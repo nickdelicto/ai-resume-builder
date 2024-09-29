@@ -1,6 +1,96 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 30 20% 97%;
+    --foreground: 30 10% 15%;
+
+    --muted: 30 15% 90%;
+    --muted-foreground: 30 10% 40%;
+
+    --popover: 30 20% 97%;
+    --popover-foreground: 30 10% 15%;
+
+    --card: 30 10% 95%;
+    --card-foreground: 30 10% 15%;
+
+    --border: 30 15% 85%;
+    --input: 30 15% 85%;
+
+    --primary: 160 50% 50%;
+    --primary-foreground: 160 100% 98%;
+
+    --secondary: 30 15% 90%;
+    --secondary-foreground: 30 10% 15%;
+
+    --accent: 340 70% 60%;
+    --accent-foreground: 340 100% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 160 50% 50%;
+
+    --radius: 0.5rem;
+
+    /* Dialog variables */
+    --dialog-overlay: 30 20% 5% / 50%;
+    --dialog-background: 30 20% 97%;
+    --dialog-foreground: 30 10% 15%;
+    --dialog-border: 160 50% 50%;
+    --dialog-close-button: 340 70% 60%;
+    --dialog-close-button-foreground: 340 100% 98%;
+  }
+
+  .dark {
+    --background: 30 15% 10%;
+    --foreground: 30 10% 90%;
+
+    --muted: 30 15% 20%;
+    --muted-foreground: 30 10% 60%;
+
+    --popover: 30 15% 10%;
+    --popover-foreground: 30 10% 90%;
+
+    --card: 30 10% 15%;
+    --card-foreground: 30 10% 90%;
+
+    --border: 30 15% 25%;
+    --input: 30 15% 25%;
+
+    --primary: 160 50% 40%;
+    --primary-foreground: 160 100% 98%;
+
+    --secondary: 30 15% 20%;
+    --secondary-foreground: 30 10% 90%;
+
+    --accent: 340 60% 50%;
+    --accent-foreground: 340 100% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 85% 97%;
+
+    --ring: 160 50% 40%;
+
+    /* New variables for dialog component in dark mode */
+    --dialog-overlay: 0 0% 100%;
+    --dialog-content-border: 210 40% 98%;
+    --dialog-close-button: 217.2 32.6% 17.5%;
+    --dialog-close-button-foreground: 210 40% 98%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 
 :root {
   --background: #ffffff;
