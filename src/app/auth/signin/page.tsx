@@ -2,31 +2,48 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
+import { useToast } from '@/app/components/ui/use-toast'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const result = await signIn('email', { email, redirect: false })
+      const result = await signIn('email', { 
+        email, 
+        redirect: false,
+        callbackUrl: '/auth/callback' // We'll create this route to handle redirection
+      })
       if (result?.error) {
         console.error('Sign-in error:', result.error)
         setError('An error occurred during sign-in. Please try again.')
+        toast({
+          title: 'Error',
+          description: 'An error occurred during sign-in. Please try again.',
+          variant: 'destructive',
+        })
       } else {
-        router.push('/auth/verify-request')
+        toast({
+          title: 'Check your email',
+          description: 'A sign in link has been sent to your email address.',
+        })
       }
     } catch (error) {
       console.error('Sign-in error:', error)
       setError('An unexpected error occurred. Please try again.')
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -37,7 +54,7 @@ export default function SignIn() {
       <h1 className="text-4xl font-bold mb-8">Login to IntelliResume</h1>
       <div className="w-full max-w-md space-y-8">
         <Button 
-          onClick={() => signIn('google')} 
+          onClick={() => signIn('google', { callbackUrl: '/auth/callback' })}
           className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">

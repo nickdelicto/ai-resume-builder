@@ -24,16 +24,57 @@ export const authOptions = {
   ],
   adapter: MongoDBAdapter(clientPromise),
   callbacks: {
-    session: ({ session, user }) => {
+    async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
   },
   pages: {
     signIn: '/auth/signin',
     verifyRequest: '/auth/verify-request',
+    error: '/auth/error', // Add this line to handle authentication errors
+  },
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
+      const client = await clientPromise;
+      const db = client.db();
+      const usersCollection = db.collection('users');
+
+      if (isNewUser) {
+        // New user
+        await usersCollection.updateOne(
+          { _id: user.id },
+          {
+            $set: {
+              isNewUser: true,
+              planType: 'free',
+              planExpirationDate: null,
+              maxSavedResumes: 1,
+            },
+          },
+          { upsert: true }
+        );
+      } else {
+        // Returning user
+        await usersCollection.updateOne(
+          { _id: user.id },
+          {
+            $set: {
+              isNewUser: false,
+            },
+          }
+        );
+      }
+    },
   },
 }
 

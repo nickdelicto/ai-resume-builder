@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, FileText, Plus, Eye, Save, AlertCircle } from 'lucide-react'
 import PersonalInformationSection from './personal-information-section'
 import ProfessionalSummarySection from './professional-summary-section'
 import ExperienceSection from './experience-section'
@@ -20,6 +20,8 @@ import ATSResume from './ats-resume'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog'
+import { useToast } from './ui/use-toast'
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 
 export interface ResumeData {
   personalInfo: {
@@ -32,12 +34,25 @@ export interface ResumeData {
     country: string;
   };
   professionalSummary: string;
-  experience: any[]; // Replace 'any' with a more specific type if available
-  education: any[]; // Replace 'any' with a more specific type if available
+  experience: any[];
+  education: any[];
   projects: { id: string; name: string; description: string }[];
-  certificates: any[]; // Replace 'any' with a more specific type if available
-  customSections: any[]; // Replace 'any' with a more specific type if available
+  certificates: any[];
+  customSections: any[];
   skills: { id: string; name: string }[];
+}
+
+interface SavedResume {
+  _id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ResumeBuilderProps {
+  initialData?: ResumeData & { _id?: string; name?: string; sectionOrder?: string[] }
+  onSave?: (data: ResumeData & { name: string; sectionOrder: string[] }) => Promise<void>
+  isSaving?: boolean
 }
 
 const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
@@ -69,8 +84,8 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
   )
 }
 
-const ResumeBuilder = () => {
-  const [resumeData, setResumeData] = useState<ResumeData>({
+export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderProps) {
+  const [resumeData, setResumeData] = useState<ResumeData>(initialData?.data || {
     personalInfo: {
       name: '',
       email: '',
@@ -89,7 +104,7 @@ const ResumeBuilder = () => {
     skills: [],
   })
 
-  const [sectionOrder, setSectionOrder] = useState([
+  const [sectionOrder, setSectionOrder] = useState(initialData?.sectionOrder || [
     'experience',
     'education',
     'skills',
@@ -99,9 +114,15 @@ const ResumeBuilder = () => {
 
   const [showPreview, setShowPreview] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
-  const [resumeName, setResumeName] = useState('')
+  const [resumeName, setResumeName] = useState(initialData?.name || '')
   const { data: session } = useSession()
   const router = useRouter()
+
+  const [savedResumes, setSavedResumes] = useState<SavedResume[]>([])
+  const [isLoadingResumes, setIsLoadingResumes] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  const { toast } = useToast()
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -109,6 +130,39 @@ const ResumeBuilder = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  useEffect(() => {
+    const fetchSavedResumes = async () => {
+      if (!session?.user) {
+        setIsLoadingResumes(false)
+        return
+      }
+
+      try {
+        const response = await fetch('/api/resumes')
+        if (!response.ok) {
+          throw new Error('Failed to fetch resumes')
+        }
+        const data = await response.json()
+        setSavedResumes(data)
+        setLoadError(null)
+      } catch (error) {
+        console.error('Error fetching resumes:', error)
+        setLoadError('Failed to load saved resumes. Please try again later.')
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch saved resumes',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsLoadingResumes(false)
+      }
+    }
+
+    if (!initialData) {
+      fetchSavedResumes()
+    }
+  }, [session, toast, initialData])
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event
@@ -164,29 +218,74 @@ const ResumeBuilder = () => {
     }
 
     try {
-      const response = await fetch('/api/resumes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      if (onSave) {
+        // We're editing an existing resume
+        await onSave({
+          ...resumeData,
           name: resumeName,
-          data: resumeData,
           sectionOrder: sectionOrder,
-        }),
-      })
-
-      if (response.ok) {
-        setShowSaveDialog(false)
-        // Show success message or update UI
-        alert('Resume saved successfully!')
+        })
       } else {
-        // Handle error
-        alert('Failed to save resume. Please try again.')
+        // We're creating a new resume
+        const response = await fetch('/api/resumes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: resumeName,
+            data: resumeData,
+            sectionOrder: sectionOrder,
+          }),
+        })
+
+        if (response.ok) {
+          const updatedResumes = await response.json()
+          setSavedResumes(updatedResumes)
+        } else if (response.status === 403) {
+          throw new Error('You have reached your resume limit. Please upgrade your plan to save more resumes.')
+        } else {
+          throw new Error('Failed to save resume')
+        }
       }
+
+      setShowSaveDialog(false)
+      toast({
+        title: 'Success',
+        description: 'Resume saved successfully!',
+      })
     } catch (error) {
       console.error('Failed to save resume:', error)
-      alert('An error occurred while saving the resume. Please try again.')
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An error occurred while saving the resume. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const loadResume = async (resumeId: string) => {
+    try {
+      const response = await fetch(`/api/resumes/${resumeId}`)
+      if (response.ok) {
+        const loadedResume = await response.json()
+        setResumeData(loadedResume.data)
+        setSectionOrder(loadedResume.sectionOrder || sectionOrder)
+        setResumeName(loadedResume.name)
+        toast({
+          title: "Success",
+          description: "Resume loaded successfully!",
+        })
+      } else {
+        throw new Error('Failed to load resume')
+      }
+    } catch (error) {
+      console.error('Error loading resume:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load resume. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -251,17 +350,76 @@ const ResumeBuilder = () => {
   }
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex space-x-2">
-        <Button onClick={() => setShowPreview(!showPreview)}>
-          {showPreview ? 'Edit Resume' : 'Preview Resume'}
-        </Button>
-        <Button onClick={() => setShowSaveDialog(true)}>Save Resume</Button>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-8 text-center">IntelliResume Builder</h1>
+      
+      {!initialData && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <Card className="col-span-1 md:col-span-2">
+            <CardHeader>
+              <CardTitle>Saved Resumes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingResumes ? (
+                <p className="text-center text-gray-500">Loading saved resumes...</p>
+              ) : loadError ? (
+                <div className="text-center text-red-500">
+                  <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                  <p>{loadError}</p>
+                </div>
+              ) : savedResumes.length > 0 ? (
+                <ul className="space-y-2">
+                  {savedResumes.map((resume) => (
+                    <li key={resume._id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                      <span className="flex items-center">
+                        <FileText className="mr-2 h-4 w-4" />
+                        {resume.name}
+                      </span>
+                      <Button onClick={() => loadResume(resume._id)} variant="outline" size="sm">
+                        Load
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-center text-gray-500">No saved resumes yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={() => setShowPreview(!showPreview)} className="w-full">
+                <Eye className="mr-2 h-4 w-4" />
+                {showPreview ? 'Edit Resume' : 'Preview Resume'}
+              </Button>
+              <Button onClick={() => setShowSaveDialog(true)} className="w-full">
+                <Save className="mr-2 h-4 w-4" />
+                Save Resume
+              </Button>
+              <Button onClick={addCustomSection} variant="outline" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Custom Resume Section
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {showPreview ? (
-        <ATSResume resumeData={resumeData} sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Resume Preview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ATSResume resumeData={resumeData} sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} />
+          </CardContent>
+        </Card>
       ) : (
-        <>
+        <div className="space-y-8">
           <PersonalInformationSection
             personalInfo={resumeData.personalInfo}
             updatePersonalInfo={updatePersonalInfo}
@@ -286,9 +444,9 @@ const ResumeBuilder = () => {
               ))}
             </SortableContext>
           </DndContext>
-          <Button onClick={addCustomSection}>Add Custom Section</Button>
-        </>
+        </div>
       )}
+
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent>
           <DialogHeader>
@@ -300,12 +458,12 @@ const ResumeBuilder = () => {
             onChange={(e) => setResumeName(e.target.value)}
           />
           <DialogFooter>
-            <Button onClick={handleSaveResume}>Save</Button>
+            <Button onClick={handleSaveResume} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-
-export default ResumeBuilder
