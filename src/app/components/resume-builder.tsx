@@ -21,7 +21,9 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog'
 import { useToast } from './ui/use-toast'
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { Progress } from './ui/progress'
 
 export interface ResumeData {
   personalInfo: {
@@ -70,12 +72,12 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} className="mb-4 border rounded bg-white shadow-sm">
-      <div className="flex items-center p-2 bg-gray-100 border-b">
-        <div {...listeners} className="mr-2 cursor-move">
-          <GripVertical size={20} />
+    <div ref={setNodeRef} style={style} {...attributes} className="mb-6 border rounded-lg bg-white shadow-sm">
+      <div className="flex items-center p-3 bg-emerald-100 border-b rounded-t-lg">
+        <div {...listeners} className="mr-3 cursor-move">
+          <GripVertical size={20} className="text-emerald-600" />
         </div>
-        <h2 className="text-lg font-semibold">{id.charAt(0).toUpperCase() + id.slice(1)}</h2>
+        <h2 className="text-lg font-bold text-emerald-700">{id.charAt(0).toUpperCase() + id.slice(1)}</h2>
       </div>
       <div className="p-4">
         {children}
@@ -84,7 +86,56 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
   )
 }
 
-export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderProps) {
+const calculateCompletion = (data: ResumeData, sectionOrder: string[]) => {
+  const sectionWeights = {
+    personalInfo: 15,
+    professionalSummary: 15,
+    experience: 20,
+    education: 15,
+    skills: 15,
+    projects: 10,
+    certificates: 5,
+    customSections: 5
+  };
+
+  let totalWeight = 0;
+  let completedWeight = 0;
+
+  const isPersonalInfoComplete = Object.values(data.personalInfo).every(value => value !== '');
+  if (isPersonalInfoComplete) completedWeight += sectionWeights.personalInfo;
+  totalWeight += sectionWeights.personalInfo;
+
+  if (data.professionalSummary.trim() !== '') completedWeight += sectionWeights.professionalSummary;
+  totalWeight += sectionWeights.professionalSummary;
+
+  if (data.experience.length > 0) completedWeight += sectionWeights.experience;
+  totalWeight += sectionWeights.experience;
+
+  if (data.education.length > 0) completedWeight += sectionWeights.education;
+  totalWeight += sectionWeights.education;
+
+  if (data.skills.length > 0) completedWeight += sectionWeights.skills;
+  totalWeight += sectionWeights.skills;
+
+  if (data.projects.length > 0) completedWeight += sectionWeights.projects;
+  totalWeight += sectionWeights.projects;
+
+  if (data.certificates.length > 0) completedWeight += sectionWeights.certificates;
+  totalWeight += sectionWeights.certificates;
+
+  const customSectionCount = sectionOrder.filter(section => section.startsWith('custom-')).length;
+  if (customSectionCount > 0) {
+    const customSectionWeight = sectionWeights.customSections / customSectionCount;
+    data.customSections.forEach(section => {
+      if (section.items.length > 0) completedWeight += customSectionWeight;
+      totalWeight += customSectionWeight;
+    });
+  }
+
+  return (completedWeight / totalWeight) * 100;
+};
+
+export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderProps) {
   const [resumeData, setResumeData] = useState<ResumeData>(initialData?.data || {
     personalInfo: {
       name: '',
@@ -123,6 +174,9 @@ export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeB
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const { toast } = useToast()
+
+  const [activeTab, setActiveTab] = useState('edit')
+  const [completionPercentage, setCompletionPercentage] = useState(0)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -163,6 +217,11 @@ export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeB
       fetchSavedResumes()
     }
   }, [session, toast, initialData])
+
+  useEffect(() => {
+    const completionPercentage = calculateCompletion(resumeData, sectionOrder);
+    setCompletionPercentage(completionPercentage);
+  }, [resumeData, sectionOrder]);
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event
@@ -219,14 +278,12 @@ export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeB
 
     try {
       if (onSave) {
-        // We're editing an existing resume
         await onSave({
           ...resumeData,
           name: resumeName,
           sectionOrder: sectionOrder,
         })
       } else {
-        // We're creating a new resume
         const response = await fetch('/api/resumes', {
           method: 'POST',
           headers: {
@@ -350,115 +407,132 @@ export default function ResumeBuilder({ initialData, onSave, isSaving }: ResumeB
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">IntelliResume Builder</h1>
+    <div className="container mx-auto px-4 py-8 bg-white">
+      <h1 className="text-4xl font-bold mb-8 text-center text-primary">IntelliResume Builder</h1>
       
-      {!initialData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <Card className="col-span-1 md:col-span-2">
-            <CardHeader>
-              <CardTitle>Saved Resumes</CardTitle>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger 
+            value="edit" 
+            className="text-base py-2 px-4 flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Edit Resume
+          </TabsTrigger>
+          <TabsTrigger 
+            value="preview"
+            className="text-base py-2 px-4 flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Preview
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="edit">
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="bg-primary/5 rounded-t-lg">
+              <CardTitle className="flex justify-between items-center text-xl">
+                <span>Resume Editor</span>
+                <span className="text-base font-normal">Completion: {completionPercentage.toFixed(0)}%</span>
+              </CardTitle>
+              <Progress value={completionPercentage} className="w-full h-2 mt-2" />
             </CardHeader>
-            <CardContent>
-              {isLoadingResumes ? (
-                <p className="text-center text-gray-500">Loading saved resumes...</p>
-              ) : loadError ? (
-                <div className="text-center text-red-500">
-                  <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                  <p>{loadError}</p>
-                </div>
-              ) : savedResumes.length > 0 ? (
-                <ul className="space-y-2">
-                  {savedResumes.map((resume) => (
-                    <li key={resume._id} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                      <span className="flex items-center">
-                        <FileText className="mr-2 h-4 w-4" />
-                        {resume.name}
-                      </span>
-                      <Button onClick={() => loadResume(resume._id)} variant="outline" size="sm">
-                        Load
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-center text-gray-500">No saved resumes yet.</p>
-              )}
+            <CardContent className="p-6">
+              <div className="space-y-8">
+                <PersonalInformationSection
+                  personalInfo={resumeData.personalInfo}
+                  updatePersonalInfo={updatePersonalInfo}
+                />
+                <ProfessionalSummarySection
+                  professionalSummary={resumeData.professionalSummary}
+                  updateProfessionalSummary={(data) => updateResumeData('professionalSummary', data)}
+                />
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={sectionOrder}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {sectionOrder.map((sectionId) => (
+                      <SortableItem key={sectionId} id={sectionId}>
+                        {renderSection(sectionId)}
+                      </SortableItem>
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
             </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button onClick={() => setShowPreview(!showPreview)} className="w-full">
-                <Eye className="mr-2 h-4 w-4" />
-                {showPreview ? 'Edit Resume' : 'Preview Resume'}
+            <CardFooter className="flex justify-between bg-primary/5 p-4 rounded-b-lg">
+              <Button onClick={addCustomSection} variant="outline" size="default" className="text-sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Custom Section
               </Button>
-              <Button onClick={() => setShowSaveDialog(true)} className="w-full">
+              <Button onClick={() => setShowSaveDialog(true)} size="default" className="text-sm">
                 <Save className="mr-2 h-4 w-4" />
                 Save Resume
               </Button>
-              <Button onClick={addCustomSection} variant="outline" className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                Custom Resume Section
-              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        <TabsContent value="preview">
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="bg-primary/5 rounded-t-lg">
+              <CardTitle className="text-xl text-center">Resume Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ATSResume resumeData={resumeData} sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} />
             </CardContent>
           </Card>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
 
-      {showPreview ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Resume Preview</CardTitle>
+      {!initialData && (
+        <Card className="mt-8 border-2 border-primary/20">
+          <CardHeader className="bg-primary/5 rounded-t-lg">
+            <CardTitle className="text-xl text-center">Saved Resumes</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ATSResume resumeData={resumeData} sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} />
+          <CardContent className="p-6">
+            {isLoadingResumes ? (
+              <p className="text-center text-gray-500">Loading saved resumes...</p>
+            ) : loadError ? (
+              <div className="text-center text-red-500">
+                <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                <p>{loadError}</p>
+              </div>
+            ) : savedResumes.length > 0 ? (
+              <ul className="space-y-3">
+                {savedResumes.map((resume) => (
+                  <li key={resume._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <span className="flex items-center">
+                      <FileText className="mr-3 h-5 w-5" />
+                      {resume.name}
+                    </span>
+                    <Button onClick={() => loadResume(resume._id)} variant="outline" size="sm">
+                      Load
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-gray-500">No saved resumes yet.</p>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-8">
-          <PersonalInformationSection
-            personalInfo={resumeData.personalInfo}
-            updatePersonalInfo={updatePersonalInfo}
-          />
-          <ProfessionalSummarySection
-            professionalSummary={resumeData.professionalSummary}
-            updateProfessionalSummary={(data) => updateResumeData('professionalSummary', data)}
-          />
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={sectionOrder}
-              strategy={verticalListSortingStrategy}
-            >
-              {sectionOrder.map((sectionId) => (
-                <SortableItem key={sectionId} id={sectionId}>
-                  {renderSection(sectionId)}
-                </SortableItem>
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
       )}
 
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Save Resume</DialogTitle>
+            <DialogTitle className="text-xl text-center">Save Resume</DialogTitle>
           </DialogHeader>
           <Input
             placeholder="Enter resume name"
             value={resumeName}
             onChange={(e) => setResumeName(e.target.value)}
+            className="text-base py-2"
           />
           <DialogFooter>
-            <Button onClick={handleSaveResume} disabled={isSaving}>
+            <Button onClick={handleSaveResume} disabled={isSaving} size="default" className="text-sm">
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>

@@ -33,7 +33,7 @@ export default function SignIn() {
       } else {
         toast({
           title: 'Check your email',
-          description: 'A sign in link has been sent to your email address.',
+          description: 'A sign in link has been sent to your email address. If you don\'t see it, please check your spam folder.',
         })
       }
     } catch (error) {
