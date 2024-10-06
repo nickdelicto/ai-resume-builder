@@ -1,3 +1,4 @@
+import React from 'react'
 import Link from 'next/link'
 import { Button } from "./ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card"
@@ -7,7 +8,7 @@ import { VideoEmbed } from './VideoEmbed'
 export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50">
-      <nav className="flex justify-between items-center p-4 bg-white shadow-sm">
+      <nav className="flex justify-between items-center py-4 px-8 bg-white shadow-sm">
         <div className="flex items-center space-x-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +38,7 @@ export function LandingPage() {
       </nav>
 
       <main className="flex-grow">
-        <section className="relative bg-gradient-to-b from-purple-50 to-white py-20 overflow-hidden">
+        <section className="py-20 md:py-32 relative">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
               <div className="w-full lg:w-1/2 text-center lg:text-left">
@@ -49,26 +50,27 @@ export function LandingPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                   <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 ease-in-out transform hover:scale-105">
-                    Start Building for Free
+                    Try IntelliResume for Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <p className="text-sm text-gray-500">No credit card required</p>
                 </div>
               </div>
               <div className="w-full lg:w-1/2 relative">
-                <VideoEmbed videoId="YOUR_VIDEO_ID_HERE" className="w-full max-w-3xl mx-auto"/>
+                <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                  <VideoEmbed videoId="HB1ZC7czKRs" className="w-full h-full"/>
+                </div>
                 <div className="absolute -top-6 -right-6 w-24 h-24 bg-yellow-400 rounded-full opacity-50 animate-blob"></div>
                 <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-400 rounded-full opacity-50 animate-blob animation-delay-2000"></div>
               </div>
             </div>
           </div>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 via-blue-500 to-purple-400"></div>
         </section>
 
-        <section className="py-16">
+        <section className="py-24 bg-purple-100">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Old Way vs IntelliResume</h2>
-            <div className="grid md:grid-cols-2 gap-8">
+            <h2 className="text-3xl font-bold text-center mb-16 text-gray-800">Old Way vs IntelliResume</h2>
+            <div className="grid md:grid-cols-2 gap-12">
               <Card className="bg-white shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-2xl text-gray-700">Old Way</CardTitle>
@@ -296,42 +298,3 @@ export function LandingPage() {
     </div>
   )
 }
-
-// Add these styles to your global CSS file
-const globalStyles = `
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .7;
-  }
-}
-`
