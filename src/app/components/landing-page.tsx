@@ -1,42 +1,36 @@
+'use client'
+
 import React from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Button } from "./ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card"
 import { CheckCircle, FileText, Users, BarChart, ArrowRight, X } from 'lucide-react'
 import { VideoEmbed } from './VideoEmbed'
 
 export function LandingPage() {
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  const handleCTAClick = () => {
+    if (session) {
+      router.push('/dashboard')
+    } else {
+      router.push('/auth/signin')
+    }
+  }
+
+  const handlePricingClick = () => {
+    if (session) {
+      router.push('/pricing')
+    } else {
+      router.push('/auth/signin')
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-purple-50">
-      <nav className="flex justify-between items-center py-4 px-8 bg-white shadow-sm">
-        <div className="flex items-center space-x-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-6 w-6 text-purple-600"
-          >
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-            <line x1="12" y1="22.08" x2="12" y2="12" />
-          </svg>
-          <span className="text-xl font-bold text-purple-600">IntelliResume</span>
-        </div>
-        <div className="space-x-4">
-          <Link href="/pricing" className="text-gray-600 hover:text-purple-600">
-            Pricing
-          </Link>
-          <Link href="/login" className="text-gray-600 hover:text-purple-600">
-            Login
-          </Link>
-          <Button className="bg-purple-600 hover:bg-purple-700">Sign Up</Button>
-        </div>
-      </nav>
-
       <main className="flex-grow">
         <section className="py-20 md:py-32 relative">
           <div className="container mx-auto px-4">
@@ -49,8 +43,12 @@ export function LandingPage() {
                   AI-powered resume builder for job seekers who want to stand out and land their dream jobs faster.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 ease-in-out transform hover:scale-105">
-                    Try IntelliResume for Free
+                  <Button 
+                    size="lg" 
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 ease-in-out transform hover:scale-105"
+                    onClick={handleCTAClick}
+                  >
+                    Start Building for Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <p className="text-sm text-gray-500">No credit card required</p>
@@ -185,7 +183,9 @@ export function LandingPage() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300">Continue with Free Plan</Button>
+                  <Button className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300" onClick={handleCTAClick}>
+                    Continue with Free Plan
+                  </Button>
                 </CardFooter>
               </Card>
               <Card className="bg-purple-50 shadow-lg border-2 border-purple-500">
@@ -211,7 +211,9 @@ export function LandingPage() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700">Get 7-Day Access</Button>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={handlePricingClick}>
+                    Get 7-Day Access
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
@@ -247,7 +249,12 @@ export function LandingPage() {
         <section className="py-20 bg-purple-600 text-white text-center">
           <h2 className="text-4xl font-bold mb-4">Ready to Build Your Perfect Resume?</h2>
           <p className="text-xl mb-8">Join thousands of job seekers who have landed their dream jobs with IntelliResume</p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 bg-white text-purple-600 hover:bg-gray-100">
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="text-lg px-8 bg-white text-purple-600 hover:bg-gray-100"
+            onClick={handleCTAClick}
+          >
             Get Started Now
           </Button>
         </section>
@@ -276,25 +283,6 @@ export function LandingPage() {
           </div>
         </section>
       </main>
-
-      <footer className="bg-gray-100 py-8">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-gray-600 mb-4 md:mb-0">
-            © 2024 IntelliResume. All rights reserved.
-          </div>
-          <div className="flex space-x-4">
-            <Link href="/privacy" className="text-sm text-gray-600 hover:text-purple-600">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-sm text-gray-600 hover:text-purple-600">
-              Terms of Service
-            </Link>
-            <Link href="/contact" className="text-sm text-gray-600 hover:text-purple-600">
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

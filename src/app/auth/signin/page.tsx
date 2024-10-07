@@ -12,7 +12,23 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn('google', { 
+        callbackUrl: '/dashboard', // The middleware will handle the actual redirection
+        redirect: true
+      })
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      toast({
+        title: 'Error',
+        description: 'An error occurred during Google sign-in. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -20,7 +36,7 @@ export default function SignIn() {
       const result = await signIn('email', { 
         email, 
         redirect: false,
-        callbackUrl: '/auth/callback' // We'll create this route to handle redirection
+        callbackUrl: '/dashboard' // The middleware will handle the actual redirection
       })
       if (result?.error) {
         console.error('Sign-in error:', result.error)
@@ -54,7 +70,7 @@ export default function SignIn() {
       <h1 className="text-4xl font-bold mb-8">Login to IntelliResume</h1>
       <div className="w-full max-w-md space-y-8">
         <Button 
-          onClick={() => signIn('google', { callbackUrl: '/auth/callback' })}
+          onClick={handleGoogleSignIn}
           className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,7 +86,7 @@ export default function SignIn() {
             <span className="px-2 bg-white text-gray-500">Or continue with</span>
           </div>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleEmailSignIn}>
           <Input
             type="email"
             required

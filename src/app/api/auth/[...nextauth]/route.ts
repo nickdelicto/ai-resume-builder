@@ -41,7 +41,7 @@ export const authOptions = {
   pages: {
     signIn: '/auth/signin',
     verifyRequest: '/auth/verify-request',
-    error: '/auth/error', // Add this line to handle authentication errors
+    error: '/auth/error',
   },
   events: {
     async signIn({ user, account, profile, isNewUser }) {
@@ -50,7 +50,6 @@ export const authOptions = {
       const usersCollection = db.collection('users');
 
       if (isNewUser) {
-        // New user
         await usersCollection.updateOne(
           { _id: user.id },
           {
@@ -59,12 +58,12 @@ export const authOptions = {
               planType: 'free',
               planExpirationDate: null,
               maxSavedResumes: 1,
+              createdAt: new Date(),
             },
           },
           { upsert: true }
         );
       } else {
-        // Returning user
         await usersCollection.updateOne(
           { _id: user.id },
           {
@@ -76,6 +75,7 @@ export const authOptions = {
       }
     },
   },
+  debug: process.env.NODE_ENV === 'development',
 }
 
 const handler = NextAuth(authOptions)

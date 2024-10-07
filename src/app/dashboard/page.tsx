@@ -63,6 +63,13 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json()
           setResumes(data)
+          if (data.length === 0) {
+            toast({
+              title: 'No Resumes',
+              description: "You haven't created any resumes yet. Start by creating a new one!",
+              variant: 'default',
+            })
+          }
         } else {
           throw new Error('Failed to fetch resumes')
         }
@@ -93,6 +100,10 @@ export default function Dashboard() {
   const handlePreview = (resumeId: string) => {
     setSelectedResumeId(resumeId)
     setPreviewModalOpen(true)
+  }
+
+  const handleDeleteResume = (deletedResumeId: string) => {
+    setResumes(prevResumes => prevResumes.filter(resume => resume._id !== deletedResumeId))
   }
 
   if (status === 'loading' || isLoading) {
@@ -219,6 +230,7 @@ export default function Dashboard() {
         isOpen={previewModalOpen}
         onClose={() => setPreviewModalOpen(false)}
         resumeId={selectedResumeId || ''}
+        onDelete={handleDeleteResume}
       />
     </div>
   )

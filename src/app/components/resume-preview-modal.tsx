@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog'
 import { Button } from './ui/button'
 import { useToast } from './ui/use-toast'
 import ATSResume from './ats-resume'
+import { Trash2 } from 'lucide-react'
 
 interface ResumeData {
   _id: string
@@ -45,11 +46,13 @@ interface ResumePreviewModalProps {
   isOpen: boolean
   onClose: () => void
   resumeId: string
+  onDelete: (resumeId: string) => void
 }
 
-export function ResumePreviewModal({ isOpen, onClose, resumeId }: ResumePreviewModalProps) {
+export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete }: ResumePreviewModalProps) {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -81,6 +84,35 @@ export function ResumePreviewModal({ isOpen, onClose, resumeId }: ResumePreviewM
     }
   }, [isOpen, resumeId, toast])
 
+  const handleDelete = async () => {
+    if (!resumeId) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/resumes/${resumeId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('Failed to delete resume')
+      }
+      toast({
+        title: 'Success',
+        description: 'Resume deleted successfully.',
+      })
+      onDelete(resumeId)
+      onClose()
+    } catch (error) {
+      console.error('Error deleting resume:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to delete resume. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -94,9 +126,13 @@ export function ResumePreviewModal({ isOpen, onClose, resumeId }: ResumePreviewM
         ) : (
           <div className="text-center text-red-500">Failed to load resume data</div>
         )}
-        <div className="mt-4 flex justify-end">
+        <DialogFooter className="mt-4 flex justify-between">
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            {isDeleting ? 'Deleting...' : 'Delete Resume'}
+          </Button>
           <Button onClick={onClose}>Close</Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

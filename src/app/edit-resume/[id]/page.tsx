@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import ResumeBuilder, { ResumeData } from '@/app/components/resume-builder'
+import { ResumeBuilder, ResumeData } from '@/app/components/resume-builder'
 import { useToast } from '@/app/components/ui/use-toast'
 import { Button } from '@/app/components/ui/button'
 
@@ -34,6 +34,14 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
         if (response.ok) {
           const data: Resume = await response.json()
           setResumeData(data)
+        } else if (response.status === 404) {
+          toast({
+            title: 'Error',
+            description: 'Resume not found. It may have been deleted.',
+            variant: 'destructive',
+          })
+          router.push('/dashboard')
+          return
         } else {
           throw new Error('Failed to fetch resume')
         }
@@ -71,6 +79,13 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
         toast({
           title: 'Success',
           description: 'Resume updated successfully!',
+        })
+        router.push('/dashboard')
+      } else if (response.status === 404) {
+        toast({
+          title: 'Error',
+          description: 'Resume not found. It may have been deleted.',
+          variant: 'destructive',
         })
         router.push('/dashboard')
       } else {
