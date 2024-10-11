@@ -1,24 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/app/components/ui/use-toast'
 
 export default function AuthCallback() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      handleRedirect()
-    } else if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-    }
-  }, [status])
-
-  const handleRedirect = async () => {
+  const handleRedirect = useCallback(async () => {
     try {
       const response = await fetch('/api/user-status')
       const userData = await response.json()
@@ -39,7 +31,15 @@ export default function AuthCallback() {
       })
       router.push('/dashboard')
     }
-  }
+  }, [router, toast])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      handleRedirect()
+    } else if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    }
+  }, [status, handleRedirect, router])
 
   return <div>Authenticating...</div>
 }
