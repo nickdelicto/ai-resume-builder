@@ -25,7 +25,7 @@ export const authOptions = {
   ],
   adapter: MongoDBAdapter(clientPromise),
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ user, account }) {
       if (account && account.provider === 'google') {
         const client = await clientPromise;
         const db = client.db();
@@ -89,7 +89,7 @@ export const authOptions = {
     error: '/auth/error',
   },
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
+    async signIn({ user, isNewUser }) {
       const client = await clientPromise;
       const db = client.db();
       const usersCollection = db.collection('users');
