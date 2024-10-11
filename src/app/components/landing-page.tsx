@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
+//import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from "./ui/button"
@@ -76,7 +76,7 @@ export function LandingPage() {
                 <CardContent>
                   <ul className="text-lg list-disc pl-5 space-y-2 text-gray-600">
                     <li>Time-consuming manual formatting</li>
-                    <li>Struggle with writer's block</li>
+                    <li>Struggle with writer&apos;s block</li>
                     <li>Generic, one-size-fits-all resumes</li>
                   </ul>
                 </CardContent>
@@ -273,7 +273,7 @@ export function LandingPage() {
                     <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                       <Users className="h-8 w-8 text-purple-600" />
                     </div>
-                    <p className="text-gray-600 mb-4">"{testimonial.comment}"</p>
+                    <p className="text-gray-600 mb-4">&ldquo;{testimonial.comment}&rdquo;</p>
                     <p className="font-bold text-gray-700">{testimonial.name}</p>
                     <p className="text-sm text-gray-500">{testimonial.role}</p>
                   </CardContent>
