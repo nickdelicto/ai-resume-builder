@@ -28,7 +28,7 @@ interface Resume {
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()  // Remove 'data: session' from destructuring
   const router = useRouter()
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null)
   const [resumes, setResumes] = useState<Resume[]>([])
@@ -218,7 +218,7 @@ export default function Dashboard() {
         <Card className="mt-8 bg-muted">
           <CardContent className="flex flex-col items-center py-8">
             <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground mb-4">You haven't created any resumes yet. Get started by creating your first resume!</p>
+            <p className="text-center text-muted-foreground mb-4">You haven&apos;t created any resumes yet. Get started by creating your first resume!</p>
             <Button onClick={() => router.push('/resume-builder')}>
               Create Your First Resume
             </Button>
