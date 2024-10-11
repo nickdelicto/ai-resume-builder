@@ -30,11 +30,14 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
       }
 
       try {
+        // console.log('Fetching resume with ID:', params.id)
         const response = await fetch(`/api/resumes/${params.id}`)
         if (response.ok) {
           const data: Resume = await response.json()
+          // console.log('Fetched resume data:', data)
           setResumeData(data)
         } else if (response.status === 404) {
+          // console.log('Resume not found')
           toast({
             title: 'Error',
             description: 'Resume not found. It may have been deleted.',
@@ -110,6 +113,13 @@ export default function EditResumePage({ params }: { params: { id: string } }) {
   if (!resumeData) {
     return <div className="flex justify-center items-center h-screen">Resume not found</div>
   }
+
+  // console.log('Passing initialData to ResumeBuilder:', {
+  //   ...resumeData.data,
+  //   _id: resumeData._id,
+  //   name: resumeData.name,
+  //   sectionOrder: resumeData.sectionOrder,
+  // })
 
   return (
     <div className="container mx-auto px-4 py-8">

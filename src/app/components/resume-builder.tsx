@@ -10,7 +10,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, FileText, Plus, Eye, Save, AlertCircle } from 'lucide-react'
+import { GripVertical, FileText, Plus, Save, AlertCircle } from 'lucide-react'
 import PersonalInformationSection from './personal-information-section'
 import ProfessionalSummarySection from './professional-summary-section'
 import ExperienceSection from './experience-section'
@@ -90,6 +90,8 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
 }
 
 const calculateCompletion = (data: ResumeData, sectionOrder: string[]) => {
+  if (!data) return 0;
+
   const sectionWeights = {
     personalInfo: 15,
     professionalSummary: 15,
@@ -104,59 +106,67 @@ const calculateCompletion = (data: ResumeData, sectionOrder: string[]) => {
   let totalWeight = 0;
   let completedWeight = 0;
 
-  const isPersonalInfoComplete = Object.values(data.personalInfo).every(value => value !== '');
-  if (isPersonalInfoComplete) completedWeight += sectionWeights.personalInfo;
-  totalWeight += sectionWeights.personalInfo;
+  if (data.personalInfo) {
+    const isPersonalInfoComplete = Object.values(data.personalInfo).every(value => value !== '');
+    if (isPersonalInfoComplete) completedWeight += sectionWeights.personalInfo;
+    totalWeight += sectionWeights.personalInfo;
+  }
 
-  if (data.professionalSummary.trim() !== '') completedWeight += sectionWeights.professionalSummary;
+  if (data.professionalSummary && data.professionalSummary.trim() !== '') completedWeight += sectionWeights.professionalSummary;
   totalWeight += sectionWeights.professionalSummary;
 
-  if (data.experience.length > 0) completedWeight += sectionWeights.experience;
+  if (data.experience && data.experience.length > 0) completedWeight += sectionWeights.experience;
   totalWeight += sectionWeights.experience;
 
-  if (data.education.length > 0) completedWeight += sectionWeights.education;
+  if (data.education && data.education.length > 0) completedWeight += sectionWeights.education;
   totalWeight += sectionWeights.education;
 
-  if (data.skills.length > 0) completedWeight += sectionWeights.skills;
+  if (data.skills && data.skills.length > 0) completedWeight += sectionWeights.skills;
   totalWeight += sectionWeights.skills;
 
-  if (data.projects.length > 0) completedWeight += sectionWeights.projects;
+  if (data.projects && data.projects.length > 0) completedWeight += sectionWeights.projects;
   totalWeight += sectionWeights.projects;
 
-  if (data.certificates.length > 0) completedWeight += sectionWeights.certificates;
+  if (data.certificates && data.certificates.length > 0) completedWeight += sectionWeights.certificates;
   totalWeight += sectionWeights.certificates;
 
   const customSectionCount = sectionOrder.filter(section => section.startsWith('custom-')).length;
-  if (customSectionCount > 0) {
+  if (customSectionCount > 0 && data.customSections) {
     const customSectionWeight = sectionWeights.customSections / customSectionCount;
     data.customSections.forEach(section => {
-      if (section.items.length > 0) completedWeight += customSectionWeight;
+      if (section.items && section.items.length > 0) completedWeight += customSectionWeight;
       totalWeight += customSectionWeight;
     });
   }
 
-  return (completedWeight / totalWeight) * 100;
+  return totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 };
 
+
 export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderProps) {
-  const [resumeData, setResumeData] = useState<ResumeData>(initialData?.data || {
-    personalInfo: {
-      name: '',
-      email: '',
-      phone: '',
-      city: '',
-      state: '',
-      zipcode: '',
-      country: '',
-    },
-    professionalSummary: '',
-    experience: [],
-    education: [],
-    projects: [],
-    certificates: [],
-    customSections: [],
-    skills: [],
-  })
+
+  const [resumeData, setResumeData] = useState<ResumeData>(() => {
+    // if (isDev) console.log('Initializing resumeData with:', initialData);
+    return {
+      personalInfo: {
+        name: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        zipcode: '',
+        country: '',
+      },
+      professionalSummary: '',
+      experience: [],
+      education: [],
+      projects: [],
+      certificates: [],
+      customSections: [],
+      skills: [],
+      ...initialData
+    };
+  });
 
   const [sectionOrder, setSectionOrder] = useState(initialData?.sectionOrder || [
     'experience',
@@ -166,7 +176,6 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     'certificates',
   ])
 
-  //const [showPreview, setShowPreview] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [resumeName, setResumeName] = useState(initialData?.name || '')
   const { data: session } = useSession()
@@ -225,6 +234,19 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     const completionPercentage = calculateCompletion(resumeData, sectionOrder);
     setCompletionPercentage(completionPercentage);
   }, [resumeData, sectionOrder]);
+
+  useEffect(() => {
+    if (initialData) {
+      // if (isDev) console.log('Updating resumeData with new initialData:', initialData);
+      setResumeData(prevData => ({
+        ...prevData,
+        ...initialData
+      }));
+      setSectionOrder(initialData.sectionOrder || sectionOrder);
+      setResumeName(initialData.name || '');
+    }
+  }, [initialData])
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -412,18 +434,18 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
   return (
     <div className="container mx-auto px-4 py-8 bg-white">
       <h1 className="text-4xl font-bold mb-8 text-center text-primary">IntelliResume Builder</h1>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
         <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger 
-            value="edit" 
+          <TabsTrigger
+            value="edit"
             className="text-base py-2 px-4 flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             Edit Resume
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="preview"
-            className="text-base py-2 px-4 flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="text-base  py-2 px-4 flex items-center justify-center data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             Preview
           </TabsTrigger>
@@ -439,30 +461,36 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-8">
-                <PersonalInformationSection
-                  personalInfo={resumeData.personalInfo}
-                  updatePersonalInfo={updatePersonalInfo}
-                />
-                <ProfessionalSummarySection
-                  professionalSummary={resumeData.professionalSummary}
-                  updateProfessionalSummary={(data) => updateResumeData('professionalSummary', data)}
-                />
-                <DndContext 
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext 
-                    items={sectionOrder}
-                    strategy={verticalListSortingStrategy}
+                {resumeData && (
+                  <PersonalInformationSection
+                    personalInfo={resumeData.personalInfo}
+                    updatePersonalInfo={updatePersonalInfo}
+                  />
+                )}
+                {resumeData && (
+                  <ProfessionalSummarySection
+                    professionalSummary={resumeData.professionalSummary}
+                    updateProfessionalSummary={(data) => updateResumeData('professionalSummary', data)}
+                  />
+                )}
+                {resumeData && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                   >
-                    {sectionOrder.map((sectionId) => (
-                      <SortableItem key={sectionId} id={sectionId}>
-                        {renderSection(sectionId)}
-                      </SortableItem>
-                    ))}
-                  </SortableContext>
-                </DndContext>
+                    <SortableContext
+                      items={sectionOrder}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {sectionOrder.map((sectionId) => (
+                        <SortableItem key={sectionId} id={sectionId}>
+                          {renderSection(sectionId)}
+                        </SortableItem>
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex justify-between bg-primary/5 p-4 rounded-b-lg">
