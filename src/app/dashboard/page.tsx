@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/card'
-import { FileText, Plus, Edit2, Eye, Star, Clock, AlertCircle } from 'lucide-react'
+import { FileText, Plus, Edit2, Eye, Star, Clock, AlertCircle, Copy } from 'lucide-react'
 import { useToast } from '../components/ui/use-toast'
 import { ResumePreviewModal } from '../components/resume-preview-modal'
 import { Progress } from '../components/ui/progress'
@@ -28,7 +28,7 @@ interface Resume {
 }
 
 export default function Dashboard() {
-  const { status } = useSession()  // Remove 'data: session' from destructuring
+  const { status } = useSession()
   const router = useRouter()
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null)
   const [resumes, setResumes] = useState<Resume[]>([])
@@ -104,6 +104,38 @@ export default function Dashboard() {
 
   const handleDeleteResume = (deletedResumeId: string) => {
     setResumes(prevResumes => prevResumes.filter(resume => resume._id !== deletedResumeId))
+  }
+
+  const handleDuplicateResume = async (resumeId: string) => {
+    try {
+      const response = await fetch(`/api/resumes/duplicate/${resumeId}`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const newResume = await response.json()
+        setResumes(prevResumes => [...prevResumes, newResume])
+        toast({
+          title: 'Success',
+          description: 'Resume duplicated successfully',
+        })
+      } else if (response.status === 403) {
+        toast({
+          title: 'Error',
+          description: 'Resume limit reached for your plan',
+          variant: 'destructive',
+        })
+      } else {
+        throw new Error('Failed to duplicate resume')
+      }
+    } catch (error) {
+      console.error('Error duplicating resume:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to duplicate resume. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   if (status === 'loading' || isLoading) {
@@ -208,6 +240,10 @@ export default function Dashboard() {
               <Button variant="secondary" onClick={() => handlePreview(resume._id)}>
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
+              </Button>
+              <Button variant="outline" onClick={() => handleDuplicateResume(resume._id)}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
               </Button>
             </CardFooter>
           </Card>
