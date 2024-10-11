@@ -26,7 +26,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, updateSkills, res
 
   useEffect(() => {
     setOriginalSkills(skills)
-  }, [])
+  }, [skills])  // Add 'skills' to the dependency array
 
   const addSkill = () => {
     if (newSkill.trim()) {
@@ -90,7 +90,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, updateSkills, res
               <Info className="h-5 w-5 text-gray-500 cursor-help" />
             </TooltipTrigger>
             <TooltipContent>
-              <p>For best results, add some skills or fill out other sections of your resume before using the 'Suggest Skills' button.</p>
+              <p>For best results, add some skills or fill out other sections of your resume before using the &apos;Suggest Skills&apos; button.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
