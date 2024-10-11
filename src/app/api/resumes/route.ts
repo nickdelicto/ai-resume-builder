@@ -12,10 +12,35 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, data, sectionOrder } = await request.json()
+    const { id, name, data, sectionOrder } = await request.json()
     const client = await clientPromise
     const db = client.db()
 
+    // If id is provided, update existing resume
+    if (id) {
+      const result = await db.collection('resumes').updateOne(
+        {
+          _id: new ObjectId(id),
+          userId: new ObjectId(session.user.id),
+        },
+        {
+          $set: {
+            name,
+            data,
+            sectionOrder,
+            updatedAt: new Date(),
+          },
+        }
+      )
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 })
+      }
+
+      return NextResponse.json({ id, message: 'Resume updated successfully' }, { status: 200 })
+    }
+
+    // If no id is provided, create a new resume
     // Get user's plan type and current resume count
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(session.user.id) },
@@ -29,7 +54,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Resume limit reached' }, { status: 403 })
     }
 
-    // Save the resume
+    // Save the new resume
     const result = await db.collection('resumes').insertOne({
       userId: new ObjectId(session.user.id),
       name,
@@ -41,12 +66,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: result.insertedId }, { status: 201 })
   } catch (error) {
-    console.error('Failed to save resume:', error)
-    return NextResponse.json({ error: 'Failed to save resume' }, { status: 500 })
+    console.error('Failed to save/update resume:', error)
+    return NextResponse.json({ error: 'Failed to save/update resume' }, { status: 500 })
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions)
 
   if (!session) {
