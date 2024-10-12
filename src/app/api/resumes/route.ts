@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '../auth/[...nextauth]/options'
 
 export async function POST(request: Request) {
+  // Authenticate the user
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -44,12 +45,31 @@ export async function POST(request: Request) {
     // Get user's plan type and current resume count
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(session.user.id) },
-      { projection: { planType: 1 } }
+      { projection: { planType: 1, maxSavedResumes: 1 } }
     )
+
+    // Handle case where user is not found in the database
+    if (!user) {
+      console.error(`User not found for ID: ${session.user.id}`)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Type assertion to inform TypeScript that user is not null
+    //const verifiedUser = user as { planType?: string; maxSavedResumes?: number }
+
+    // Check if planType and maxSavedResumes exist, otherwise return an error
+    //if (typeof verifiedUser.planType === 'undefined' || typeof verifiedUser.maxSavedResumes === 'undefined') {
+    //  console.error(`Invalid user data for ID: ${session.user.id}. planType or maxSavedResumes is undefined.`)
+    //  return NextResponse.json({ error: 'Invalid user data' }, { status: 500 })
+    //}
 
     const resumeCount = await db.collection('resumes').countDocuments({ userId: new ObjectId(session.user.id) })
 
     // Check if user has reached their resume limit
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     if ((user.planType === 'free' && resumeCount >= 1) || (user.planType === 'paid' && resumeCount >= 10)) {
       return NextResponse.json({ error: 'Resume limit reached' }, { status: 403 })
     }
@@ -72,9 +92,10 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  // Authenticate the user
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -82,6 +103,7 @@ export async function GET() {
     const client = await clientPromise
     const db = client.db()
 
+    // Fetch all resumes for the authenticated user
     const resumes = await db.collection('resumes')
       .find({ userId: new ObjectId(session.user.id) })
       .project({ name: 1, createdAt: 1, updatedAt: 1 })

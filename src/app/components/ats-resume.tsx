@@ -7,7 +7,7 @@ import { pdf } from '@react-pdf/renderer'
 import PDFResume from './pdf-resume'
 import { useToast } from './ui/use-toast'
 
-// Updated interface to include userPlanType
+// Interface for component props
 interface ATSResumeProps {
   resumeData: ResumeData
   sectionOrder: string[]
@@ -17,10 +17,12 @@ interface ATSResumeProps {
 const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPlanType }) => {
   const { toast } = useToast()
 
+  // Helper function to format dates
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
   }
 
+  // Helper function to format address
   const formatAddress = (personalInfo: ResumeData['personalInfo']) => {
     const parts = [
       personalInfo.city,
@@ -31,6 +33,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
     return parts.join(', ')
   }
 
+  // Helper function to render description with bullet points
   const renderDescription = (description: string) => {
     return description.split('\n').map((line, index) => (
       <p key={index} className="mt-1">
@@ -39,6 +42,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
     ))
   }
 
+  // Helper function to render section titles
   const renderSectionTitle = (title: string) => (
     <div className="mb-2">
       <h2 className="text-2xl font-semibold">{title}</h2>
@@ -46,6 +50,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
     </div>
   )
 
+  // Helper function to check if a section is populated
   const isPopulated = (sectionId: string): boolean => {
     switch (sectionId) {
       case 'professionalSummary':
@@ -69,6 +74,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
     }
   }
 
+  // Helper function to render skills in two columns
   const renderSkills = (skills: { id: string; name: string }[]) => {
     if (skills.length === 0) {
       return null
@@ -94,9 +100,9 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
     )
   }
 
-  // Updated exportToPDF function to check user plan type
+  // Function to export resume to PDF
   const exportToPDF = async () => {
-    if (userPlanType === 'free') {
+    if (userPlanType !== 'paid') {
       toast({
         title: "Feature not available",
         description: "PDF export is only available for paid plan users. Please upgrade your plan to use this feature.",
@@ -117,6 +123,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
   return (
     <div className="bg-white p-8 shadow-lg max-w-4xl mx-auto font-['Arial', sans-serif] text-base">
       <div id="ats-resume">
+        {/* Personal Information Section */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{resumeData.personalInfo.name}</h1>
           <p className="text-gray-600">{resumeData.personalInfo.email}</p>
@@ -124,6 +131,7 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
           <p className="text-gray-600">{formatAddress(resumeData.personalInfo)}</p>
         </div>
 
+        {/* Dynamically render resume sections based on sectionOrder */}
         {sectionOrder.filter(isPopulated).map((sectionId) => (
           <div key={sectionId} className="mb-6">
             {sectionId === 'professionalSummary' && (
@@ -194,11 +202,12 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
               </>
             )}
 
+            {/* Custom Sections */}
             {sectionId.startsWith('custom-') && (
               <>
                 {renderSectionTitle(resumeData.customSections.find(s => s.id === sectionId)?.title || 'Custom Section')}
                 <ul className="list-disc list-inside">
-                  {resumeData.customSections.find(s => s.id === sectionId)?.items.map((item, index) => (
+                  {resumeData.customSections.find(s => s.id === sectionId)?.items.map((item: string, index: number) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
@@ -207,13 +216,13 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPla
           </div>
         ))}
       </div>
-      {/* Updated Button to be disabled for free plan users */}
+      {/* Export to PDF button */}
       <Button 
         onClick={exportToPDF} 
         className="mt-4" 
-        disabled={userPlanType === 'free'}
+        disabled={userPlanType !== 'paid'}
       >
-        {userPlanType === 'free' ? 'Upgrade to Export PDF' : 'Export to PDF'}
+        {userPlanType === 'paid' ? 'Export to PDF' : 'Upgrade Plan to Export PDF'}
       </Button>
     </div>
   )

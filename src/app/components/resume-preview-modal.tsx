@@ -7,6 +7,7 @@ import { useToast } from './ui/use-toast'
 import ATSResume from './ats-resume'
 import { Trash2 } from 'lucide-react'
 
+// Define the structure for resume data
 interface ResumeData {
   _id: string
   name: string
@@ -28,7 +29,9 @@ interface ResumeData {
       endDate: string | null
       description: string
     }>
+    // Updated education array to include the id field
     education: Array<{
+      id: string
       degree: string
       fieldOfStudy: string
       institution: string
@@ -36,12 +39,13 @@ interface ResumeData {
     }>
     skills: Array<{ id: string; name: string }>
     projects: Array<{ id: string; name: string; description: string }>
-    certificates: Array<{ name: string; issuer: string; issueDate: string }>
+    certificates: Array<{ id: string; name: string; issuer: string; issueDate: string }>
     customSections: Array<{ id: string; title: string; items: string[] }>
   }
   sectionOrder: string[]
 }
 
+// Define props for the ResumePreviewModal component
 interface ResumePreviewModalProps {
   isOpen: boolean
   onClose: () => void
@@ -50,12 +54,14 @@ interface ResumePreviewModalProps {
   userPlanType: 'free' | 'paid'
 }
 
+// Main ResumePreviewModal component
 export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete, userPlanType }: ResumePreviewModalProps) {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
 
+  // Effect to fetch resume data when the modal is opened
   useEffect(() => {
     const fetchResumeData = async () => {
       if (!resumeId) return
@@ -85,6 +91,7 @@ export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete, userPl
     }
   }, [isOpen, resumeId, toast])
 
+  // Function to handle resume deletion
   const handleDelete = async () => {
     if (!resumeId) return
 
@@ -114,6 +121,7 @@ export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete, userPl
     }
   }
 
+  // Render the ResumePreviewModal component
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

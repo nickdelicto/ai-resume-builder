@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client'
 
 import React, { useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog"
 
+// Define the structure of an Experience item
 interface Experience {
   id: string
   company: string
@@ -33,6 +34,7 @@ interface Experience {
   currentIndex: number
 }
 
+// Define the props for the ExperienceSection component
 interface ExperienceSectionProps {
   experience: Experience[]
   updateExperience: (data: Experience[]) => void
@@ -44,6 +46,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
   const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({})
   const [compareVersions, setCompareVersions] = useState<{ [key: string]: number | null }>({})
 
+  // Function to add a new experience
   const addExperience = useCallback(() => {
     const newExperience: Experience = {
       id: Date.now().toString(),
@@ -59,16 +62,19 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
     updateExperience([...experience, newExperience])
   }, [experience, updateExperience])
 
+  // Function to update a specific field of an experience
   const updateExperienceItem = useCallback((index: number, field: keyof Experience, value: any) => {
     updateExperience(experience.map((exp, i) =>
       i === index ? { ...exp, [field]: value } : exp
     ))
   }, [experience, updateExperience])
 
+  // Function to remove an experience
   const removeExperience = useCallback((index: number) => {
     updateExperience(experience.filter((_, i) => i !== index))
   }, [experience, updateExperience])
 
+  // Function to handle AI suggestion
   const handleAIsuggestion = useCallback(async (index: number) => {
     if (experience[index].suggestionCount >= MAX_SUGGESTIONS) return
 
@@ -103,6 +109,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
     }
   }, [experience, updateExperience])
 
+  // Function to reset an experience
   const resetExperience = useCallback((index: number) => {
     updateExperience(experience.map((exp, i) => 
       i === index 
@@ -117,6 +124,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
     ))
   }, [experience, updateExperience])
 
+  // Function to navigate through experience history
   const navigateHistory = useCallback((index: number, direction: 'prev' | 'next') => {
     const exp = experience[index]
     const newIndex = direction === 'prev' ? exp.currentIndex - 1 : exp.currentIndex + 1
@@ -129,11 +137,13 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
     }
   }, [experience, updateExperience])
 
+  // Function to validate dates
   const validateDates = useCallback((startDate: string, endDate: string) => {
     if (!startDate || !endDate) return true
     return new Date(startDate) <= new Date(endDate)
   }, [])
 
+  // Function to handle description change
   const handleDescriptionChange = useCallback((index: number, value: string) => {
     const lines = value.split('\n')
     const newLines = lines.map(line => line.startsWith('- ') ? line : `- ${line}`)
@@ -276,11 +286,12 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experience, updat
                     </div>
                     <div>
                       <Label htmlFor={`compareVersion-${index}`}>Compare With</Label>
+                      {/* Updated select element to fix type error */}
                       <select
                         id={`compareVersion-${index}`}
                         className="w-full p-2 border rounded mb-2"
-                        value={compareVersions[index] === null ? '' : compareVersions[index]}
-                        onChange={(e) => setCompareVersions({ ...compareVersions, [index]: Number(e.target.value) })}
+                        value={compareVersions[index]?.toString() ?? ''}
+                        onChange={(e) => setCompareVersions({ ...compareVersions, [index]: e.target.value ? Number(e.target.value) : null })}
                       >
                         <option value="">Select a version</option>
                         {exp.history.map((_, historyIndex) => (

@@ -28,6 +28,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Progress } from './ui/progress'
 
+// Define the structure for resume data
 export interface ResumeData {
   personalInfo: {
     name: string;
@@ -40,13 +41,36 @@ export interface ResumeData {
   };
   professionalSummary: string;
   experience: any[];
-  education: any[];
+  education: Education[];
   projects: { id: string; name: string; description: string }[];
-  certificates: any[];
-  customSections: any[];
+  certificates: Certificate[];
+  customSections: CustomSection[];
   skills: { id: string; name: string }[];
 }
 
+export interface Education {
+  id: string;
+  institution: string;
+  degree: string;
+  fieldOfStudy: string;
+  graduationDate: string;
+}
+
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: string[];
+}
+
+// Define the structure for a certificate
+export interface Certificate {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+}
+
+// Define the structure for a saved resume
 interface SavedResume {
   _id: string;
   name: string;
@@ -54,12 +78,14 @@ interface SavedResume {
   updatedAt: string;
 }
 
+// Define the props for the ResumeBuilder component
 interface ResumeBuilderProps {
   initialData?: ResumeData & { _id?: string; name?: string; sectionOrder?: string[] }
   onSave?: (data: ResumeData & { name: string; sectionOrder: string[] }) => Promise<void>
   isSaving?: boolean
 }
 
+// SortableItem component for drag-and-drop functionality
 const SortableItem = ({ id, children }: { id: string; children: React.ReactNode }) => {
   const {
     attributes,
@@ -89,6 +115,7 @@ const SortableItem = ({ id, children }: { id: string; children: React.ReactNode 
   )
 }
 
+// Function to calculate the completion percentage of the resume
 const calculateCompletion = (data: ResumeData, sectionOrder: string[]) => {
   if (!data) return 0;
 
@@ -142,11 +169,10 @@ const calculateCompletion = (data: ResumeData, sectionOrder: string[]) => {
   return totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 };
 
-
+// Main ResumeBuilder component
 export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderProps) {
-
+  // State for resume data
   const [resumeData, setResumeData] = useState<ResumeData>(() => {
-    // if (isDev) console.log('Initializing resumeData with:', initialData);
     return {
       personalInfo: {
         name: '',
@@ -168,7 +194,8 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     };
   });
 
-  const [sectionOrder, setSectionOrder] = useState(initialData?.sectionOrder || [
+  // State for section order
+  const [sectionOrder, setSectionOrder] = useState<string[]>(initialData?.sectionOrder || [
     'experience',
     'education',
     'skills',
@@ -176,20 +203,20 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     'certificates',
   ])
 
+  // Other state variables
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [resumeName, setResumeName] = useState(initialData?.name || '')
   const { data: session } = useSession()
   const router = useRouter()
-
   const [savedResumes, setSavedResumes] = useState<SavedResume[]>([])
   const [isLoadingResumes, setIsLoadingResumes] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-
   const { toast } = useToast()
-
   const [activeTab, setActiveTab] = useState('edit')
   const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [userPlanType, setUserPlanType] = useState<"free" | "paid">('free')
 
+  // Set up sensors for drag and drop functionality
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -197,6 +224,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     })
   )
 
+  // Effect to fetch saved resumes
   useEffect(() => {
     const fetchSavedResumes = async () => {
       if (!session?.user) {
@@ -230,14 +258,15 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     }
   }, [session, toast, initialData])
 
+  // Effect to update completion percentage
   useEffect(() => {
     const completionPercentage = calculateCompletion(resumeData, sectionOrder);
     setCompletionPercentage(completionPercentage);
   }, [resumeData, sectionOrder]);
 
+  // Effect to update resume data when initialData changes
   useEffect(() => {
     if (initialData) {
-      // if (isDev) console.log('Updating resumeData with new initialData:', initialData);
       setResumeData(prevData => ({
         ...prevData,
         ...initialData
@@ -247,23 +276,55 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     }
   }, [initialData])
 
+  useEffect(() => {
+    const fetchUserPlanType = async () => {
+      if (session?.user) {
+        try {
+          const userId = session.user.id // Assuming the user id is available here
+          const response = await fetch(`/api/user-plan?userId=${userId}`)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Fetched user plan type:', data.planType) // Add this log
+            setUserPlanType(data.planType as "free" | "paid")
+          } else {
+            console.error('Error fetching user plan type:', await response.text())
+          }
+        } catch (error) {
+          console.error('Error fetching user plan type:', error)
+        }
+      }
+    }
+  
+    fetchUserPlanType()
+  }, [session])
 
+   // Development-only logging
+   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Current user plan type:', userPlanType)
+    }
+  }, [userPlanType])
+
+  // Handle drag end for reordering sections
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (active.id !== over.id) {
+    // Check if 'over' is not null before accessing its 'id' property
+    if (over && active.id !== over.id) {
       setSectionOrder((items) => {
-        const oldIndex = items.indexOf(active.id)
-        const newIndex = items.indexOf(over.id)
+        const oldIndex = items.indexOf(String(active.id))
+        const newIndex = items.indexOf(String(over.id))
         return arrayMove(items, oldIndex, newIndex)
       })
     }
   }
 
+  // Update resume data for a specific section
   const updateResumeData = (section: keyof ResumeData, data: any) => {
     setResumeData((prev) => ({ ...prev, [section]: data }))
   }
 
+  // Update personal information
   const updatePersonalInfo = (field: keyof ResumeData['personalInfo'], value: string) => {
     setResumeData((prev) => ({
       ...prev,
@@ -274,6 +335,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     }))
   }
 
+  // Add a custom section
   const addCustomSection = () => {
     const newSection = {
       id: `custom-${Date.now()}`,
@@ -287,6 +349,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     setSectionOrder((prev) => [...prev, newSection.id])
   }
 
+  // Remove a custom section
   const removeCustomSection = (sectionId: string) => {
     setResumeData((prev) => ({
       ...prev,
@@ -295,6 +358,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     setSectionOrder((prev) => prev.filter((id) => id !== sectionId))
   }
 
+  // Handle saving the resume
   const handleSaveResume = async () => {
     if (!session) {
       router.push('/auth/signin')
@@ -346,6 +410,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
     }
   }
 
+  // Load a saved resume
   const loadResume = async (resumeId: string) => {
     try {
       const response = await fetch(`/api/resumes/${resumeId}`)
@@ -369,8 +434,10 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
         variant: "destructive",
       })
     }
+  
   }
 
+  // Render a specific section based on its ID
   const renderSection = (sectionId: string) => {
     switch (sectionId) {
       case 'experience':
@@ -511,7 +578,11 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
               <CardTitle className="text-xl text-center">Resume Preview</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <ATSResume resumeData={resumeData} sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} />
+              <ATSResume 
+                resumeData={resumeData} 
+                sectionOrder={['personalInfo', 'professionalSummary', ...sectionOrder]} 
+                userPlanType={userPlanType}
+              />
             </CardContent>
           </Card>
         </TabsContent>
