@@ -21,7 +21,7 @@ export async function POST(
     // Check user's plan and resume count
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) })
     const resumeCount = await db.collection('resumes').countDocuments({ userId: new ObjectId(userId) })
-    const maxResumes = user.planType === 'paid' ? 10 : user.maxSavedResumes // Use the user's maxSavedResumes value
+    const maxResumes = user.planType === 'paid' ? 10 : user.maxSavedResumes
 
     if (resumeCount >= maxResumes) {
       return NextResponse.json({ error: 'Resume limit reached for your plan' }, { status: 403 })

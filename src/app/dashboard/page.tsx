@@ -12,6 +12,7 @@ import { Progress } from '../components/ui/progress'
 import { Badge } from '../components/ui/badge'
 import { Skeleton } from '../components/ui/skeleton'
 
+// Define interfaces for type safety
 interface UserStatus {
   isNewUser: boolean
   planType: 'free' | 'paid'
@@ -106,7 +107,18 @@ export default function Dashboard() {
     setResumes(prevResumes => prevResumes.filter(resume => resume._id !== deletedResumeId))
   }
 
+  // Updated handleDuplicateResume function to check for free plan limits
   const handleDuplicateResume = async (resumeId: string) => {
+    // Check if the user has reached the limit for free plan
+    if (userStatus?.planType === 'free' && resumes.length >= userStatus.maxSavedResumes) {
+      toast({
+        title: 'Error',
+        description: 'You have reached the maximum number of resumes for the free plan. Please upgrade to create more.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       const response = await fetch(`/api/resumes/duplicate/${resumeId}`, {
         method: 'POST',
@@ -138,6 +150,7 @@ export default function Dashboard() {
     }
   }
 
+  // Show loading skeleton while data is being fetched
   if (status === 'loading' || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -153,6 +166,7 @@ export default function Dashboard() {
     )
   }
 
+  // Redirect to sign-in page if user is not authenticated
   if (status === 'unauthenticated') {
     return null
   }
@@ -200,6 +214,7 @@ export default function Dashboard() {
       
       <h2 className="text-2xl font-bold mb-6">Your Resumes</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Show 'Create New Resume' card if user hasn't reached the limit */}
         {resumeCount < maxResumes && (
           <Card className="bg-primary/5 border-2 border-dashed border-primary/20 hover:bg-primary/10 transition-colors">
             <CardHeader>
@@ -215,6 +230,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+        {/* Display existing resumes */}
         {resumes.map((resume) => (
           <Card key={resume._id} className="hover:shadow-md transition-shadow">
             <CardHeader>
@@ -241,7 +257,12 @@ export default function Dashboard() {
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
               </Button>
-              <Button variant="outline" onClick={() => handleDuplicateResume(resume._id)}>
+              {/* Disable duplicate button for free users who have reached their limit */}
+              <Button 
+                variant="outline" 
+                onClick={() => handleDuplicateResume(resume._id)}
+                disabled={userStatus?.planType === 'free' && resumes.length >= (userStatus?.maxSavedResumes || 1)}
+              >
                 <Copy className="mr-2 h-4 w-4" />
                 Duplicate
               </Button>
@@ -250,6 +271,7 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Show a message if the user has no resumes */}
       {resumeCount === 0 && (
         <Card className="mt-8 bg-muted">
           <CardContent className="flex flex-col items-center py-8">
@@ -262,6 +284,7 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Resume preview modal */}
       <ResumePreviewModal
         isOpen={previewModalOpen}
         onClose={() => setPreviewModalOpen(false)}
