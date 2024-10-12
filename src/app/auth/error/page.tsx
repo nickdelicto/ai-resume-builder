@@ -39,7 +39,7 @@ export default function AuthError() {
         </CardHeader>
         <CardContent>
           <p className="text-center text-gray-600 mb-4">{getErrorMessage()}</p>
-          <p className="text-center text-sm text-gray-500">Don't worry, even our CEO gets locked out sometimes!</p>
+          <p className="text-center text-sm text-gray-500">Don&apos;t worry, even our CEO gets locked out sometimes!</p>
         </CardContent>
         <CardFooter className="flex justify-center space-x-4">
           <Button asChild>
