@@ -5,13 +5,18 @@ import { ResumeData } from './resume-builder'
 import { Button } from './ui/button'
 import { pdf } from '@react-pdf/renderer'
 import PDFResume from './pdf-resume'
+import { useToast } from './ui/use-toast'
 
+// Updated interface to include userPlanType
 interface ATSResumeProps {
   resumeData: ResumeData
   sectionOrder: string[]
+  userPlanType: 'free' | 'paid'
 }
 
-const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder }) => {
+const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder, userPlanType }) => {
+  const { toast } = useToast()
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
   }
@@ -89,12 +94,22 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder }) => {
     )
   }
 
+  // Updated exportToPDF function to check user plan type
   const exportToPDF = async () => {
+    if (userPlanType === 'free') {
+      toast({
+        title: "Feature not available",
+        description: "PDF export is only available for paid plan users. Please upgrade your plan to use this feature.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const blob = await pdf(<PDFResume resumeData={resumeData} sectionOrder={sectionOrder} />).toBlob()
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = 'resume.pdf'
+    link.download = `${resumeData.personalInfo.name.replace(/\s+/g, '_')}_resume.pdf`
     link.click()
     URL.revokeObjectURL(url)
   }
@@ -192,7 +207,14 @@ const ATSResume: React.FC<ATSResumeProps> = ({ resumeData, sectionOrder }) => {
           </div>
         ))}
       </div>
-      <Button onClick={exportToPDF} className="mt-4">Export to PDF</Button>
+      {/* Updated Button to be disabled for free plan users */}
+      <Button 
+        onClick={exportToPDF} 
+        className="mt-4" 
+        disabled={userPlanType === 'free'}
+      >
+        {userPlanType === 'free' ? 'Upgrade to Export PDF' : 'Export to PDF'}
+      </Button>
     </div>
   )
 }

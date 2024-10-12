@@ -47,9 +47,10 @@ interface ResumePreviewModalProps {
   onClose: () => void
   resumeId: string
   onDelete: (resumeId: string) => void
+  userPlanType: 'free' | 'paid'
 }
 
-export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete }: ResumePreviewModalProps) {
+export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete, userPlanType }: ResumePreviewModalProps) {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -122,7 +123,11 @@ export function ResumePreviewModal({ isOpen, onClose, resumeId, onDelete }: Resu
         {isLoading ? (
           <div className="flex justify-center items-center h-64">Loading...</div>
         ) : resumeData ? (
-          <ATSResume resumeData={resumeData.data} sectionOrder={resumeData.sectionOrder} />
+          <ATSResume 
+            resumeData={resumeData.data} 
+            sectionOrder={resumeData.sectionOrder} 
+            userPlanType={userPlanType}
+          />
         ) : (
           <div className="text-center text-red-500">Failed to load resume data</div>
         )}

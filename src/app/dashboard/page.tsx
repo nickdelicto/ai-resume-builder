@@ -290,6 +290,7 @@ export default function Dashboard() {
         onClose={() => setPreviewModalOpen(false)}
         resumeId={selectedResumeId || ''}
         onDelete={handleDeleteResume}
+        userPlanType={userStatus?.planType || 'free'}
       />
     </div>
   )
