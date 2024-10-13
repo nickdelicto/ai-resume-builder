@@ -1,6 +1,7 @@
 /* eslint-disable no-var */
 
-import { MongoClient } from 'mongodb'
+import { MongoClient, MongoClientOptions } from 'mongodb'
+import fs from 'fs'
 
 // Check for the presence of the MongoDB URI in environment variables
 if (!process.env.MONGODB_URI) {
@@ -8,7 +9,21 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI
-const options = {}
+let options: MongoClientOptions = {}
+
+// Set SSL/TLS options only for production environment and if the CA bundle exists
+if (process.env.NODE_ENV === 'production') {
+  const caBundlePath = '/home/intelliresume/ssl-certs/intelliresume_net.ca-bundle'
+  if (fs.existsSync(caBundlePath)) {
+    options = {
+      ssl: true,
+      tls: true,
+      tlsCAFile: caBundlePath,
+    }
+  } else {
+    console.warn('CA bundle file not found. SSL/TLS options will not be applied.')
+  }
+}
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
