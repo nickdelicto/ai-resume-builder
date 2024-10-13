@@ -13,15 +13,15 @@ let options: MongoClientOptions = {}
 
 // Set SSL/TLS options only for production environment and if the CA bundle exists
 if (process.env.NODE_ENV === 'production') {
-  const caBundlePath = '/home/intelliresume/ssl-certs/intelliresume_net.ca-bundle'
-  if (fs.existsSync(caBundlePath)) {
+  const systemCaBundlePath = '/etc/ssl/certs/ca-certificates.crt'
+  if (fs.existsSync(systemCaBundlePath)) {
     options = {
       ssl: true,
       tls: true,
-      tlsCAFile: caBundlePath,
+      tlsCAFile: systemCaBundlePath,
     }
   } else {
-    console.warn('CA bundle file not found. SSL/TLS options will not be applied.')
+    console.warn('System CA bundle file not found. SSL/TLS options will not be applied.')
   }
 }
 
