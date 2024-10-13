@@ -1,7 +1,6 @@
 /* eslint-disable no-var */
 
 import { MongoClient, MongoClientOptions } from 'mongodb'
-import fs from 'fs'
 
 // Check for the presence of the MongoDB URI in environment variables
 if (!process.env.MONGODB_URI) {
@@ -9,34 +8,15 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI
-let options: MongoClientOptions = {}
+console.log('MongoDB URI:', uri.replace(/:[^:]*@/, ':****@'))
 
-// Define paths for SSL/TLS certificates
-const systemCaBundlePath = '/etc/ssl/certs/ca-certificates.crt'
-const letsEncryptRootPath = '/etc/ssl/certs/isrgrootx1.pem' // Update this path if needed
-
-// Set SSL/TLS options only for production environment
-if (process.env.NODE_ENV === 'production') {
-  if (fs.existsSync(systemCaBundlePath)) {
-    // Use system CA bundle if available
-    options = {
-      ssl: true,
-      tls: true,
-      tlsCAFile: systemCaBundlePath,
-    }
-    console.log('Using system CA bundle for MongoDB connection')
-  } else if (fs.existsSync(letsEncryptRootPath)) {
-    // Fall back to Let's Encrypt root certificate if system CA bundle is not available
-    options = {
-      ssl: true,
-      tls: true,
-      tlsCAFile: letsEncryptRootPath,
-    }
-    console.log('Using Let\'s Encrypt root certificate for MongoDB connection')
-  } else {
-    console.warn('Neither system CA bundle nor Let\'s Encrypt root found. SSL/TLS options will not be applied.')
-  }
+// Set SSL/TLS options for MongoDB connection
+const options: MongoClientOptions = {
+  tls: true,
+  tlsCAFile: '/etc/ssl/certs/ca-certificates.crt',
 }
+
+console.log('MongoDB connection options:', JSON.stringify(options, null, 2))
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
@@ -60,7 +40,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Log connection status
-clientPromise.then(() => console.log('MongoDB connected successfully'))
+clientPromise
+  .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err))
 
 // Export the clientPromise which is used in other parts of the application
