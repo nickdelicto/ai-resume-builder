@@ -37,10 +37,10 @@ export function LandingPage() {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
-                  Create Your Perfect Resume in Minutes
+                  Create Your Perfect ATS-friendly Resume in Minutes
                 </h1>
                 <p className="text-xl mb-8 text-gray-600 max-w-lg mx-auto lg:mx-0">
-                  AI-powered resume builder for job seekers who want to stand out and land their dream jobs faster.
+                  Intelligent AI-powered resume builder for applicants who want to stand out and land their dream jobs faster.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                   <Button 
@@ -87,7 +87,7 @@ export function LandingPage() {
                 </CardHeader>
                 <CardContent>
                   <ul className="text-lg list-disc pl-5 space-y-2 text-purple-700">
-                    <li>AI-powered instant formatting</li>
+                    <li>Intelligent instant formatting</li>
                     <li>Smart suggestions for content</li>
                     <li>Tailored resumes for each job application</li>
                   </ul>
@@ -103,7 +103,7 @@ export function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 { title: 'Time-Saving', description: 'Create a professional resume in minutes, not hours', icon: <CheckCircle className="h-8 w-8 text-green-500" /> },
-                { title: 'AI-Powered', description: 'Get smart suggestions tailored to your experience and the job', icon: <FileText className="h-8 w-8 text-blue-500" /> },
+                { title: 'AI-Powered', description: 'Get smart suggestions tailored to your experience', icon: <FileText className="h-8 w-8 text-blue-500" /> },
                 { title: 'ATS-Friendly', description: 'Ensure your resume passes Applicant Tracking Systems', icon: <BarChart className="h-8 w-8 text-purple-500" /> },
               ].map((benefit, index) => (
                 <Card key={index} className="bg-white shadow-lg">
@@ -127,7 +127,7 @@ export function LandingPage() {
               {[
                 { step: 1, title: 'Input Your Info', description: 'Enter your work history, skills, and education' },
                 { step: 2, title: 'AI Enhancement', description: 'Our AI suggests improvements and tailors your content' },
-                { step: 3, title: 'Download & Apply', description: 'Get your polished resume and start applying with confidence' },
+                { step: 3, title: 'Download & Apply', description: 'Export your polished resume and start applying with confidence' },
               ].map((step, index) => (
                 <Card key={index} className="bg-white shadow-lg">
                   <CardHeader>
@@ -228,10 +228,10 @@ export function LandingPage() {
             <h2 className="text-3xl font-bold mb-12 text-gray-800">Frequently Asked Questions</h2>
             <div className="grid md:grid-cols-2 gap-8">
               {[
-                { question: 'Is my data secure?', answer: 'Yes, we use industry-standard encryption to protect your information.' },
                 { question: 'How does the 7-day access work?', answer: 'You get full access to all premium features for 7 days. After that, your account reverts to the free plan with no auto-renewal or hidden charges.' },
-                { question: 'Do you offer refunds?', answer: 'We offer a 100% satisfaction guarantee. If you are not happy, contact us within the 7-day period for a full refund.' },
-                { question: 'How does the AI work?', answer: 'Our AI analyzes your input and job descriptions to suggest optimal content and formatting.' },
+                { question: 'How does IntelliResume tailor my Resume?', answer: 'IntelliResume analyzes your input to suggest highly tailored content based on resume best-practices.' },
+                { question: 'Is IntelliResume suitable for all applicants ?', answer: 'Yes, IntelliResume is suitable for all applicants in any industry, regardless of experience.' },
+                { question: 'Can I create multiple resume versions?', answer: 'Yes, you can save up to 10 resumes and export them in ATS-friendly format.' },
               ].map((faq, index) => (
                 <Card key={index} className="bg-white shadow-lg">
                   <CardHeader>
@@ -265,8 +265,8 @@ export function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 { name: 'James', role: 'Software Engineer', comment: "IntelliResume made crafting my resume a breeze. The AI suggestions were spot-on!" },
-                { name: 'Emily', role: 'Marketing Specialist', comment: "I love how IntelliResume tailors my resume for each job application. It's a game-changer!" },
-                { name: 'Michael', role: 'Recent Graduate', comment: "As a new grad, IntelliResume helped me create a professional resume that stands out." },
+                { name: 'Regina', role: 'Neuroscientist (Also, my wife)', comment: "I love how IntelliResume simplifies my resume creation process. God knows I hate manually crafting resumes. It's a game-changer!" },
+                { name: 'Michael', role: 'Recent Graduate', comment: "As a new grad, IntelliResume helped me create a simple yet professional resume that stands out." },
               ].map((testimonial, index) => (
                 <Card key={index} className="bg-white shadow-lg">
                   <CardContent className="pt-6">
