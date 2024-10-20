@@ -56,7 +56,7 @@ export function LandingPage() {
               </div>
               <div className="w-full lg:w-1/2 relative">
                 <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                  <VideoEmbed videoId="HB1ZC7czKRs" className="w-full h-full"/>
+                  <VideoEmbed videoId="2aIV9Gd9odM" className="w-full h-full"/>
                 </div>
                 <div className="absolute -top-6 -right-6 w-24 h-24 bg-yellow-400 rounded-full opacity-50 animate-blob"></div>
                 <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-400 rounded-full opacity-50 animate-blob animation-delay-2000"></div>
