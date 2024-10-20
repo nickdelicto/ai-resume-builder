@@ -3,9 +3,42 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from './ui/button'
+import { Sheet, SheetContent } from './ui/sheet'
+import { Menu, X } from 'lucide-react'
+import { useState } from 'react'
 
 export function Navbar() {
   const { data: session } = useSession()
+  const [isOpen, setIsOpen] = useState(false)
+
+  const toggleMenu = () => setIsOpen(!isOpen)
+
+  const NavItems = () => (
+    <>
+      <Link href="/pricing" className="text-gray-600 hover:text-purple-600">
+        Pricing
+      </Link>
+      {session ? (
+        <>
+          <Link href="/dashboard" className="text-gray-600 hover:text-purple-600">
+            Dashboard
+          </Link>
+          <Button onClick={() => signOut({ callbackUrl: '/' })} variant="outline">
+            Log Out
+          </Button>
+        </>
+      ) : (
+        <>
+          <Link href="/auth/signin" className="text-gray-600 hover:text-purple-600">
+            Login
+          </Link>
+          <Button asChild>
+            <Link href="/auth/signin">Sign Up</Link>
+          </Button>
+        </>
+      )}
+    </>
+  )
 
   return (
     <nav className="flex justify-between items-center py-4 px-8 bg-white shadow-sm">
@@ -28,29 +61,29 @@ export function Navbar() {
           IntelliResume
         </Link>
       </div>
-      <div className="flex items-center space-x-6">
-        <Link href="/pricing" className="text-gray-600 hover:text-purple-600">
-          Pricing
-        </Link>
-        {session ? (
-          <>
-            <Link href="/dashboard" className="text-gray-600 hover:text-purple-600">
-              Dashboard
-            </Link>
-            <Button onClick={() => signOut({ callbackUrl: '/' })} variant="outline">
-              Log Out
-            </Button>
-          </>
-        ) : (
-          <>
-            <Link href="/auth/signin" className="text-gray-600 hover:text-purple-600">
-              Login
-            </Link>
-            <Button asChild>
-              <Link href="/auth/signin">Sign Up</Link>
-            </Button>
-          </>
-        )}
+      <div className="hidden md:flex items-center space-x-6">
+        <NavItems />
+      </div>
+      <div className="md:hidden">
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <Button variant="ghost" size="icon" onClick={toggleMenu}>
+            {isOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+          <SheetContent 
+            side="right" 
+            className="w-[240px] sm:w-[300px] bg-white"
+            onInteractOutside={toggleMenu}
+          >
+            <div className="flex flex-col space-y-4 mt-4">
+              <NavItems />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </nav>
   )
