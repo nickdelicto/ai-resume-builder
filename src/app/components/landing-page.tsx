@@ -37,7 +37,7 @@ export function LandingPage() {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
-                  Create Your Perfect ATS-friendly Resume in Minutes
+                  Create Your Perfect Resume in Minutes
                 </h1>
                 <p className="text-xl mb-8 text-gray-600 max-w-lg mx-auto lg:mx-0">
                   Intelligent AI-powered resume builder for applicants who want to stand out and land their dream jobs faster.
