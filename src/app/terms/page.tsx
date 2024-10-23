@@ -62,7 +62,7 @@ export default function TermsOfService() {
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">7. Termination</h2>
       <h3 className="text-xl font-semibold mt-4 mb-2">7.1 By You</h3>
-      <p className="mb-4">You may terminate your account at any time by following the instructions on the Services or contacting us at support@intelliresume.net.</p>
+      <p className="mb-4">You may terminate your account at any time by following the instructions on the Services or contacting us through our <a href="/contact" className="text-blue-600 hover:underline">contact page</a>.</p>
       <h3 className="text-xl font-semibold mt-4 mb-2">7.2 By Us</h3>
       <p className="mb-4">We reserve the right to suspend or terminate your access to the Services at our sole discretion, without notice, for any reason, including but not limited to violation of these Terms.</p>
       <h3 className="text-xl font-semibold mt-4 mb-2">7.3 Effect of Termination</h3>
@@ -108,8 +108,7 @@ export default function TermsOfService() {
       <p className="mb-4">You may not assign or transfer your rights or obligations under these Terms without our prior written consent. We may assign our rights and obligations without restriction.</p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">13. Contact Information</h2>
-      <p className="mb-4">If you have any questions about these Terms, please contact us at:</p>
-      <p className="mb-4">Email: support@intelliresume.net</p>
+      <p className="mb-4">If you have any questions about these Terms, please contact us through our <a href="/contact" className="text-blue-600 hover:underline">contact page</a>.</p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">14. User Feedback</h2>
       <p className="mb-4">We welcome your feedback, suggestions, or ideas about the Services (&quot;Feedback&quot;). By submitting Feedback, you grant us a non-exclusive, perpetual, irrevocable, royalty-free, worldwide license to use, modify, and incorporate the Feedback into the Services without any obligation to compensate you.</p>

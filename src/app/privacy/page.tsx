@@ -78,7 +78,7 @@ export default function PrivacyPolicy() {
       <ul className="list-disc pl-6 mb-4">
         <li>Logging into your account and updating your profile information.</li>
         <li>Deleting resumes you have created, which will remove the associated data.</li>
-        <li>Contacting us at support@intelliresume.net for assistance.</li>
+        <li>Contacting us through our <a href="/contact" className="text-blue-600 hover:underline">contact page</a> for assistance.</li>
       </ul>
 
       <h3 className="text-xl font-semibold mt-4 mb-2">5.2 Opt-Out of Communications</h3>
@@ -123,8 +123,7 @@ export default function PrivacyPolicy() {
       <p className="mb-4">We may update this Privacy Policy from time to time. If we make significant changes, we will notify you by email or through a notice on our Services prior to the change becoming effective. Your continued use of the Services after the effective date of the revised Privacy Policy constitutes your acceptance of the terms.</p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">13. Contact Us</h2>
-      <p className="mb-4">If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:</p>
-      <p className="mb-4">Email: support@intelliresume.net</p>
+      <p className="mb-4">If you have any questions or concerns about this Privacy Policy or our data practices, please contact us through our <a href="/contact" className="text-blue-600 hover:underline">contact page</a>.</p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">14. Advertising and Marketing</h2>
       <p className="mb-4">We may use your personal information to send you promotional content and advertisements that we believe may be of interest to you. You have the right to opt-out of marketing communications at any time.</p>
