@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
         <li>Analytics and Performance: To analyze how you use our Services and to monitor site performance.</li>
         <li>Advertising: To deliver relevant advertisements to you.</li>
       </ul>
-      <p className="mb-4">You can control the use of cookies at the individual browser level. Refer to section 12 for more details on managing cookies.</p>
+      <p className="mb-4">You can control the use of cookies at the individual browser level. Refer to section 11 for more details on managing cookies.</p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">2. How We Use Your Information</h2>
       <p className="mb-4">We use the information we collect for various purposes, including:</p>
@@ -60,7 +60,7 @@ export default function PrivacyPolicy() {
       <p className="mb-4">We may share your information with third-party vendors, service providers, contractors, or agents who perform services on our behalf, such as:</p>
       <ul className="list-disc pl-6 mb-4">
         <li>Payment Processors: We use Stripe to process payments. Stripe may collect payment information necessary to complete transactions. Stripe&apos;s Privacy Policy can be found here.</li>
-        <li>Email Services: We use Brevo for passwordless login via magic links.</li>
+        <li>Email Services: We use Brevo for passwordless login.</li>
         <li>Analytics Providers: We use Google Analytics to collect and analyze usage information.</li>
       </ul>
       <p className="mb-4">These third parties are obligated to maintain the confidentiality of your information and are restricted from using your personal information for any purpose other than providing services to us.</p>
@@ -106,13 +106,10 @@ export default function PrivacyPolicy() {
         <li>California Consumer Privacy Act (CCPA): For California residents, you have specific rights under the CCPA.</li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">10. International Data Transfers</h2>
-      <p className="mb-4">Our Services are intended for users within [Your Country or Region], and we do not transfer personal data internationally. If you are accessing our Services from outside this region, please be aware that your information may be transferred to, stored, and processed in our facilities.</p>
-
-      <h2 className="text-2xl font-semibold mt-6 mb-4">11. Children&apos;s Privacy</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">10. Children&apos;s Privacy</h2>
       <p className="mb-4">Our Services are not intended for individuals under the age of 16. We do not knowingly collect personal information from children under 16 without parental consent. If we become aware that we have collected personal information from a child under 16 without verification of parental consent, we will take steps to remove that information.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">12. Cookies and Tracking Technologies</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">11. Cookies and Tracking Technologies</h2>
       <p className="mb-4">We use cookies and similar technologies for various purposes:</p>
       <ul className="list-disc pl-6 mb-4">
         <li>Essential Cookies: Necessary for the operation of our Services.</li>
@@ -122,20 +119,20 @@ export default function PrivacyPolicy() {
       <p className="mb-4">Managing Cookies:</p>
       <p className="mb-4">You can manage your cookie preferences by adjusting your browser settings to refuse cookies or to alert you when cookies are being sent. Please note that some parts of our Services may become inaccessible or not function properly if you disable cookies.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">13. Changes to This Privacy Policy</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">12. Changes to This Privacy Policy</h2>
       <p className="mb-4">We may update this Privacy Policy from time to time. If we make significant changes, we will notify you by email or through a notice on our Services prior to the change becoming effective. Your continued use of the Services after the effective date of the revised Privacy Policy constitutes your acceptance of the terms.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">14. Contact Us</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">13. Contact Us</h2>
       <p className="mb-4">If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:</p>
       <p className="mb-4">Email: support@intelliresume.net</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">15. Advertising and Marketing</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">14. Advertising and Marketing</h2>
       <p className="mb-4">We may use your personal information to send you promotional content and advertisements that we believe may be of interest to you. You have the right to opt-out of marketing communications at any time.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">16. Automated Decision-Making and Profiling</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">15. Automated Decision-Making and Profiling</h2>
       <p className="mb-4">We do not engage in automated decision-making or profiling that produces legal effects concerning you or similarly significantly affects you.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">17. Legal Bases for Processing</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">16. Legal Bases for Processing</h2>
       <p className="mb-4">We process your personal information based on the following legal grounds:</p>
       <ul className="list-disc pl-6 mb-4">
         <li>Consent: By providing your personal information, you consent to its processing as described in this Privacy Policy.</li>
@@ -143,10 +140,10 @@ export default function PrivacyPolicy() {
         <li>Legitimate Interests: We may process your information for our legitimate interests, such as improving our Services and marketing.</li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">18. Scope and Application</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">17. Scope and Application</h2>
       <p className="mb-4">This Privacy Policy applies to all users of our Services, regardless of their location. However, users in certain jurisdictions may have additional rights under local laws.</p>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">19. Data Breach Response Plan</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">18. Data Breach Response Plan</h2>
       <p className="mb-4">In the event of a data breach:</p>
       <ul className="list-disc pl-6 mb-4">
         <li>Identification and Containment: We will promptly identify the breach and take steps to contain it.</li>
@@ -155,7 +152,7 @@ export default function PrivacyPolicy() {
         <li>Review: Analyze the cause of the breach and update our security measures to prevent future incidents.</li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mt-6 mb-4">20. Miscellaneous</h2>
+      <h2 className="text-2xl font-semibold mt-6 mb-4">19. Miscellaneous</h2>
       <p className="mb-4">We may provide additional disclosures relating to the processing of personal information specific to certain regions or as required by applicable laws.</p>
       <p className="mb-4">Your use of IntelliResume&apos;s Services signifies your acceptance of this Privacy Policy. Please ensure you read it carefully and contact us if you have any questions.</p>
 
