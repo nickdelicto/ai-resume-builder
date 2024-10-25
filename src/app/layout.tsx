@@ -45,6 +45,21 @@ export default function RootLayout({
             </Script>
           </>
         )}
+
+        {/* Crisp Chat Script */}
+        <Script id="crisp-widget" strategy="afterInteractive">
+          {`
+            window.$crisp=[];
+            window.CRISP_WEBSITE_ID="9900b3cc-7064-4098-9e25-dd8e06abe759";
+            (function(){
+              d=document;
+              s=d.createElement("script");
+              s.src="https://client.crisp.chat/l.js";
+              s.async=1;
+              d.getElementsByTagName("head")[0].appendChild(s);
+            })();
+          `}
+        </Script>
       </head>
       <body className={inter.className}>
         {/* Authentication Provider wraps the entire application */}
