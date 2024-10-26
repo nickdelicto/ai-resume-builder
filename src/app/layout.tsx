@@ -24,6 +24,8 @@ export default function RootLayout({
 }) {
   // Get the Google Analytics ID from environment variables
   const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+  // Get the Google Ads ID from environment variables
+  const gAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
 
   return (
     <html lang="en">
@@ -44,6 +46,26 @@ export default function RootLayout({
               `}
             </Script>
           </>
+        )}
+
+        {/* Google Ads Conversion Tracking Script */}
+        {gAdsId && (
+          <Script id="google-ads-conversion" strategy="afterInteractive">
+            {`
+              function gtag_report_conversion(url) {
+                var callback = function () {
+                  if (typeof(url) != 'undefined') {
+                    window.location = url;
+                  }
+                };
+                gtag('event', 'conversion', {
+                    'send_to': '${gAdsId}',
+                    'event_callback': callback
+                });
+                return false;
+              }
+            `}
+          </Script>
         )}
 
         {/* Crisp Chat Script */}

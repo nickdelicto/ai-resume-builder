@@ -28,6 +28,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Progress } from './ui/progress'
 
+declare global {
+  interface Window {
+    gtag_report_conversion: (url?: string) => boolean;
+  }
+}
+
 // Define the structure for resume data
 export interface ResumeData {
   personalInfo: {
@@ -215,6 +221,7 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
   const [activeTab, setActiveTab] = useState('edit')
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [userPlanType, setUserPlanType] = useState<"free" | "paid">('free')
+  const [hasTrackedFirstSave, setHasTrackedFirstSave] = useState(false)
 
   // Set up sensors for drag and drop functionality
   const sensors = useSensors(
@@ -388,6 +395,14 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
         if (response.ok) {
           const updatedResumes = await response.json()
           setSavedResumes(updatedResumes)
+
+          // Track the "Resume Saved" event if it's the first time
+          if (!hasTrackedFirstSave) {
+            if (typeof window !== 'undefined' && window.gtag_report_conversion) {
+              window.gtag_report_conversion()
+            }
+            setHasTrackedFirstSave(true)
+          }
         } else if (response.status === 403) {
           throw new Error('You have reached your resume limit. Please upgrade your plan to save more resumes.')
         } else {
@@ -414,7 +429,9 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
   const loadResume = async (resumeId: string) => {
     try {
       const response = await fetch(`/api/resumes/${resumeId}`)
-      if (response.ok) {
+      if (response.ok) 
+
+ {
         const loadedResume = await response.json()
         setResumeData(loadedResume.data)
         setSectionOrder(loadedResume.sectionOrder || sectionOrder)
@@ -434,7 +451,6 @@ export function ResumeBuilder({ initialData, onSave, isSaving }: ResumeBuilderPr
         variant: "destructive",
       })
     }
-  
   }
 
   // Render a specific section based on its ID
