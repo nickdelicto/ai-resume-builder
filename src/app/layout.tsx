@@ -24,32 +24,35 @@ export default function RootLayout({
 }) {
   // Get the Google Analytics ID from environment variables
   const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
-  // Get the Google Ads ID from environment variables
-  const gAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
+  // Get the Google Ads Conversion ID from environment variables
+  const gAdsConversionId = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_ID
+  // Get the Google Ads Conversion Label from environment variables
+  const gAdsConversionLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL
 
   return (
     <html lang="en">
       <head>
-        {/* Google Analytics Script */}
-        {gaId && (
+        {/* Google Analytics and Google Ads Script */}
+        {(gaId || gAdsConversionId) && (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId || gAdsConversionId}`}
               strategy="afterInteractive"
             />
-            <Script id="google-analytics" strategy="afterInteractive">
+            <Script id="google-analytics-and-ads" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${gaId}');
+                ${gaId ? `gtag('config', '${gaId}');` : ''}
+                ${gAdsConversionId ? `gtag('config', '${gAdsConversionId}');` : ''}
               `}
             </Script>
           </>
         )}
 
         {/* Google Ads Conversion Tracking Script */}
-        {gAdsId && (
+        {gAdsConversionId && gAdsConversionLabel && (
           <Script id="google-ads-conversion" strategy="afterInteractive">
             {`
               function gtag_report_conversion(url) {
@@ -59,7 +62,7 @@ export default function RootLayout({
                   }
                 };
                 gtag('event', 'conversion', {
-                    'send_to': '${gAdsId}',
+                    'send_to': '${gAdsConversionId}/${gAdsConversionLabel}',
                     'event_callback': callback
                 });
                 return false;
