@@ -1,0 +1,303 @@
+/*
+  Minimalist Template: Enforce Playfair Display as the only font for all text.
+  This ensures pixel-perfect consistency between the resume preview and PDF output.
+  Do not add other font-families or fallbacks here.
+*/
+
+.resumePreview {
+  font-family: 'Playfair Display' !important;
+  color: #333;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+/* Explicitly enforce Playfair Display for all text elements */
+.header, .name, .contactInfo, .sectionTitle, .itemTitle, .dates, .bullet, .skill, .itemSubtitle, .description, .summary, .languagesList, .language, .languageName, .languageProficiency {
+  font-family: 'Playfair Display' !important;
+}
+
+.name {
+  font-size: 32px;
+  font-weight: 300;
+  color: #000;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.contactInfo {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 11pt;
+}
+
+/*
+  Experience section pixel-perfect tweaks for minimalist template
+  Ensures PDF output matches preview exactly
+*/
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 400;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+  margin-bottom: 18px;
+  font-family: 'Playfair Display' !important;
+}
+
+.itemTitle {
+  /* Reduced font size to match city/location under experiences for visual balance */
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+.itemSubtitle {
+  font-size: 15px;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+.dates {
+  color: #888;
+  font-style: italic;
+  font-size: 13px;
+  margin-left: auto;
+  white-space: nowrap;
+  padding-left: 15px;
+  text-align: right;
+  font-family: 'Playfair Display' !important;
+}
+
+.bulletPoint {
+  position: relative;
+  padding-left: 18px;
+  margin: 4px 0;
+  font-size: 15px;
+  color: #222;
+  line-height: 1.6;
+  font-family: 'Playfair Display' !important;
+}
+
+.bullet {
+  color: #aaa !important;
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+}
+
+.skill {
+  background-color: #f8f9fa;
+  color: #555;
+  padding: 3px 10px;
+  border-radius: 2px;
+  border: 1px solid #eee;
+}
+
+/*
+  Ensure the separator dot is perfectly centered with the contact info text.
+  This fixes alignment in both preview and PDF output.
+  Explicitly set color to faint gray (#aaa) for PDF/preview consistency.
+*/
+.separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11pt;
+  line-height: 1;
+  vertical-align: middle;
+  margin: 0 8px;
+  font-family: 'Playfair Display' !important;
+  color: #aaa !important; /* Faint gray for minimalist PDF/preview consistency */
+}
+
+/*
+  Skills section pixel-perfect tweaks for minimalist template
+  Ensures PDF output matches preview exactly
+*/
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 18px;
+  font-family: 'Playfair Display' !important;
+}
+
+.skill {
+  background-color: #f8f9fa;
+  color: #555;
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+  font-weight: 400;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+/*
+  Certifications section pixel-perfect refinements for minimalist template
+  Ensures PDF output matches preview exactly
+*/
+.item {
+  margin-bottom: 22px;
+}
+
+.itemTitle {
+  font-size: 19px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+.certDetails {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #444;
+  margin-bottom: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+.certIssuer {
+  font-weight: 400;
+  color: #444;
+  font-family: 'Playfair Display' !important;
+}
+
+.certDate {
+  font-style: italic;
+  color: #888;
+  font-size: 14px;
+  margin-left: 6px;
+  font-family: 'Playfair Display' !important;
+}
+
+.itemSubtitle {
+  font-size: 15px;
+  color: #444;
+  font-weight: 400;
+  margin-bottom: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+/*
+  Languages section pixel-perfect refinements for minimalist template
+  Ensures PDF output matches preview exactly
+*/
+.languagesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 10px;
+  font-family: 'Playfair Display' !important;
+}
+
+.language {
+  display: flex;
+  align-items: baseline;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+  margin-bottom: 4px;
+}
+
+.languageName {
+  font-weight: 700;
+  color: #222;
+  margin-right: 4px;
+  font-family: 'Playfair Display' !important;
+}
+
+.languageProficiency {
+  font-style: italic;
+  color: #888;
+  font-size: 15px;
+  margin-left: 2px;
+  font-family: 'Playfair Display' !important;
+}
+
+/* --- Experience Section Flex Row --- */
+.expHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin-bottom: 2px;
+  font-size: 15px;
+}
+.company {
+  font-weight: 700;
+  color: #444;
+  font-size: 15px;
+}
+.companyLocationSpacer {
+  width: 8px;
+  display: inline-block;
+}
+.location {
+  color: #555;
+  font-size: 15px;
+  margin-left: 2px;
+}
+.dates {
+  margin-left: auto;
+  color: #888;
+  font-size: 14px;
+  font-style: italic;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* --- Company & Location Row for Experience Section --- */
+.companyLocationRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+}
+
+/* --- School & Location Row for Education Section --- */
+.schoolLocationRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+}
+
+/* --- School name for Education Section (Minimalist) --- */
+.school {
+  color: #444;
+  font-weight: 600;
+  font-size: 15px;
+  font-family: 'Playfair Display' !important;
+}
+
+/* Ensure consistent spacing after summary section for minimalist template */
+.summary {
+  margin-bottom: 32px; /* Match section spacing for visual consistency */
+}
+
+.section:not(:first-child) {
+  margin-top: 32px;
+}

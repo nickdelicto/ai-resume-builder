@@ -1,0 +1,203 @@
+.resumePreview {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  line-height: 1.5;
+  padding: 0;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 10px 0;
+}
+
+.contactInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  font-size: 11pt;
+}
+
+/* Style for each contact item container */
+.contactInfo span {
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure contact links are blue and underlined for ATS template */
+.contactInfo a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Style for the bullet separator */
+.contactInfo .separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  color: #000;
+  font-size: 11pt;
+  line-height: 1;
+}
+
+/* Remove the default global separator for ATS template to avoid double dots */
+.contactInfo span:not(:last-child)::after {
+  content: none !important;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.item {
+  margin-bottom: 15px;
+}
+
+.itemHeader {
+  margin-bottom: 8px;
+}
+
+/* Experience section: ensure job title and dates are on the same line, dates right-aligned */
+.itemTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13pt;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 2px;
+}
+
+.certDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11pt;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.certIssuer {
+  font-weight: normal;
+  color: #222;
+}
+
+.certDate {
+  font-style: italic;
+  color: #555;
+  margin-left: 4px;
+}
+
+.description {
+  font-size: 10pt;
+  color: #444;
+  margin-top: 2px;
+}
+
+.dates {
+  color: #000;
+  font-style: italic;
+  font-size: 10pt;
+  margin-left: auto;
+  white-space: nowrap;
+  padding-left: 15px;
+  text-align: right;
+}
+
+.company {
+  font-weight: 600;
+  color: #000;
+  font-size: 11pt;
+  margin-bottom: 2px;
+}
+
+.location {
+  color: #000;
+  font-size: 11pt;
+}
+
+.bullet {
+  color: #000 !important;
+  margin-right: 8px;
+}
+
+.bulletPoint {
+  position: relative;
+  padding-left: 15px;
+  margin: 4px 0;
+  font-size: 11pt;
+  color: #000;
+  line-height: 1.5;
+}
+
+.skill {
+  display: inline;
+  background: none;
+  padding: 0;
+  margin-right: 15px;
+  font-weight: normal;
+  color: #000;
+  font-size: 11pt;
+}
+
+.skillsList {
+  display: block;
+  margin-top: 8px;
+}
+
+.itemSubtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #000;
+  font-size: 11pt;
+}
+
+.summary {
+  font-size: 11pt;
+  color: #000;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+/* Languages section styles for ATS template */
+.languagesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.language {
+  display: flex;
+  align-items: center;
+  font-size: 11pt;
+}
+
+.languageName {
+  font-weight: bold;
+  color: #000;
+}
+
+.languageProficiency {
+  font-style: italic;
+  color: #555;
+  margin-left: 2px;
+}
+
+.section:not(:first-child) {
+  margin-top: 32px;
+} 

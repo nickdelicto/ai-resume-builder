@@ -1,0 +1,1221 @@
+.sectionContainer {
+  padding: 25px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: visible;
+  max-height: none;
+}
+
+.sectionContainer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 4px;
+  width: 100px;
+  background: linear-gradient(90deg, #00B8A9, #00a395);
+  border-top-right-radius: 12px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 10px;
+}
+
+.sectionDescription {
+  color: #6c757d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  max-height: none;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sectionContainer {
+    padding: 20px 15px;
+    border-radius: 10px;
+  }
+  
+  .sectionTitle {
+    font-size: 22px;
+  }
+  
+  .sectionDescription {
+    font-size: 14px;
+  }
+  
+  /* Increase form element spacing for better touch targets */
+  .formGroup {
+    margin-bottom: 18px;
+  }
+  
+  .formInput {
+    font-size: 16px; /* Prevent iOS zoom on focus */
+    padding: 12px 14px;
+  }
+  
+  select.formInput {
+    background-position: right 12px center; /* Adjust dropdown icon position */
+  }
+}
+
+.formGroup {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #343a40;
+}
+
+.formGroup .sublabel {
+  display: block;
+  font-size: 12px;
+  font-weight: normal;
+  color: #868e96;
+  margin-top: 2px;
+}
+
+.formInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+  background-color: #fafcff;
+}
+
+.formInput::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+.formInput[type="text"], .formInput[type="email"], .formInput[type="tel"], .formInput[type="url"] {
+  height: 42px;
+}
+
+.formInput[type="text"]:focus, .formInput[type="email"]:focus, .formInput[type="tel"]:focus, .formInput[type="url"]:focus {
+  padding-left: 14px;
+  border-left: 2px solid #4dabf7;
+}
+
+select.formInput {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.completionHint {
+  margin-top: 15px;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #1c7ed6;
+  display: flex;
+  align-items: flex-start;
+}
+
+.warningHint {
+  background-color: #fff9db;
+  border-left: 4px solid #f59f00;
+  margin-bottom: 15px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.hintIcon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.hintText {
+  font-size: 14px;
+  color: #495057;
+  flex: 1;
+}
+
+.hintText strong {
+  color: #212529;
+  font-weight: 600;
+}
+
+/* Enhanced Experience Tabs Section */
+.experienceTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 20px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.experienceTab {
+  padding: 10px 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.experienceTab:hover {
+  background-color: #f1f3f5;
+  transform: translateY(-2px);
+}
+
+.activeTab {
+  background-color: #e7f5ff;
+  border-color: #a5d8ff;
+  font-weight: 500;
+  color: #1c7ed6;
+  box-shadow: 0 2px 5px rgba(28, 126, 214, 0.1);
+}
+
+.tabContent {
+  padding-top: 0;
+  width: 100%;
+}
+
+/* Add Position Button */
+.addButton {
+  padding: 10px 18px;
+  background-color: #00B8A9;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 184, 169, 0.2);
+}
+
+.addButton:hover {
+  background-color: #00a395;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 184, 169, 0.3);
+}
+
+/* Style for the remove button */
+.removeButton {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  margin-left: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+}
+
+.removeButton:hover {
+  color: #e03131;
+  background-color: rgba(224, 49, 49, 0.1);
+}
+
+.addItemButton {
+  background-color: #e7f5ff;
+  color: #1c7ed6;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.addItemButton::before {
+  content: "+";
+  margin-right: 8px;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.addItemButton:hover {
+  background-color: #d0ebff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(28, 126, 214, 0.15);
+}
+
+.addItemButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(28, 126, 214, 0.15);
+}
+
+.addItemButton:disabled {
+  background-color: #f8f9fa;
+  color: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.itemsList {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.itemCard {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 18px;
+  border-left: 3px solid #1c7ed6;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.itemCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(28, 126, 214, 0.05) 0%, rgba(255, 255, 255, 0) 50%);
+  z-index: 0;
+}
+
+.itemCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  border-left-width: 5px;
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.itemTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #343a40;
+}
+
+.removeItemButton {
+  background-color: #fff;
+  color: #868e96;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.removeItemButton::before {
+  content: "×";
+  margin-right: 4px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.removeItemButton:hover {
+  background-color: #ffe3e3;
+  color: #e03131;
+  border-color: #ffc9c9;
+  transform: translateY(-1px);
+}
+
+.itemDescription {
+  font-size: 14px;
+  color: #495057;
+  margin: 0;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.tabNavigation {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 25px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1px;
+  position: relative;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scrollbar-width: none; /* For Firefox */
+}
+
+@media (max-width: 600px) {
+  .tabNavigation {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    border-bottom: none;
+    overflow-x: visible;
+    padding-bottom: 12px;
+  }
+}
+
+.tabNavigation::-webkit-scrollbar {
+  display: none; /* For Chrome and Safari */
+}
+
+.tabNavigation::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(222,226,230,0) 0%, rgba(222,226,230,1) 15%, rgba(222,226,230,1) 85%, rgba(222,226,230,0) 100%);
+}
+
+@media (max-width: 600px) {
+  .tabNavigation::after {
+    display: none;
+  }
+  
+  .tabNavigation::before {
+    display: none;
+  }
+}
+
+.tabButton {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.25s ease;
+  color: #495057;
+  white-space: nowrap;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+  touch-action: manipulation; /* Improve touch responsiveness */
+}
+
+@media (max-width: 600px) {
+  .tabButton {
+    padding: 14px 10px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    white-space: normal;
+    text-align: center;
+    height: 100%;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .tabButton::before {
+    font-size: 20px;
+  }
+  
+  .activeTabButton {
+    background-color: #e7f5ff;
+    border-color: #a5d8ff;
+    border-bottom: 1px solid #a5d8ff;
+    box-shadow: 0 2px 5px rgba(28, 126, 214, 0.1);
+  }
+  
+  .activeTabButton::after {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Show tabs in two rows on very small screens if needed */
+  .tabNavigation {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .tabButton {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 8px;
+    min-height: 70px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .tabButton::before {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  
+  .activeTabButton {
+    background-color: #e7f5ff;
+    color: #1c7ed6;
+    border-color: #a5d8ff;
+    box-shadow: 0 2px 5px rgba(28, 126, 214, 0.1);
+  }
+  
+  .tabContent {
+    margin-top: 5px;
+  }
+}
+
+.tabButton::before {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+.tabButton:nth-child(1)::before {
+  content: "🚀";
+}
+
+.tabButton:nth-child(2)::before {
+  content: "🏆";
+}
+
+.tabButton:nth-child(3)::before {
+  content: "🌐";
+}
+
+.tabButton:nth-child(4)::before {
+  content: "📝";
+}
+
+.tabButton:hover {
+  color: #1c7ed6;
+  background-color: #f8f9fa;
+}
+
+.activeTabButton {
+  border-bottom: 2px solid #1c7ed6;
+  color: #1c7ed6;
+  font-weight: 500;
+}
+
+.activeTabButton::before {
+  opacity: 1;
+}
+
+.activeTabButton::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #1c7ed6;
+  box-shadow: 0 0 8px #4dabf7;
+}
+
+.tabTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f3f5;
+  position: relative;
+}
+
+.tabTitle::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #4dabf7, #1c7ed6);
+  border-radius: 2px;
+}
+
+.tabDescription {
+  color: #6c757d;
+  margin-bottom: 20px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.tabContent {
+  animation: fadeIn 0.3s ease;
+  padding: 5px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.customSectionsList {
+  margin-top: 25px;
+  border-top: 1px dashed #dee2e6;
+  padding-top: 20px;
+}
+
+.subsectionTitle {
+  font-size: 16px;
+  color: #343a40;
+  margin-bottom: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.subsectionTitle::before {
+  content: "📄";
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.customSectionEditor {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
+  position: relative;
+  overflow: hidden;
+}
+
+.customSectionEditor::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #4dabf7, #1c7ed6);
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.editorTitle {
+  font-size: 18px;
+  margin: 0;
+  color: #1c7ed6;
+  font-weight: 600;
+}
+
+.backButton {
+  background-color: #f1f3f5;
+  color: #495057;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.backButton::before {
+  content: "←";
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.backButton:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .buttonGroup {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    align-items: flex-end;
+  }
+  
+  .itemHeader {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .removeItemButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .editButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+.editButton {
+  background-color: #e7f5ff;
+  color: #1c7ed6;
+  border: 1px solid #d0ebff;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.editButton:hover {
+  background-color: #d0ebff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(28, 126, 214, 0.1);
+}
+
+/* AI-powered generation button */
+.aiButton {
+  padding: 12px 20px;
+  background-color: #7c5cff;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.25);
+  margin-top: 10px;
+  margin-bottom: 5px;
+  width: auto;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent; /* Prevents flash on tap for mobile */
+}
+
+@media (max-width: 480px) {
+  .aiButton {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+  
+  .addItemButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .backButton {
+    padding: 10px 16px;
+  }
+  
+  .itemCard {
+    padding: 16px;
+  }
+  
+  .customSectionEditor {
+    padding: 20px 16px;
+  }
+  
+  .completionHint {
+    flex-direction: column;
+    padding: 16px;
+  }
+  
+  .hintIcon {
+    margin-right: 0;
+    margin-bottom: 10px;
+    font-size: 24px;
+  }
+}
+
+.aiButton::before {
+  content: "✨";
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.aiButton:hover {
+  background-color: #6a4ee0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 92, 255, 0.35);
+}
+
+.aiButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(124, 92, 255, 0.25);
+}
+
+.aiButton:disabled {
+  background-color: #d1cbe7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.generating {
+  position: relative;
+  background-color: #7c5cff;
+  overflow: hidden;
+}
+
+.generating::before {
+  content: "";
+}
+
+.generating::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.emptyMessage {
+  font-style: italic;
+  color: #868e96;
+  text-align: center;
+  padding: 20px;
+  background-color: #f1f3f5;
+  border-radius: 6px;
+}
+
+/* Skills Section Styles */
+.skillInputContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .skillInputContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .skillInputContainer .formInput {
+    width: 100%;
+  }
+  
+  .addSkillButton {
+    width: 100%;
+  }
+  
+  .skillBadge {
+    padding: 8px 12px;
+  }
+  
+  .skillText {
+    font-size: 13px;
+  }
+}
+
+.skillInputContainer .formInput {
+  flex: 1;
+  border: 1px solid #ced4da;
+  transition: all 0.25s ease;
+  padding-left: 40px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23adb5bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+}
+
+.skillInputContainer .formInput:focus {
+  border-left-width: 1px;
+  padding-left: 40px;
+  box-shadow: 0 0 0 3px rgba(0, 184, 169, 0.1);
+  border-color: #00B8A9;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2300B8A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+}
+
+.addSkillButton {
+  background-color: #00B8A9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  height: 42px;
+  min-width: 80px;
+  box-shadow: 0 1px 3px rgba(0, 184, 169, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addSkillButton:hover {
+  background-color: #00a395;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 184, 169, 0.3);
+}
+
+.addSkillButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 184, 169, 0.3);
+}
+
+.skillsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 25px;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+.skillBadge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e7f5ff;
+  border: 1px solid #d0ebff;
+  color: #1c7ed6;
+  padding: 5px 10px;
+  margin: 0 8px 8px 0;
+  border-radius: 20px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.manualSkill {
+  background-color: #e7f5ff;
+  border: 1px solid #d0ebff;
+  color: #1c7ed6;
+}
+
+.aiSkill {
+  background-color: #f3f0ff;
+  border: 1px solid #e5dbff;
+  color: #7048e8;
+}
+
+.aiSkill::before {
+  content: '✨';
+  font-size: 11px;
+  margin-right: 5px;
+  opacity: 0.7;
+}
+
+.removeSkillButton {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 0.5;
+  padding: 0 0 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.removeSkillButton:hover {
+  color: #e03131;
+}
+
+/* Add a responsive container class for better mobile wrapping */
+.responsiveContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .responsiveContainer {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .responsiveContainer::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+  
+  /* Better touch targets for small screens */
+  .tabContent {
+    padding: 0;
+  }
+  
+  .tabTitle {
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+  
+  .editorHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .backButton {
+    align-self: flex-start;
+  }
+}
+
+/* Add visual indicator for horizontal scrolling on mobile */
+@media (max-width: 640px) {
+  .tabNavigation::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 30px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  
+  /* Animate tab transitions for better mobile visual feedback */
+  .tabContent {
+    animation-duration: 0.25s;
+  }
+  
+  /* Enhance touch feedback */
+  .tabButton:active {
+    background-color: #f1f3f5;
+  }
+  
+  .itemCard {
+    /* Subtle indication that cards are touchable */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.03);
+  }
+}
+
+@media (max-width: 480px) {
+  .skillBadge {
+    padding: 8px 12px;
+    /* Make skill badges more visually distinct on touch */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .skillText {
+    font-size: 13px;
+  }
+  
+  .removeSkillButton {
+    /* Increase touch target size */
+    padding: 2px 2px 2px 5px;
+    font-size: 20px;
+  }
+  
+  /* Active states for touch feedback on mobile */
+  .addSkillButton:active,
+  .removeItemButton:active,
+  .addItemButton:active,
+  .editButton:active,
+  .backButton:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  
+  /* Better visual feedback for remove button on mobile */
+  .removeItemButton:active {
+    background-color: #ffe3e3;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Show progress hint that touch is possible on cards */
+  @keyframes subtlePulse {
+    0% { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+    50% { box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+    100% { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+  }
+  
+  /* Apply subtle pulse animation to the first card only when page loads */
+  .itemsList .itemCard:first-child {
+    animation: subtlePulse 2s ease-in-out;
+  }
+  
+  /* Fix editor layout on mobile */
+  .customSectionEditor {
+    margin-top: 15px;
+  }
+  
+  /* Improve the pro tip box layout on mobile */
+  .completionHint {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .completionHint::before {
+    width: 100%;
+    height: 4px;
+    top: 0;
+    left: 0;
+    border-radius: 0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+}
+
+/* Add specific fixes for the tab content area on mobile */
+@media (max-width: 600px) {
+  .tabTitle {
+    padding-top: 5px;
+  }
+  
+  /* Make the first visible tab have subtle focus indicator animation */
+  @keyframes subtleFocus {
+    0% { opacity: 0.9; }
+    50% { opacity: 1; }
+    100% { opacity: 0.9; }
+  }
+  
+  .tabContent {
+    animation: fadeIn 0.3s ease, subtleFocus 2s ease-in-out;
+  }
+  
+  /* Make all inputs slightly larger on mobile for better touch */
+  .formInput {
+    height: 45px;
+  }
+  
+  textarea.formInput {
+    height: auto;
+    min-height: 100px;
+  }
+}
+
+.sectionLink {
+  color: #228be6;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.sectionLink:hover {
+  color: #1971c2;
+  text-decoration: underline;
+}
+
+.sectionLink:active {
+  color: #1c7cd6;
+}
+
+.warningHint .sectionLink {
+  color: #e03131;
+}
+
+.warningHint .sectionLink:hover {
+  color: #c92a2a;
+}
+
+/* Make sure form has proper scrolling */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  max-height: none;
+}
+
+/* Ensure textarea is always visible */
+.formGroup textarea.formInput {
+  min-height: 150px;
+  resize: vertical;
+}
+
+/* Make sure the section content area scrolls properly */
+.sectionContent {
+  overflow-y: visible;
+  height: auto;
+  max-height: none;
+} 

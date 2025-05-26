@@ -1,0 +1,80 @@
+.resumePreview {
+  font-family: 'Times New Roman', Times, serif;
+  color: #222;
+  line-height: 1.5;
+}
+
+.header {
+  border-bottom: 2px solid #343a40;
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #343a40;
+  margin: 0 0 5px 0;
+  letter-spacing: 0.5px;
+}
+
+.contactInfo {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 11pt;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #343a40;
+  text-transform: uppercase;
+  border-bottom: 1px solid #343a40;
+  padding-bottom: 3px;
+  margin-bottom: 15px;
+}
+
+.itemTitle {
+  font-size: 14pt;
+  font-weight: 700;
+  color: #343a40;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dates {
+  color: #343a40;
+  font-style: italic;
+  font-size: 11pt;
+  margin-left: auto;
+  white-space: nowrap;
+  padding-left: 15px;
+}
+
+.company, .school {
+  font-weight: 700;
+}
+
+.bullet {
+  color: #343a40 !important;
+}
+
+.skill {
+  background-color: #f8f9fa;
+  color: #343a40;
+  border: 1px solid #dee2e6;
+  padding: 3px 10px;
+  border-radius: 0;
+  font-weight: 500;
+}
+
+.itemSubtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #343a40;
+  font-size: 11pt;
+} 

@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String?             @unique
+  emailVerified      DateTime?
+  image              String?
+  isNewUser          Boolean             @default(true)
+  planType           String              @default("free")
+  planExpirationDate DateTime?
+  createdAt          DateTime            @default(now())
+  accounts           Account[]
+  resumeData         ResumeData[]
+  sessions           Session[]
+  subscriptions      UserSubscription[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model ResumeData {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("Untitled Resume")
+  data      Json
+  template  String   @default("ats")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Subscription-related Models
+model SubscriptionPlan {
+  id                  String              @id @default(cuid())
+  name                String
+  description         String
+  price               Float
+  interval            String              // "one-time", "weekly", "monthly"
+  stripePriceId       String?             // Stripe price ID reference
+  isPopular           Boolean             @default(false)
+  isActive            Boolean             @default(true)
+  features            String[]            // Array of feature descriptions
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  userSubscriptions   UserSubscription[]
+}
+
+model UserSubscription {
+  id                    String            @id @default(cuid())
+  userId                String
+  planId                String
+  stripeCustomerId      String?           // Stripe customer ID
+  stripeSubscriptionId  String?           // Stripe subscription ID
+  stripePaymentIntentId String?           // For one-time payments
+  status                String            // "active", "canceled", "past_due", "trialing", "incomplete"
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  SubscriptionPlan  @relation(fields: [planId], references: [id])
+}
+
+// Added for auto-save duplicate prevention
+model KVStore {
+  key       String   @id
+  value     String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

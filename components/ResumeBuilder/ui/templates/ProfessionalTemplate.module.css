@@ -1,0 +1,62 @@
+.resumePreview {
+  font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #333;
+  line-height: 1.5;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1c7ed6;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.5px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 5px;
+  margin-bottom: 12px;
+}
+
+.itemTitle {
+  font-size: 13pt;
+  font-weight: 600;
+  color: #212529;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.itemSubtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #495057;
+  font-size: 11pt;
+}
+
+.dates {
+  color: #495057;
+  font-style: italic;
+  font-size: 10pt;
+  margin-left: auto;
+  white-space: nowrap;
+  padding-left: 15px;
+}
+
+.bullet {
+  color: #1c7ed6 !important;
+}
+
+.skill {
+  background-color: #e7f5ff;
+  color: #1c7ed6;
+  padding: 3px 8px;
+  border-radius: 3px;
+} 

@@ -1,0 +1,325 @@
+.importFlowContainer {
+  min-height: 600px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --primary-color: #1a73e8;
+  --primary-light: rgba(26, 115, 232, 0.1);
+  --primary-dark: #0d47a1;
+  --text-primary: #212529;
+  --text-secondary: #4e5968;
+  --background-light: #f8f9fc;
+  --card-background: #ffffff;
+  --border-color: rgba(233, 236, 239, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-hover: rgba(0, 0, 0, 0.12);
+}
+
+/* Confirm Container Styles */
+.confirmContainer {
+  background-color: var(--card-background);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px var(--shadow-color);
+  padding: 40px;
+  max-width: 800px;
+  margin: 20px auto;
+  animation: fadeSlideDown 0.6s ease-out;
+}
+
+.confirmHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.confirmTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1a73e8;
+  margin-bottom: 15px;
+  animation: fadeSlideDown 0.6s ease-out;
+  letter-spacing: -0.5px;
+}
+
+.confirmDescription {
+  font-size: 16px;
+  color: #4e5968;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+  animation: fadeSlideDown 0.6s ease-out 0.1s both;
+}
+
+.dataConfirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.confirmSection {
+  border: 1px solid rgba(233, 236, 239, 0.7);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  animation: fadeSlideUp 0.5s ease both;
+  animation-delay: calc(0.1s * var(--animation-order, 0));
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.confirmSection:nth-child(1) { --animation-order: 1; }
+.confirmSection:nth-child(2) { --animation-order: 2; }
+.confirmSection:nth-child(3) { --animation-order: 3; }
+.confirmSection:nth-child(4) { --animation-order: 4; }
+.confirmSection:nth-child(5) { --animation-order: 5; }
+
+.confirmSection:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+  border-color: #1a73e8;
+  transform: translateY(-3px);
+}
+
+.confirmSection h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d2129;
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.08), rgba(108, 92, 231, 0.08));
+  padding: 15px 20px;
+  margin: 0;
+  border-bottom: 1px solid rgba(233, 236, 239, 0.7);
+}
+
+.sectionContent {
+  padding: 20px;
+}
+
+.dataRow {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.dataLabel {
+  font-weight: 600;
+  width: 120px;
+  color: #4e5968;
+}
+
+.dataValue {
+  flex: 1;
+  color: #1d2129;
+}
+
+.summaryText {
+  font-size: 15px;
+  color: #4e5968;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.experienceList, .educationList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.experienceItem, .educationItem {
+  background-color: #f8f9fc;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-left: 3px solid #1a73e8;
+}
+
+.experienceItem:hover, .educationItem:hover {
+  background-color: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+
+.expHeader, .eduHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.expTitle, .eduDegree {
+  font-weight: 600;
+  color: #1d2129;
+  font-size: 16px;
+}
+
+.expCompany, .eduSchool {
+  font-weight: 500;
+  color: #4e5968;
+}
+
+.expDetails, .eduDetails {
+  display: flex;
+  justify-content: space-between;
+  color: #8a94a6;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.expDescription {
+  font-size: 14px;
+  color: #4e5968;
+  line-height: 1.5;
+  margin-top: 8px;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.skillBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(26, 115, 232, 0.1), rgba(108, 92, 231, 0.1));
+  color: #1a73e8;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.skillBadge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(26, 115, 232, 0.1);
+}
+
+.noDataMessage {
+  color: #8a94a6;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fc;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px dashed rgba(26, 115, 232, 0.2);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+  animation: fadeSlideUp 0.5s ease 0.3s both;
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: #4e5968;
+  border: 1px solid rgba(26, 115, 232, 0.3);
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.cancelButton:hover {
+  background-color: rgba(26, 115, 232, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.continueButton {
+  background: linear-gradient(135deg, #34a853, #28b485);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 15px rgba(52, 168, 83, 0.2);
+}
+
+.continueButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.3) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  transition: all 0.6s ease;
+}
+
+.continueButton:hover::before {
+  left: 100%;
+}
+
+.continueButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(52, 168, 83, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .confirmTitle {
+    font-size: 26px;
+  }
+  
+  .confirmContainer {
+    padding: 30px 20px;
+  }
+  
+  .expHeader, .eduHeader {
+    flex-direction: column;
+  }
+  
+  .confirmActions {
+    flex-direction: column;
+  }
+  
+  .cancelButton, .continueButton {
+    width: 100%;
+  }
+} 

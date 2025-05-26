@@ -1,0 +1,308 @@
+.navigationContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.navigationTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d2129;
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.navigationTitle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #1a73e8, #6c5ce7);
+  border-radius: 3px;
+}
+
+.sectionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.sectionItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(233, 236, 239, 0.5);
+  overflow: hidden;
+}
+
+.sectionItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  background-color: #f8f9fc;
+}
+
+.activeSection {
+  border-left: 3px solid #1a73e8;
+  background: linear-gradient(90deg, rgba(26, 115, 232, 0.08), rgba(26, 115, 232, 0.02));
+  box-shadow: 0 5px 15px rgba(26, 115, 232, 0.12);
+  transform: translateY(-2px);
+}
+
+.activeSection:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(26, 115, 232, 0.15);
+}
+
+.completedSection .sectionLabel {
+  color: #34a853;
+  font-weight: 600;
+}
+
+.sectionStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  position: relative;
+}
+
+.completedIcon {
+  color: #34a853;
+  font-size: 18px;
+  animation: checkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes checkPop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.incompleteIcon {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+}
+
+.sectionLabel {
+  flex-grow: 1;
+  font-weight: 500;
+  color: #4e5968;
+}
+
+.activeIndicator {
+  position: absolute;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a73e8, #6c5ce7);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.5);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(26, 115, 232, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0);
+  }
+}
+
+.dragHandle {
+  margin-right: 10px;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sectionItem:hover .dragHandle {
+  opacity: 0.5;
+}
+
+.dragIcon {
+  font-size: 16px;
+  color: #8a94a6;
+}
+
+.draggingSection {
+  opacity: 0.8;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.fixedSection {
+  cursor: not-allowed;
+  opacity: 0.8;
+  background-color: rgba(248, 249, 252, 0.7);
+}
+
+.fixedSection:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.fixedSection::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.02) 5px,
+    rgba(0, 0, 0, 0.02) 10px
+  );
+  pointer-events: none;
+  border-radius: 10px;
+}
+
+.fixedSection:hover::after {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(0, 0, 0, 0.04) 5px,
+    rgba(0, 0, 0, 0.04) 10px
+  );
+}
+
+.resetOrderInfo {
+  margin-top: 20px;
+  padding: 0 4px;
+  color: #8a94a6;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.resetOrderButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #f8f9fc;
+  color: #4e5968;
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin-top: 12px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.resetOrderButton:hover {
+  background-color: rgba(26, 115, 232, 0.05);
+  color: #1a73e8;
+  border-color: rgba(26, 115, 232, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.resetOrderButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.resetIcon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.resetOrderButton:hover .resetIcon {
+  transform: rotate(-45deg);
+}
+
+@keyframes subtlePulse {
+  0% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(26, 115, 232, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); }
+}
+
+.showResetHint {
+  animation: subtlePulse 2s infinite;
+}
+
+.resetOrderButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+}
+
+/* Add a small helper text that appears on hover */
+.resetOrderButton::after {
+  content: "Return to recommended section order";
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #8a94a6;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.resetOrderButton:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .resetOrderButton {
+    width: 100%;
+    margin-top: 12px;
+  }
+  
+  .resetOrderButton::after {
+    display: none;
+  }
+  
+  .resetOrderInfo {
+    margin-top: 16px;
+  }
+} 

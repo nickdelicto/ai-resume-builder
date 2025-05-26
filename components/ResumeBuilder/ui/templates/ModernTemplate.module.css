@@ -1,0 +1,207 @@
+.resumePreview {
+  font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #333;
+  line-height: 1.5;
+  padding: 30px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 25px;
+  position: relative;
+  width: 100%;
+}
+
+.headerSidebar {
+  background-color: #4263eb;
+  padding: 20px;
+  margin: -30px -30px 15px -30px;
+  width: calc(100% + 60px);
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 700;
+  color: white !important;
+  margin: 0;
+  letter-spacing: 0.7px;
+}
+
+.contactContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 0 5px;
+  margin-top: 15px;
+}
+
+.contactItem {
+  font-size: 11pt;
+  color: #495057;
+  position: relative;
+  padding-right: 20px;
+}
+
+.contactItem:not(:last-child):after {
+  content: "•";
+  position: absolute;
+  right: 0;
+  color: #4263eb;
+}
+
+.contactItem a {
+  color: #4263eb;
+  text-decoration: none;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4263eb !important;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 2px solid #4263eb;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.item {
+  margin-bottom: 15px;
+}
+
+.itemHeader {
+  margin-bottom: 8px;
+}
+
+.itemTitle {
+  font-size: 14pt;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.itemSubtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #495057;
+  font-size: 11pt;
+}
+
+.companyLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detailsLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #666;
+  font-size: 10.5pt;
+  width: 100%;
+}
+
+.company, .school {
+  font-weight: 500;
+}
+
+.location {
+  color: #495057;
+}
+
+.dates {
+  color: #495057;
+  font-style: italic;
+  font-size: 11pt;
+  margin-left: auto;
+  white-space: nowrap;
+  padding-left: 15px;
+}
+
+.bulletPoint {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 4px;
+  line-height: 1.5;
+  color: #495057;
+}
+
+.bullet {
+  color: #4263eb !important;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.summary {
+  color: #495057;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.skill {
+  background-color: #e7f5ff;
+  color: #4263eb;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 11pt;
+}
+
+.languagesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.language {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #495057;
+}
+
+.languageName {
+  font-weight: 500;
+}
+
+.languageProficiency {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.certDetails {
+  display: flex;
+  gap: 8px;
+  color: #495057;
+  font-size: 11pt;
+  margin-top: 2px;
+}
+
+.certIssuer {
+  font-weight: 500;
+}
+
+.certDate {
+  font-style: italic;
+}
+
+/* Additional modern styles... */ 

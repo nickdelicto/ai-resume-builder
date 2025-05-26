@@ -1,0 +1,182 @@
+.progressContainer {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(233, 236, 239, 0.7);
+  overflow: hidden;
+}
+
+/* Add subtle background gradient */
+.progressContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(248, 249, 252, 0), rgba(248, 249, 252, 0.7));
+  pointer-events: none;
+}
+
+/* Create a wrapper for text and mascot to be side by side */
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Container for completion text */
+.progressInfo {
+  flex: 1;
+}
+
+.progressStats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  align-items: center;
+  font-size: 14px;
+  color: #1d2129;
+  font-weight: 600;
+  /* For smaller screens, we'll make this take full width */
+  width: 100%;
+}
+
+.progressBarOuter {
+  height: 10px;
+  background: linear-gradient(90deg, rgba(241, 243, 246, 1), rgba(233, 236, 239, 1));
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 15px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.progressBarInner {
+  height: 100%;
+  background: linear-gradient(90deg, #1a73e8, #6c5ce7);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 5px rgba(26, 115, 232, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add shimmer effect to progress bar */
+.progressBarInner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.progressPulse {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 30px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.5) 50%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: pulse 1.5s infinite;
+}
+
+.progressMessage {
+  margin-top: 12px;
+  text-align: left;
+  font-size: 15px;
+  color: #4e5968;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.mascotContainer {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin-left: 20px;
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Floating animation for mascot */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.mascotContainer::before {
+  content: '';
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  background: linear-gradient(135deg, #fcd34d, #f59e0b);
+  border-radius: 50%;
+  z-index: -1;
+  top: -10%;
+  left: -10%;
+  opacity: 0.8;
+  box-shadow: 0 10px 25px rgba(252, 211, 77, 0.4);
+  animation: pulseShadow 3s ease-in-out infinite;
+}
+
+@keyframes pulseShadow {
+  0% { box-shadow: 0 10px 25px rgba(252, 211, 77, 0.4); }
+  50% { box-shadow: 0 10px 30px rgba(252, 211, 77, 0.6); }
+  100% { box-shadow: 0 10px 25px rgba(252, 211, 77, 0.4); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .progressHeader {
+    flex-direction: column-reverse; /* Mascot on top, text below on mobile */
+    align-items: center;
+  }
+  
+  .mascotContainer {
+    margin-left: 0;
+    margin-bottom: 20px;
+  }
+  
+  .progressInfo {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .progressMessage {
+    text-align: center;
+  }
+} 
