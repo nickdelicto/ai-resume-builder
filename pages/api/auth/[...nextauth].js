@@ -40,6 +40,37 @@ export const authOptions = {
       // Include user.id in session
       session.user.id = user.id;
       return session;
+    },
+    // Add account linking callback
+    async signIn({ user, account, profile }) {
+      // Allow sign-in if this is a first time sign-in
+      if (account.provider === "google") {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: { accounts: true },
+        });
+
+        // If user exists but doesn't have a Google account linked
+        if (existingUser && existingUser.accounts.length === 0) {
+          // Link the Google account to the existing user
+          await prisma.account.create({
+            data: {
+              userId: existingUser.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+            },
+          });
+          return true;
+        }
+      }
+      return true;
     }
   },
   debug: process.env.NODE_ENV === 'development',
