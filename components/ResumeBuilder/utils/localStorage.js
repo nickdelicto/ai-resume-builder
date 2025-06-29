@@ -2,9 +2,18 @@
 const RESUME_DATA_KEY = 'modern_resume_data';
 const RESUME_PROGRESS_KEY = 'modern_resume_progress';
 
+// Import DB-only mode check from resumeUtils
+import { isDbOnlyMode } from '../../../lib/resumeUtils';
+
 // Save resume data to local storage
 export const saveResumeData = (data) => {
   try {
+    // Skip saving to localStorage if in DB-only mode
+    if (isDbOnlyMode()) {
+      console.log('📊 Skipping localStorage save - user is in DB-only mode');
+      return;
+    }
+    
     localStorage.setItem(RESUME_DATA_KEY, JSON.stringify(data));
   } catch (error) {
     console.error('Error saving resume data to localStorage:', error);
@@ -14,6 +23,12 @@ export const saveResumeData = (data) => {
 // Get resume data from local storage
 export const getResumeData = () => {
   try {
+    // If in DB-only mode, don't read from localStorage
+    if (isDbOnlyMode()) {
+      console.log('📊 Skipping localStorage read - user is in DB-only mode');
+      return null;
+    }
+    
     const savedData = localStorage.getItem(RESUME_DATA_KEY);
     return savedData ? JSON.parse(savedData) : null;
   } catch (error) {
@@ -25,6 +40,12 @@ export const getResumeData = () => {
 // Save resume section completion progress
 export const saveResumeProgress = (progress) => {
   try {
+    // Skip saving to localStorage if in DB-only mode
+    if (isDbOnlyMode()) {
+      console.log('📊 Skipping localStorage progress save - user is in DB-only mode');
+      return;
+    }
+    
     localStorage.setItem(RESUME_PROGRESS_KEY, JSON.stringify(progress));
   } catch (error) {
     console.error('Error saving progress to localStorage:', error);
@@ -34,6 +55,12 @@ export const saveResumeProgress = (progress) => {
 // Get resume section completion progress
 export const getResumeProgress = () => {
   try {
+    // If in DB-only mode, don't read from localStorage
+    if (isDbOnlyMode()) {
+      console.log('📊 Skipping localStorage progress read - user is in DB-only mode');
+      return null;
+    }
+    
     const savedProgress = localStorage.getItem(RESUME_PROGRESS_KEY);
     return savedProgress ? JSON.parse(savedProgress) : null;
   } catch (error) {

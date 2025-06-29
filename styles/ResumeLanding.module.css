@@ -28,11 +28,67 @@
   }
 }
 
+/* Animation for highlighted word underline */
+@keyframes underlineAnimation {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
 /* Landing page container */
 .landingPage {
   font-family: 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   color: #4e5968;
   line-height: 1.6;
+}
+
+/* Highlighted word styling - base styles */
+.highlightedWord {
+  position: relative;
+  font-weight: 700;
+  display: inline-block;
+  margin: 0 4px;
+  padding-bottom: 5px; /* Increased padding for more space between text and underline */
+}
+
+/* Specific colors for each word */
+.highlightedWord:nth-of-type(1) {
+  color: #1a73e8; /* Blue for "builds" */
+}
+
+.highlightedWord:nth-of-type(2) {
+  color: #f59f00; /* Orange/amber for "improves" */
+}
+
+.highlightedWord:nth-of-type(3) {
+  color: #12b886; /* Green for "tailors" */
+}
+
+.highlightedWord::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  border-radius: 4px; /* More rounded corners for the underline */
+  animation: underlineAnimation 0.7s ease-out forwards; /* Slightly slower, smoother animation */
+  opacity: 0.85; /* Slightly transparent for a more subtle effect */
+}
+
+/* Different colors for each underline */
+.highlightedWord:nth-of-type(1)::after {
+  background: #1a73e8;
+  animation-delay: 0.3s;
+}
+
+.highlightedWord:nth-of-type(2)::after {
+  background: #f59f00;
+  animation-delay: 0.7s;
+}
+
+.highlightedWord:nth-of-type(3)::after {
+  background: #12b886;
+  animation-delay: 1.1s;
 }
 
 /* Typography styles with Figtree */
@@ -150,20 +206,96 @@
   background-color: rgba(18, 184, 134, 1);
 }
 
+/* Tab Navigation Container */
+.tabNavigation {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0 10px;
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+}
+
+/* Hide scrollbar for Chrome/Safari */
+.tabNavigation::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tab Button Styles */
+.tabButton {
+  padding: 14px 28px;
+  margin: 0 5px;
+  background: transparent;
+  border: none;
+  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #6c757d;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.tabButton:hover {
+  color: #495057;
+}
+
+.tabButton:focus {
+  outline: none;
+}
+
+.tabButtonActive {
+  font-weight: 600;
+  border-bottom: 3px solid;
+}
+
+.tabButtonBuild {
+  color: #1a73e8;
+  border-bottom-color: #1a73e8;
+}
+
+.tabButtonImprove {
+  color: #f59f00;
+  border-bottom-color: #f59f00;
+}
+
+.tabButtonTailor {
+  color: #12b886;
+  border-bottom-color: #12b886;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .tabNavigation {
-    overflow-x: auto;
-    padding-bottom: 10px;
+    justify-content: flex-start;
+    padding: 0 5px 5px;
+    margin-bottom: 30px;
+    position: relative;
+  }
+  
+  .tabNavigation::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+    pointer-events: none;
+    z-index: 1;
   }
 
   .tabButton {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
-
-  .gridContainer {
-    grid-template-columns: 1fr;
+    padding: 12px 20px;
+    font-size: 15px;
+    flex-shrink: 0;
   }
 }
 
@@ -196,40 +328,148 @@
   .ctaButton {
     width: 100%;
   }
+
+  .tabButton {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }
 
-/* Tab Button Styles */
-.tabButton {
-  padding: 12px 24px;
-  margin-right: 10px;
-  background: transparent;
-  border: none;
-  font-family: 'Figtree', ui-sans-serif, system-ui;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  font-weight: 500;
-  color: #6c757d;
-  border-bottom: 3px solid transparent;
+/* Tab Content */
+.tabContent {
+  padding: 20px 0;
+  animation: fadeIn 0.5s ease;
 }
 
-.tabButtonActive {
-  font-weight: 600;
-  border-bottom: 3px solid;
+/* Grid Container */
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  animation: fadeIn 0.5s ease;
 }
 
-.tabButtonBuild {
+/* Step Card */
+.stepCard {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+}
+
+.stepCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Step Circle */
+.stepCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.buildStepCircle {
+  background: linear-gradient(135deg, #e7f5ff, #d0ebff);
+  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.15);
+}
+
+.improveStepCircle {
+  background: linear-gradient(135deg, #fff3e0, #ffe8cc);
+  box-shadow: 0 4px 10px rgba(245, 159, 0, 0.15);
+}
+
+.tailorStepCircle {
+  background: linear-gradient(135deg, #e6fcf5, #c3fae8);
+  box-shadow: 0 4px 10px rgba(18, 184, 134, 0.15);
+}
+
+/* Step Number */
+.stepNumber {
+  font-size: 22px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.buildStepCircle .stepNumber {
   color: #1a73e8;
-  border-bottom-color: #1a73e8;
 }
 
-.tabButtonImprove {
+.improveStepCircle .stepNumber {
   color: #f59f00;
-  border-bottom-color: #f59f00;
 }
 
-.tabButtonTailor {
+.tailorStepCircle .stepNumber {
   color: #12b886;
-  border-bottom-color: #12b886;
-} 
+}
+
+/* Step Title */
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+/* Step Description */
+.stepDescription {
+  font-size: 15px;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+/* Responsive styles for steps */
+@media (max-width: 768px) {
+  .gridContainer {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  
+  .stepCircle {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 15px;
+  }
+  
+  .stepNumber {
+    font-size: 20px;
+  }
+  
+  .stepTitle {
+    font-size: 17px;
+  }
+  
+  .stepDescription {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  
+  .stepCard {
+    padding: 15px;
+  }
+  
+  .stepCircle {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .stepNumber {
+    font-size: 18px;
+  }
+}

@@ -8,10 +8,6 @@ import executiveStyles from './templates/ExecutiveTemplate.module.css';
 import atsStyles from './templates/ATSTemplate.module.css';
 
 const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = null }) => {
-  if (!resumeData) return null;
-  
-  const { personalInfo, summary, experience, education, skills, additional } = resumeData;
-  
   // Refs for scroll detection
   const previewContainerRef = useRef(null);
   const resumePreviewRef = useRef(null);
@@ -20,8 +16,35 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
   // Function to check if this preview is being rendered for PDF capture
   const isForPdfCapture = useRef(false);
   
+  // Default section order if not provided
+  const defaultSectionOrder = ['personalInfo', 'summary', 'experience', 'education', 'skills', 'additional'];
+  
+  // Use provided section order or default
+  const usedSectionOrder = sectionOrder || defaultSectionOrder;
+  
+  // Select template styles
+  const templateStyles = (() => {
+    switch(template) {
+      case 'modern':
+        return modernStyles;
+      case 'minimalist':
+        return minimalistStyles;
+      case 'creative':
+        return creativeStyles;
+      case 'executive':
+        return executiveStyles;
+      case 'ats':
+        return atsStyles;
+      case 'professional':
+      default:
+        return professionalStyles;
+    }
+  })();
+  
   // Check if the component is rendered within a PDF capture container
   useEffect(() => {
+    if (!resumeData) return; // Skip effect if no data
+    
     if (typeof document !== 'undefined' && resumePreviewRef.current) {
       // Look for a parent with the PDF capture class
       let parent = resumePreviewRef.current.parentElement;
@@ -36,10 +59,12 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         parent = parent.parentElement;
       }
     }
-  }, []);
+  }, [resumeData]);
   
   // Detect if content is scrollable
   useEffect(() => {
+    if (!resumeData) return; // Skip effect if no data
+    
     const checkScrollability = () => {
       if (resumePreviewRef.current) {
         const isScrollable = resumePreviewRef.current.scrollHeight > resumePreviewRef.current.clientHeight;
@@ -63,32 +88,60 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     };
   }, [resumeData, template]);
   
-  // Default section order if not provided
-  const defaultSectionOrder = ['personalInfo', 'summary', 'experience', 'education', 'skills', 'additional'];
-  
-  // Use provided section order or default
-  const usedSectionOrder = sectionOrder || defaultSectionOrder;
-  
-  // Select template styles
-  const getTemplateStyles = () => {
-    switch(template) {
-      case 'modern':
-        return modernStyles;
-      case 'minimalist':
-        return minimalistStyles;
-      case 'creative':
-        return creativeStyles;
-      case 'executive':
-        return executiveStyles;
-      case 'ats':
-        return atsStyles;
-      case 'professional':
-      default:
-        return professionalStyles;
+  // Copy protection
+  useEffect(() => {
+    if (!resumeData) return; // Skip effect if no data
+    
+    // Skip copy protection when rendered for PDF capture
+    if (isForPdfCapture.current) {
+      console.log('Skipping copy protection for PDF capture');
+      return;
     }
-  };
+    
+    // Function to prevent copy/cut events
+    const preventCopy = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
   
-  const templateStyles = getTemplateStyles();
+    // Function to prevent keyboard shortcuts for copy/cut
+    const preventCopyShortcuts = (e) => {
+      // Check for Ctrl+C, Ctrl+X, Cmd+C, Cmd+X
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    // Get the resume preview element
+    const previewElement = resumePreviewRef.current;
+    if (previewElement) {
+      // Add event listeners to prevent copying
+      previewElement.addEventListener('copy', preventCopy);
+      previewElement.addEventListener('cut', preventCopy);
+      previewElement.addEventListener('keydown', preventCopyShortcuts);
+      
+      // Add context menu prevention (right-click)
+      previewElement.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+      });
+
+      console.log('📊 Copy protection enabled for resume preview');
+    }
+
+    // Cleanup function to remove event listeners
+    return () => {
+      if (previewElement) {
+        previewElement.removeEventListener('copy', preventCopy);
+        previewElement.removeEventListener('cut', preventCopy);
+        previewElement.removeEventListener('keydown', preventCopyShortcuts);
+        previewElement.removeEventListener('contextmenu', preventCopy);
+      }
+    };
+  }, [resumeData]);
   
   // Helper function for rendering bulleted text
   const renderBulletedText = (text) => {
@@ -151,6 +204,12 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
       </div>
     );
   };
+  
+  // Early return moved to here
+  if (!resumeData) return null;
+  
+  // Extract data for convenience in the rendering functions
+  const { personalInfo, summary, experience, education, skills, additional } = resumeData;
   
   // Render header with personal info
   const renderHeader = () => {
@@ -516,59 +575,6 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         return null;
     }
   };
-  
-  // Copy protection handlers
-  useEffect(() => {
-    // Skip copy protection when rendered for PDF capture
-    if (isForPdfCapture.current) {
-      console.log('Skipping copy protection for PDF capture');
-      return;
-    }
-    
-    // Function to prevent copy/cut events
-    const preventCopy = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-
-    // Function to prevent keyboard shortcuts for copy/cut
-    const preventCopyShortcuts = (e) => {
-      // Check for Ctrl+C, Ctrl+X, Cmd+C, Cmd+X
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x')) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
-
-    // Get the resume preview element
-    const previewElement = resumePreviewRef.current;
-    if (previewElement) {
-      // Add event listeners to prevent copying
-      previewElement.addEventListener('copy', preventCopy);
-      previewElement.addEventListener('cut', preventCopy);
-      previewElement.addEventListener('keydown', preventCopyShortcuts);
-      
-      // Add context menu prevention (right-click)
-      previewElement.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        return false;
-      });
-
-      console.log('📊 Copy protection enabled for resume preview');
-    }
-
-    // Cleanup function to remove event listeners
-    return () => {
-      if (previewElement) {
-        previewElement.removeEventListener('copy', preventCopy);
-        previewElement.removeEventListener('cut', preventCopy);
-        previewElement.removeEventListener('keydown', preventCopyShortcuts);
-        previewElement.removeEventListener('contextmenu', preventCopy);
-      }
-    };
-  }, []); // Empty dependency array - only run once on mount
   
   return (
     <div className={styles.previewContainer} ref={previewContainerRef}>

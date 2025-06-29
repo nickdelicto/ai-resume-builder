@@ -4,27 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { startNewResume } from '../../lib/resumeUtils';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 const Navigation = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isSignInHovered, setIsSignInHovered] = useState(false);
   const [hoveredMenuItem, setHoveredMenuItem] = useState(null);
   const [hoveredDesktopItem, setHoveredDesktopItem] = useState(null);
   const [hoveredResumeButton, setHoveredResumeButton] = useState(false);
   const [isProcessingNewResume, setIsProcessingNewResume] = useState(false);
-  
-  // Handle scroll event to change header style when scrolled
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
   
   // Close menu when route changes
   useEffect(() => {
@@ -321,11 +311,26 @@ const Navigation = () => {
   };
 
   return (
-    <header className={`nav-container ${isScrolled ? 'scrolled' : ''}`}>
+    <header className="nav-container">
       <div className="nav-content">
-        {/* Logo */}
+        {/* Logo and Tagline */}
         <Link href="/" className="nav-logo">
-          <span className="logo-text">IntelliResume</span>
+          <div className="logo-with-text">
+            <div className="logo-container">
+              <Image 
+                src="/logo.svg" 
+                alt="IntelliResume Logo" 
+                width={40} 
+                height={40} 
+                style={{ marginRight: '10px', position: 'relative', top: '-2px' }}
+                priority
+              />
+              <span className="logo-text">IntelliResume</span>
+            </div>
+            <div className="tagline-container">
+              <span className="nav-tagline">Building careers, one resume at a time</span>
+            </div>
+          </div>
         </Link>
         
         {/* Right-side controls: Sign In/User Menu + Mobile Menu */}
@@ -618,7 +623,7 @@ const Navigation = () => {
                 </svg>
                 Pricing
               </Link>
-            
+              
               <Link 
                 href="/profile#resumes"
                 style={mobileMenuItemStyles.menuItem('resumes')}
@@ -645,9 +650,9 @@ const Navigation = () => {
                 </svg>
                 My Resumes
               </Link>
-            
+              
               <div style={mobileMenuItemStyles.divider}></div>
-            
+              
               <button
                 onClick={handleSignOut}
                 style={mobileMenuItemStyles.signOutItem('signOut')}
@@ -680,48 +685,104 @@ const Navigation = () => {
           </div>
         )}
       </div>
-      
+
       <style jsx>{`
         /* Logo styling */
         .nav-logo {
           font-family: 'Figtree', 'Inter', sans-serif;
           font-weight: 800;
-          font-size: 2.4rem;
+          font-size: 3.2rem;
           text-decoration: none;
           display: flex;
           align-items: center;
           letter-spacing: -0.02em;
-          transition: transform 0.2s ease;
+          transition: transform 0.3s ease, filter 0.3s ease;
           flex-shrink: 0;
           margin-right: auto;
+          position: relative;
+          padding: 0.3rem 0;
+        }
+        
+        .logo-with-text {
+          display: flex;
+          align-items: center;
+        }
+        
+        .logo-container {
+          display: flex;
+          align-items: center;
         }
         
         .logo-text {
-          background: linear-gradient(135deg, var(--primary-blue) 20%, var(--tertiary-purple) 80%);
+          background: linear-gradient(135deg, #1a73e8 15%, #4f46e5 70%, #6366f1 95%);
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          text-shadow: 0 2px 4px rgba(0,0,0,0.08);
+          font-weight: 900;
+        }
+        
+        .tagline-container {
+          display: flex;
+          align-items: center;
+          margin-left: 16px;
+          position: relative;
+        }
+        
+        .tagline-container::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          height: 16px;
+          width: 1px;
+          background-color: rgba(100, 116, 139, 0.3);
+          margin-right: 16px;
+        }
+        
+        .nav-tagline {
+          font-size: 0.75rem;
+          color: #64748b;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+          opacity: 0.8;
+          font-style: italic;
+          padding-left: 16px;
         }
         
         .nav-logo:hover {
-          transform: translateY(-1px);
+          transform: translateY(-2px);
+          filter: brightness(1.1);
+        }
+        
+        .nav-logo::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #1a73e8, #4f46e5);
+          transition: width 0.3s ease;
+          opacity: 0;
+          border-radius: 3px;
+        }
+        
+        .nav-logo:hover::after {
+          width: 100%;
+          opacity: 1;
         }
         
         /* Navigation layout */
         .nav-container {
-          position: fixed;
+          position: static;
           top: 0;
           left: 0;
           right: 0;
-          z-index: 100;
+          z-index: 1000;
+          background: linear-gradient(135deg, #f8f9fc, #edf2ff);
+          padding: 1rem 1.5rem;
           transition: all 0.3s ease;
-          padding: 0.5rem 0;
-        }
-        
-        .nav-container.scrolled {
-          background-color: white;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          box-shadow: none;
         }
         
         .nav-content {
@@ -855,7 +916,31 @@ const Navigation = () => {
         
         /* Mobile menu styling */
         .mobile-menu {
-          display: none;
+          display: block;
+          position: absolute;
+          top: 60px;
+          left: 0;
+          right: 0;
+          background: linear-gradient(135deg, #f8f9fc, #edf2ff);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+          padding: 16px;
+          overflow: hidden;
+          transition: all 0.3s ease;
+          z-index: 1000;
+        }
+        
+        .mobile-menu.closed {
+          max-height: 0;
+          padding-top: 0;
+          padding-bottom: 0;
+          opacity: 0;
+          visibility: hidden;
+        }
+        
+        .mobile-menu.open {
+          max-height: 500px;
+          opacity: 1;
+          visibility: visible;
         }
         
         .mobile-menu-content {
@@ -865,7 +950,12 @@ const Navigation = () => {
         /* Responsive styles */
         @media (max-width: 768px) {
           .nav-logo {
-            font-size: 1.8rem;
+            font-size: 2.5rem;
+            padding: 0.15rem 0;
+          }
+          
+          .tagline-container {
+            display: none; /* Hide tagline on mobile to save space */
           }
           
           .auth-controls {
@@ -882,8 +972,8 @@ const Navigation = () => {
             top: 60px;
             left: 0;
             right: 0;
-            background-color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #f8f9fc, #edf2ff);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             padding: 16px;
             overflow: hidden;
             transition: all 0.3s ease;
@@ -901,6 +991,21 @@ const Navigation = () => {
             opacity: 1;
           }
         }
+        
+        /* Medium screens - adjust tagline position */
+        @media (max-width: 1024px) and (min-width: 769px) {
+          .nav-tagline {
+            font-size: 0.7rem;
+          }
+          
+          .tagline-container {
+            margin-left: 12px;
+          }
+          
+          .tagline-container::before {
+            height: 14px;
+          }
+        }
       `}</style>
       <style jsx global>{`
         @keyframes spin {
@@ -915,4 +1020,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation; 
+export default Navigation;

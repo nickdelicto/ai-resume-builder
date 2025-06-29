@@ -3,7 +3,7 @@
   width: 100%;
   box-sizing: border-box;
   position: relative;
-  padding: 20px;
+  padding: 60px 20px 20px 20px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
   --primary-color: #1a73e8;
   --primary-light: rgba(26, 115, 232, 0.1);

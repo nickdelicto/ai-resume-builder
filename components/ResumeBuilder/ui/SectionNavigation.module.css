@@ -5,6 +5,14 @@
   position: relative;
   overflow-y: auto;
   padding-right: 5px;
+  /* Hide scrollbar while keeping functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.navigationContainer::-webkit-scrollbar {
+  display: none;
 }
 
 .navigationTitle {
@@ -34,6 +42,14 @@
   gap: 8px;
   flex-grow: 1;
   overflow-y: auto;
+  /* Hide scrollbar while keeping functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sectionsList::-webkit-scrollbar {
+  display: none;
 }
 
 .sectionItem {
@@ -48,6 +64,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(233, 236, 239, 0.5);
   overflow: hidden;
+  /* Prevent horizontal overflow */
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sectionItem:hover {
@@ -106,6 +127,10 @@
   flex-grow: 1;
   font-weight: 500;
   color: #4e5968;
+  /* Prevent text overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeIndicator {

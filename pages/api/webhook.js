@@ -41,13 +41,28 @@ export default async function handler(req, res) {
 
   // Handle the event
   try {
+    console.log(`Processing webhook event: ${event.type}`);
+    
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
+        console.log('Checkout session completed:', {
+          id: session.id,
+          customer: session.customer,
+          metadata: session.metadata,
+          mode: session.mode
+        });
         
         // Get user ID from the metadata or client_reference_id
         const userId = session.metadata.userId || session.client_reference_id;
         const planId = session.metadata.planId;
+        const isDownloadAction = session.metadata.action === 'download';
+        
+        console.log('Processing subscription for:', {
+          userId,
+          planId,
+          isDownloadAction
+        });
         
         if (!userId) {
           throw new Error('No user ID found in session');
@@ -65,8 +80,66 @@ export default async function handler(req, res) {
           // Calculate the end date from current_period_end
           currentPeriodEnd = new Date(subscription.current_period_end * 1000);
         } else {
-          // For one-time payments, set expiry to 30 days from now
+          // For one-time payments
+          if (planId === 'one-time') {
+            // Set to a far future date for perpetual access
+            currentPeriodEnd = new Date('2099-12-31');
+          } else {
+            // Other one-time payments get 30 days
           currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+          }
+        }
+        
+        // Check if this is an upgrade or downgrade (has previous subscription)
+        const previousSubscriptionId = session.metadata.previousSubscriptionId;
+        const isUpgrade = session.metadata.isUpgrade === 'true';
+        const isDowngrade = session.metadata.isDowngrade === 'true';
+        
+        // If this is an upgrade or downgrade, cancel the previous subscription
+        if (previousSubscriptionId) {
+          console.log(`Plan change detected: ${isUpgrade ? 'Upgrade' : isDowngrade ? 'Downgrade' : 'Change'} from previous subscription ${previousSubscriptionId}`);
+          
+          try {
+            // Find the previous subscription in our database
+            const previousSubscription = await prisma.userSubscription.findUnique({
+              where: { id: previousSubscriptionId }
+            });
+            
+            if (previousSubscription) {
+              // If there's a Stripe subscription ID, cancel it in Stripe
+              if (previousSubscription.stripeSubscriptionId) {
+                try {
+                  console.log(`Canceling previous Stripe subscription: ${previousSubscription.stripeSubscriptionId}`);
+                  await stripe.subscriptions.cancel(previousSubscription.stripeSubscriptionId);
+                  console.log('Successfully canceled previous subscription in Stripe');
+                } catch (stripeError) {
+                  console.error('Error canceling previous subscription in Stripe:', stripeError);
+                  // Continue with local cancellation even if Stripe API call fails
+                }
+              }
+              
+              // Update the previous subscription status in our database
+              await prisma.userSubscription.update({
+                where: { id: previousSubscriptionId },
+                data: {
+                  status: 'canceled',
+                  canceledAt: new Date(),
+                  metadata: {
+                    ...previousSubscription.metadata,
+                    cancelReason: isUpgrade ? 'upgraded' : 'downgraded',
+                    upgradedToSubscriptionId: null // Will be set after new subscription is created
+                  }
+                }
+              });
+              
+              console.log(`Marked previous subscription ${previousSubscriptionId} as canceled in database`);
+            } else {
+              console.log(`Previous subscription ${previousSubscriptionId} not found in database`);
+            }
+          } catch (error) {
+            console.error(`Error handling previous subscription cancellation: ${error.message}`);
+            // Continue with new subscription creation even if there's an error with the previous one
+          }
         }
         
         // Get the plan to determine max_resumes and other settings
@@ -76,6 +149,25 @@ export default async function handler(req, res) {
         
         if (!plan) {
           throw new Error(`Plan not found: ${planId}`);
+        }
+        
+        // Prepare metadata for one-time plans
+        let subscriptionMetadata = {};
+        if (planId === 'one-time') {
+          subscriptionMetadata = {
+            isPerpetual: true
+          };
+        }
+        
+        // If this is an upgrade or downgrade, add that info to the metadata
+        if (previousSubscriptionId) {
+          subscriptionMetadata = {
+            ...subscriptionMetadata,
+            previousSubscriptionId: previousSubscriptionId,
+            isUpgrade: isUpgrade,
+            isDowngrade: isDowngrade,
+            planChangeDate: new Date().toISOString()
+          };
         }
         
         // Create or update subscription in our database
@@ -89,17 +181,93 @@ export default async function handler(req, res) {
             stripeCustomerId: session.customer,
             stripeSubscriptionId: stripeSubscriptionId,
             stripePaymentIntentId: session.payment_intent,
+            metadata: subscriptionMetadata
           },
         });
+        
+        console.log('Created user subscription:', {
+          id: userSubscription.id,
+          userId: userSubscription.userId,
+          planId: userSubscription.planId,
+          status: userSubscription.status
+        });
+        
+        // If this was a plan change, update the previous subscription with a reference to this new one
+        if (previousSubscriptionId) {
+          try {
+            await prisma.userSubscription.update({
+              where: { id: previousSubscriptionId },
+              data: {
+                metadata: {
+                  upgradedToSubscriptionId: userSubscription.id,
+                  upgradedToPlanId: planId,
+                  upgradedAt: new Date().toISOString()
+                }
+              }
+            });
+            console.log(`Updated previous subscription ${previousSubscriptionId} with reference to new subscription ${userSubscription.id}`);
+          } catch (error) {
+            console.error(`Error updating previous subscription reference: ${error.message}`);
+            // Continue even if this update fails
+          }
+        }
         
         // Update the user's plan type and expiration date
         await prisma.user.update({
           where: { id: userId },
           data: {
-            planType: plan.interval === 'one-time' ? 'one-time' : 'subscription',
+            planType: plan.id,
             planExpirationDate: currentPeriodEnd,
           },
         });
+        
+        console.log('Updated user plan type:', {
+          userId,
+          planType: plan.id,
+          planExpirationDate: currentPeriodEnd
+        });
+        
+        // If this was a download action, find the user's most recent resume
+        // and store its ID in the subscription metadata for easy access
+        if (isDownloadAction) {
+          try {
+            const mostRecentResume = await prisma.resumeData.findFirst({
+              where: { userId: userId },
+              orderBy: { updatedAt: 'desc' },
+              select: { id: true }
+            });
+            
+            if (mostRecentResume) {
+              // Update the subscription with the most recent resume ID
+              await prisma.userSubscription.update({
+                where: { id: userSubscription.id },
+                data: {
+                  metadata: {
+                    mostRecentResumeId: mostRecentResume.id,
+                    isDownloadAction: true
+                  }
+                }
+              });
+              
+              console.log(`Download action: Found most recent resume ${mostRecentResume.id} for user ${userId}`);
+            } else {
+              console.log(`Download action: No resumes found for user ${userId}`);
+              
+              // Even if no resume was found, still mark this as a download action
+              await prisma.userSubscription.update({
+                where: { id: userSubscription.id },
+                data: {
+                  metadata: {
+                    isDownloadAction: true
+                  }
+                }
+              });
+            }
+          } catch (error) {
+            console.error(`Error finding most recent resume: ${error.message}`);
+            // Continue even if there's an error finding the resume
+          }
+        }
         
         console.log(`Payment successful: Created subscription for user ${userId}`);
         break;

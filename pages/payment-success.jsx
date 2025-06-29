@@ -5,8 +5,8 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function PaymentSuccessPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { data: _session } = useSession();
   const { session_id } = router.query;
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState('pending'); // pending, success, error
@@ -17,7 +17,7 @@ export default function PaymentSuccessPage() {
   
   // Verify the payment when the page loads with a session_id
   useEffect(() => {
-    if (!session_id || status !== 'authenticated') return;
+    if (!session_id || _session === null) return;
     
     const verifyPayment = async () => {
       setIsVerifying(true);
@@ -78,14 +78,14 @@ export default function PaymentSuccessPage() {
     };
     
     verifyPayment();
-  }, [session_id, status]);
+  }, [session_id, _session]);
   
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (_session === null) {
       router.push('/auth/signin?callbackUrl=/payment-success');
     }
-  }, [status, router]);
+  }, [_session, router]);
 
   // Handle resume download
   const handleDownload = async () => {
@@ -136,7 +136,7 @@ export default function PaymentSuccessPage() {
   };
   
   // Show loading state while checking authentication
-  if (status === 'loading' || isVerifying) {
+  if (_session === null || isVerifying) {
     return (
       <div className="container">
         <div style={{ 
@@ -309,7 +309,7 @@ export default function PaymentSuccessPage() {
             color: 'var(--text-medium)',
             marginBottom: '20px',
           }}>
-            We couldn't verify your payment. If you've been charged, please contact our support team.
+            We couldn&apos;t verify your payment. If you&apos;ve been charged, please contact our support team.
           </p>
           {error && (
             <div style={{

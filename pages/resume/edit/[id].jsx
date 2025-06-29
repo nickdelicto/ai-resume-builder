@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+import { useResumeService } from '../../../lib/contexts/ResumeServiceContext';
 
 // Dynamically import ModernResumeBuilder with SSR disabled
 const ModernResumeBuilder = dynamic(
@@ -21,6 +22,10 @@ export default function EditResumePage() {
   const [error, setError] = useState(null);
   const [resumeData, setResumeData] = useState(null);
   const [template, setTemplate] = useState('ats');
+  const [resumeTitle, setResumeTitle] = useState('');
+  
+  // Get resume service from context
+  const { service: resumeService } = useResumeService();
   
   // Use a ref to track if we're navigating away internally
   const isNavigatingAwayRef = useRef(false);
@@ -54,7 +59,32 @@ export default function EditResumePage() {
         try {
           setIsLoading(true);
 
-          // Call API to get resume data
+          // First try to load via the resume service
+          if (resumeService) {
+            console.log('Using resume service to load resume:', id);
+            const result = await resumeService.loadResume(id);
+            
+            if (result.success && result.data) {
+              // Set state with loaded data
+              setResumeData(result.data.resumeData);
+              setTemplate(result.data.meta?.template || 'ats');
+              setResumeTitle(result.data.meta?.title || 'My Resume');
+              
+              // IMPORTANT: Reset the navigating away flag to enable auto-save
+              isNavigatingAwayRef.current = false;
+              setIsNavigatingAway(false);
+              console.log('Edit page loaded, enabling autosave');
+              
+              setIsLoading(false);
+              return;
+            }
+            
+            // If service load failed, log error but try direct API as fallback
+            console.error('Resume service failed to load resume:', result.error);
+          }
+
+          // Fallback to direct API call
+          console.log('Falling back to direct API call to load resume:', id);
           const response = await fetch(`/api/resume/get/${id}`);
           
           if (!response.ok) {
@@ -66,9 +96,14 @@ export default function EditResumePage() {
           
           const resumeResponse = await response.json();
           
+          if (!resumeResponse.success || !resumeResponse.resume) {
+            throw new Error('Invalid resume data returned from API');
+          }
+          
           // Set state with loaded data
-          setResumeData(resumeResponse.data);
-          setTemplate(resumeResponse.template || 'ats');
+          setResumeData(resumeResponse.resume.data);
+          setTemplate(resumeResponse.resume.template || 'ats');
+          setResumeTitle(resumeResponse.resume.title || 'My Resume');
           
           // IMPORTANT: Reset the navigating away flag to enable auto-save
           isNavigatingAwayRef.current = false;
@@ -94,7 +129,7 @@ export default function EditResumePage() {
       setIsNavigatingAway(true);
       console.log('Edit page unmounting, disable autosave');
     };
-  }, [id, status, router]);
+  }, [id, status, router, resumeService]);
 
   if (isLoading) {
     return (
@@ -146,7 +181,9 @@ export default function EditResumePage() {
       initialData={resumeData} 
       isAuthenticated={!!session} 
       resumeId={id}
+      resumeTitle={resumeTitle}
       isNavigatingAway={isNavigatingAway}
+      selectedTemplate={template}
     />
   ) : null;
 } 

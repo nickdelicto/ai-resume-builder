@@ -34,19 +34,23 @@ model Session {
 }
 
 model User {
-  id                 String              @id @default(cuid())
+  id                 String             @id @default(cuid())
   name               String?
-  email              String?             @unique
+  email              String?            @unique
   emailVerified      DateTime?
   image              String?
-  isNewUser          Boolean             @default(true)
-  planType           String              @default("free")
+  isNewUser          Boolean            @default(true)
+  planType           String             @default("free")
   planExpirationDate DateTime?
-  createdAt          DateTime            @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   accounts           Account[]
   resumeData         ResumeData[]
   sessions           Session[]
   subscriptions      UserSubscription[]
+  feedback           FeedbackEntry[]
+  events             UserEvent[]
+  discounts          SubscriptionDiscount[]
 }
 
 model VerificationToken {
@@ -68,45 +72,88 @@ model ResumeData {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Subscription-related Models
 model SubscriptionPlan {
-  id                  String              @id @default(cuid())
-  name                String
-  description         String
-  price               Float
-  interval            String              // "one-time", "weekly", "monthly"
-  stripePriceId       String?             // Stripe price ID reference
-  isPopular           Boolean             @default(false)
-  isActive            Boolean             @default(true)
-  features            String[]            // Array of feature descriptions
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  userSubscriptions   UserSubscription[]
+  id                String             @id @default(cuid())
+  name              String
+  description       String
+  price             Float
+  interval          String
+  stripePriceId     String?
+  isPopular         Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  features          String[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  userSubscriptions UserSubscription[]
 }
 
 model UserSubscription {
-  id                    String            @id @default(cuid())
+  id                    String                @id @default(cuid())
   userId                String
   planId                String
-  stripeCustomerId      String?           // Stripe customer ID
-  stripeSubscriptionId  String?           // Stripe subscription ID
-  stripePaymentIntentId String?           // For one-time payments
-  status                String            // "active", "canceled", "past_due", "trialing", "incomplete"
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  stripePaymentIntentId String?
+  status                String
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime
-  cancelAtPeriodEnd     Boolean           @default(false)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
-  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan                  SubscriptionPlan  @relation(fields: [planId], references: [id])
+  cancelAtPeriodEnd     Boolean               @default(false)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  metadata              Json?
+  plan                  SubscriptionPlan      @relation(fields: [planId], references: [id])
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discounts             SubscriptionDiscount[]
 }
 
-// Added for auto-save duplicate prevention
 model KVStore {
   key       String   @id
   value     String
   metadata  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Add FeedbackEntry model for storing cancellation feedback
+model FeedbackEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // e.g., 'cancellation', 'feature_request', etc.
+  content   Json     // Flexible structure for different types of feedback
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Add UserEvent model for analytics
+model UserEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // e.g., 'retention_discount_applied', 'subscription_canceled', etc.
+  metadata  Json?    // Additional data about the event
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Add SubscriptionDiscount model for tracking discounts
+model SubscriptionDiscount {
+  id                String           @id @default(cuid())
+  subscriptionId    String
+  userId            String
+  discountPercent   Float
+  originalPrice     Float
+  discountedPrice   Float
+  stripeCouponId    String?
+  appliedAt         DateTime         @default(now())
+  expiresAt         DateTime?        // Null means forever
+  isActive          Boolean          @default(true)
+  reason            String?          // e.g., 'retention', 'promotion', etc.
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  // Relations
+  subscription      UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

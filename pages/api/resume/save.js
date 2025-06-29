@@ -1,171 +1,200 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "../../../lib/prisma";
-import { v4 as uuidv4 } from 'uuid';
+// Kept for potential future use
+// import { v4 as uuidv4 } from 'uuid';
 
 /**
- * API endpoint to save resume data
- * Used for creating a new resume or updating an existing one
+ * API endpoint to save a resume to the database
+ * Handles both new resume creation and updates to existing resumes
  */
 export default async function handler(req, res) {
-  // Only allow POST requests
+  // Only allow POST method
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
-    // Get user session
+    // Get the user session
     const session = await getServerSession(req, res, authOptions);
 
-    // Check if user is authenticated
-    if (!session || !session.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    // If user is not authenticated, return error
+    if (!session) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
     }
-    
-    // Get data from request body
-    const { title, data, template, resumeId, forcedId } = req.body;
-    
-    // Use title or generate a fallback
-    const resumeTitle = title || 'Untitled Resume';
 
-    // Validate data
-    if (!data) {
-      return res.status(400).json({ error: 'No resume data provided' });
+    // Get user ID from session
+    const userId = session.user.id;
+
+    // Get the resume data from the request body
+    const { resumeData, template = 'ats', title = 'My Resume', resumeId, isImport = false, forceUpdate = false } = req.body;
+
+    // Validate the data
+    if (!resumeData) {
+      return res.status(400).json({ success: false, error: 'Resume data is required' });
     }
-    
-    // Try to use KVStore for locking to prevent duplicates
-    let useLocking = true;
-    let lockKey = null;
-    
-    try {
-      // Check if KVStore exists in the database by wrapping in try/catch
-      try {
-        // Test if KVStore is available by making a simple query
-        await prisma.kVStore.findFirst({
-          take: 1,
+
+    // Check if this is an import operation (override existing resume)
+    // Or if a resumeId was provided (update existing resume)
+    if ((isImport || forceUpdate) && resumeId) {
+      console.log(`📊 API: Import/Force update operation for resumeId ${resumeId}`);
+      
+      // First check if the resume exists and belongs to this user
+      const existingResume = await prisma.resumeData.findFirst({
+        where: {
+          id: resumeId,
+          userId: userId
+        }
+      });
+      
+      if (!existingResume) {
+        console.log(`📊 API: Resume ${resumeId} not found or doesn't belong to user ${userId}`);
+        
+        // For imports, if the resume doesn't exist, create a new one instead of failing
+        const newResume = await prisma.resumeData.create({
+          data: {
+            data: sanitizeDataForDb(resumeData),
+            title: title,
+            template: template,
+            userId: userId
+          }
         });
         
-        // If we get here, KVStore is available, so create a lock
-        lockKey = `resume_save_lock_${session.user.id}_${Date.now()}`;
-        await prisma.kVStore.create({
-          data: {
-            key: lockKey,
-            value: 'locked',
-            metadata: {
-              userId: session.user.id,
-              expires: new Date(Date.now() + 10000), // 10 seconds
-              resumeId: resumeId || forcedId || null
-            }
-          }
+        return res.status(200).json({
+          success: true,
+          message: 'New resume created from import',
+          resumeId: newResume.id
         });
-        console.log(`Created lock with key: ${lockKey}`);
-      } catch (kvError) {
-        // KVStore table likely doesn't exist yet
-        console.error('KVStore error - likely needs migration:', kvError.message);
-        useLocking = false;
       }
-
-      // Check if a resume with the provided resumeId already exists (if resumeId is provided)
-      // This is to prevent duplicate creations when the client thinks a resume exists but it doesn't
-      const idToCheck = resumeId || forcedId;
-      if (idToCheck) {
-        const existingResume = await prisma.resumeData.findUnique({
-          where: {
-            id: idToCheck,
-          }
-        });
-
-        if (existingResume) {
-          // If resume already exists and belongs to this user, redirect to update endpoint
-          if (existingResume.userId === session.user.id) {
-            // Update the existing resume instead of redirecting
-            const updatedResume = await prisma.resumeData.update({
-              where: {
-                id: idToCheck
-              },
-              data: {
-                title: resumeTitle,
-                data: sanitizeDataForDb(data),
-                template: template,
-                updatedAt: new Date()
-              }
-            });
-            
-            console.log(`Updated existing resume: ${updatedResume.id}`);
-            
-            // Release the lock if using locking
-            if (useLocking && lockKey) {
-              try {
-                await prisma.kVStore.delete({
-                  where: { key: lockKey }
-                });
-              } catch (e) {
-                console.error('Error releasing lock:', e);
-              }
-            }
-            
-            return res.status(200).json({
-              message: 'Resume updated successfully',
-              resumeId: updatedResume.id
-            });
-          } else {
-            // If resume exists but belongs to another user, reject the operation
-            return res.status(403).json({
-              error: 'You do not have permission to access this resume'
-            });
-          }
+      
+      // For imports, add extra logging and prioritize the operation
+      if (isImport) {
+        console.log(`📊 API: IMPORT OPERATION - Prioritizing imported data over existing data`);
+        console.log(`📊 API: IMPORT OPERATION - Existing title: ${existingResume.title}, New title: ${title || existingResume.title}`);
+        
+        // Log some data about the import to help with debugging
+        if (resumeData && resumeData.personalInfo) {
+          console.log(`📊 API: IMPORT OPERATION - Import data name: ${resumeData.personalInfo.name || 'Not provided'}`);
         }
-        // If the ID doesn't exist, we'll create a new resume with that ID below
+        
+        // For imports, always use the new data completely (stronger force update)
+        const updatedResume = await prisma.resumeData.update({
+          where: {
+            id: resumeId
+          },
+          data: {
+            data: sanitizeDataForDb(resumeData),
+            title: title || existingResume.title,
+            template: template || existingResume.template,
+            updatedAt: new Date()
+          }
+        });
+        
+        // Double-check that the update was successful by reading back the data
+        const verifyResume = await prisma.resumeData.findUnique({
+          where: {
+            id: resumeId
+          }
+        });
+        
+        // Log verification results
+        if (verifyResume && verifyResume.data && verifyResume.data.personalInfo) {
+          console.log(`📊 API: IMPORT VERIFICATION - Updated name: ${verifyResume.data.personalInfo.name || 'Not found'}`);
+          console.log(`📊 API: IMPORT VERIFICATION - Update successful: ${
+            verifyResume.data.personalInfo.name === resumeData.personalInfo.name ? 'YES' : 'NO'
+          }`);
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Resume updated from import with verification',
+          resumeId: updatedResume.id
+        });
       }
-
-      // Create a new resume, using forcedId if provided
+      
+      // Update the existing resume with the imported data
+      const updatedResume = await prisma.resumeData.update({
+        where: {
+          id: resumeId
+        },
+        data: {
+          data: sanitizeDataForDb(resumeData),
+          title: title || existingResume.title, // Preserve original title if not specified
+          template: template || existingResume.template, // Preserve original template if not specified
+          updatedAt: new Date()
+        }
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Resume updated from import',
+        resumeId: updatedResume.id
+      });
+    } 
+    // Handle regular update if resumeId is provided but not an import
+    else if (resumeId) {
+      console.log(`📊 API: Update operation for resumeId ${resumeId}`);
+      
+      // Check if the resume exists and belongs to this user
+      const existingResume = await prisma.resumeData.findFirst({
+        where: {
+          id: resumeId,
+          userId: userId
+        }
+      });
+      
+      if (!existingResume) {
+        return res.status(404).json({
+          success: false,
+          error: 'Resume not found or does not belong to you'
+        });
+      }
+      
+      // Update the resume
+      const updatedResume = await prisma.resumeData.update({
+        where: {
+          id: resumeId
+        },
+        data: {
+          data: sanitizeDataForDb(resumeData),
+          title: title,
+          template: template,
+          updatedAt: new Date()
+        }
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Resume updated',
+        resumeId: updatedResume.id
+      });
+    }
+    // Create a new resume
+    else {
+      console.log(`📊 API: Creating new resume for user ${userId}`);
+      
+      // Create a new resume
       const newResume = await prisma.resumeData.create({
         data: {
-          // Use forcedId if provided, otherwise auto-generate
-          ...(forcedId && { id: forcedId }),
-          userId: session.user.id,
-          title: resumeTitle,
-          data: sanitizeDataForDb(data),
-          template: template || 'ats'
+          data: sanitizeDataForDb(resumeData),
+          title: title,
+          template: template,
+          userId: userId
         }
       });
       
-      console.log(`Created new resume${forcedId ? ' with specified ID' : ''}: ${newResume.id}`);
-      
-      // Release the lock if using locking
-      if (useLocking && lockKey) {
-        try {
-          await prisma.kVStore.delete({
-            where: { key: lockKey }
-          });
-        } catch (e) {
-          console.error('Error releasing lock:', e);
-        }
-      }
-      
-      return res.status(201).json({
-        message: `Resume created successfully${forcedId ? ' with provided ID' : ''}`,
+      return res.status(200).json({
+        success: true,
+        message: 'Resume created',
         resumeId: newResume.id
       });
-    } catch (error) {
-      console.error('Error in save resume operation:', error);
-      
-      // Release the lock if using locking
-      if (useLocking && lockKey) {
-        try {
-          await prisma.kVStore.delete({
-            where: { key: lockKey }
-          });
-        } catch (e) {
-          console.error('Error releasing lock:', e);
-        }
-      }
-      
-      return res.status(500).json({ error: 'Failed to save resume: ' + error.message });
     }
   } catch (error) {
     console.error('Error saving resume:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      success: false,
+      error: 'An error occurred while saving the resume'
+    });
   }
 }
 

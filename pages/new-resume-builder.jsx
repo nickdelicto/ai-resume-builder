@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useResumeService } from '../lib/contexts/ResumeServiceContext';
 
 // Dynamically import ModernResumeBuilder with SSR disabled
 const ModernResumeBuilder = dynamic(
@@ -12,6 +12,7 @@ const ModernResumeBuilder = dynamic(
 );
 
 // Update LoadingFallback to be more modern and show job targeting context if available
+// This component is used conditionally when isInitialized is false
 const LoadingFallback = ({ jobTitle }) => (
   <div style={{
     display: 'flex',
@@ -98,443 +99,127 @@ const LoadingFallback = ({ jobTitle }) => (
 );
 
 const NewResumeBuilderPage = () => {
-  const [showOptions, setShowOptions] = useState(true);
-  const [jobContext, setJobContext] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: _session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
   const router = useRouter();
-  const session = useSession();
   
-  // Clear all resume data from localStorage
-  const clearAllResumeData = () => {
-    try {
-      // Clear all resume-related localStorage items for a fresh start
-      localStorage.removeItem('modern_resume_data');
-      localStorage.removeItem('modern_resume_progress');
-      localStorage.removeItem('modern_resume_section_order');
-      localStorage.removeItem('job_targeting_context');
-      localStorage.removeItem('imported_resume_data');
-      localStorage.removeItem('selected_resume_template');
-      console.log('📊 All resume builder data has been reset for a fresh start');
-    } catch (error) {
-      console.error('Error clearing resume data:', error);
-    }
-  };
+  // Get resume service from context
+  const { 
+    service: _service, 
+    isInitialized,
+    currentResumeId,
+    needsMigration: _needsMigration
+  } = useResumeService();
   
-  // Check if router is ready
+  // Add state to track if user is navigating away
+  const [isNavigatingAway, setIsNavigatingAway] = useState(false);
+  
+  // Add state for potential imported data
+  const [importedData, setImportedData] = useState(null);
+  
+  // Track the resumeId from URL parameters
+  const [urlResumeId, setUrlResumeId] = useState(null);
+  
+  // Parse any query parameters
   useEffect(() => {
     if (router.isReady) {
-      console.log('📊 DEBUG - PAGE - new-resume-builder page initialized');
-      console.log('📊 DEBUG - PAGE - localStorage keys:', Object.keys(localStorage));
-      console.log('📊 DEBUG - PAGE - resumeId in localStorage:', localStorage.getItem('current_resume_id'));
-      console.log('📊 DEBUG - PAGE - starting_new_resume flag:', localStorage.getItem('starting_new_resume'));
+      console.log('📊 NewResumeBuilderPage - Router ready, URL parameters:', router.query);
       
-      // Get all relevant query parameters
-      const { source, job_targeting, mode, job, preserve_job_context } = router.query;
-      console.log('📊 URL params:', { source, job_targeting, mode, hasJobParam: !!job, preserveRequested: !!preserve_job_context });
-      
-      // If no specific parameters are provided, redirect to landing page
-      // This makes /resume the primary entry point
-      if (!source && !job_targeting && !mode) {
-        router.replace('/');
-        return;
-      }
-      
-      // Don't show options if coming from import or if mode is builder
-      if (source === 'import' || mode === 'builder') {
-        setShowOptions(false);
-      }
-      
-      // Enhanced job targeting detection with multiple sources
-      const hasJobTargetingFlag = job_targeting === 'true';
-      const hasJobParam = !!job;
-      const isJobTargetingSource = source === 'job-targeting';
-      const preserveRequested = preserve_job_context === 'true';
-      
-      // Check existing localStorage state
-      let hasExistingJobContext = false;
-      let existingJobContextData = null;
-      try {
-        const existingJobContext = localStorage.getItem('job_targeting_context');
-        if (existingJobContext) {
-          hasExistingJobContext = true;
-          existingJobContextData = JSON.parse(existingJobContext);
-        }
-      } catch (e) {
-        console.error('📊 NewResumeBuilderPage - Error checking existing job context:', e);
-      }
-      
-      // Consider it a job targeting workflow if ANY of these conditions are true
-      const isJobTargeting = hasJobTargetingFlag || hasJobParam || isJobTargetingSource || 
-                            (hasExistingJobContext && preserveRequested);
-                            
-      console.log('📊 NewResumeBuilderPage - Job targeting detection:', {
-        hasJobTargetingFlag,
-        hasJobParam,
-        isJobTargetingSource,
-        hasExistingJobContext,
-        preserveRequested,
-        isJobTargeting
-      });
-      
-      if (isJobTargeting) {
-        // First try to get job context from URL parameter if available
-        if (hasJobParam) {
-          try {
-            const jobContextFromUrl = JSON.parse(decodeURIComponent(job));
-            console.log('📊 NewResumeBuilderPage - Found job context in URL param:', {
-              title: jobContextFromUrl.title || jobContextFromUrl.jobTitle,
-              hasDescription: !!jobContextFromUrl.description
-            });
-            
-            // Save to localStorage and update state
-            localStorage.setItem('job_targeting_context', JSON.stringify(jobContextFromUrl));
-            localStorage.setItem('job_targeting_active', 'true');
-            setJobContext(jobContextFromUrl);
-          } catch (error) {
-            console.error('📊 NewResumeBuilderPage - Error parsing job context from URL:', error);
-            
-            // Fallback to localStorage if URL parsing fails
-            if (hasExistingJobContext) {
-              setJobContext(existingJobContextData);
-            }
-          }
-        } 
-        // If no URL parameter but we have localStorage data
-        else if (hasExistingJobContext) {
-          console.log('📊 NewResumeBuilderPage - Using existing job context from localStorage:', {
-            title: existingJobContextData.title || existingJobContextData.jobTitle,
-            hasDescription: !!existingJobContextData.description
-          });
-          
-          setJobContext(existingJobContextData);
-          localStorage.setItem('job_targeting_active', 'true');
-        } else {
-          console.log('📊 NewResumeBuilderPage - Job targeting enabled but no context found');
-          setJobContext(null);
-        }
-      } else {
-        // For any other workflow, ensure job context is null and clear job targeting data
-        setJobContext(null);
-        console.log('📊 NewResumeBuilderPage - Job targeting disabled for this flow, clearing any previous job context', { source, job_targeting });
+      // Check for resumeId in URL parameters - this takes priority
+      if (router.query.resumeId) {
+        console.log('📊 NewResumeBuilderPage - Found resumeId in URL:', router.query.resumeId);
+        setUrlResumeId(router.query.resumeId);
         
-        // Clear job targeting context if we're starting a fresh workflow
-        // This prevents job context from persisting when starting a new "Build from Scratch" workflow
-        try {
-          localStorage.removeItem('job_targeting_context');
-          localStorage.removeItem('job_targeting_active');
-          console.log('📊 NewResumeBuilderPage - Cleared job targeting data from localStorage');
-        } catch (error) {
-          console.error('📊 NewResumeBuilderPage - Error clearing job targeting data:', error);
+        // If this is from a new resume creation, ensure we use this ID and clear any conflicting IDs
+        if (router.query.source === 'new') {
+          console.log('📊 NewResumeBuilderPage - This is a new resume, ensuring we use the correct ID');
+          localStorage.setItem('current_resume_id', router.query.resumeId);
+          
+          // Clear any editing flags to prevent conflicts
+          localStorage.removeItem('editing_resume_id');
+          localStorage.removeItem('editing_existing_resume');
+        }
+        // If this is from an import, also update the current_resume_id in localStorage
+        else if (router.query.source === 'import') {
+          console.log('📊 NewResumeBuilderPage - Updating localStorage with resumeId from import:', router.query.resumeId);
+          localStorage.setItem('current_resume_id', router.query.resumeId);
         }
       }
       
-      // Set loading to false once we've checked all conditions
-      setIsLoading(false);
+      // Check for import flag
+      if (router.query.import === 'true') {
+        console.log('📊 NewResumeBuilderPage - Import flag detected, ensuring import flags are set');
+        
+        // Check localStorage for imported data
+        try {
+          const importedData = localStorage.getItem('imported_resume_data');
+          if (importedData) {
+            setImportedData(JSON.parse(importedData));
+            
+            // Ensure the import_create_new flag is set
+            localStorage.setItem('import_create_new', 'true');
+            localStorage.setItem('import_pending', 'true');
+          }
+        } catch (error) {
+          console.error('Error parsing imported data:', error);
+        }
+      }
+      
+      // If there's a job parameter, parse it
+      if (router.query.job) {
+        try {
+          const jobContext = JSON.parse(decodeURIComponent(router.query.job));
+          localStorage.setItem('job_targeting_context', JSON.stringify(jobContext));
+        } catch (error) {
+          console.error('Error parsing job context:', error);
+        }
+      }
     }
   }, [router.isReady, router.query]);
 
-  // Handle option selection
-  const handleOption = (option) => {
-    // First clear all localStorage data for a fresh start
-    clearAllResumeData();
+  // Before unloading, mark that we're navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      setIsNavigatingAway(true);
+    };
     
-    // Reset state
-    setJobContext(null);
+    const handleRouteChange = () => {
+      setIsNavigatingAway(true);
+    };
     
-    // Proceed with the selected workflow using clean URLs without extra parameters
-    if (option === 'scratch') {
-      // For scratch workflow, just show the builder directly
-      setShowOptions(false);
-      
-      // Update URL to remove any query parameters that might cause workflow confusion
-      router.replace('/new-resume-builder', undefined, { shallow: true });
-    } else if (option === 'import') {
-      // For import workflow, navigate to the import page with a clean URL
-      router.push({
-        pathname: '/resume-import',
-        // Only pass necessary parameters, no job_targeting flags
-        query: { source: 'new_builder' }
-      });
-    } else if (option === 'tailor') {
-      // For job targeting workflow, navigate to the targeting page with appropriate flags
-      router.push({
-        pathname: '/job-targeting',
-        query: { source: 'new_builder' }
-      });
-    }
-  };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    router.events.on('routeChangeStart', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [router]);
   
-  // If still loading, show appropriate loading screen
-  if (isLoading) {
-    return <LoadingFallback jobTitle={jobContext?.title} />;
-  }
-
-  // Render starting options
-  const renderOptions = () => (
-    <div style={{
-      maxWidth: '900px',
-      margin: '40px auto',
-      padding: '20px',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{
-        textAlign: 'center',
-        marginBottom: '40px'
-      }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: '700',
-          color: '#1c7ed6',
-          marginBottom: '15px'
-        }}>
-          Create Your Professional Resume
-        </h1>
-        <p style={{
-          fontSize: '18px',
-          color: '#495057',
-          maxWidth: '600px',
-          margin: '0 auto',
-          lineHeight: '1.6'
-        }}>
-          Choose the best starting point for your resume creation journey
-        </p>
-      </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '20px',
-        marginTop: '30px'
-      }}>
-        {/* Build from Scratch Option */}
-        <div 
-          onClick={() => handleOption('scratch')}
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '30px 25px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-            transition: 'all 0.3s ease',
-            cursor: 'pointer',
-            border: '1px solid #e9ecef',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-5px)';
-            e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#1c7ed6';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
-            e.currentTarget.style.borderColor = '#e9ecef';
-          }}
-        >
-          <div style={{
-            width: '70px',
-            height: '70px',
-            backgroundColor: '#e7f5ff',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '20px'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 4L12 20" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M4 12L20 12" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '600',
-            color: '#343a40',
-            marginBottom: '10px'
-          }}>
-            Build from Scratch
-          </h3>
-          <p style={{
-            color: '#6c757d',
-            fontSize: '15px',
-            lineHeight: '1.5'
-          }}>
-            Together, we will create your outstanding resume- step by step!
-          </p>
-        </div>
-
-        {/* Import Resume Option */}
-        <div 
-          onClick={() => handleOption('import')}
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '30px 25px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-            transition: 'all 0.3s ease',
-            cursor: 'pointer',
-            border: '1px solid #e9ecef',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-5px)';
-            e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#1c7ed6';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
-            e.currentTarget.style.borderColor = '#e9ecef';
-          }}
-        >
-          <div style={{
-            width: '70px',
-            height: '70px',
-            backgroundColor: '#e7f5ff',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '20px'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 16L4 17C4 18.6569 5.34315 20 7 20L17 20C18.6569 20 20 18.6569 20 17L20 16" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M16 8L12 4L8 8" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 4L12 16" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '600',
-            color: '#343a40',
-            marginBottom: '10px'
-          }}>
-            Import Existing Resume
-          </h3>
-          <p style={{
-            color: '#6c757d',
-            fontSize: '15px',
-            lineHeight: '1.5'
-          }}>
-            Upload your resume and we will polish it up- make it stand out!
-          </p>
-        </div>
-
-        {/* Tailor to Job Option */}
-        <div 
-          onClick={() => handleOption('tailor')}
-          style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '30px 25px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-            transition: 'all 0.3s ease',
-            cursor: 'pointer',
-            border: '1px solid #e9ecef',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-5px)';
-            e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
-            e.currentTarget.style.borderColor = '#1c7ed6';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
-            e.currentTarget.style.borderColor = '#e9ecef';
-          }}
-        >
-          <div style={{
-            position: 'absolute',
-            top: '15px',
-            right: '15px',
-            background: '#fa5252',
-            color: 'white',
-            fontSize: '12px',
-            fontWeight: '600',
-            padding: '4px 8px',
-            borderRadius: '20px',
-            textTransform: 'uppercase'
-          }}>
-            Coming Soon
-          </div>
-          <div style={{
-            width: '70px',
-            height: '70px',
-            backgroundColor: '#e7f5ff',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '20px'
-          }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 11L12 14L22 4" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '600',
-            color: '#343a40',
-            marginBottom: '10px'
-          }}>
-            Tailor to Job Description
-          </h3>
-          <p style={{
-            color: '#6c757d',
-            fontSize: '15px',
-            lineHeight: '1.5'
-          }}>
-            We will match your resume to the Job Posting!
-          </p>
-        </div>
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-lg">Loading resume builder...</p>
       </div>
     </div>
   );
+  }
 
   return (
     <>
       <Head>
-        <title>
-          {jobContext ? 
-            `Tailor Resume for ${jobContext.title || jobContext.jobTitle || 'Job'} | Modern Resume Builder` : 
-            'Modern Resume Builder | Create Your Professional Resume'}
-        </title>
-        <meta 
-          name="description" 
-          content={jobContext ? 
-            `Optimize your resume for ${jobContext.title || jobContext.jobTitle} position with our AI-powered resume tailoring tool.` : 
-            "Create a professional resume with our modern, AI-powered resume builder. Easy to use with customizable templates."}
-        />
+        <title>Resume Builder | Create Professional Resumes</title>
+        <meta name="description" content="Build professional resumes with our AI-powered resume builder. Tailor your resume for job applications and get more interviews." />
       </Head>
-      
-      {/* Render Options UI or the Resume Builder */}
-      {!isLoading && (
-        <>
-          {showOptions ? (
-            renderOptions()
-          ) : (
             <ModernResumeBuilder 
-              jobContext={jobContext}
-              isJobTargeting={!!jobContext}
-              isAuthenticated={!!session.data}
-            />
-          )}
-        </>
-      )}
+        isAuthenticated={isAuthenticated} 
+        initialData={importedData}
+        resumeId={urlResumeId || currentResumeId}
+        isNavigatingAway={isNavigatingAway}
+      />
     </>
   );
 };

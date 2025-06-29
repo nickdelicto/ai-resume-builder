@@ -704,8 +704,8 @@ const RawResumeTemplate = ({ resumeData, template = 'ats', sectionOrder = null }
       );
     } else if (template === 'creative') {
       return (
-        <div className={styles.header}>
-          <div className={styles.headerMain}>
+        <div className={styles.header} style={{ marginBottom: '24px' }}>
+          <div className={styles.headerMain} style={{ marginBottom: '0' }}>
             <h1 className={styles.name}>{resumeData.personalInfo?.name || 'Your Name'}</h1>
           </div>
           <div className={styles.contactGrid}>
@@ -793,7 +793,7 @@ const RawResumeTemplate = ({ resumeData, template = 'ats', sectionOrder = null }
     } else {
       return (
         <div className={styles.header}>
-          <div className={styles.headerSidebar}>
+          <div className={styles.headerSidebar} style={{ marginBottom: '15px', width: 'auto' }}>
             <h1 className={styles.name}>{resumeData.personalInfo?.name || 'Your Name'}</h1>
           </div>
           <div className={styles.contactContainer}>
@@ -823,7 +823,7 @@ const RawResumeTemplate = ({ resumeData, template = 'ats', sectionOrder = null }
   };
 
   return (
-    <div className={styles.resumePreview}>
+    <div className={styles.resumePreview} style={{ background: 'white', paddingBottom: 0, marginBottom: 0 }}>
       {/* Header with personal info is always first */}
       {renderHeader()}
       

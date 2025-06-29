@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fields, files } = await parseForm(req);
+    const { files } = await parseForm(req);
     console.log('✅ Form parsed successfully');
     
     // Check if a file was uploaded
@@ -147,7 +147,6 @@ async function parseResumeWithAI(file, fileName, filePath, fileExt) {
     // Extract text based on file type
     let extractedText = '';
     let extractionMethod = '';
-    let extractionError = null;
     
     try {
       if (fileExt === '.pdf') {
@@ -176,7 +175,8 @@ async function parseResumeWithAI(file, fileName, filePath, fileExt) {
       }
     } catch (error) {
       console.error(`❌ Error extracting text from ${fileExt} file:`, error.message);
-      extractionError = error;
+      // Kept for potential future logging/debugging
+      // const extractionError = error;
       
       // Instead of fallback text, throw a more specific error that will be caught by the outer try/catch
       if (error.message.includes('Invalid PDF structure')) {

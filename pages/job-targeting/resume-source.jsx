@@ -139,7 +139,7 @@ const ResumeSourcePage = () => {
             margin: '0 auto',
             lineHeight: '1.6'
           }}>
-            We'll optimize your resume for: <strong>{jobContext?.title || 'Target Position'}</strong>
+            We&apos;ll optimize your resume for: <strong>{jobContext?.title || 'Target Position'}</strong>
           </p>
         </div>
         
@@ -266,7 +266,7 @@ const ResumeSourcePage = () => {
               fontSize: '15px',
               lineHeight: '1.5'
             }}>
-              Upload your existing resume and we'll optimize it for this job.
+              Upload your existing resume and we&apos;ll optimize it for this job.
             </p>
           </div>
         </div>

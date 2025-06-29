@@ -1,6 +1,6 @@
 .resumePreview {
-  font-family: Arial, Helvetica, sans-serif;
-  color: #000;
+  font-family: Arial, Helvetica, sans-serif !important;
+  color: #000 !important;
   line-height: 1.5;
   padding: 0;
 }
@@ -11,8 +11,8 @@
 
 .name {
   font-size: 24px;
-  font-weight: 700;
-  color: #000;
+  font-weight: 700 !important;
+  color: #000 !important;
   margin: 0 0 10px 0;
 }
 
@@ -22,12 +22,16 @@
   align-items: center;
   gap: 0;
   font-size: 11pt;
+  font-family: Arial, Helvetica, sans-serif !important;
+  color: #000 !important;
 }
 
 /* Style for each contact item container */
 .contactInfo span {
   display: flex;
   align-items: center;
+  font-family: Arial, Helvetica, sans-serif !important;
+  color: #000 !important;
 }
 
 /* Ensure contact links are blue and underlined for ATS template */
@@ -54,16 +58,18 @@
 
 .sectionTitle {
   font-size: 14px;
-  font-weight: 700;
-  color: #000;
+  font-weight: 700 !important;
+  color: #000 !important;
   text-transform: uppercase;
   border-bottom: 1px solid #000;
   padding-bottom: 5px;
   margin-bottom: 15px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .item {
   margin-bottom: 15px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .itemHeader {
@@ -76,9 +82,10 @@
   justify-content: space-between;
   align-items: center;
   font-size: 13pt;
-  font-weight: bold;
-  color: #000;
+  font-weight: bold !important;
+  color: #000 !important;
   margin-bottom: 2px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .certDetails {
@@ -132,6 +139,7 @@
 .bullet {
   color: #000 !important;
   margin-right: 8px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .bulletPoint {
@@ -139,8 +147,9 @@
   padding-left: 15px;
   margin: 4px 0;
   font-size: 11pt;
-  color: #000;
+  color: #000 !important;
   line-height: 1.5;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .skill {
@@ -149,8 +158,9 @@
   padding: 0;
   margin-right: 15px;
   font-weight: normal;
-  color: #000;
+  color: #000 !important;
   font-size: 11pt;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .skillsList {
@@ -168,9 +178,10 @@
 
 .summary {
   font-size: 11pt;
-  color: #000;
+  color: #000 !important;
   line-height: 1.5;
   margin-bottom: 15px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 /* Languages section styles for ATS template */

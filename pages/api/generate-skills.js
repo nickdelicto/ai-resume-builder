@@ -221,8 +221,8 @@ function buildUserMessageContent(existingSkills, professionalContext, experience
   // Add experience information if available
   if (experience && experience.length > 0) {
     content += '=== WORK EXPERIENCE ===\n';
-    experience.forEach((exp, index) => {
-      content += `Position ${index + 1}: ${exp.title} at ${exp.company}\n`;
+    experience.forEach((exp, _index) => {
+      content += `Position ${_index + 1}: ${exp.title} at ${exp.company}\n`;
       if (exp.startDate && exp.endDate) content += `Duration: ${exp.startDate} - ${exp.endDate}\n`;
       if (exp.description) content += `Description: ${exp.description}\n`;
       content += '\n';
@@ -232,7 +232,7 @@ function buildUserMessageContent(existingSkills, professionalContext, experience
   // Add education if available
   if (education && education.length > 0) {
     content += '=== EDUCATION ===\n';
-    education.forEach((edu, index) => {
+    education.forEach((edu, _index) => {
       if (edu.degree) content += `Degree: ${edu.degree}\n`;
       if (edu.school) content += `School: ${edu.school}\n`;
       if (edu.fieldOfStudy) content += `Field of Study: ${edu.fieldOfStudy}\n`;

@@ -11,7 +11,8 @@ import Education from '../ResumeBuilder/sections/Education';
 import Skills from '../ResumeBuilder/sections/Skills';
 import AdditionalInfo from '../ResumeBuilder/sections/AdditionalInfo';
 import { saveResumeData as saveToLocalStorage, getResumeData as getFromLocalStorage, saveResumeProgress, getResumeProgress } from '../ResumeBuilder/utils/localStorage';
-import { loadResumeData, saveResumeData } from '../../lib/resumeUtils';
+import { loadResumeData, saveResumeData, startNewResume, migrateToDatabase } from '../../lib/resumeUtils';
+import { useResumeService } from '../../lib/contexts/ResumeServiceContext';
 import styles from './ModernResumeBuilder.module.css';
 import Head from 'next/head';
 import TemplateSelector from '../ResumeBuilder/ui/TemplateSelector';
@@ -19,7 +20,43 @@ import { FaArrowLeft, FaPencilAlt, FaBriefcase, FaInfoCircle, FaTimes, FaLightbu
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
-import { startNewResume } from '../../lib/resumeUtils';
+
+// Helper function to mark localStorage data for migration to database
+// This can be imported and called when a user signs in from another component
+export const markLocalStorageForMigration = () => {
+  if (typeof window !== 'undefined') {
+    // Don't set the flag if it's already being processed
+    if (localStorage.getItem('migration_in_progress') !== 'true') {
+      // Generate a unique migration session ID to prevent duplicate migrations
+      const migrationSessionId = `migration_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('migration_session_id', migrationSessionId);
+      localStorage.setItem('needs_db_migration', 'true');
+      localStorage.setItem('migration_marked_time', Date.now().toString());
+      console.log('📊 Marked localStorage data for migration to database');
+      
+      // Set a debounce timer to prevent rapid consecutive migrations
+      localStorage.setItem('migration_debounce', 'true');
+      setTimeout(() => {
+        localStorage.removeItem('migration_debounce');
+      }, 5000); // 5 second debounce
+    } else {
+      console.log('📊 Migration already in progress, skipping mark');
+    }
+  }
+};
+
+// Helper function to check if user is in DB-only mode
+export const isDbOnlyMode = () => {
+  return typeof window !== 'undefined' && localStorage.getItem('db_only_mode') === 'true';
+};
+
+// Helper function to set DB-only mode
+export const setDbOnlyMode = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('db_only_mode', 'true');
+    console.log('📊 User is now in DB-only mode');
+  }
+};
 
 /**
  * Job Description Modal Component for editing job details
@@ -194,12 +231,42 @@ const ModernResumeBuilder = ({
   // Add router for navigation
   const router = useRouter();
   
+  // Get resume service from context
+  const { 
+    service, 
+    isDbService,
+    isLocalStorageService,
+    currentResumeId: contextResumeId,
+    setCurrentResumeId: updateContextResumeId,
+    isAuthenticated: serviceIsAuthenticated
+  } = useResumeService();
+  
   // Add ref for scrolling to preview
   const previewRef = useRef(null);
+  
+  // Add ref to track if a migration has already run in this session
+  const hasMigratedRef = useRef(false);
+  const templateChangeFromDbLoad = useRef(false);
   
   // Job description modal state
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
   const [internalJobContext, setInternalJobContext] = useState(jobContext);
+  
+  // Add state for download eligibility
+  const [isEligibleForDownload, setIsEligibleForDownload] = useState(true);
+  const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
+  
+  // Add state for subscription details
+  const [subscriptionDetails, setSubscriptionDetails] = useState({
+    planName: '',
+    expirationDate: null
+  });
+
+  // Add state to track which resume IDs are eligible for download with one-time plans
+  const [eligibleResumeIds, setEligibleResumeIds] = useState([]);
+  
+  // Add a state variable to track when we need to force a refresh from the database
+  const [forceDbRefresh, setForceDbRefresh] = useState(false);
   
   // Add state for current resume ID (for saving to database)
   const [currentResumeId, setCurrentResumeId] = useState(() => {
@@ -209,6 +276,7 @@ const ModernResumeBuilder = ({
       console.log('📊 DEBUG - INIT - resumeId from prop:', resumeId);
       console.log('📊 DEBUG - INIT - resumeId in localStorage:', localStorage.getItem('current_resume_id'));
       console.log('📊 DEBUG - INIT - starting_new_resume flag:', localStorage.getItem('starting_new_resume'));
+      console.log('📊 DEBUG - INIT - creating_new_resume flag:', localStorage.getItem('creating_new_resume'));
     }
     
     // IMPORTANT: Check if we're starting a new resume first - this takes priority over everything
@@ -217,9 +285,26 @@ const ModernResumeBuilder = ({
       return null;
     }
     
-    // Initialize from prop if provided
+    // Check if we're in the process of creating a new resume from the homepage
+    if (typeof window !== 'undefined' && localStorage.getItem('creating_new_resume') === 'true') {
+      console.log('📊 DEBUG - INIT - Found creating_new_resume flag, using resumeId from prop');
+      // Use the resumeId from prop (which should be the newly created resume ID)
+      if (resumeId) {
+        return resumeId;
+      }
+      return null;
+    }
+    
+    // Initialize from prop if provided - THIS SHOULD HAVE HIGHEST PRIORITY FOR EDITING
     if (resumeId) {
       console.log('📊 Initializing currentResumeId from prop:', resumeId);
+      // IMPORTANT: Also update localStorage immediately to prevent syncing issues
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('current_resume_id', resumeId);
+        // Set a flag to indicate we're editing an existing resume
+        localStorage.setItem('editing_existing_resume', 'true');
+        localStorage.setItem('editing_resume_id', resumeId);
+      }
       return resumeId;
     }
     
@@ -232,20 +317,49 @@ const ModernResumeBuilder = ({
       }
     }
     
+    // If context has a resumeId, use that
+    if (contextResumeId) {
+      console.log('📊 Using resumeId from context:', contextResumeId);
+      return contextResumeId;
+    }
+    
     console.log('📊 No resumeId found, starting with null');
     return null;
   });
   
-  // Ensure currentResumeId stays updated if resumeId prop changes
+  // Monitor changes to resumeId prop
   useEffect(() => {
     if (resumeId && resumeId !== currentResumeId) {
       console.log('📊 resumeId prop changed, updating currentResumeId:', resumeId);
+      
+      // Check if we're in the process of creating a new resume
+      const isCreatingNew = localStorage.getItem('creating_new_resume') === 'true';
+      const currentStoredId = localStorage.getItem('current_resume_id');
+      
+      // If we're creating a new resume and already have a valid ID in localStorage, don't override it
+      if (isCreatingNew && currentStoredId) {
+        console.log('📊 Creating new resume - keeping current ID:', currentStoredId);
+        return;
+      }
+      
+      // Clean up any existing resume data from localStorage to prevent bleeding between resumes
+      if (currentResumeId && currentResumeId !== resumeId) {
+        console.log('📊 Detected resume switch - clearing local state to prevent data bleeding');
+        // Don't clear currentResumeId from localStorage as we're about to set it
+        
+        // Force a clean slate for the new resume
       setCurrentResumeId(resumeId);
       
-      // Also update localStorage
+        // Mark that we shouldn't use any localStorage data for this resume
+        localStorage.setItem('resume_state_reset', 'true');
+      } else {
+        setCurrentResumeId(resumeId);
+      }
+      
+      // Always update localStorage with the new resumeId
       localStorage.setItem('current_resume_id', resumeId);
     }
-  }, [resumeId, currentResumeId]);
+  }, [resumeId]);
   
   // Add state for auto-save
   const [lastSaved, setLastSaved] = useState(null);
@@ -385,6 +499,22 @@ const ModernResumeBuilder = ({
       }
 
       console.log('📊 DETECTED IMPORTED RESUME DATA');
+      
+      // Set special import flags to override db-only mode behavior
+      localStorage.setItem('import_pending', 'true');
+      
+      // Check if we should create a new resume instead of updating the current one
+      const importCreateNew = localStorage.getItem('import_create_new') === 'true';
+      
+      // Only set target resumeId if we're NOT creating a new resume
+      if (currentResumeId && !importCreateNew) {
+        console.log('📊 Setting import target to current resumeId:', currentResumeId);
+        localStorage.setItem('import_target_resumeId', currentResumeId);
+      } else if (importCreateNew) {
+        console.log('📊 Import will create a new resume instead of updating current one');
+        // Ensure we don't have any target resumeId set
+        localStorage.removeItem('import_target_resumeId');
+      }
       
       // Parse the JSON data
       const parsedData = JSON.parse(importedData);
@@ -814,8 +944,9 @@ const ModernResumeBuilder = ({
       
       console.log('📊 MAPPED IMPORTED DATA:', JSON.stringify(mappedData, null, 2));
       
-      // Save the mapped data to localStorage for persistence
-      // This ensures data is saved before we remove the imported_resume_data
+      // Save the mapped data to localStorage for persistence with a special flag
+      // to indicate this is an import-triggered update that should fully replace existing data
+      localStorage.setItem('imported_resume_override', 'true');
       saveToLocalStorage(mappedData);
       
       // Do NOT remove the imported data here, we'll do it in a useEffect after render
@@ -949,6 +1080,17 @@ const ModernResumeBuilder = ({
     setTimeout(() => setPreviewUpdated(false), 2000);
   };
   
+  // Function to set template from database without triggering save loop
+  const setTemplateFromDatabase = (template) => {
+    console.log('📊 Setting template from database:', template);
+    templateChangeFromDbLoad.current = true;
+    setSelectedTemplate(template);
+    // Reset after a short delay to allow the effect to be skipped
+    setTimeout(() => {
+      templateChangeFromDbLoad.current = false;
+    }, 100);
+  };
+  
   // Function to reset section order to default
   const resetSectionOrder = () => {
     // Reset to the default order
@@ -1045,97 +1187,339 @@ const ModernResumeBuilder = ({
   // Load resume data from the appropriate source on mount
   useEffect(() => {
     const fetchResumeData = async () => {
-      console.log('📊 DEBUG - FETCH - Starting fetchResumeData');
-      console.log('📊 DEBUG - FETCH - localStorage keys:', Object.keys(localStorage));
-      console.log('📊 DEBUG - FETCH - resumeId:', currentResumeId);
-      console.log('📊 DEBUG - FETCH - starting_new_resume flag:', localStorage.getItem('starting_new_resume'));
+      console.log('📊 DEBUG - FETCH - Starting fetchResumeData with service');
+      console.log('📊 DEBUG - FETCH - Service available:', service && service.isAvailable());
+      console.log('📊 DEBUG - FETCH - currentResumeId:', currentResumeId);
+      console.log('📊 DEBUG - FETCH - Is DB service:', isDbService);
+      console.log('📊 DEBUG - FETCH - Is authenticated:', serviceIsAuthenticated);
+      console.log('📊 DEBUG - FETCH - creating_new_resume flag:', localStorage.getItem('creating_new_resume'));
       
-      if (importedResumeData) {
-        console.log('📊 Using imported data, skipping fetch');
+      // Check if we're in the process of creating a new resume
+      if (localStorage.getItem('creating_new_resume') === 'true') {
+        console.log('📊 DEBUG - FETCH - Creating new resume flag is set, skipping database operations');
         
-        // Set initial resume name for imported data
-        if (importedResumeData.personalInfo?.name) {
-          setResumeName(`${importedResumeData.personalInfo.name}'s Resume`);
+        // Just use the default template or initialData if provided
+        if (initialData) {
+          setResumeData(initialData);
         } else {
-          setResumeName(`Imported Resume - ${new Date().toLocaleDateString()}`);
+          setResumeData(defaultTemplate);
         }
         
-      return;
-    }
-    
-      // Check if we're starting a new resume - in which case use default template
-      const startingNewResume = localStorage.getItem('starting_new_resume') === 'true';
-      if (startingNewResume) {
-        console.log('📊 Starting new resume, using default template');
-        // Clear the flag
-        localStorage.removeItem('starting_new_resume');
-        console.log('📊 DEBUG - FETCH - Cleared starting_new_resume flag');
-        
-        // Also clear resumeId from state to ensure it's completely fresh
-        if (currentResumeId) {
-          console.log('📊 DEBUG - FETCH - Clearing resumeId from state:', currentResumeId);
-          setCurrentResumeId(null);
-        }
-        
-        console.log('📊 DEBUG - FETCH - After clearing flags, current resumeId:', currentResumeId);
-        
-        // Set default data
-        setResumeData(defaultTemplate);
-        setResumeName(`Untitled Resume - ${new Date().toLocaleDateString()}`);
         return;
       }
-    
-      try {
-        // Load data from appropriate source based on authentication status
-        const data = await loadResumeData(isAuthenticated, initialData);
+      
+      // Check for newly imported resume ID
+      const importNewResumeId = typeof window !== 'undefined' && localStorage.getItem('import_new_resume_id');
+      if (importNewResumeId && service) {
+        console.log('📊 Found newly imported resume ID in localStorage:', importNewResumeId);
         
-        if (data) {
-          console.log('📊 Resume data loaded successfully');
-          setResumeData(data);
+        try {
+          // Load the newly imported resume directly
+          const result = await service.loadResume(importNewResumeId);
           
-          // Set initial resume name from personal info or default
-          if (data.personalInfo?.name) {
-            setResumeName(`${data.personalInfo.name}'s Resume`);
-        } else {
-            setResumeName(`Untitled Resume - ${new Date().toLocaleDateString()}`);
+          if (result.success && result.data) {
+            const fetchedData = result.data.resumeData;
+            const meta = result.data.meta || {};
+            
+            console.log('📊 Successfully loaded newly imported resume data for ID:', importNewResumeId);
+            
+            // Set the fetched data to state
+            setResumeData(fetchedData);
+            setResumeName(meta.title || 'Imported Resume');
+            
+            // If template is available, set it
+            if (meta.template) {
+              setTemplateFromDatabase(meta.template);
+              console.log('📊 Setting template from imported resume:', meta.template);
+            }
+            
+            // Update completion status for imported data
+            updateCompletionStatusFromData(fetchedData);
+            
+            // Update current resume ID
+            setCurrentResumeId(importNewResumeId);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('current_resume_id', importNewResumeId);
+            }
+            
+            // Clear import flags after successful load
+            localStorage.removeItem('import_pending');
+            localStorage.removeItem('import_target_resumeId');
+            localStorage.removeItem('import_create_new');
+            localStorage.removeItem('imported_resume_data');
+            localStorage.removeItem('import_new_resume_id');
+            
+            // Show success message
+            toast.success('Resume imported successfully!');
+            
+            return;
           }
-        } else if (!initialData) {
-          // If no data from any source, use default template
-          console.log('📊 No resume data found, using default template');
-          setResumeData(defaultTemplate);
-          setResumeName(`Untitled Resume - ${new Date().toLocaleDateString()}`);
+        } catch (error) {
+          console.error('Error loading newly imported resume:', error);
         }
-      } catch (error) {
-        console.error('Error loading resume data:', error);
-        toast.error('Failed to load resume data');
-        
-        // Fallback to default template if load fails
-        if (!initialData) {
-          setResumeData(defaultTemplate);
-          setResumeName(`Untitled Resume - ${new Date().toLocaleDateString()}`);
+      }
+      
+      // If we have a resume service and ID, try to load it
+      if (service && currentResumeId) {
+        try {
+          console.log('📊 Loading resume data with service, ID:', currentResumeId);
+          
+          // IMPORTANT: Check if there's an import pending before loading from DB
+          const importPending = typeof window !== 'undefined' && localStorage.getItem('import_pending') === 'true';
+          const importTargetResumeId = localStorage.getItem('import_target_resumeId');
+          
+          if (importPending && serviceIsAuthenticated) {
+            console.log('📊 Import operation pending for resumeId:', importTargetResumeId || 'new resume');
+            // If we have imported data that's been loaded into state, use that
+            // instead of loading from DB to prevent data loss
+            if (importedResumeData || resumeData.personalInfo) {
+              console.log('📊 Using already loaded imported data instead of fetching from DB');
+              return;
+            }
+          }
+          
+          // First check if the resume exists (for DB service only)
+          if (isDbService) {
+            const exists = await service.checkResumeExists(currentResumeId);
+            if (!exists) {
+              console.log('📊 Resume does not exist in database:', currentResumeId);
+              
+              // Clear invalid resume ID from localStorage
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('current_resume_id');
+                localStorage.removeItem('editing_resume_id');
+                localStorage.removeItem('editing_existing_resume');
+                
+                // Show error toast
+                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.');
+              }
+              
+              // Set default template data
+              setResumeData(defaultTemplate);
+              setResumeName('My Resume');
+              setCompletedSections({});
+              
+              // If authenticated, create a new resume
+              if (serviceIsAuthenticated) {
+                console.log('📊 Creating new resume to replace missing one');
+                const saveResult = await service.saveResume(defaultTemplate, {
+                  title: 'My Resume',
+                  template: 'ats'
+                });
+                
+                if (saveResult.success && saveResult.data?.resumeId) {
+                  // Update IDs
+                  setCurrentResumeId(saveResult.data.resumeId);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('current_resume_id', saveResult.data.resumeId);
+                  }
+                  
+                  console.log('📊 Created new resume with ID:', saveResult.data.resumeId);
+                  toast.success('Created a new resume for you');
+                }
+              }
+              
+              return;
+            }
+          }
+          
+          // Skip DB load if we're handling an import and already have imported data
+          if (importPending && (importedResumeData || resumeData.personalInfo)) {
+            console.log('📊 Skipping database load during import process to prevent data loss');
+            return;
+          }
+          
+          // Load the resume data
+          const result = await service.loadResume(currentResumeId);
+          
+          if (result.success && result.data) {
+            const fetchedData = result.data.resumeData;
+            const meta = result.data.meta || {};
+            
+            console.log('📊 Successfully loaded resume data for ID:', currentResumeId);
+            
+            // Don't override imported data with DB data if import is pending
+            if (importPending && importedResumeData) {
+              console.log('📊 Import pending, keeping imported data instead of loaded DB data');
+              return;
+            }
+            
+            // Set the fetched data to state
+            setResumeData(fetchedData);
+            setResumeName(meta.title || 'My Resume');
+            
+            // If template is available, set it
+            if (meta.template) {
+              setTemplateFromDatabase(meta.template);
+              console.log('📊 Setting template from loaded resume:', meta.template);
+            }
+            
+            // Always update completion status for fetched data
+            updateCompletionStatusFromData(fetchedData);
+            
+            // If in DB-only mode, make sure localStorage is cleared of resume data
+            if (isDbService && isDbOnlyMode()) {
+              localStorage.removeItem('modern_resume_data');
+            }
+            
+            return;
+          } else {
+            console.error('📊 Failed to load resume with service:', result.error);
+            
+            // Handle different error conditions
+            if (result.error && result.error.includes('not found')) {
+              // Clear invalid resume ID from localStorage
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('current_resume_id');
+                localStorage.removeItem('editing_resume_id');
+                localStorage.removeItem('editing_existing_resume');
+                
+                // Show error toast
+                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.');
+              }
+            } else {
+              toast.error('Failed to load resume. Starting with a new one.');
+            }
+            
+            // Fall back to localStorage or default template
+            const savedData = getFromLocalStorage();
+            if (savedData) {
+              setResumeData(savedData);
+              updateCompletionStatusFromData(savedData);
+            } else {
+              setResumeData(defaultTemplate);
+              setResumeName('My Resume');
+              setCompletedSections({});
+            }
+          }
+        } catch (error) {
+          console.error('Error loading resume with service:', error);
+          toast.error('Error loading resume. Using backup data.');
+          
+          // On error, try localStorage or default
+          const savedData = getFromLocalStorage();
+          if (savedData) {
+            setResumeData(savedData);
+            updateCompletionStatusFromData(savedData);
+          } else {
+            setResumeData(defaultTemplate);
+            setCompletedSections({});
+          }
         }
+      } else {
+        // If no service or no resume ID, use initialData or default template
+        console.log('📊 Using initialData or default template data');
+        setResumeData(initialData || defaultTemplate);
+        setResumeName(initialData?.title || 'My Resume');
+        setCompletedSections({});
       }
     };
     
     fetchResumeData();
-  }, [isAuthenticated, initialData, importedResumeData, currentResumeId]);
+  }, [service, isDbService, initialData, importedResumeData, currentResumeId, contextResumeId, serviceIsAuthenticated, updateContextResumeId]);
+
+  // Add a helper function to update completion status from data
+  const updateCompletionStatusFromData = (data) => {
+    console.log('📊 Updating completion status based on loaded data');
+    const newCompletions = {};
+    
+    // Personal info section - check if required fields exist
+    if (data.personalInfo) {
+      const hasName = data.personalInfo.name && data.personalInfo.name.trim().length > 0;
+      const hasEmail = data.personalInfo.email && data.personalInfo.email.trim().length > 0;
+      const hasLocation = data.personalInfo.location && data.personalInfo.location.trim().length > 0;
+      
+      // Mark as complete if at least name and one other field are filled
+      if (hasName && (hasEmail || hasLocation)) {
+        newCompletions.personalInfo = hasEmail ? data.personalInfo.email : true;
+      }
+    }
+    
+    // Summary section
+    if (data.summary && typeof data.summary === 'string' && data.summary.trim().length > 0) {
+      newCompletions.summary = true;
+    }
+    
+    // Experience section - check if there's at least one job with title and company
+    if (Array.isArray(data.experience) && data.experience.length > 0) {
+      const hasValidExperience = data.experience.some(job => 
+        job.title && job.title.trim().length > 0 && 
+        job.company && job.company.trim().length > 0
+      );
+      
+      if (hasValidExperience) {
+        newCompletions.experience = true;
+      }
+    }
+    
+    // Education section - check if there's at least one education entry with school/degree
+    if (Array.isArray(data.education) && data.education.length > 0) {
+      const hasValidEducation = data.education.some(edu => 
+        (edu.school && edu.school.trim().length > 0) || 
+        (edu.degree && edu.degree.trim().length > 0)
+      );
+      
+      if (hasValidEducation) {
+        newCompletions.education = true;
+      }
+    }
+    
+    // Skills section
+    if (Array.isArray(data.skills) && data.skills.length > 0) {
+      const hasValidSkills = data.skills.some(skill => 
+        typeof skill === 'string' ? skill.trim().length > 0 : 
+        (skill.name && skill.name.trim().length > 0)
+      );
+      
+      if (hasValidSkills) {
+        newCompletions.skills = true;
+      }
+    }
+    
+    // Additional info section - check if any subfield has content
+    const hasAdditionalInfo = data.additional && (
+      (Array.isArray(data.additional.certifications) && data.additional.certifications.length > 0) ||
+      (Array.isArray(data.additional.languages) && data.additional.languages.length > 0) ||
+      (Array.isArray(data.additional.projects) && data.additional.projects.length > 0) ||
+      (Array.isArray(data.additional.volunteer) && data.additional.volunteer.length > 0) ||
+      (Array.isArray(data.additional.awards) && data.additional.awards.length > 0) ||
+      (Array.isArray(data.additional.customSections) && data.additional.customSections.length > 0)
+    );
+    
+    if (hasAdditionalInfo) {
+      newCompletions.additional = true;
+    }
+    
+    console.log('📊 Calculated completion status:', newCompletions);
+    setCompletedSections(newCompletions);
+    localStorage.setItem('modern_resume_progress', JSON.stringify(newCompletions));
+    console.log('📊 Updated section completion status after loading data');
+  };
   
   // Auto-save to database for authenticated users
   useEffect(() => {
     // Add explicit debug logging at the beginning
     console.log('📊 Auto-save effect triggered with:', { 
-      isAuthenticated, 
+      serviceIsAuthenticated, 
       hasResumeData: !!resumeData,
       hasPersonalInfo: !!(resumeData?.personalInfo),
       isNavigatingAway, 
       initialLoad: initialLoadRef.current,
       resumeId: currentResumeId,
-      template: selectedTemplate
+      template: selectedTemplate,
+      service: !!service,
+      creatingNewResume: localStorage.getItem('creating_new_resume') === 'true'
     });
     
-    // Only auto-save for authenticated users and if there's actual resume data
+    // Skip auto-save if we're in the process of creating a new resume
+    if (localStorage.getItem('creating_new_resume') === 'true') {
+      console.log('📊 Auto-save skipped - creating new resume flag is set');
+      return;
+    }
+    
+    // Only auto-save if we have a service, user is authenticated, and there's resume data
     // Skip auto-save if we're navigating away
-    if (isAuthenticated && resumeData && resumeData.personalInfo && !isNavigatingAway) {
+    if (service && serviceIsAuthenticated && resumeData && resumeData.personalInfo && !isNavigatingAway) {
       // Skip auto-save on initial load
       if (initialLoadRef.current) {
         initialLoadRef.current = false;
@@ -1166,6 +1550,10 @@ const ModernResumeBuilder = ({
       // Update ref for next comparison
       previousResumeDataRef.current = currentStateStr;
       
+      // Check if we're in editing mode
+      const isEditingExistingResume = localStorage.getItem('editing_existing_resume') === 'true';
+      const editingResumeId = localStorage.getItem('editing_resume_id');
+      
       // Create a debounced auto-save
       const autoSaveTimeout = setTimeout(async () => {
         // Skip if already saving or navigating away
@@ -1176,27 +1564,41 @@ const ModernResumeBuilder = ({
           // Show auto-save indicator
           setShowAutoSaveIndicator(true);
           
-          console.log('📊 Starting auto-save with resumeId:', currentResumeId, 'template:', selectedTemplate);
+          // If we're in editing mode, ensure we're using the correct resumeId
+          const saveId = isEditingExistingResume ? editingResumeId : currentResumeId;
           
-          // Save to the appropriate source
+          console.log('📊 Starting auto-save with resumeId:', saveId, 'template:', selectedTemplate, 
+                     isEditingExistingResume ? '(EDITING MODE)' : '');
+          
+          // Save using our service
           const saveResult = await saveResumeData(
             resumeData, 
-            isAuthenticated, 
+            serviceIsAuthenticated, 
             selectedTemplate, 
-            currentResumeId,
+            saveId,
             resumeName
           );
           
           // Update currentResumeId if a new ID was returned
-          if (saveResult && saveResult.resumeId) {
+          if (saveResult.success && saveResult.resumeId) {
             if (saveResult.resumeId !== currentResumeId) {
               console.log('📊 Updated resumeId from auto-save:', saveResult.resumeId, '(was:', currentResumeId, ')');
               
               // CRITICAL FIX: Update the state with the new resumeId
-              setCurrentResumeId(saveResult.resumeId);
+              updateContextResumeId(saveResult.resumeId);
+              
+              // Also update context if available
+              if (updateContextResumeId) {
+                updateContextResumeId(saveResult.resumeId);
+              }
               
               // Also update localStorage for consistency
               localStorage.setItem('current_resume_id', saveResult.resumeId);
+              
+              // If we're in editing mode, also update the editing resume ID
+              if (isEditingExistingResume) {
+                localStorage.setItem('editing_resume_id', saveResult.resumeId);
+              }
             } else {
               console.log('📊 Auto-save successful with existing resumeId:', currentResumeId);
             }
@@ -1205,13 +1607,13 @@ const ModernResumeBuilder = ({
             localStorage.removeItem('pending_resume_changes');
             localStorage.removeItem('pending_resume_timestamp');
           } else {
-            console.warn('📊 Auto-save returned no resumeId:', saveResult);
+            console.warn('📊 Auto-save problem:', saveResult.error || 'No resumeId returned');
           }
           
           // Update last saved timestamp
           setLastSaved(new Date());
           setResumeModified(false); // Reset modified flag after save
-      } catch (error) {
+        } catch (error) {
           console.error('📊 Auto-save failed:', error);
         } finally {
           setIsSaving(false);
@@ -1226,15 +1628,43 @@ const ModernResumeBuilder = ({
       return () => clearTimeout(autoSaveTimeout);
     } else if (isNavigatingAway) {
       console.log('📊 Auto-save skipped - navigating away flag is set');
-    } else if (!isAuthenticated) {
+    } else if (!serviceIsAuthenticated) {
       console.log('📊 Auto-save skipped - user not authenticated');
+      
+      // For unauthenticated users, always save to localStorage
+      if (resumeData && resumeData.personalInfo) {
+        console.log('📊 SAVING RESUME DATA TO LOCALSTORAGE', {
+          hasPersonalInfo: !!resumeData.personalInfo,
+          namePresent: !!resumeData.personalInfo?.name,
+          emailPresent: !!resumeData.personalInfo?.email,
+          experienceCount: resumeData.experience?.length || 0,
+          educationCount: resumeData.education?.length || 0,
+          skillsCount: resumeData.skills?.length || 0
+        });
+        
+        saveToLocalStorage(resumeData);
+        
+        // Also save completion progress
+        const currentProgress = Object.keys(completedSections).filter(key => completedSections[key]).length;
+        const totalSections = orderedSections.length;
+        console.log(`📊 SAVED PROGRESS: ${currentProgress}/${totalSections} sections complete`);
+      }
     } else if (!resumeData || !resumeData.personalInfo) {
       console.log('📊 Auto-save skipped - missing resume data or personal info');
+    } else if (!service) {
+      console.log('📊 Auto-save skipped - resume service not initialized');
     }
-  }, [resumeData, isAuthenticated, selectedTemplate, currentResumeId, isSaving, resumeName, isNavigatingAway, resumeModified]);
+  }, [resumeData, serviceIsAuthenticated, selectedTemplate, currentResumeId, isSaving, resumeName, isNavigatingAway, resumeModified, service, updateContextResumeId]);
   
   // Save data to localStorage for unauthenticated users
   useEffect(() => {
+    // Skip localStorage save if in DB-only mode
+    if (isDbOnlyMode()) {
+      console.log('📊 Skipping localStorage save - user is in DB-only mode');
+      return;
+    }
+    
+    // Save to localStorage for unauthenticated users
     if (!isAuthenticated) {
       console.log('📊 SAVING RESUME DATA TO LOCALSTORAGE', {
         hasPersonalInfo: !!resumeData.personalInfo,
@@ -1265,24 +1695,27 @@ const ModernResumeBuilder = ({
     setResumeData(updatedData);
     setResumeModified(true); // Mark that resume has been modified
     
-    // IMMEDIATE SAVE: Always save to localStorage immediately regardless of authentication
-    // This provides an instant backup in case of refresh before auto-save completes
-    try {
-      console.log('📊 Immediate save to localStorage after update to:', sectionId);
-      localStorage.setItem('modern_resume_data', JSON.stringify(updatedData));
-      
-      // Also store resumeId to maintain consistency
-      if (currentResumeId) {
-        localStorage.setItem('current_resume_id', currentResumeId);
+    // IMMEDIATE SAVE: Only save to localStorage if not in DB-only mode
+    if (!isDbOnlyMode()) {
+      try {
+        console.log('📊 Immediate save to localStorage after update to:', sectionId);
+        localStorage.setItem('modern_resume_data', JSON.stringify(updatedData));
+        
+        // Also store resumeId to maintain consistency
+        if (currentResumeId) {
+          localStorage.setItem('current_resume_id', currentResumeId);
+        }
+        
+        // For authenticated users, set a flag to indicate unsaved changes
+        if (isAuthenticated) {
+          localStorage.setItem('pending_resume_changes', 'true');
+          localStorage.setItem('pending_resume_timestamp', Date.now().toString());
+        }
+      } catch (error) {
+        console.error('Error during immediate localStorage save:', error);
       }
-      
-      // For authenticated users, set a flag to indicate unsaved changes
-      if (isAuthenticated) {
-        localStorage.setItem('pending_resume_changes', 'true');
-        localStorage.setItem('pending_resume_timestamp', Date.now().toString());
-      }
-    } catch (error) {
-      console.error('Error during immediate localStorage save:', error);
+    } else {
+      console.log('📊 Skipping localStorage save for section update - user is in DB-only mode');
     }
     
     // Show preview updated indicator
@@ -1299,7 +1732,11 @@ const ModernResumeBuilder = ({
       };
       
       setCompletedSections(updatedCompletions);
-      saveResumeProgress(updatedCompletions);
+      
+      // Save progress to localStorage only if not in DB-only mode
+      if (!isDbOnlyMode()) {
+        saveResumeProgress(updatedCompletions);
+      }
       
       // Show celebration when a section is newly completed
       if (isComplete && !completedSections[sectionId]) {
@@ -1511,9 +1948,98 @@ const ModernResumeBuilder = ({
   useEffect(() => {
     if (importedResumeData) {
       console.log('📊 REMOVING IMPORTED DATA FROM LOCALSTORAGE AFTER INITIALIZATION');
-      localStorage.removeItem('imported_resume_data');
+      
+      // Priority immediate save to database for imports when authenticated
+      if (isAuthenticated && service) {
+        console.log('📊 IMPORT: Priority save to database for imported data, isDbOnlyMode:', isDbOnlyMode());
+        
+        // Show toast for import status
+        toast.loading('Saving imported resume data...', { id: 'import-save-toast' });
+        
+        // Immediate save to database to override existing resume
+        saveResumeData(
+          resumeData, 
+          true, 
+          selectedTemplate, 
+          currentResumeId,
+          resumeName || 'Imported Resume',
+          true // Force update
+        ).then(result => {
+          if (result && result.success) {
+            console.log('📊 IMPORT: Successfully saved imported data to database with ID:', result.resumeId || currentResumeId);
+            
+            // Update IDs if needed
+            if (result.resumeId && result.resumeId !== currentResumeId) {
+              setCurrentResumeId(result.resumeId);
+              localStorage.setItem('current_resume_id', result.resumeId);
+            }
+            
+            // Verify the data was saved properly by loading it from the database
+            const verifyImportSave = async () => {
+              try {
+                console.log('📊 IMPORT: Verifying imported data was saved correctly');
+                const verifyId = result.resumeId || currentResumeId;
+                
+                // Fetch the resume data from the database
+                const response = await fetch(`/api/resume/get?id=${verifyId}`);
+                
+                if (!response.ok) {
+                  throw new Error(`Failed to verify import: ${response.status}`);
+                }
+                
+                const verifyResult = await response.json();
+                
+                if (verifyResult.success && verifyResult.resume) {
+                  console.log('📊 IMPORT: Verification successful, data saved correctly');
+                  
+                  // Important: Clear import flags AFTER successful verification
+            localStorage.removeItem('import_pending');
+            localStorage.removeItem('import_target_resumeId');
+                  localStorage.removeItem('import_create_new');
+            localStorage.removeItem('imported_resume_data');
+            localStorage.removeItem('imported_resume_override');
+                  localStorage.removeItem('import_save_successful');
+                  localStorage.removeItem('import_saved_resume_id');
+                  
+                  // Update UI with verified data from database
+                  setResumeData(verifyResult.resume.data);
+                  updateCompletionStatusFromData(verifyResult.resume.data);
+                  
+                  // Show success message
+                  toast.success('Resume imported successfully!', { id: 'import-save-toast' });
+                  
+                  // Force a refresh from the database to ensure we have the latest data
+                  setForceDbRefresh(true);
+                } else {
+                  console.error('📊 IMPORT: Verification failed, data may not be saved correctly');
+                  toast.error('Import verification failed. Please try again.', { id: 'import-save-toast' });
+                }
+              } catch (error) {
+                console.error('📊 IMPORT: Error verifying import:', error);
+                toast.error('Error verifying import. Please try again.', { id: 'import-save-toast' });
+              }
+            };
+            
+            // Run the verification after a short delay to ensure the database has been updated
+            setTimeout(verifyImportSave, 500);
+          } else {
+            console.error('📊 IMPORT: Failed to save imported data to database:', result?.error);
+            toast.error('Failed to save imported resume. Please try again.', { id: 'import-save-toast' });
+          }
+        }).catch(error => {
+          console.error('📊 IMPORT: Error saving imported data:', error);
+          toast.error('Error saving imported resume. Please try again.', { id: 'import-save-toast' });
+        });
+      } else {
+        // For non-db users, just show a success message and clear the import flags
+        toast.success('Resume imported successfully!');
+        localStorage.removeItem('imported_resume_data');
+        localStorage.removeItem('imported_resume_override');
+        localStorage.removeItem('import_pending');
+        localStorage.removeItem('import_target_resumeId');
+      }
     }
-  }, []);
+  }, [importedResumeData, isAuthenticated, currentResumeId, resumeData, selectedTemplate, resumeName, service, updateCompletionStatusFromData]);
 
   // Function to handle job context update
   const handleJobContextUpdate = (updatedJobContext) => {
@@ -1780,7 +2306,7 @@ const ModernResumeBuilder = ({
   // Replace the download handler with Puppeteer-based logic
   const handleDownloadPDF = async () => {
     // Check if user is authenticated
-    if (!isAuthenticated) {
+    if (!serviceIsAuthenticated) {
       // Save current resume data to localStorage before redirecting
       localStorage.setItem('pending_resume_download', 'true');
       
@@ -1789,8 +2315,38 @@ const ModernResumeBuilder = ({
       localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
       localStorage.setItem('selected_resume_template', selectedTemplate);
       
-      // Redirect to sign-in page
-      router.push('/auth/signin?callbackUrl=/profile&action=download');
+      // Set flag to indicate migration is needed after authentication
+      localStorage.setItem('needs_db_migration', 'true');
+      
+      // Generate a unique migration session ID to prevent duplicate migrations
+      const migrationSessionId = `migration_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem('migration_session_id', migrationSessionId);
+      
+      // For download actions, we want to follow the subscription flow
+      // rather than returning to the resume builder immediately
+      // So we DON'T set post_auth_redirect here
+      
+      // Show message to user
+      toast.loading('Please sign in to download your resume...', { id: 'download-auth-toast' });
+      
+      // Redirect to sign-in page with special action parameter
+      router.push('/auth/signin?action=download');
+      return;
+    }
+
+    // If we already know the resume isn't eligible, redirect directly to subscription page
+    if ((!isEligibleForDownload || (subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) && currentResumeId) {
+      // Save the current state before redirecting
+      localStorage.setItem('pending_resume_download', 'true');
+      localStorage.setItem('modern_resume_data', JSON.stringify(resumeData));
+      localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
+      localStorage.setItem('selected_resume_template', selectedTemplate);
+      
+      // Store the current resume ID to maintain context after purchase
+      localStorage.setItem('pending_download_resume_id', currentResumeId);
+      
+      // Redirect to subscription page with download action
+      router.push(`/subscription?action=download&resumeId=${currentResumeId}`);
       return;
     }
 
@@ -1799,8 +2355,11 @@ const ModernResumeBuilder = ({
     setIsDownloading(true);
 
     try {
+      // Get the current resume ID for eligibility check
+      const resumeIdForCheck = currentResumeId;
+      
       // Check if user is eligible to download
-      const eligibilityResponse = await fetch('/api/resume/check-download-eligibility');
+      const eligibilityResponse = await fetch(`/api/resume/check-download-eligibility${resumeIdForCheck ? `?resumeId=${resumeIdForCheck}` : ''}`);
       const eligibilityData = await eligibilityResponse.json();
 
       if (!eligibilityData.eligible) {
@@ -1808,9 +2367,56 @@ const ModernResumeBuilder = ({
         toast.error(eligibilityData.message || 'Subscription required', { id: toastId });
         setIsDownloading(false);
         
-        // Redirect to subscription page
-        router.push('/subscription');
+        // Save the current state before redirecting
+        localStorage.setItem('pending_resume_download', 'true');
+        localStorage.setItem('modern_resume_data', JSON.stringify(resumeData));
+        localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
+        localStorage.setItem('selected_resume_template', selectedTemplate);
+        
+        // Redirect to subscription page with download action
+        router.push('/subscription?action=download');
         return;
+      }
+      
+      // Handle one-time plan restrictions
+      if (eligibilityData.plan === 'one-time') {
+        // Check if this is the first download for a one-time plan
+        if (eligibilityData.isFirstDownload) {
+          // Show warning to user about one-time plan restriction
+          toast.loading(
+            'Note: Your one-time plan allows you to download this resume multiple times, but you cannot download different resumes.', 
+            { id: toastId, duration: 5000 }
+          );
+        } else if (eligibilityData.error === 'different_resume_needs_plan') {
+          // User is trying to download a different resume than their first download
+          // They need to purchase another plan
+          toast.error(
+            'Your one-time plan only allows downloading the resume you previously downloaded. To download this different resume, you need to purchase another plan.', 
+            { id: toastId, duration: 5000 }
+          );
+          setIsDownloading(false);
+          
+          // Save the current state before redirecting
+          localStorage.setItem('pending_resume_download', 'true');
+          localStorage.setItem('modern_resume_data', JSON.stringify(resumeData));
+          localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
+          localStorage.setItem('selected_resume_template', selectedTemplate);
+          
+          // Store the current resume ID to maintain context after purchase
+          localStorage.setItem('pending_download_resume_id', resumeIdForCheck);
+          
+          // Redirect to subscription page with special parameters
+          router.push(`/subscription?action=download&reason=different_resume&current_resume=${resumeIdForCheck}&previous_resume=${eligibilityData.downloadedResumeId}`);
+          return;
+        } else if (eligibilityData.downloadedResumeId && eligibilityData.downloadedResumeId !== resumeIdForCheck) {
+          // Fallback for old API response format
+          toast.error(
+            `Your one-time plan only allows downloading the resume you previously downloaded. Please contact support if you need to change resumes.`, 
+            { id: toastId }
+          );
+          setIsDownloading(false);
+          return;
+        }
       }
 
       // Update toast to show we're preparing the PDF
@@ -1826,33 +2432,29 @@ const ModernResumeBuilder = ({
       // --- For authenticated users, only save to database if needed ---
       let resumeIdForDownload = currentResumeId;
       
-      // Retrieve resumeId from localStorage if not available in state
-      if (!resumeIdForDownload) {
-        const storedResumeId = localStorage.getItem('current_resume_id');
-        if (storedResumeId) {
-          console.log('[DownloadPDF] Retrieved resumeId from localStorage:', storedResumeId);
-          resumeIdForDownload = storedResumeId;
-        }
-      }
-      
       // Only save if this is a new resume (no ID) or if there are unsaved changes
       const needsToSave = !resumeIdForDownload || resumeModified;
       
-      if (isAuthenticated && needsToSave) {
+      if (serviceIsAuthenticated && needsToSave && service) {
         try {
           console.log('[DownloadPDF] Saving current resume data to database before generating PDF');
           const saveResult = await saveResumeData(
             resumeData, 
-            isAuthenticated, 
+            serviceIsAuthenticated, 
             selectedTemplate,
             resumeIdForDownload,
             resumeName,
             true // Force update to ensure we have latest data for PDF
           );
           
-          if (saveResult && saveResult.resumeId) {
+          if (saveResult.success && saveResult.resumeId) {
             resumeIdForDownload = saveResult.resumeId;
             setCurrentResumeId(saveResult.resumeId);
+            
+            if (updateContextResumeId) {
+              updateContextResumeId(saveResult.resumeId);
+            }
+            
             // Also update localStorage for consistency
             localStorage.setItem('current_resume_id', saveResult.resumeId);
             setLastSaved(new Date());
@@ -1921,6 +2523,23 @@ const ModernResumeBuilder = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      // Record the download with our new API endpoint
+      try {
+        await fetch('/api/resume/record-download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            resumeId: resumeIdForDownload
+          }),
+        });
+        console.log('[DownloadPDF] Successfully recorded download for resume ID:', resumeIdForDownload);
+      } catch (recordError) {
+        // Don't block the download if recording fails
+        console.error('[DownloadPDF] Error recording download:', recordError);
+      }
 
       toast.success('Resume downloaded successfully!', { id: toastId });
     } catch (error) {
@@ -2009,7 +2628,7 @@ const ModernResumeBuilder = ({
             // CRITICAL FIX: Update currentResumeId if a new one was returned
             if (result.resumeId && result.resumeId !== currentResumeId) {
               console.log('📊 Updating resumeId after save:', result.resumeId);
-              setCurrentResumeId(result.resumeId);
+              updateContextResumeId(result.resumeId);
               localStorage.setItem('current_resume_id', result.resumeId);
             }
           }
@@ -2054,7 +2673,7 @@ const ModernResumeBuilder = ({
           const storedResumeId = localStorage.getItem('current_resume_id');
           if (storedResumeId && storedResumeId !== currentResumeId) {
             console.log('📊 Restoring resumeId after refresh:', storedResumeId);
-            setCurrentResumeId(storedResumeId);
+            updateContextResumeId(storedResumeId);
           }
           
           // Set a flag to delay auto-save after refresh
@@ -2085,6 +2704,23 @@ const ModernResumeBuilder = ({
     const checkLocalStorageForResumeId = () => {
       if (typeof window === 'undefined') return;
       
+      // Check if we're in editing mode - if so, we should never override the resumeId
+      const isEditingExistingResume = localStorage.getItem('editing_existing_resume') === 'true';
+      const editingResumeId = localStorage.getItem('editing_resume_id');
+      
+      if (isEditingExistingResume && editingResumeId) {
+        console.log('📊 SYNC - In editing mode, enforcing edited resume ID:', editingResumeId);
+        
+        // If our current state doesn't match the resume being edited, update it
+        if (currentResumeId !== editingResumeId) {
+          console.log('📊 SYNC - Correcting resumeId to match editing_resume_id');
+          setCurrentResumeId(editingResumeId);
+          localStorage.setItem('current_resume_id', editingResumeId);
+        }
+        return;
+      }
+      
+      // Regular sync behavior for non-editing mode
       const storedId = localStorage.getItem('current_resume_id');
       
       // If localStorage has a resumeId but we don't, or it's different from our current one
@@ -2107,7 +2743,10 @@ const ModernResumeBuilder = ({
     const handleStorageChange = (e) => {
       if (e.key === 'current_resume_id') {
         console.log('📊 SYNC - Storage event detected for resumeId:', e.newValue);
-        if (e.newValue !== currentResumeId) {
+        
+        // Only update if we're not in editing mode
+        const isEditingExistingResume = localStorage.getItem('editing_existing_resume') === 'true';
+        if (!isEditingExistingResume && e.newValue !== currentResumeId) {
           setCurrentResumeId(e.newValue);
         }
       }
@@ -2173,9 +2812,16 @@ const ModernResumeBuilder = ({
     // Skip on initial load
     if (initialLoadRef.current) return;
     
+    // Skip if this template change is from database load
+    if (templateChangeFromDbLoad.current) {
+      console.log('📊 Template change from database load, skipping effect');
+      return;
+    }
+    
     // Mark as modified when template changes
     setResumeModified(true);
     console.log('📊 Template changed to:', selectedTemplate, '- marking resume as modified');
+    console.log('📊 Template change source:', new Error().stack);
     
     // Also save template to localStorage for persistence
     if (typeof window !== 'undefined') {
@@ -2183,6 +2829,427 @@ const ModernResumeBuilder = ({
     }
     
   }, [selectedTemplate]);
+
+  // Migrate localStorage data to database when user authenticates
+  // This is the first step in moving toward using DB as single source of truth
+  // for authenticated users while maintaining backward compatibility
+  useEffect(() => {
+    const migrateLocalStorageToDatabase = async () => {
+      // Skip if we've already migrated in this session
+      if (hasMigratedRef.current) {
+        console.log('📊 Migration skipped - Already migrated in this React session');
+        return;
+      }
+      
+      // Only proceed if user is authenticated
+      if (!isAuthenticated) {
+        console.log('📊 Migration skipped - User not authenticated');
+        return;
+      }
+      
+      // Use the centralized migration function
+      try {
+        const migrationResult = await migrateToDatabase({
+          source: 'modern_resume_builder',
+          onSuccess: ({ resumeId }) => {
+            // Mark that we've migrated in this session
+            hasMigratedRef.current = true;
+            
+            // Update state with new resumeId
+            setCurrentResumeId(resumeId);
+          }
+        });
+        
+        if (migrationResult.success) {
+          if (migrationResult.code === 'MIGRATION_SUCCESS') {
+            toast.success('Your resume data has been synced successfully!', { id: 'migration-toast' });
+          }
+        } else if (migrationResult.code === 'ALREADY_DB_ONLY') {
+          // Already in DB-only mode, update our ref
+          hasMigratedRef.current = true;
+        }
+      } catch (error) {
+        console.error('📊 Error during migration:', error);
+        toast.error('Sync error. Will try again later.', { id: 'migration-toast' });
+      }
+    };
+    
+    migrateLocalStorageToDatabase();
+  }, [isAuthenticated]);
+
+  // Add a new useEffect to update our migration ref when localStorage changes
+  // This helps sync migration state across components
+  useEffect(() => {
+    const checkMigrationStatus = () => {
+      if (typeof window === 'undefined') return;
+      
+      // If another component has completed migration, update our ref
+      if (localStorage.getItem('db_only_mode') === 'true' && !hasMigratedRef.current) {
+        console.log('📊 Detected migration completed by another component - updating ref');
+        hasMigratedRef.current = true;
+      }
+    };
+    
+    // Check immediately and set up interval
+    checkMigrationStatus();
+    const interval = setInterval(checkMigrationStatus, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Improve the DB-only mode transition
+  useEffect(() => {
+    // This effect ensures that authenticated users in DB-only mode 
+    // completely stop using localStorage for resume data
+    if (isAuthenticated && isDbOnlyMode()) {
+      console.log('📊 User is authenticated and in DB-only mode');
+      
+      // Function to load resume directly from database, bypassing localStorage
+      const loadFromDatabase = async () => {
+        if (!currentResumeId) {
+          console.log('📊 No resumeId available, cannot load from database');
+          return;
+        }
+        
+        // IMPORTANT: Check if there's an import pending before loading from DB
+        const importPending = typeof window !== 'undefined' && localStorage.getItem('import_pending') === 'true';
+        const importTargetResumeId = localStorage.getItem('import_target_resumeId');
+        const importSaveSuccessful = localStorage.getItem('import_save_successful') === 'true';
+        const importSavedResumeId = localStorage.getItem('import_saved_resume_id');
+        
+        // If we have a successful import save, prioritize loading that data
+        if (importSaveSuccessful && importSavedResumeId) {
+          console.log('📊 Import save successful, loading verified data from database:', importSavedResumeId);
+          
+          try {
+            const response = await fetch(`/api/resume/get?id=${importSavedResumeId}`);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch resume: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success && result.resume) {
+              console.log('📊 Successfully loaded verified import data from database');
+              setResumeData(result.resume.data);
+              setResumeName(result.resume.title || 'My Resume');
+              if (result.resume.template) {
+                setTemplateFromDatabase(result.resume.template);
+              }
+              updateCompletionStatusFromData(result.resume.data);
+              
+              // Clear import flags now that we've loaded the verified data
+              localStorage.removeItem('import_pending');
+              localStorage.removeItem('import_target_resumeId');
+              localStorage.removeItem('import_create_new');
+              localStorage.removeItem('imported_resume_data');
+              localStorage.removeItem('imported_resume_override');
+              localStorage.removeItem('import_save_successful');
+              localStorage.removeItem('import_saved_resume_id');
+              
+              return; // Skip further processing
+            }
+          } catch (error) {
+            console.error('📊 Error loading verified import data:', error);
+          }
+        }
+        
+        // If this is an import operation targeting the current resumeId, skip database load
+        if (importPending && (importTargetResumeId === currentResumeId || !importTargetResumeId)) {
+          console.log('📊 Import operation pending for resumeId:', importTargetResumeId || 'new resume');
+          console.log('📊 Skipping database load to prevent overriding imported data');
+          
+          // If we have imported data in memory or localStorage, prioritize it
+          const importedDataStr = localStorage.getItem('imported_resume_data');
+          if (importedDataStr) {
+            try {
+              const importedData = JSON.parse(importedDataStr);
+              console.log('📊 Using imported data instead of loading from database');
+              
+              // Instead of just returning, proactively save imported data to DB
+              // This ensures the imported data persists in the database
+              try {
+                const response = await fetch('/api/resume/save', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    resumeData: importedData,
+                    resumeId: currentResumeId,
+                    template: selectedTemplate || 'ats',
+                    title: resumeName || 'Imported Resume',
+                    forceUpdate: true,
+                    isImport: true // Explicitly mark as import
+                  }),
+                });
+                
+                if (response.ok) {
+                  const result = await response.json();
+                  if (result.success) {
+                    console.log('📊 Successfully saved imported data to database');
+                    
+                    // Update UI with imported data
+                    setResumeData(importedData);
+                    updateCompletionStatusFromData(importedData);
+                    
+                    // Show success message
+                    toast.success('Resume imported successfully!');
+                    
+                    // Set force refresh flag to ensure we have the latest data
+                    setForceDbRefresh(true);
+                    
+                    // Store the successful save result ID for verification
+                    localStorage.setItem('import_save_successful', 'true');
+                    localStorage.setItem('import_saved_resume_id', result.resumeId || currentResumeId);
+                    
+                    // Verify the save was successful by loading from the database after a delay
+                    setTimeout(async () => {
+                      try {
+                        const verifyResponse = await fetch(`/api/resume/get?id=${currentResumeId}`);
+                        if (verifyResponse.ok) {
+                          const verifyResult = await verifyResponse.json();
+                          if (verifyResult.success) {
+                            console.log('📊 Import verification successful');
+                            
+                            // Compare the imported data with the data in the database
+                            const importedDataStr = localStorage.getItem('imported_resume_data');
+                            if (importedDataStr) {
+                              try {
+                                const importedData = JSON.parse(importedDataStr);
+                                const dbData = verifyResult.resume.data;
+                                
+                                // Check if the name matches as a simple verification
+                                const importedName = importedData.personalInfo?.name;
+                                const dbName = dbData.personalInfo?.name;
+                                
+                                if (importedName === dbName) {
+                                  console.log('📊 Import verification confirmed - names match:', importedName);
+                                  
+                                  // Only now that we've verified, clear import flags
+                                  localStorage.removeItem('import_pending');
+                                  localStorage.removeItem('import_target_resumeId');
+                                  localStorage.removeItem('import_create_new');
+                                  localStorage.removeItem('imported_resume_data');
+                                  localStorage.removeItem('imported_resume_override');
+                                } else {
+                                  console.warn('📊 Import verification failed - names do not match:', 
+                                    { importedName, dbName });
+                                  
+                                  // Retry the save with a stronger force update
+                                  console.log('📊 Retrying import with stronger force update');
+                                  const retryResponse = await fetch('/api/resume/save', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                      resumeData: importedData,
+                                      resumeId: currentResumeId,
+                                      template: selectedTemplate || 'ats',
+                                      title: resumeName || 'Imported Resume',
+                                      forceUpdate: true,
+                                      isImport: true
+                                    }),
+                                  });
+                                  
+                                  if (retryResponse.ok) {
+                                    console.log('📊 Retry save successful, scheduling final verification');
+                                    // Schedule a final verification
+                                    setTimeout(async () => {
+                                      try {
+                                        const finalVerifyResponse = await fetch(`/api/resume/get?id=${currentResumeId}`);
+                                        if (finalVerifyResponse.ok) {
+                                          const finalVerifyResult = await finalVerifyResponse.json();
+                                          if (finalVerifyResult.success) {
+                                            console.log('📊 Final import verification completed');
+                                            
+                                            // Update UI with verified data
+                                            setResumeData(finalVerifyResult.resume.data);
+                                            updateCompletionStatusFromData(finalVerifyResult.resume.data);
+                                            
+                                            // Clear import flags after final verification
+                                            localStorage.removeItem('import_pending');
+                                            localStorage.removeItem('import_target_resumeId');
+                                            localStorage.removeItem('import_create_new');
+                                            localStorage.removeItem('imported_resume_data');
+                                            localStorage.removeItem('imported_resume_override');
+                                          }
+                                        }
+                                      } catch (error) {
+                                        console.error('📊 Error in final verification:', error);
+                                      }
+                                    }, 1000); // Longer delay for final verification
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('📊 Error comparing imported data with DB data:', error);
+                              }
+                            } else {
+                              // If we can't compare, just clear the flags
+                              localStorage.removeItem('import_pending');
+                              localStorage.removeItem('import_target_resumeId');
+                              localStorage.removeItem('import_create_new');
+                              localStorage.removeItem('imported_resume_data');
+                              localStorage.removeItem('imported_resume_override');
+                            }
+                          }
+                        }
+                      } catch (error) {
+                        console.error('📊 Error verifying import:', error);
+                      }
+                    }, 1000); // Increased delay from 500ms to 1000ms
+                  }
+                }
+              } catch (error) {
+                console.error('📊 Error saving imported data to database:', error);
+              }
+              
+              return;
+            } catch (error) {
+              console.error('📊 Error parsing imported data:', error);
+            }
+          }
+          
+          return;
+        }
+        
+        try {
+          console.log('📊 Loading resume directly from database, ID:', currentResumeId);
+          const response = await fetch(`/api/resume/get?id=${currentResumeId}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.error(`Resume with ID ${currentResumeId} not found in database.`);
+              return;
+            }
+            throw new Error(`Failed to fetch resume: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          if (result.success && result.resume) {
+            console.log('📊 Successfully loaded resume from database');
+            setResumeData(result.resume.data);
+            setResumeName(result.resume.title || 'My Resume');
+            if (result.resume.template) {
+              setTemplateFromDatabase(result.resume.template);
+            }
+            updateCompletionStatusFromData(result.resume.data);
+          }
+        } catch (error) {
+          console.error('Error loading resume from database:', error);
+        }
+      };
+      
+      // Only load from database if we're not in initial load or if force refresh is requested
+      if (!initialLoadRef.current || forceDbRefresh) {
+        loadFromDatabase();
+        
+        // Reset the force refresh flag after attempting to load
+        if (forceDbRefresh) {
+          setForceDbRefresh(false);
+        }
+      }
+    }
+  }, [isAuthenticated, currentResumeId, isDbOnlyMode, forceDbRefresh]);
+
+  // Add cleanup of editing flags when component unmounts
+  useEffect(() => {
+    // Cleanup function for component unmount
+    return () => {
+      if (typeof window !== 'undefined') {
+        // Clean up editing flags on unmount
+        localStorage.removeItem('editing_existing_resume');
+        localStorage.removeItem('editing_resume_id');
+      }
+    };
+  }, []);
+  
+  // Check download eligibility when the page loads or resumeId changes
+  useEffect(() => {
+    const checkDownloadEligibility = async () => {
+      if (!serviceIsAuthenticated || !currentResumeId) return;
+      
+      setIsCheckingEligibility(true);
+      try {
+        const eligibilityResponse = await fetch(`/api/resume/check-download-eligibility?resumeId=${currentResumeId}`);
+        const eligibilityData = await eligibilityResponse.json();
+        
+        console.log('🔍 Download eligibility check:', eligibilityData);
+        
+        // Only set as eligible if the API explicitly says it's eligible
+        // For one-time plans, this means the resume ID must match the downloaded resume ID
+        setIsEligibleForDownload(eligibilityData.eligible === true);
+      } catch (error) {
+        console.error('Error checking download eligibility:', error);
+        // Default to not eligible in case of error to prevent bypassing subscription requirements
+        setIsEligibleForDownload(false);
+      } finally {
+        setIsCheckingEligibility(false);
+      }
+    };
+    
+    checkDownloadEligibility();
+  }, [serviceIsAuthenticated, currentResumeId]);
+
+  // Check subscription details when the page loads
+  useEffect(() => {
+    const checkSubscriptionDetails = async () => {
+      if (!serviceIsAuthenticated) return;
+      
+      try {
+        const response = await fetch('/api/resume/check-download-eligibility');
+        const data = await response.json();
+        
+        if (data.eligible && data.plan) {
+          // Set the plan name based on the subscription data
+          let planDisplayName = 'Free Plan';
+          
+          // Map plan IDs to display names
+          if (data.plan === 'weekly') {
+            planDisplayName = 'Short-Term Job Hunt';
+          } else if (data.plan === 'monthly') {
+            planDisplayName = 'Long-Term Job Hunt';
+          } else if (data.plan === 'one-time') {
+            planDisplayName = 'One-Time Download';
+            
+            // For one-time plans, check which resume IDs are eligible
+            try {
+              const oneTimeResponse = await fetch('/api/subscription/get-one-time-subscriptions');
+              if (oneTimeResponse.ok) {
+                const oneTimeData = await oneTimeResponse.json();
+                console.log('One-time subscriptions:', oneTimeData.subscriptions);
+                
+                // Extract eligible resume IDs from subscriptions
+                if (oneTimeData.subscriptions && oneTimeData.subscriptions.length > 0) {
+                  const eligibleIds = oneTimeData.subscriptions
+                    .filter(sub => sub.metadata?.downloadedResumeId)
+                    .map(sub => sub.metadata.downloadedResumeId);
+                  
+                  console.log('Eligible resume IDs for one-time plans:', eligibleIds);
+                  setEligibleResumeIds(eligibleIds);
+                }
+              }
+            } catch (oneTimeError) {
+              console.error('Error fetching one-time subscriptions:', oneTimeError);
+            }
+          } else {
+            // Use the plan name directly if it doesn't match our known IDs
+            planDisplayName = data.plan;
+          }
+          
+          setSubscriptionDetails({
+            planName: planDisplayName,
+            expirationDate: data.expirationDate
+          });
+        }
+      } catch (error) {
+        console.error('Error checking subscription details:', error);
+      }
+    };
+    
+    checkSubscriptionDetails();
+  }, [serviceIsAuthenticated]);
 
   return (
     <ResumeProvider value={{ resumeData, updateResumeData, jobContext: internalJobContext, selectedTemplate }}>
@@ -2200,39 +3267,7 @@ const ModernResumeBuilder = ({
           } : 'null'
         )}
         
-        {/* Debug tools in development mode */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            right: '90px',
-            zIndex: 9999,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            padding: '8px',
-            borderRadius: '4px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <button 
-              onClick={clearLocalStorageResumeData}
-              style={{
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                padding: '5px 10px',
-                borderRadius: '3px',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}
-            >
-              🗑️ Clear localStorage
-            </button>
-            <div style={{ fontSize: '11px', color: 'white', marginTop: '4px' }}>
-              ResumeID: {currentResumeId ? currentResumeId.substring(0, 8) + '...' : 'none'}
-            </div>
-          </div>
-        )}
+        {/* Debug tools removed */}
         
         {/* Auto-save indicator */}
         {showAutoSaveIndicator && (
@@ -2328,31 +3363,6 @@ const ModernResumeBuilder = ({
                 )}
               </button>
               
-              {/* Debug button - only visible in development */}
-              {process.env.NODE_ENV === 'development' && (
-                <button
-                  style={{
-                    marginTop: '10px',
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                  onClick={testExperienceTailoring}
-                  disabled={isTailoring}
-                >
-                  <span>🔍</span>
-                  Debug Experience Tailoring
-                </button>
-              )}
-              
               {isTailoring ? (
                 <p className={styles.tailoringCardNote} style={{ marginTop: '15px' }}>
                   AI is analyzing your resume and the job description to optimize your content...
@@ -2379,7 +3389,16 @@ const ModernResumeBuilder = ({
           {/* Move Import Resume to compact button when in job tailoring mode */}
           {!internalJobContext && (
             <div className={styles.importButtonContainer}>
-              <a href="/resume-import" className={styles.importButton}>
+              <a 
+                href="/resume-import" 
+                className={styles.importButton}
+                onClick={() => {
+                  // Set flags to indicate this is an import operation that should create a new resume
+                  localStorage.setItem('import_pending', 'true');
+                  localStorage.setItem('import_create_new', 'true');
+                  console.log('📊 Setting import flags for creating a new resume from import');
+                }}
+              >
                 <span className={styles.importIcon}>📄</span>
                 Import Resume
               </a>
@@ -2393,6 +3412,12 @@ const ModernResumeBuilder = ({
               <a 
                 href={`/resume-import?job=${encodeURIComponent(JSON.stringify(internalJobContext))}&job_targeting=true`} 
                 className={styles.compactImportLink}
+                onClick={() => {
+                  // Set flags to indicate this is an import operation that should create a new resume
+                  localStorage.setItem('import_pending', 'true');
+                  localStorage.setItem('import_create_new', 'true');
+                  console.log('📊 Setting import flags for creating a new resume with job targeting');
+                }}
               >
                 <span className={styles.compactImportIcon}>📄</span>
                 Import new resume for this job
@@ -2440,20 +3465,40 @@ const ModernResumeBuilder = ({
         </div>
         
         <div className={styles.actionContainer}>
+          {subscriptionDetails.planName === 'One-Time Download' && currentResumeId && eligibleResumeIds.includes(currentResumeId) && (
+            <div className={styles.purchasedBadgeContainer}>
+              <span className={styles.purchasedBadge}>
+                Purchased
+              </span>
+            </div>
+          )}
           <button 
-            className={styles.downloadButton} 
+            className={`${styles.downloadButton} ${(!isEligibleForDownload || (subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? styles.buyPlanButton : ''}`}
             onClick={handleDownloadPDF}
-            disabled={isDownloading}
+            disabled={isDownloading || isCheckingEligibility}
+            style={{
+              background: (isEligibleForDownload && !(subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? 
+                'linear-gradient(135deg, var(--secondary-green), #28b485)' : 
+                'linear-gradient(135deg, #f39c12, #f5b041)',
+              boxShadow: (isEligibleForDownload && !(subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? 
+                '0 6px 15px rgba(52, 168, 83, 0.2)' : 
+                '0 6px 15px rgba(243, 156, 18, 0.2)'
+            }}
           >
             {isDownloading ? (
               <>
                 <FaSpinner className={styles.spinnerIcon} />
                 Preparing PDF...
               </>
+            ) : isCheckingEligibility ? (
+              <>
+                <FaSpinner className={styles.spinnerIcon} />
+                Checking eligibility...
+              </>
             ) : (
               <>
                 <FaDownload className={styles.downloadIcon} />
-                Download Resume
+                {(isEligibleForDownload && !(subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? 'Download Resume' : 'Buy Plan'}
               </>
             )}
           </button>

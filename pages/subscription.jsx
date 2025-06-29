@@ -9,9 +9,15 @@ export default function SubscriptionPage({ dbPlans }) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { resumeId } = router.query;
+  const { resumeId, action } = router.query;
   const [error, setError] = useState(null);
   const [plans, setPlans] = useState(dbPlans || []);
+  // New state for active subscription
+  const [activeSubscription, setActiveSubscription] = useState(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  
+  // Check if user is here to download a resume
+  const isPendingDownload = action === 'download';
   
   // Redirect to sign in page if not authenticated
   useEffect(() => {
@@ -19,6 +25,30 @@ export default function SubscriptionPage({ dbPlans }) {
       router.push('/auth/signin?callbackUrl=/subscription');
     }
   }, [status, router]);
+
+  // Fetch active subscription when the page loads
+  useEffect(() => {
+    const fetchActiveSubscription = async () => {
+      if (status !== 'authenticated' || !session?.user?.id) return;
+      
+      setIsLoadingSubscription(true);
+      try {
+        const response = await fetch('/api/subscription/get-active');
+        const data = await response.json();
+        
+        if (data.success && data.subscription) {
+          console.log('Active subscription found:', data.subscription);
+          setActiveSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Error fetching active subscription:', error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+    
+    fetchActiveSubscription();
+  }, [status, session]);
   
   // Auto-select the popular plan when plans are loaded
   useEffect(() => {
@@ -83,6 +113,37 @@ export default function SubscriptionPage({ dbPlans }) {
     }
   }, [dbPlans]);
   
+  // Function to determine if user is trying to subscribe to the same plan they already have
+  const isCurrentPlan = (planId) => {
+    return activeSubscription && activeSubscription.planId === planId;
+  };
+  
+  // Function to determine if a plan is an upgrade from current plan
+  const isPlanUpgrade = (planId) => {
+    if (!activeSubscription) return false;
+    
+    // Only consider weekly -> monthly as an upgrade
+    return activeSubscription.planId === 'weekly' && planId === 'monthly';
+  };
+  
+  // Function to determine if a plan is a downgrade from current plan
+  const isPlanDowngrade = (planId) => {
+    if (!activeSubscription) return false;
+    
+    // Only consider monthly -> weekly as a downgrade
+    return activeSubscription.planId === 'monthly' && planId === 'weekly';
+  };
+  
+  // Function to format date in a readable way
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+  
   const handleContinue = async () => {
     if (!selectedPlan) return;
     
@@ -90,28 +151,19 @@ export default function SubscriptionPage({ dbPlans }) {
     setError(null);
     
     try {
-      // First, save any pending resume data to the user's account
-      const pendingResumeData = localStorage.getItem('modern_resume_data');
-      if (pendingResumeData) {
-        try {
-          const resumeResponse = await fetch('/api/resume/save', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              data: JSON.parse(pendingResumeData),
-              title: 'My Resume'
-            }),
-          });
-          
-          if (resumeResponse.ok) {
-            console.log('Resume saved to account before checkout');
-          }
-        } catch (resumeError) {
-          console.error('Error saving resume to account:', resumeError);
-          // Continue with payment even if saving fails
-        }
+      // Prepare metadata to pass through Stripe
+      const metadata = {};
+      
+      // If this is a download action, add it to metadata
+      if (isPendingDownload) {
+        metadata.action = 'download';
+      }
+      
+      // If user is upgrading or downgrading, add the current subscription ID
+      if ((isPlanUpgrade(selectedPlan) || isPlanDowngrade(selectedPlan)) && activeSubscription) {
+        metadata.previousSubscriptionId = activeSubscription.id;
+        metadata.isUpgrade = isPlanUpgrade(selectedPlan);
+        metadata.isDowngrade = isPlanDowngrade(selectedPlan);
       }
       
       // Call API to create subscription
@@ -122,6 +174,8 @@ export default function SubscriptionPage({ dbPlans }) {
         },
         body: JSON.stringify({
           planId: selectedPlan,
+          metadata: metadata,
+          successUrl: `${window.location.origin}/profile?payment=success${isPendingDownload ? '&download=true' : ''}`
         }),
       });
       
@@ -169,6 +223,11 @@ export default function SubscriptionPage({ dbPlans }) {
   
   // If authenticated, show subscription options
   if (session) {
+    // Check if user already has an active weekly or monthly subscription
+    const hasActiveRecurringPlan = activeSubscription && 
+      (activeSubscription.planId === 'weekly' || activeSubscription.planId === 'monthly') && 
+      !isLoadingSubscription;
+    
     return (
       <div className="container">
         <div style={{ 
@@ -184,19 +243,109 @@ export default function SubscriptionPage({ dbPlans }) {
             marginBottom: '20px',
             textAlign: 'center'
           }}>
-            Choose Your Plan
+            {isPendingDownload 
+              ? 'One Last Step to Download Your Resume' 
+              : 'Choose Your Plan'}
           </h1>
           
-          <p style={{
-            fontSize: '18px',
-            color: 'var(--text-medium)',
-            textAlign: 'center',
-            marginBottom: '40px',
-            maxWidth: '700px',
-            margin: '0 auto 40px'
+          {/* Show active subscription banner if user has an active recurring plan */}
+          {hasActiveRecurringPlan && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(52, 168, 83, 0.05), rgba(46, 204, 113, 0.1))',
+              border: '1px solid rgba(52, 168, 83, 0.2)',
+              borderRadius: '12px',
+              padding: '22px 28px',
+              marginBottom: '30px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '15px'
           }}>
-            Select a plan that fits your needs to download your professionally crafted resume
-          </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                flex: '1'
+              }}>
+                <div style={{
+                  background: 'rgba(52, 168, 83, 0.15)',
+                  borderRadius: '50%',
+                  width: '44px',
+                  height: '44px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34a853" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ 
+                    margin: '0 0 4px 0', 
+                    fontSize: '17px', 
+                    color: '#2d3748',
+                    fontWeight: '600',
+                    lineHeight: '1.3'
+                  }}>
+                    Your <strong>{activeSubscription.planName}</strong> Subscription is Active
+                  </h3>
+                  <p style={{ 
+                    margin: 0,
+                    fontSize: '14px', 
+                    color: '#4a5568'
+                  }}>
+                    Renews on {formatDate(activeSubscription.currentPeriodEnd)}
+                    {activeSubscription.isCanceled && " (Canceled)"}
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'center'
+              }}>
+                <Link href="/profile" style={{
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  background: 'white',
+                  color: '#34a853',
+                  border: '1px solid rgba(52, 168, 83, 0.3)',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                  Return to Profile
+                </Link>
+              </div>
+            </div>
+          )}
+          
+          {isPendingDownload && (
+            <div style={{
+              background: '#f0f7ff',
+              border: '1px solid #cce5ff',
+              borderRadius: '8px',
+              padding: '15px 20px',
+              marginBottom: '30px',
+              textAlign: 'center'
+            }}>
+              <p style={{ fontSize: '16px', color: '#0066cc' }}>
+                <strong>Select a plan</strong> to
+                download your resume & create unlimited versions for different job applications.
+              </p>
+            </div>
+          )}
           
           {error && (
             <div style={{
@@ -218,7 +367,18 @@ export default function SubscriptionPage({ dbPlans }) {
             gap: '25px',
             marginBottom: '40px'
           }}>
-            {plans.map(plan => (
+            {plans.map(plan => {
+              // Skip one-time plan if user has active recurring plan
+              if (hasActiveRecurringPlan && plan.id === 'one-time') {
+                return null;
+              }
+              
+              // Determine the plan status for UI display
+              const isCurrentActivePlan = isCurrentPlan(plan.id);
+              const isUpgrade = isPlanUpgrade(plan.id);
+              const isDowngrade = isPlanDowngrade(plan.id);
+              
+              return (
               <div 
                 key={plan.id}
                 style={{
@@ -226,15 +386,20 @@ export default function SubscriptionPage({ dbPlans }) {
                   borderRadius: '12px',
                   padding: '30px',
                   transition: 'all 0.3s ease',
-                  cursor: 'pointer',
+                    cursor: isCurrentActivePlan ? 'default' : 'pointer',
                   position: 'relative',
-                  background: selectedPlan === plan.id ? `${plan.color}0a` : 'white',
+                    background: isCurrentActivePlan 
+                      ? 'rgba(52, 168, 83, 0.05)' 
+                      : selectedPlan === plan.id 
+                        ? `${plan.color}0a` 
+                        : 'white',
                   boxShadow: selectedPlan === plan.id ? '0 8px 20px rgba(0, 0, 0, 0.1)' : 'none',
-                  transform: selectedPlan === plan.id ? 'translateY(-5px)' : 'none'
+                    transform: selectedPlan === plan.id ? 'translateY(-5px)' : 'none',
+                    opacity: isCurrentActivePlan ? 0.85 : 1
                 }}
-                onClick={() => setSelectedPlan(plan.id)}
+                  onClick={() => !isCurrentActivePlan && setSelectedPlan(plan.id)}
               >
-                {plan.popular && (
+                  {plan.popular && !isCurrentActivePlan && (
                   <div style={{
                     position: 'absolute',
                     top: '0',
@@ -248,6 +413,57 @@ export default function SubscriptionPage({ dbPlans }) {
                     borderRadius: '20px'
                   }}>
                     Popular
+                  </div>
+                )}
+                  
+                  {isCurrentActivePlan && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      right: '25px',
+                      transform: 'translateY(-50%)',
+                      background: '#34a853',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      padding: '5px 12px',
+                      borderRadius: '20px'
+                    }}>
+                      Current Plan
+                    </div>
+                  )}
+                  
+                  {isUpgrade && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      right: '25px',
+                      transform: 'translateY(-50%)',
+                      background: '#6c5ce7',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      padding: '5px 12px',
+                      borderRadius: '20px'
+                    }}>
+                      Upgrade
+                    </div>
+                  )}
+                  
+                  {isDowngrade && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      right: '25px',
+                      transform: 'translateY(-50%)',
+                      background: '#f39c12',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      padding: '5px 12px',
+                      borderRadius: '20px'
+                    }}>
+                      Downgrade
                   </div>
                 )}
                 
@@ -316,6 +532,23 @@ export default function SubscriptionPage({ dbPlans }) {
                   justifyContent: 'center',
                   marginTop: 'auto'
                 }}>
+                    {isCurrentActivePlan ? (
+                      <span style={{ 
+                        color: '#34a853',
+                        fontWeight: '500',
+                        fontSize: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        Currently Active
+                      </span>
+                    ) : (
+                      <>
                   <input
                     type="radio"
                     id={`plan-${plan.id}`}
@@ -328,20 +561,113 @@ export default function SubscriptionPage({ dbPlans }) {
                     htmlFor={`plan-${plan.id}`}
                     style={{ cursor: 'pointer' }}
                   >
-                    Select Plan
+                          {isUpgrade ? 'Upgrade to This Plan' : 
+                           isDowngrade ? 'Switch to This Plan' : 
+                           'Select Plan'}
                   </label>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           <div style={{
             textAlign: 'center',
             marginTop: '30px'
           }}>
+            {hasActiveRecurringPlan && selectedPlan && (
+              <div style={{
+                maxWidth: '600px',
+                margin: '0 auto 25px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+                border: isPlanUpgrade(selectedPlan) ? '1px solid rgba(52, 168, 83, 0.2)' : '1px solid rgba(243, 156, 18, 0.2)'
+              }}>
+                <div style={{
+                  padding: '14px 20px',
+                  background: isPlanUpgrade(selectedPlan) 
+                    ? 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))' 
+                    : 'linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(230, 126, 34, 0.1))',
+                  borderBottom: isPlanUpgrade(selectedPlan) 
+                    ? '1px solid rgba(52, 168, 83, 0.15)' 
+                    : '1px solid rgba(243, 156, 18, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: isPlanUpgrade(selectedPlan) ? 'rgba(52, 168, 83, 0.15)' : 'rgba(243, 156, 18, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {isPlanUpgrade(selectedPlan) ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34a853" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f39c12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                    )}
+                  </div>
+                  <h4 style={{
+                    margin: 0,
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: isPlanUpgrade(selectedPlan) ? '#2d8a4e' : '#b7791f'
+                  }}>
+                    {isPlanUpgrade(selectedPlan) ? 'You\'re upgrading from Weekly to Monthly plan' : 'You\'re downgrading from Monthly to Weekly plan'}
+                  </h4>
+                </div>
+                
+                <div style={{
+                  padding: '16px 20px',
+                  background: 'white'
+                }}>
+                  <p style={{
+                    margin: '0 0 12px 0',
+                    fontSize: '14px',
+                    lineHeight: '1.6',
+                    color: '#4a5568'
+                  }}>
+                    <strong>What happens next:</strong>
+                  </p>
+                  
+                  <ul style={{
+                    margin: '0 0 0 20px',
+                    padding: 0,
+                    fontSize: '14px',
+                    lineHeight: '1.6',
+                    color: '#4a5568'
+                  }}>
+                    <li style={{ marginBottom: '8px' }}>
+                      Your current plan will be canceled immediately
+                    </li>
+                    <li style={{ marginBottom: '8px' }}>
+                      You'll be charged now for the new {isPlanUpgrade(selectedPlan) ? 'Monthly' : 'Weekly'} plan
+                    </li>
+                    <li>
+                      Your billing cycle will reset to today
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            
             <button
               onClick={handleContinue}
-              disabled={!selectedPlan || isProcessing}
+              disabled={!selectedPlan || isProcessing || isCurrentPlan(selectedPlan)}
               style={{
                 background: 'linear-gradient(135deg, #1a73e8, #6c5ce7)',
                 color: 'white',
@@ -350,8 +676,8 @@ export default function SubscriptionPage({ dbPlans }) {
                 borderRadius: '10px',
                 fontSize: '18px',
                 fontWeight: 'bold',
-                cursor: selectedPlan ? 'pointer' : 'not-allowed',
-                opacity: selectedPlan ? 1 : 0.7,
+                cursor: selectedPlan && !isCurrentPlan(selectedPlan) ? 'pointer' : 'not-allowed',
+                opacity: selectedPlan && !isCurrentPlan(selectedPlan) ? 1 : 0.7,
                 transition: 'all 0.3s ease',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -389,6 +715,8 @@ export default function SubscriptionPage({ dbPlans }) {
                   Processing...
                 </>
               ) : (
+                isPlanUpgrade(selectedPlan) ? 'Upgrade Plan' : 
+                isPlanDowngrade(selectedPlan) ? 'Switch Plan' : 
                 'Continue to Payment'
               )}
             </button>
@@ -414,15 +742,9 @@ export default function SubscriptionPage({ dbPlans }) {
               color: 'var(--text-medium)',
               marginBottom: '15px'
             }}>
-              Not ready to subscribe? <Link href="/resume" style={{ color: 'var(--primary-blue)', fontWeight: 'bold' }}>
-                Return to resume builder
+              Not ready to subscribe yet? <Link href="/profile" style={{ color: 'var(--primary-blue)', fontWeight: 'bold' }}>
+                Return to my profile
               </Link>
-            </p>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--text-light)'
-            }}>
-              You won't be able to download your resume without a subscription
             </p>
           </div>
         </div>

@@ -81,21 +81,104 @@ const ResumeTemplateCapture = () => {
 
   // Styles specific to PDF generation - much simpler now!
   const pdfCaptureStyles = `
-    /* Import fonts first */
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
+    /* Import fonts conditionally based on template */
+    ${template !== 'ats' ? `
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
+    ` : ''}
     
     /* Reset any global font settings */
     html, body {
-      margin: 0;
-      padding: 0;
-      background: white;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: white !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      ${template !== 'ats' ? 
+        `font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;` : 
+        `font-family: Arial, Helvetica, sans-serif !important;`
+      }
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      overflow-y: visible !important;
     }
+    
+    /* Fix for the blue rectangle issue */
+    #template-for-pdf-capture {
+      background: white !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      position: relative !important;
+      padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
+      max-height: none !important;
+    }
+    
+    /* Fix for Modern template header */
+    .headerSidebar {
+      margin-bottom: 15px !important;
+      width: auto !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: fit-content !important;
+    }
+    
+    /* Fix for Creative template header */
+    .headerMain {
+      margin-bottom: 0 !important;
+      border-radius: 12px !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: fit-content !important;
+    }
+    
+    /* Aggressive fix for blue rectangle issue */
+    .resumePreview {
+      background: white !important;
+      background-color: white !important;
+      height: auto !important;
+      min-height: auto !important;
+      padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
+      overflow: visible !important;
+    }
+    
+    /* Fix for Creative template */
+    .header {
+      margin-bottom: 15px !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+    
+    /* Remove any pseudo-elements that might create the blue rectangle */
+    .resumePreview *::after,
+    .resumePreview *::before,
+    .header::after,
+    .header::before,
+    .headerMain::after,
+    .headerMain::before,
+    .headerSidebar::after,
+    .headerSidebar::before {
+      display: none !important;
+      content: none !important;
+    }
+    
+    /* Special styles for ATS template */
+    ${template === 'ats' ? `
+      body, .resumePreview, h1, h2, h3, h4, h5, h6, p, div, span {
+        font-family: Arial, Helvetica, sans-serif !important;
+        color: #000 !important;
+      }
+      .name, .sectionTitle {
+        font-weight: 700 !important;
+      }
+      .itemTitle {
+        font-weight: bold !important;
+      }
+    ` : ''}
     
     /* Ensure proper page breaks */
     .section {
@@ -154,13 +237,23 @@ const ResumeTemplateCapture = () => {
       </Head>
       
       {/* Render the raw template without any containers */}
-      <div id="template-for-pdf-capture">
+      <div id="template-for-pdf-capture" style={{ 
+        background: 'white', 
+        height: 'auto', 
+        minHeight: 'auto',
+        paddingBottom: 0,
+        marginBottom: 0,
+        overflow: 'visible'
+      }}>
         <RawResumeTemplate 
           resumeData={resumeData} 
           template={template}
           sectionOrder={sectionOrder}
         />
       </div>
+      
+      {/* Add an empty div to ensure there's no extra space at the bottom */}
+      <div style={{ height: 0, overflow: 'hidden', background: 'white' }}></div>
     </>
   );
 };

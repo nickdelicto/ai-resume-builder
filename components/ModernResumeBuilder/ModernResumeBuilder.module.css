@@ -63,6 +63,16 @@
 .navigationColumn {
   height: 100%;
   position: relative;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  /* Hide scrollbar while keeping functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.navigationColumn::-webkit-scrollbar {
+  display: none;
 }
 
 .sectionContent {
@@ -261,9 +271,27 @@
 
 /* Action buttons */
 .actionContainer {
+  margin-top: 20px;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-top: 25px;
+  gap: 15px;
+}
+
+.purchasedBadgeContainer {
+  display: flex;
+  align-items: center;
+}
+
+.purchasedBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #e8f5e9;
+  color: #34a853;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(52, 168, 83, 0.2);
 }
 
 .downloadButton {
@@ -1088,4 +1116,14 @@
 .useSuggestedButton:hover {
   background-color: rgba(26, 115, 232, 0.05);
   border-radius: 4px;
+}
+
+.buyPlanButton {
+  background: linear-gradient(135deg, #f39c12, #f5b041) !important;
+  box-shadow: 0 6px 15px rgba(243, 156, 18, 0.2) !important;
+}
+
+.buyPlanButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(243, 156, 18, 0.3) !important;
 } 

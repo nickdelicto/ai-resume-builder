@@ -155,6 +155,7 @@ export default async function handler(req, res) {
 
 /**
  * Sanitize a text string to replace characters not supported in LATIN1 encoding
+ * This function is used by the sanitizeDataForDb function
  */
 function sanitizeText(text) {
   if (!text) return text;
@@ -171,7 +172,9 @@ function sanitizeText(text) {
 
 /**
  * Recursively sanitize all string values in an object
+ * Kept for potential future use
  */
+/*
 function sanitizeDataForDb(data) {
   if (typeof data === 'string') {
     return sanitizeText(data);
@@ -191,3 +194,4 @@ function sanitizeDataForDb(data) {
   
   return data;
 } 
+*/ 

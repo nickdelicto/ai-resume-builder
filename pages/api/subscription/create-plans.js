@@ -23,48 +23,48 @@ export default async function handler(req, res) {
     // Default subscription plans
     const plans = [
       {
-        name: 'One-Time Quick Start',
-        description: 'Perfect for a single job application',
+        id: 'one-time',
+        name: 'One-Time Download',
+        description: 'Make a single resume and download it once',
         price: 6.99,
         interval: 'one-time',
-        maxResumes: 1,
         isPopular: false,
         isActive: true,
         features: [
           'One professional resume download',
           'ATS-optimized format',
-          'All premium templates',
+          'All professional templates',
           'One time payment- No renewal!'
         ]
       },
       {
-        name: 'Job Hunt Boost',
-        description: 'Ideal for short-term job search campaigns',
+        id: 'weekly',
+        name: 'Short-Term Job Hunt',
+        description: 'Ideal for short-term job search',
         price: 4.99,
         interval: 'weekly',
-        maxResumes: 5,
         isPopular: true,
         isActive: true,
         features: [
           'Unlimited resume downloads',
           'Create multiple versions',
           'All premium templates',
-          'Perfect for applying to similar roles'
+          'Best for short-term job search'
         ]
       },
       {
-        name: 'Career Accelerator',
-        description: 'For serious job seekers targeting various positions',
+        id: 'monthly',
+        name: 'Long-Term Job Hunt',
+        description: 'Ideal for long-term job seekers',
         price: 13.99,
         interval: 'monthly',
-        maxResumes: 10,
         isPopular: false,
         isActive: true,
         features: [
           'Unlimited resume downloads',
           'Tailor for multiple jobs',
           'All premium templates',
-          'Best for career changers & active seekers'
+          'Best for long-term job search'
         ]
       }
     ];
@@ -72,9 +72,9 @@ export default async function handler(req, res) {
     // Create or update each plan
     const createdPlans = await Promise.all(
       plans.map(async (plan) => {
-        // Check if plan with this name already exists
-        const existingPlan = await prisma.subscriptionPlan.findFirst({
-          where: { name: plan.name }
+        // Check if plan with this ID already exists
+        const existingPlan = await prisma.subscriptionPlan.findUnique({
+          where: { id: plan.id }
         });
 
         if (existingPlan) {
@@ -82,10 +82,10 @@ export default async function handler(req, res) {
           return prisma.subscriptionPlan.update({
             where: { id: existingPlan.id },
             data: {
+              name: plan.name,
               description: plan.description,
               price: plan.price,
               interval: plan.interval,
-              maxResumes: plan.maxResumes,
               isPopular: plan.isPopular,
               isActive: plan.isActive,
               features: plan.features

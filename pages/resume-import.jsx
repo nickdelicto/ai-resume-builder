@@ -221,7 +221,7 @@ const ResumeImportPage = () => {
     }
   }, [router.isReady, router.query]);
 
-  const handleImportComplete = (data) => {
+  const handleImportComplete = async (data) => {
     console.log('📊 ResumeImportPage - Received import data, storing in localStorage:', data);
     
     // Check for required fields and data structure
@@ -234,15 +234,81 @@ const ResumeImportPage = () => {
     };
     console.log('📊 ResumeImportPage - Data validation:', dataValidation);
     
-    // Store the data in localStorage temporarily and redirect to the builder
     try {
+      // Store the data in localStorage temporarily
       localStorage.setItem('imported_resume_data', JSON.stringify(data));
+      localStorage.setItem('import_pending', 'true');
+      localStorage.setItem('import_create_new', 'true'); // Always create new resume
       console.log('📊 ResumeImportPage - Data successfully stored in localStorage');
       
-      // Verify storage by reading it back
-      const storedData = localStorage.getItem('imported_resume_data');
-      console.log('📊 ResumeImportPage - Verification - Data retrieved from localStorage:', 
-        storedData ? 'Successfully retrieved' : 'Failed to retrieve');
+      // For authenticated users, directly save the resume to the database
+      let newResumeId = null;
+      try {
+        // Generate a base title for the imported resume
+        const baseTitle = data.personalInfo?.name 
+          ? `${data.personalInfo.name}'s Resume (Imported)` 
+          : `Resume (Imported) - ${new Date().toLocaleDateString()}`;
+        
+        // Validate the name to avoid duplicates
+        let finalTitle = baseTitle;
+        try {
+          const validateResponse = await fetch('/api/resume/validate-name', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: baseTitle,
+              // No resumeId since this is a new resume
+            }),
+          });
+          
+          if (validateResponse.ok) {
+            const validationResult = await validateResponse.json();
+            if (!validationResult.isValid && validationResult.suggestedName) {
+              console.log('📊 ResumeImportPage - Duplicate name detected, using suggested name:', validationResult.suggestedName);
+              finalTitle = validationResult.suggestedName;
+            }
+          }
+        } catch (validationError) {
+          console.error('📊 ResumeImportPage - Error validating resume name:', validationError);
+          // Continue with the base title if validation fails
+        }
+        
+        console.log('📊 ResumeImportPage - Using final title for import:', finalTitle);
+        
+        // Make a direct API call to save the resume
+        const response = await fetch('/api/resume/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            resumeData: data,
+            template: 'ats',
+            title: finalTitle,
+            isImport: true
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.resumeId) {
+            console.log('📊 ResumeImportPage - Successfully created new resume in database:', result.resumeId);
+            newResumeId = result.resumeId;
+            
+            // Store the new resume ID in localStorage
+            localStorage.setItem('import_new_resume_id', result.resumeId);
+            localStorage.setItem('current_resume_id', result.resumeId);
+          } else {
+            console.error('📊 ResumeImportPage - API returned success: false or missing resumeId:', result);
+          }
+        } else {
+          console.error('📊 ResumeImportPage - Error saving resume to database:', await response.text());
+        }
+      } catch (error) {
+        console.error('📊 ResumeImportPage - Error during API call to save resume:', error);
+      }
       
       // Enhanced job targeting detection
       const hasJobContext = localStorage.getItem('job_targeting_context') !== null;
@@ -253,15 +319,24 @@ const ResumeImportPage = () => {
       // Consider it job targeting if ANY of these conditions are true
       const isJobTargetingFlow = hasJobContext || isJobTargetingSource || hasJobTargetingFlag || hasJobParam;
       
-      // Create the redirect URL with appropriate parameters
-      const redirectUrl = isJobTargetingFlow
-        ? '/new-resume-builder?source=import&job_targeting=true'
-        : '/new-resume-builder?source=import';
+      // Create the redirect URL, including the new resume ID if available
+      let redirectUrl;
+      if (newResumeId) {
+        // If we have a new resume ID, include it in the redirect URL
+        redirectUrl = isJobTargetingFlow
+          ? `/new-resume-builder?source=import&resumeId=${newResumeId}&job_targeting=true`
+          : `/new-resume-builder?source=import&resumeId=${newResumeId}`;
+      } else {
+        // Fallback to the old behavior if we couldn't create a new resume
+        // But still include import=true to ensure the builder knows to create a new resume
+        redirectUrl = isJobTargetingFlow
+          ? '/new-resume-builder?source=import&import=true&job_targeting=true'
+          : '/new-resume-builder?source=import&import=true';
+      }
       
       console.log('📊 ResumeImportPage - Redirecting to:', redirectUrl, 
-                 'with job targeting:', isJobTargetingFlow,
-                 'job context exists:', hasJobContext,
-                 'source is job-targeting:', isJobTargetingSource);
+                 'with new resumeId:', newResumeId,
+                 'job targeting:', isJobTargetingFlow);
       
       window.location.href = redirectUrl;
     } catch (error) {

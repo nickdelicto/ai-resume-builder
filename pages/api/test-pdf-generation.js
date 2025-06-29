@@ -1,6 +1,6 @@
 import chromium from 'chrome-aws-lambda';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../pages/api/auth/[...nextauth]";
 import { prisma } from '../../lib/prisma';
 
 // Detect development environment
@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     const isAuthenticated = !!(session && session.user);
     
     // Get resume data and template from request
-    const { template = 'professional', resumeData, sectionOrder, resumeId } = req.body;
+    const { resumeData, sectionOrder, resumeId } = req.body;
+    let { template = 'professional' } = req.body;
     
     // If user is authenticated and we have a resumeId, try to get the latest data from database
     let dataToUse = resumeData;
@@ -139,7 +140,7 @@ export default async function handler(req, res) {
           padding: 0 !important;
           background: white !important;
           height: auto !important;
-          min-height: 100% !important;
+          min-height: auto !important;
           overflow: visible !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
@@ -151,18 +152,19 @@ export default async function handler(req, res) {
           margin: 0 !important;
           padding: 0 !important;
           height: auto !important;
-          min-height: 100% !important;
+          min-height: auto !important;
           max-height: none !important;
           overflow: visible !important;
           position: relative !important;
           display: block !important;
+          background: white !important;
         }
         
         /* Resume content styling */
         .resume-content-for-pdf {
           width: 100% !important;
           height: auto !important;
-          min-height: 100% !important;
+          min-height: auto !important;
           max-height: none !important;
           padding: 0 !important;
           margin: 0 auto !important;
@@ -178,6 +180,7 @@ export default async function handler(req, res) {
         .noCopy {
           max-height: none !important;
           height: auto !important;
+          min-height: auto !important;
           overflow: visible !important;
           box-shadow: none !important;
           border: none !important;
@@ -186,6 +189,72 @@ export default async function handler(req, res) {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
+          background: white !important;
+        }
+        
+        /* Fix for specific template elements */
+        .headerSidebar {
+          margin-bottom: 15px !important;
+          width: auto !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: fit-content !important;
+        }
+        
+        .headerMain {
+          margin-bottom: 0 !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: fit-content !important;
+        }
+        
+        /* Aggressive fix for blue rectangle issue */
+        .resumePreview {
+          background: white !important;
+          background-color: white !important;
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        
+        .resumePreview::after {
+          display: none !important;
+          content: none !important;
+        }
+        
+        /* Fix for Creative template */
+        .header {
+          margin-bottom: 15px !important;
+        }
+        
+        /* Fix for Modern template blue background */
+        .headerSidebar {
+          background-color: #4263eb !important;
+          margin: 0 !important;
+          padding: 20px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* Fix for Creative template blue background */
+        .headerMain {
+          background-color: #043442 !important;
+          margin: 0 !important;
+          padding: 32px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* Remove any pseudo-elements that might create the blue rectangle */
+        .resumePreview *::after,
+        .resumePreview *::before,
+        .header::after,
+        .header::before,
+        .headerMain::after,
+        .headerMain::before,
+        .headerSidebar::after,
+        .headerSidebar::before {
+          display: none !important;
+          content: none !important;
         }
         
         /* Hide any UI elements that shouldn't be in the PDF */
@@ -232,6 +301,16 @@ export default async function handler(req, res) {
           padding-top: 0 !important;
           margin-top: 0 !important;
         }
+        
+        /* Fix for blue rectangle issue */
+        #template-for-pdf-capture {
+          background: white !important;
+          height: auto !important;
+          min-height: auto !important;
+          padding-bottom: 0 !important;
+          margin-bottom: 0 !important;
+          overflow: visible !important;
+        }
       `
     });
     
@@ -277,6 +356,85 @@ export default async function handler(req, res) {
       scale: 0.8, // Slightly scale down to ensure content fits
       displayHeaderFooter: false,
     });
+
+    // Before closing the browser, let's try to fix the blue rectangle issue
+    // by explicitly setting the background of all elements to white
+    try {
+      await page.evaluate(() => {
+        // Force white background on all elements that might have a background color
+        const elementsToFix = document.querySelectorAll('body, #template-for-pdf-capture, .resumePreview, .header, .headerMain, .headerSidebar');
+        elementsToFix.forEach(el => {
+          if (el) {
+            el.style.background = 'white';
+            el.style.backgroundColor = 'white';
+            el.style.minHeight = 'auto';
+            el.style.height = 'auto';
+            // Remove any bottom padding or margin that might create space
+            el.style.paddingBottom = '0';
+            el.style.marginBottom = '0';
+          }
+        });
+        
+        // Specifically target the Creative template's headerMain which has the blue background
+        const creativeHeader = document.querySelector('.headerMain');
+        if (creativeHeader) {
+          // Keep the blue background only for the header content area
+          const headerHeight = creativeHeader.offsetHeight;
+          creativeHeader.style.height = `${headerHeight}px`;
+          creativeHeader.style.minHeight = `${headerHeight}px`;
+          creativeHeader.style.maxHeight = `${headerHeight}px`;
+          creativeHeader.style.overflow = 'hidden';
+        }
+        
+        // Specifically target the Modern template's headerSidebar which has the blue background
+        const modernHeader = document.querySelector('.headerSidebar');
+        if (modernHeader) {
+          // Keep the blue background only for the header content area
+          const headerHeight = modernHeader.offsetHeight;
+          modernHeader.style.height = `${headerHeight}px`;
+          modernHeader.style.minHeight = `${headerHeight}px`;
+          modernHeader.style.maxHeight = `${headerHeight}px`;
+          modernHeader.style.overflow = 'hidden';
+        }
+        
+        // Remove any extra space at the bottom of the document
+        document.body.style.paddingBottom = '0';
+        document.body.style.marginBottom = '0';
+        document.documentElement.style.paddingBottom = '0';
+        document.documentElement.style.marginBottom = '0';
+      });
+      
+      // Generate the PDF again with the fixed styling
+      const fixedPdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: false,
+        margin: {
+          top: '10mm',
+          right: '10mm',
+          bottom: '10mm',
+          left: '10mm'
+        },
+        scale: 0.8,
+        displayHeaderFooter: false,
+      });
+      
+      // Use the fixed PDF if we were able to generate it
+      if (fixedPdf && fixedPdf.length > 0) {
+        await browser.close();
+        
+        // Send the fixed PDF as response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="resume-${template}.pdf"`);
+        res.setHeader('Content-Length', fixedPdf.length);
+        
+        res.status(200).send(Buffer.from(fixedPdf));
+        return;
+      }
+    } catch (fixError) {
+      console.error('Error trying to fix blue rectangle issue:', fixError);
+      // Continue with the original PDF if the fix fails
+    }
 
     await browser.close();
 

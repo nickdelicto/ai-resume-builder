@@ -605,7 +605,7 @@ const ResumeImport = ({ onComplete }) => {
         <h2 className={styles.successTitle}>Resume Successfully Imported!</h2>
         <p className={styles.successMessage}>
           We've extracted the following information from your resume. 
-          Continue to build and enhance your professional resume.
+          {/* Continue below to build & enhance your professional resume. */}
         </p>
         
         {renderCompletenessIndicator()}
@@ -705,6 +705,10 @@ const ResumeImport = ({ onComplete }) => {
           onClick={handleContinue}
         >
           Continue to Resume Builder
+          <svg width="20" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginLeft: "10px", position: "relative", top: "1px"}}>
+            <path d="M1 8H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 2L23 8L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </div>
     );

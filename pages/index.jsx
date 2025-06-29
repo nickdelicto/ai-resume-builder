@@ -3,13 +3,20 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/ResumeLanding.module.css'; // We'll create this later
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+
+// Add a styled component for highlighted words
+const HighlightedWord = ({ children }) => (
+  <span className={styles.highlightedWord}>
+    {children}
+  </span>
+);
 
 const HomePage = () => {
   const router = useRouter();
   const [activeProcessTab, setActiveProcessTab] = useState('build');
   const [activeDemoTab, setActiveDemoTab] = useState('build');
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   
   // Add debug logging for localStorage on component mount
   useEffect(() => {
@@ -50,7 +57,113 @@ const HomePage = () => {
   }, []);
   
   // Navigation handlers
-  const handleBuildNewClick = () => router.push('/builder/new');
+  const handleBuildNewClick = async () => {
+    // Show loading toast if available
+    let toastId;
+    if (typeof toast !== 'undefined') {
+      toastId = toast.loading('Creating new resume...');
+    }
+    
+    try {
+      // If user is authenticated, create a new blank resume in the database
+      if (status === 'authenticated') {
+        console.log('Creating new blank resume in database for authenticated user');
+        
+        // Set a flag to prevent multiple resume creations
+        localStorage.setItem('creating_new_resume', 'true');
+        localStorage.setItem('starting_new_resume', 'true');
+        
+        // Default blank resume template
+        const blankResumeData = {
+          personalInfo: {
+            name: '',
+            email: '',
+            phone: '',
+            location: '',
+            linkedin: '',
+            website: ''
+          },
+          summary: '',
+          experience: [],
+          education: [],
+          skills: [],
+          additional: {
+            certifications: [],
+            projects: [],
+            languages: [],
+            volunteer: [],
+            awards: []
+          }
+        };
+        
+        // Save the blank resume to the database
+        const response = await fetch('/api/resume/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            resumeData: blankResumeData,
+            template: 'ats',  // Default template
+            title: 'My Resume'  // Default title
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create new resume');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.resumeId) {
+          console.log('Successfully created new resume with ID:', result.resumeId);
+          
+          // Clear any existing resume IDs from localStorage
+          localStorage.removeItem('current_resume_id');
+          localStorage.removeItem('editing_resume_id');
+          localStorage.removeItem('editing_existing_resume');
+          
+          // Set the new resume ID in localStorage
+          localStorage.setItem('current_resume_id', result.resumeId);
+          
+          // Navigate to the builder with the new resumeId
+          router.push(`/new-resume-builder?resumeId=${result.resumeId}&source=new`);
+          
+          if (toastId) {
+            toast.success('Created new resume!', { id: toastId });
+          }
+          
+          // Clear the creation flags after a short delay to ensure they're still available during navigation
+          setTimeout(() => {
+            localStorage.removeItem('creating_new_resume');
+            localStorage.removeItem('starting_new_resume');
+          }, 2000);
+          
+          return;
+        }
+      }
+      
+      // For unauthenticated users or if API call fails, use the original behavior
+      router.push('/builder/new');
+      
+      if (toastId) {
+        toast.success('Starting new resume!', { id: toastId });
+      }
+    } catch (error) {
+      console.error('Error creating new resume:', error);
+      
+      // Clear the creation flags in case of error
+      localStorage.removeItem('creating_new_resume');
+      localStorage.removeItem('starting_new_resume');
+      
+      // Fallback to original behavior
+      router.push('/builder/new');
+      
+      if (toastId) {
+        toast.error('Something went wrong. Starting with a blank resume.', { id: toastId });
+      }
+    }
+  };
   const handleImproveClick = () => router.push('/builder/import');
   const handleTailorClick = () => router.push('/builder/target');
   
@@ -67,49 +180,9 @@ const HomePage = () => {
         <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
       
-      {/* Session status indicator */}
-      {status === 'authenticated' && (
-        <Link
-          href="/profile"
-          style={{ textDecoration: 'none' }}
-        >
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            background: '#4caf50',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.15)';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-          >
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: 'white',
-              display: 'inline-block'
-            }}></span>
-            Signed in as {session.user?.name}
-          </div>
-        </Link>
-      )}
+      {/* Session status indicator - Removed as navbar handles this */}
+      
+      {/* Sign In button - Removed as navbar handles this */}
       
       {/* Loading state */}
       {status === 'loading' && (
@@ -186,63 +259,71 @@ const HomePage = () => {
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-          position: 'relative',
-          zIndex: 1
+        position: 'relative',
+        zIndex: 1
       }}>
-          {/* Hero text content */}
+        {/* Hero text content */}
         <div style={{
           textAlign: 'center',
           marginBottom: '60px'
         }}>
-            <h1 className={styles.heroHeading}>
-              Create a Resume That Gets You Hired. Fast!
+          <h1 className={styles.heroHeading}>
+            Create a Resume That Gets You Hired. Fast!
           </h1>
-            <p className={styles.bodyText} style={{
-              fontSize: '20px',
-            maxWidth: '700px',
-            margin: '0 auto',
-            }}>
-              Our Powerful, Intelligent AI builds, improves, and tailors your resume for job success
-            </p>
-            
-            <div style={{
-              display: 'inline-block',
-              margin: '20px auto 0',
-              padding: '8px 16px',
-              background: 'rgba(18, 184, 134, 0.15)',
-              color: 'rgba(18, 184, 134, 1)',
-              borderRadius: '20px',
-              fontWeight: '600',
-              fontSize: '15px',
-              border: '1px solid rgba(18, 184, 134, 0.3)'
-            }}>
-              <span style={{ marginRight: '6px' }}>✓</span>
-              No signup or credit card required to start!
-            </div>
+          
+          {/* Improved spacing and structure for the highlighted words */}
+          <div className={styles.bodyText} style={{
+            fontSize: '22px',
+            maxWidth: '800px',
+            margin: '24px auto 0',
+            lineHeight: '1.7',
+            letterSpacing: '0.01em',
+          }}>
+            <span style={{ display: 'block', marginBottom: '8px' }}>
+              Our Powerful, Intelligent AI <HighlightedWord>builds</HighlightedWord>, <HighlightedWord>improves</HighlightedWord>, and <HighlightedWord>tailors</HighlightedWord> 
+            </span>
+            <span>your resume to get you that interview. ASAP!</span>
+          </div>
+          
+          <div style={{
+            display: 'inline-block',
+            margin: '28px auto 0',
+            padding: '10px 20px',
+            background: 'rgba(18, 184, 134, 0.15)',
+            color: 'rgba(18, 184, 134, 1)',
+            borderRadius: '20px',
+            fontWeight: '600',
+            fontSize: '15px',
+            border: '1px solid rgba(18, 184, 134, 0.3)',
+            boxShadow: '0 2px 8px rgba(18, 184, 134, 0.1)'
+          }}>
+            <span style={{ marginRight: '6px' }}>✓</span>
+            No signup or credit card required to start!
+          </div>
         </div>
         
-          {/* Three entry cards */}
+        {/* Three entry cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '30px',
           marginTop: '30px'
         }}>
-            {/* Card 1: Build New Resume */}
-            <div 
-              className={styles.card}
-              style={{
-            background: 'white',
-                borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)',
-            border: '1px solid #e9ecef',
-            cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-          }}
-              onClick={handleBuildNewClick}
+          {/* Card 1: Build New Resume */}
+          <div 
+            className={styles.card}
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)',
+              border: '1px solid #e9ecef',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+            onClick={handleBuildNewClick}
           >
             <div style={{
                 height: '120px',
@@ -277,7 +358,7 @@ const HomePage = () => {
                   marginBottom: '20px',
                   flex: 1
                 }}>
-                  Start from scratch and build your professional resume with our AI- No more writer's block!
+                  Start from scratch and build your professional resume with our AI- No more writer&apos;s block!
                 </p>
                 <button className={styles.primaryButton}>
                   Get Started
@@ -345,7 +426,7 @@ const HomePage = () => {
                   marginBottom: '20px',
                   flex: 1
                 }}>
-                  Upload your existing resume & we'll enhance it- stand out from the crowd!
+                  Upload your existing resume & we&apos;ll enhance it- stand out from the crowd!
                 </p>
                 <button style={{
                   backgroundColor: '#f59f00',
@@ -400,10 +481,10 @@ const HomePage = () => {
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="8" stroke="#12b886" strokeWidth="2"/>
                     <circle cx="12" cy="12" r="3" stroke="#12b886" strokeWidth="2"/>
-                    <path d="M16 8L18 6" stroke="#12b886" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M16 16L18 18" stroke="#12b886" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M8 16L6 18" stroke="#12b886" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M8 8L6 6" stroke="#12b886" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M16 8L18 6" stroke="#12b886" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16 16L18 18" stroke="#12b886" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 16L6 18" stroke="#12b886" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M8 8L6 6" stroke="#12b886" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             </div>
@@ -502,14 +583,7 @@ const HomePage = () => {
           </div>
           
           {/* Tab Navigation */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '40px',
-            borderBottom: '1px solid #e9ecef',
-            overflowX: 'auto',
-            padding: '0 10px'
-          }}>
+          <div className={styles.tabNavigation}>
             <button 
               onClick={() => setActiveProcessTab('build')}
               className={`${styles.tabButton} ${activeProcessTab === 'build' ? styles.tabButtonActive + ' ' + styles.tabButtonBuild : ''}`}
@@ -608,7 +682,7 @@ const HomePage = () => {
                     color: '#6c757d',
                     lineHeight: '1.5'
                   }}>
-                    Add your info with our AI's assistance for perfect wording
+                    Add your info with our AI&apos;s assistance for perfect wording
                   </p>
                 </div>
                 
@@ -748,7 +822,7 @@ const HomePage = () => {
                       fontWeight: '700',
                       color: '#f59f00'
                     }}>2</span>
-              </div>
+                  </div>
               <h3 style={{
                 fontSize: '18px',
                 fontWeight: '600',
@@ -756,15 +830,15 @@ const HomePage = () => {
                     marginBottom: '10px'
               }}>
                     Review auto-filled data
-              </h3>
+                  </h3>
               <p style={{
                     fontSize: '15px',
                 color: '#6c757d',
                     lineHeight: '1.5'
               }}>
                     We extract your resume content automatically
-              </p>
-            </div>
+                  </p>
+                </div>
                 
                 {/* Step 3 */}
                 <div style={{ textAlign: 'center' }}>
@@ -820,7 +894,7 @@ const HomePage = () => {
                       fontWeight: '700',
                       color: '#f59f00'
                     }}>4</span>
-              </div>
+                  </div>
               <h3 style={{
                 fontSize: '18px',
                 fontWeight: '600',
@@ -828,15 +902,15 @@ const HomePage = () => {
                     marginBottom: '10px'
               }}>
                     Download improved resume
-              </h3>
+                  </h3>
               <p style={{
                     fontSize: '15px',
                 color: '#6c757d',
                     lineHeight: '1.5'
               }}>
                     Get your enhanced professional resume in an ATS-friendly format
-              </p>
-            </div>
+                  </p>
+                </div>
               </div>
             )}
             
@@ -902,7 +976,7 @@ const HomePage = () => {
                       fontWeight: '700',
                       color: '#12b886'
                     }}>2</span>
-              </div>
+                  </div>
               <h3 style={{
                 fontSize: '18px',
                 fontWeight: '600',
@@ -1348,7 +1422,7 @@ const HomePage = () => {
                 color: '#495057',
                 lineHeight: '1.6'
               }}>
-                Get perfect wording for your experience, skills, and summary with our advanced AI assistant. Overcome writer's block and create compelling content.
+                Get perfect wording for your experience, skills, and summary with our advanced AI assistant. Overcome writer&apos;s block and create compelling content.
               </p>
             </div>
             
@@ -1514,7 +1588,7 @@ const HomePage = () => {
                 color: '#495057',
                 lineHeight: '1.6'
               }}>
-                Complete your resume in under 15 minutes with our streamlined, intuitive builder. No complex software to learn – just follow the guided process.
+                Complete your resume in under 5 minutes with our streamlined, intuitive builder. No complex software to learn – just follow the guided process.
               </p>
             </div>
             
@@ -1623,7 +1697,7 @@ const HomePage = () => {
             color: 'rgba(255, 255, 255, 0.9)',
             lineHeight: '1.6'
           }}>
-            Create a professional resume that lands interviews with our intelligent AI-powered resume builder. It's quick, easy, and effective.
+            Create a professional resume that lands interviews with our intelligent AI-powered resume builder. It&apos;s quick, easy, and effective.
           </p>
           
           <div style={{
@@ -1719,11 +1793,11 @@ const HomePage = () => {
               lineHeight: '1.5'
             }}>
               <span style={{ fontStyle: 'italic', display: 'block', marginBottom: '15px' }}>
-                "This resume builder is amazing! You're so smart for making it!" — My wife (who says this about everything I do)
+                "This resume builder is amazing! You&apos;re so smart for making it!" - My wife (who says this about everything I do)
               </span>
               
-              We're just getting started and need real testimonials from people who aren't obligated to be nice to us. 
-              Why not see how your resume could look? Preview it instantly with no signup, no credit card, no risk — 
+              We&apos;re just getting started and need real testimonials from people who aren&apos;t obligated to be nice to us. 
+              Why not see how your resume could look? Preview it instantly with no signup, no credit card, no risk - 
               just potentially a much better resume that actually gets you interviews.
             </p>
             <p style={{ 
@@ -1732,7 +1806,7 @@ const HomePage = () => {
               fontSize: '14px',
               fontStyle: 'italic' 
             }}>
-              If it helps you land a job, your testimonial might replace my wife's (she won't mind, I promise!)
+              If it helps you land a job, your testimonial might replace my wife&apos;s (she won&apos;t mind, I promise!)
             </p>
           </div>
           

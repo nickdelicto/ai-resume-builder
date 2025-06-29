@@ -3,6 +3,8 @@ import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "../../../lib/prisma";
+// Import kept for potential future use
+// import { markLocalStorageForMigration } from '../../../components/ModernResumeBuilder/ModernResumeBuilder';
 
 /**
  * NextAuth.js configuration for authentication
@@ -38,7 +40,7 @@ export const authOptions = {
       // Include user.id in session
       session.user.id = user.id;
       return session;
-    },
+    }
   },
   debug: process.env.NODE_ENV === 'development',
 };
