@@ -325,7 +325,7 @@ const Navigation = () => {
                 style={{ marginRight: '10px', position: 'relative', top: '-2px' }}
                 priority
               />
-              <span className="logo-text">IntelliResume</span>
+          <span className="logo-text">IntelliResume</span>
             </div>
             <div className="tagline-container">
               <span className="nav-tagline">Building careers, one resume at a time</span>
@@ -1020,4 +1020,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default Navigation; 

@@ -19,7 +19,7 @@ const Footer = () => {
                 style={{ marginRight: '8px' }}
                 priority
               />
-              <span className="footer-logo-text">IntelliResume</span>
+            <span className="footer-logo-text">IntelliResume</span>
             </div>
           </Link>
           <p className="footer-tagline">
