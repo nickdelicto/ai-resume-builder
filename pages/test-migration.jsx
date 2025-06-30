@@ -1,228 +1,180 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
+import { migrateToDatabase } from '../lib/resumeUtils';
+import ResumeServiceFactory from '../lib/services/ResumeServiceFactory';
 
-export default function TestMigrationPage() {
+const TestMigrationPage = () => {
   const { data: session, status } = useSession();
   const [localStorageData, setLocalStorageData] = useState({});
+  const [migrationResult, setMigrationResult] = useState(null);
   const [migrationLogs, setMigrationLogs] = useState([]);
-  const [lastMigrationResult, setLastMigrationResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [factoryTestResult, setFactoryTestResult] = useState(null);
-  
-  // Collect localStorage data on mount
+  const [testResults, setTestResults] = useState(null);
+  const [isBrowser, setIsBrowser] = useState(false);
+
   useEffect(() => {
+    // Set isBrowser to true once component mounts
+    setIsBrowser(true);
+    
+    // Load localStorage data
     if (typeof window !== 'undefined') {
-      // Collect all localStorage data related to migration
       const data = {};
-      
-      // Collect all localStorage keys that might be relevant to migration
-      const keysToCollect = [
-        'modern_resume_data',
-        'resume_section_order',
-        'modern_resume_progress',
-        'needs_db_migration',
-        'db_only_mode',
-        'current_resume_id',
-        'migration_in_progress',
-        'migration_start_time',
-        'migration_session_id',
-        'selected_resume_template',
-        'migration_last_attempt',
-        'migration_last_source',
-        'migration_last_result'
-      ];
-      
-      keysToCollect.forEach(key => {
-        const value = localStorage.getItem(key);
-        if (value) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        try {
+          // Try to parse as JSON
+          const value = localStorage.getItem(key);
           try {
-            // Try to parse JSON values
             data[key] = JSON.parse(value);
           } catch (e) {
-            // If not JSON, store as string
+            // If not valid JSON, store as string
             data[key] = value;
           }
+        } catch (e) {
+          data[key] = 'Error reading value';
         }
-      });
-      
+      }
       setLocalStorageData(data);
       
-      // Get migration logs if available
-      try {
-        const logsStr = localStorage.getItem('migration_logs');
-        if (logsStr) {
-          const logs = JSON.parse(logsStr);
-          setMigrationLogs(logs);
+      // Load migration logs if available
+      const logsStr = localStorage.getItem('migration_logs');
+      if (logsStr) {
+        try {
+          setMigrationLogs(JSON.parse(logsStr));
+        } catch (e) {
+          console.error('Error parsing migration logs:', e);
         }
-      } catch (e) {
-        console.error('Error parsing migration logs:', e);
       }
       
-      // Get last migration result if available
-      try {
-        const resultStr = localStorage.getItem('migration_last_result');
-        if (resultStr) {
-          const result = JSON.parse(resultStr);
-          setLastMigrationResult(result);
+      // Load last migration result if available
+      const resultStr = localStorage.getItem('migration_last_result');
+      if (resultStr) {
+        try {
+          setMigrationResult(JSON.parse(resultStr));
+        } catch (e) {
+          console.error('Error parsing migration result:', e);
         }
-      } catch (e) {
-        console.error('Error parsing migration result:', e);
       }
     }
   }, []);
   
-  // Add a function to force migration flags in localStorage
+  const handleClearMigrationData = () => {
+    if (typeof window !== 'undefined') {
+      // Clear all migration-related flags
+      const keysToRemove = [
+        'db_only_mode',
+        'needs_db_migration',
+        'migration_in_progress',
+        'migration_start_time',
+        'migration_session_id',
+        'migration_last_attempt',
+        'migration_last_source',
+        'migration_last_result',
+        'migration_logs',
+        'migration_debounce'
+      ];
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Reload the page to reflect changes
+      window.location.reload();
+    }
+  };
+  
   const handleSetMigrationFlags = () => {
     if (typeof window !== 'undefined') {
+      // Set migration flags
       localStorage.setItem('needs_db_migration', 'true');
       
       // Generate a unique migration session ID
       const migrationSessionId = `migration_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('migration_session_id', migrationSessionId);
       
-      // Clear any previous migration results
-      localStorage.removeItem('migration_last_result');
-      localStorage.removeItem('migration_logs');
-      
-      // Update our state
-      const updatedData = {
-        ...localStorageData,
-        needs_db_migration: 'true',
-        migration_session_id: migrationSessionId
-      };
-      setLocalStorageData(updatedData);
-      
-      // Clear previous logs and results
-      setMigrationLogs([]);
-      setLastMigrationResult(null);
-      
-      alert('Migration flags set in localStorage. Sign out and sign back in to trigger migration.');
+      // Reload the page to reflect changes
+      window.location.reload();
     }
   };
   
-  // Add a function to clear migration data
-  const handleClearMigrationData = () => {
-    if (typeof window !== 'undefined') {
-      // Clear migration-related localStorage items
-      [
-        'needs_db_migration',
-        'migration_session_id',
-        'migration_in_progress',
-        'migration_start_time',
-        'migration_last_attempt',
-        'migration_last_source',
-        'migration_last_result',
-        'migration_logs',
-        'db_only_mode'
-      ].forEach(key => localStorage.removeItem(key));
-      
-      // Update state
-      setMigrationLogs([]);
-      setLastMigrationResult(null);
-      
-      // Update localStorage data state
-      const updatedData = {...localStorageData};
-      Object.keys(updatedData).forEach(key => {
-        if (key.includes('migration') || key === 'db_only_mode' || key === 'needs_db_migration') {
-          delete updatedData[key];
-        }
-      });
-      setLocalStorageData(updatedData);
-      
-      alert('Migration data cleared from localStorage.');
-    }
-  };
-  
-  // Add a function to test the ResumeServiceFactory directly in the browser
   const handleTestFactory = async () => {
-    setFactoryTestResult(null);
-    
     try {
-      // Import the factory dynamically
-      const ResumeServiceFactory = (await import('../lib/services/ResumeServiceFactory')).default;
+      setTestResults({ status: 'running', message: 'Testing service factory...' });
       
-      // Test the factory
-      const result = await ResumeServiceFactory.getService({ 
+      // Test getting service
+      const factory = await ResumeServiceFactory.getService({ 
         isAuthenticated: status === 'authenticated' 
       });
       
-      // Check service availability
-      const serviceAvailable = result.service && 
-        typeof result.service.isAvailable === 'function' && 
-        result.service.isAvailable();
+      // Test service availability
+      let serviceAvailable = false;
+      let serviceType = 'unknown';
       
-      // Set the result
-      setFactoryTestResult({
-        hasService: !!result.service,
-        serviceType: result.service ? result.service.constructor.name : 'undefined',
-        needsMigration: result.needsMigration,
-        isDbService: result.isDbService,
-        isLocalStorageService: result.isLocalStorageService,
-        isAvailable: serviceAvailable
+      if (factory.service) {
+        serviceType = factory.serviceType || 
+                     (factory.service.constructor ? factory.service.constructor.name : typeof factory.service);
+        
+        if (typeof factory.service.isAvailable === 'function') {
+          serviceAvailable = factory.service.isAvailable();
+        }
+      }
+      
+      setTestResults({
+        status: 'complete',
+        factory,
+        serviceAvailable,
+        serviceType,
+        timestamp: new Date().toISOString()
       });
-    } catch (err) {
-      setFactoryTestResult({ error: err.message });
-      console.error('Error testing factory:', err);
+    } catch (error) {
+      setTestResults({
+        status: 'error',
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
     }
   };
-  
-  // Format timestamp to readable date
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return 'Unknown';
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleString();
-    } catch (e) {
-      return timestamp;
+
+  // Helper function to safely get localStorage value
+  const getLocalStorageValue = (key) => {
+    if (isBrowser && typeof window !== 'undefined') {
+      return localStorage.getItem(key);
     }
+    return null;
   };
   
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
       <Head>
-        <title>Migration Diagnostics</title>
+        <title>Migration Diagnostics Tool</title>
       </Head>
       
       <h1>Migration Diagnostics Tool</h1>
       <p>This page helps diagnose issues with localStorage to database migration.</p>
       
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
         <h2>Authentication Status</h2>
-        <p>
-          <strong>Status:</strong> {status}
-          {session && (
-            <span> - Signed in as {session.user?.email || 'Unknown'}</span>
-          )}
-        </p>
-        <p>
-          <strong>User ID:</strong> {session?.user?.id || 'Not available'}
-        </p>
+        <p><strong>Status:</strong> {status}</p>
+        {status === 'authenticated' && (
+          <p><strong>User ID:</strong> {session?.user?.id || 'Not available'}</p>
+        )}
       </div>
       
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
         <h2>Migration Status</h2>
-        <div style={{ 
-          padding: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          background: '#f5f5f5',
-          marginBottom: '10px'
-        }}>
-          <p><strong>DB-only Mode:</strong> {localStorageData.db_only_mode ? 'Yes' : 'No'}</p>
-          <p><strong>Needs Migration:</strong> {localStorageData.needs_db_migration ? 'Yes' : 'No'}</p>
-          <p><strong>Last Migration Attempt:</strong> {localStorageData.migration_last_attempt ? formatTimestamp(parseInt(localStorageData.migration_last_attempt)) : 'None'}</p>
-          <p><strong>Migration Source:</strong> {localStorageData.migration_last_source || 'None'}</p>
-          <p><strong>Migration In Progress:</strong> {localStorageData.migration_in_progress ? 'Yes' : 'No'}</p>
-          <p><strong>Current Resume ID:</strong> {localStorageData.current_resume_id || 'None'}</p>
-        </div>
+        <p><strong>DB-only Mode:</strong> {getLocalStorageValue('db_only_mode') === 'true' ? 'Yes' : 'No'}</p>
+        <p><strong>Needs Migration:</strong> {getLocalStorageValue('needs_db_migration') === 'true' ? 'Yes' : 'No'}</p>
+        <p><strong>Last Migration Attempt:</strong> {getLocalStorageValue('migration_last_attempt') ? 
+          new Date(parseInt(getLocalStorageValue('migration_last_attempt'), 10)).toLocaleString() : 'None'}</p>
+        <p><strong>Migration Source:</strong> {getLocalStorageValue('migration_last_source') || 'None'}</p>
+        <p><strong>Migration In Progress:</strong> {getLocalStorageValue('migration_in_progress') === 'true' ? 'Yes' : 'No'}</p>
+        <p><strong>Current Resume ID:</strong> {getLocalStorageValue('current_resume_id') || 'None'}</p>
         
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
           <button 
             onClick={handleSetMigrationFlags}
             style={{
-              padding: '10px 20px',
-              background: '#1a73e8',
+              padding: '8px 16px',
+              backgroundColor: '#4CAF50',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -235,8 +187,8 @@ export default function TestMigrationPage() {
           <button 
             onClick={handleClearMigrationData}
             style={{
-              padding: '10px 20px',
-              background: '#dc3545',
+              padding: '8px 16px',
+              backgroundColor: '#f44336',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -249,8 +201,8 @@ export default function TestMigrationPage() {
           <button 
             onClick={handleTestFactory}
             style={{
-              padding: '10px 20px',
-              background: '#28a745',
+              padding: '8px 16px',
+              backgroundColor: '#2196F3',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -260,110 +212,119 @@ export default function TestMigrationPage() {
             Test Factory
           </button>
         </div>
-        
-        <div style={{ marginTop: '20px' }}>
-          <p><strong>How to test migration:</strong></p>
-          <ol>
-            <li>Click "Clear Migration Data" to reset migration state</li>
-            <li>Click "Set Migration Flags" to prepare for migration</li>
-            <li>Sign out and sign back in to trigger migration</li>
-            <li>Return to this page to see migration results</li>
-          </ol>
-        </div>
       </div>
       
-      {lastMigrationResult && (
-        <div style={{ marginBottom: '20px' }}>
-          <h2>Last Migration Result</h2>
-          <div style={{ 
-            padding: '10px',
-            border: '1px solid',
-            borderColor: lastMigrationResult.success ? '#28a745' : '#dc3545',
-            borderRadius: '4px',
-            background: lastMigrationResult.success ? '#f0fff0' : '#fff0f0',
-            marginBottom: '10px'
-          }}>
-            <p><strong>Success:</strong> {lastMigrationResult.success ? 'Yes' : 'No'}</p>
-            <p><strong>Code:</strong> {lastMigrationResult.code}</p>
-            {lastMigrationResult.error && <p><strong>Error:</strong> {lastMigrationResult.error}</p>}
-            {lastMigrationResult.message && <p><strong>Message:</strong> {lastMigrationResult.message}</p>}
-            <p><strong>Timestamp:</strong> {formatTimestamp(lastMigrationResult.timestamp)}</p>
-            {lastMigrationResult.data?.resumeId && <p><strong>Resume ID:</strong> {lastMigrationResult.data.resumeId}</p>}
-          </div>
-        </div>
-      )}
-      
-      {factoryTestResult && (
-        <div style={{ marginBottom: '20px' }}>
-          <h2>Factory Test Result</h2>
-          <div style={{ 
-            padding: '10px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            background: '#f5f5f5'
-          }}>
-            <pre>{JSON.stringify(factoryTestResult, null, 2)}</pre>
-          </div>
-        </div>
-      )}
-      
-      {migrationLogs && migrationLogs.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          <h2>Migration Logs</h2>
-          <div style={{ 
-            maxHeight: '400px', 
-            overflow: 'auto', 
-            padding: '10px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            background: '#f5f5f5'
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '5px', borderBottom: '1px solid #ddd' }}>Time</th>
-                  <th style={{ textAlign: 'left', padding: '5px', borderBottom: '1px solid #ddd' }}>Message</th>
-                  <th style={{ textAlign: 'left', padding: '5px', borderBottom: '1px solid #ddd' }}>Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {migrationLogs.map((log, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '5px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </td>
-                    <td style={{ padding: '5px' }}>{log.message}</td>
-                    <td style={{ padding: '5px', fontFamily: 'monospace', fontSize: '12px' }}>
-                      {log.data ? (
-                        <details>
-                          <summary>View Data</summary>
-                          <pre style={{ margin: '5px 0', whiteSpace: 'pre-wrap' }}>
-                            {log.data}
-                          </pre>
-                        </details>
-                      ) : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {testResults && (
+        <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: testResults.status === 'error' ? '#ffebee' : '#f1f8e9' }}>
+          <h2>Factory Test Results</h2>
+          <p><strong>Status:</strong> {testResults.status}</p>
+          <p><strong>Time:</strong> {testResults.timestamp}</p>
+          
+          {testResults.status === 'error' ? (
+            <>
+              <p><strong>Error:</strong> {testResults.error}</p>
+              <pre style={{ whiteSpace: 'pre-wrap', backgroundColor: '#f5f5f5', padding: '10px' }}>
+                {testResults.stack}
+              </pre>
+            </>
+          ) : (
+            <>
+              <p><strong>Service Type:</strong> {testResults.serviceType}</p>
+              <p><strong>Service Available:</strong> {testResults.serviceAvailable ? 'Yes' : 'No'}</p>
+              <p><strong>Is DB Service:</strong> {testResults.factory?.isDbService ? 'Yes' : 'No'}</p>
+              <p><strong>Is LocalStorage Service:</strong> {testResults.factory?.isLocalStorageService ? 'Yes' : 'No'}</p>
+              <p><strong>Needs Migration:</strong> {testResults.factory?.needsMigration ? 'Yes' : 'No'}</p>
+            </>
+          )}
         </div>
       )}
       
       <div style={{ marginBottom: '20px' }}>
-        <h2>LocalStorage Data</h2>
-        <div style={{ 
-          maxHeight: '200px', 
-          overflow: 'auto', 
-          padding: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          background: '#f5f5f5'
-        }}>
-          <pre>{JSON.stringify(localStorageData, null, 2)}</pre>
+        <h2>How to test migration:</h2>
+        <ol>
+          <li>Click "Clear Migration Data" to reset migration state</li>
+          <li>Click "Set Migration Flags" to prepare for migration</li>
+          <li>Sign out and sign back in to trigger migration</li>
+          <li>Return to this page to see migration results</li>
+        </ol>
+      </div>
+      
+      {migrationResult && (
+        <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: migrationResult.success ? '#f1f8e9' : '#ffebee' }}>
+          <h2>Last Migration Result</h2>
+          <p><strong>Success:</strong> {migrationResult.success ? 'Yes' : 'No'}</p>
+          <p><strong>Code:</strong> {migrationResult.code}</p>
+          {migrationResult.error && <p><strong>Error:</strong> {migrationResult.error}</p>}
+          {migrationResult.message && <p><strong>Message:</strong> {migrationResult.message}</p>}
+          <p><strong>Timestamp:</strong> {migrationResult.timestamp ? new Date(migrationResult.timestamp).toLocaleString() : 'Not available'}</p>
         </div>
+      )}
+      
+      {migrationLogs && migrationLogs.length > 0 && (
+        <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
+          <h2>Migration Logs</h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Time</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Message</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {migrationLogs.map((log, index) => (
+                <tr key={index}>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{log.message}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {log.data ? (
+                      <details>
+                        <summary>View Data</summary>
+                        <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '200px', overflow: 'auto' }}>
+                          {log.data}
+                        </pre>
+                      </details>
+                    ) : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      
+      <div style={{ marginBottom: '30px' }}>
+        <h2>LocalStorage Data</h2>
+        <pre style={{ 
+          whiteSpace: 'pre-wrap', 
+          backgroundColor: '#f5f5f5', 
+          padding: '15px', 
+          borderRadius: '5px',
+          maxHeight: '500px',
+          overflow: 'auto'
+        }}>
+          {JSON.stringify(localStorageData, null, 2)}
+        </pre>
       </div>
     </div>
   );
-} 
+};
+
+// Add this configuration to disable static generation for this page
+export const config = {
+  unstable_runtimeJS: true,
+};
+
+// Add getServerSideProps to force server-side rendering
+export async function getServerSideProps() {
+  return {
+    props: {
+      // You can pass server props here if needed
+      serverTime: new Date().toISOString(),
+    },
+  };
+}
+
+export default TestMigrationPage; 

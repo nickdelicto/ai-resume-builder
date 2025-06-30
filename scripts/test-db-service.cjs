@@ -1,59 +1,82 @@
 /**
- * Test script for diagnosing DB service issues
- * Run this script on the VPS with: node scripts/test-db-service.cjs
+ * Test script to verify DbResumeService functionality
+ * This script is designed to run directly on the server with Node.js
+ * It uses CommonJS format instead of ES modules for direct execution
  */
 
 // Mock browser environment
-global.window = {
-  localStorage: {
-    _data: {},
-    getItem: function(key) {
-      return this._data[key] || null;
-    },
-    setItem: function(key, value) {
-      this._data[key] = value;
-    },
-    removeItem: function(key) {
-      delete this._data[key];
-    }
+global.window = {};
+global.localStorage = {
+  _data: {},
+  getItem(key) {
+    return this._data[key] || null;
   },
-  location: {
-    href: 'http://localhost:3000/test-script',
-    search: ''
+  setItem(key, value) {
+    this._data[key] = value;
+  },
+  removeItem(key) {
+    delete this._data[key];
+  },
+  clear() {
+    this._data = {};
+  },
+  key(index) {
+    return Object.keys(this._data)[index] || null;
+  },
+  get length() {
+    return Object.keys(this._data).length;
   }
 };
+global.document = undefined; // Intentionally undefined to test detection
 
 // Mock fetch API
-global.fetch = async function mockFetch() {
+global.fetch = async () => {
   return {
     ok: true,
-    json: async () => ({ success: true, resumeId: 'mock-resume-id' })
+    json: async () => ({ success: true, resume: { id: 'test-id', data: {} } })
   };
 };
 
-// Create a simple mock implementation of the services
-const mockResumeService = {
-  initialize: async function() {
-    console.log('🔍 Mock service initialized');
-    return { success: true };
-  },
-  isAvailable: function() {
-    console.log('🔍 Mock service availability check');
-    return true;
+// Create mock ResumeService class
+class ResumeService {
+  async initialize() { return { success: true }; }
+  isAvailable() { return true; }
+  async loadResume() { return { success: true, data: { resumeData: {}, meta: {} } }; }
+  async saveResume() { return { success: true, data: { resumeId: 'test-id' } }; }
+  async listResumes() { return { success: true, data: { resumes: [] } }; }
+  async deleteResume() { return { success: true }; }
+}
+
+// Create mock DbResumeService class
+class DbResumeService extends ResumeService {
+  constructor() {
+    super();
+    this.apiEndpoints = {
+      save: '/api/resume/save',
+      update: '/api/resume/update',
+      get: '/api/resume/get',
+      list: '/api/resume/list',
+      delete: '/api/resume/delete'
+    };
+    this.isAuthenticated = false;
   }
-};
 
-// Mock DbResumeService
-const DbResumeService = function() {
-  this.isAuthenticated = false;
-  
-  this.initialize = async function(options) {
+  async initialize(options = {}) {
     console.log('📊 [DbResumeService] initialize called with options:', options);
-    this.isAuthenticated = options.isAuthenticated || false;
+    
+    // Ensure isAuthenticated is a boolean
+    if (typeof options.isAuthenticated !== 'boolean') {
+      console.warn('📊 [DbResumeService] isAuthenticated is not a boolean:', options.isAuthenticated);
+      // Convert to boolean explicitly
+      this.isAuthenticated = !!options.isAuthenticated;
+    } else {
+      this.isAuthenticated = options.isAuthenticated;
+    }
+    
     return { success: true };
-  };
-  
-  this.isAvailable = function() {
+  }
+
+  isAvailable() {
     const inBrowser = typeof window !== 'undefined';
     const isAuth = !!this.isAuthenticated;
     
@@ -63,102 +86,103 @@ const DbResumeService = function() {
       authValue: this.isAuthenticated
     });
     
-    return inBrowser && isAuth;
-  };
-};
-
-// Mock ResumeServiceFactory
-const ResumeServiceFactory = {
-  dbService: new DbResumeService(),
-  localStorageService: mockResumeService,
-  
-  getService: async function(options) {
-    console.log('📊 [ResumeServiceFactory] getService called with:', options);
-    
-    if (options.isAuthenticated) {
-      await this.dbService.initialize(options);
-      const isAvailable = this.dbService.isAvailable();
-      
-      return {
-        service: this.dbService,
-        needsMigration: false,
-        isDbService: true,
-        isLocalStorageService: false,
-        isAvailable
-      };
-    } else {
-      return {
-        service: this.localStorageService,
-        needsMigration: false,
-        isDbService: false,
-        isLocalStorageService: true
-      };
+    // In server-side rendering, we should return false
+    if (!inBrowser) {
+      console.log('📊 [DbResumeService] Not available: Not in browser environment');
+      return false;
     }
-  }
-};
-
-// Test function
-async function testDbService() {
-  console.log('🔍 Starting DB service test');
-  
-  try {
-    // Test 1: Direct DbResumeService initialization
-    console.log('\n🔍 Test 1: Direct DbResumeService initialization');
-    const dbService = new DbResumeService();
     
-    console.log('🔍 Initializing DbResumeService with isAuthenticated=true');
-    const initResult = await dbService.initialize({ isAuthenticated: true });
-    console.log('🔍 Initialize result:', initResult);
+    // Must be authenticated to use DB service
+    if (!isAuth) {
+      console.log('📊 [DbResumeService] Not available: User not authenticated');
+      return false;
+    }
     
-    console.log('🔍 Checking if service is available');
-    const isAvailable = dbService.isAvailable();
-    console.log('🔍 Service available:', isAvailable);
-    
-    // Test 2: ResumeServiceFactory getService
-    console.log('\n🔍 Test 2: ResumeServiceFactory.getService');
-    const factoryResult = await ResumeServiceFactory.getService({ 
-      isAuthenticated: true 
-    });
-    
-    console.log('🔍 Factory result:', {
-      hasService: !!factoryResult.service,
-      serviceType: factoryResult.service ? 'DbResumeService' : 'null',
-      needsMigration: factoryResult.needsMigration,
-      isDbService: factoryResult.isDbService,
-      isLocalStorageService: factoryResult.isLocalStorageService,
-      isAvailable: factoryResult.isAvailable
-    });
-    
-    // Test 3: DB-only mode
-    console.log('\n🔍 Test 3: DB-only mode');
-    window.localStorage.setItem('db_only_mode', 'true');
-    
-    const dbOnlyResult = await ResumeServiceFactory.getService({ 
-      isAuthenticated: true 
-    });
-    
-    console.log('🔍 DB-only mode result:', {
-      hasService: !!dbOnlyResult.service,
-      serviceType: dbOnlyResult.service ? 'DbResumeService' : 'null',
-      needsMigration: dbOnlyResult.needsMigration,
-      isDbService: dbOnlyResult.isDbService,
-      isLocalStorageService: dbOnlyResult.isLocalStorageService,
-      isAvailable: dbOnlyResult.isAvailable
-    });
-    
-    // Test 4: Check environment
-    console.log('\n🔍 Test 4: Environment check');
-    console.log('🔍 typeof window:', typeof window);
-    console.log('🔍 typeof document:', typeof document);
-    console.log('🔍 typeof localStorage:', typeof window.localStorage);
-    console.log('🔍 typeof fetch:', typeof fetch);
-    console.log('🔍 process.env.NODE_ENV:', process.env.NODE_ENV);
-    
-    console.log('\n🔍 All tests completed');
-  } catch (error) {
-    console.error('🔍 Error during tests:', error);
+    console.log('📊 [DbResumeService] Service is available');
+    return true;
   }
 }
 
-// Run the test
-testDbService(); 
+// Create mock ResumeServiceFactory
+class ResumeServiceFactory {
+  constructor() {
+    this.dbService = new DbResumeService();
+    this.isAuthenticated = false;
+  }
+
+  initialize(isAuthenticated) {
+    this.isAuthenticated = isAuthenticated;
+  }
+
+  getService() {
+    return this.isAuthenticated ? this.dbService : null;
+  }
+
+  static async getService(options = {}) {
+    console.log('📊 [ResumeServiceFactory] getService called with:', options);
+    
+    const factory = new ResumeServiceFactory();
+    factory.initialize(options.isAuthenticated);
+    
+    const service = factory.getService();
+    await service.initialize({ isAuthenticated: options.isAuthenticated });
+    
+    return {
+      service,
+      serviceType: service.constructor.name,
+      needsMigration: false,
+      isDbService: service instanceof DbResumeService,
+      isLocalStorageService: false,
+      isAvailable: service.isAvailable()
+    };
+  }
+}
+
+// Main test function
+async function runTests() {
+  console.log('🔍 Starting DB service test\n');
+
+  // Test 1: Direct DbResumeService initialization
+  console.log('🔍 Test 1: Direct DbResumeService initialization');
+  console.log('🔍 Initializing DbResumeService with isAuthenticated=true');
+  
+  const dbService = new DbResumeService();
+  const initResult = await dbService.initialize({ isAuthenticated: true });
+  
+  console.log('🔍 Initialize result:', initResult);
+  console.log('🔍 Checking if service is available');
+  
+  const isAvailable = dbService.isAvailable();
+  console.log('🔍 Service available:', isAvailable);
+  console.log('');
+
+  // Test 2: ResumeServiceFactory.getService
+  console.log('🔍 Test 2: ResumeServiceFactory.getService');
+  const factoryResult = await ResumeServiceFactory.getService({ isAuthenticated: true });
+  console.log('🔍 Factory result:', factoryResult);
+  console.log('');
+
+  // Test 3: DB-only mode
+  console.log('🔍 Test 3: DB-only mode');
+  localStorage.setItem('db_only_mode', 'true');
+  const dbOnlyResult = await ResumeServiceFactory.getService({ isAuthenticated: true });
+  console.log('🔍 DB-only mode result:', dbOnlyResult);
+  console.log('');
+
+  // Test 4: Environment check
+  console.log('🔍 Test 4: Environment check');
+  console.log('🔍 typeof window:', typeof window);
+  console.log('🔍 typeof document:', typeof document);
+  console.log('🔍 typeof localStorage:', typeof localStorage);
+  console.log('🔍 typeof fetch:', typeof fetch);
+  console.log('🔍 process.env.NODE_ENV:', process.env.NODE_ENV);
+  console.log('');
+
+  console.log('🔍 All tests completed');
+}
+
+// Run the tests
+runTests().catch(error => {
+  console.error('Test failed with error:', error);
+  process.exit(1);
+}); 
