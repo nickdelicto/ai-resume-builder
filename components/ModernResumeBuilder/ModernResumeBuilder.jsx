@@ -2847,35 +2847,83 @@ const ModernResumeBuilder = ({
         return;
       }
       
+      // Check if we have resume data to migrate
+      const hasResumeData = typeof window !== 'undefined' && 
+                           localStorage.getItem('modern_resume_data') !== null;
+      
+      // Check if migration is needed
+      const needsMigration = typeof window !== 'undefined' && 
+                            localStorage.getItem('needs_db_migration') === 'true';
+      
+      // Check if in DB-only mode
+      const dbOnlyMode = typeof window !== 'undefined' && 
+                        localStorage.getItem('db_only_mode') === 'true';
+      
       // Use the centralized migration function
       try {
         const migrationResult = await migrateToDatabase({
           source: 'modern_resume_builder',
+          // Include detailed context information
+          context: {
+            component: 'ModernResumeBuilder',
+            currentResumeId,
+            hasResumeData,
+            needsMigration,
+            dbOnlyMode,
+            isAuthenticated,
+            hasMigratedRef: hasMigratedRef.current,
+            selectedTemplate,
+            resumeName,
+            url: typeof window !== 'undefined' ? window.location.href : 'server-side',
+            timestamp: new Date().toISOString()
+          },
           onSuccess: ({ resumeId }) => {
             // Mark that we've migrated in this session
             hasMigratedRef.current = true;
             
             // Update state with new resumeId
             setCurrentResumeId(resumeId);
+            
+            // Store the successful migration time
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('migration_success_time', Date.now().toString());
+              localStorage.setItem('migration_success_resumeId', resumeId);
+            }
+          },
+          onError: (error) => {
+            // Store the error for debugging
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('migration_last_error', error.message || 'Unknown error');
+              localStorage.setItem('migration_error_time', Date.now().toString());
+            }
           }
         });
         
         if (migrationResult.success) {
           if (migrationResult.code === 'MIGRATION_SUCCESS') {
-            toast.success('Your resume data has been synced successfully!', { id: 'migration-toast' });
+            toast.success('Your resume data has been synced successfully! If you do not see your resume, please refresh/reload the page.', { id: 'migration-toast' });
           }
         } else if (migrationResult.code === 'ALREADY_DB_ONLY') {
           // Already in DB-only mode, update our ref
           hasMigratedRef.current = true;
+        } else if (migrationResult.error) {
+          // Show a more specific error message
+          toast.error(`Unable to sync your resume data. Try to refresh/reload the page. If the problem persists, please contact me. Error: ${migrationResult.error}`, { id: 'migration-toast' });
         }
       } catch (error) {
         console.error('📊 Error during migration:', error);
-        toast.error('Sync error. Will try again later.', { id: 'migration-toast' });
+        toast.error(`Unable to sync your resume data. Error: ${error.message || 'Unknown error'}`, { id: 'migration-toast' });
+        
+        // Store the error for debugging
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('migration_last_error', error.message || 'Unknown error');
+          localStorage.setItem('migration_error_time', Date.now().toString());
+        }
       }
     };
     
     migrateLocalStorageToDatabase();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentResumeId, selectedTemplate, resumeName]);
 
   // Add a new useEffect to update our migration ref when localStorage changes
   // This helps sync migration state across components
