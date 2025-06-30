@@ -2901,7 +2901,16 @@ const ModernResumeBuilder = ({
         
         if (migrationResult.success) {
           if (migrationResult.code === 'MIGRATION_SUCCESS') {
-            toast.success('Your resume data has been synced successfully! If you do not see your resume, please refresh/reload the page.', { id: 'migration-toast' });
+            toast.success('Your resume has been synced to your account! ⚠️ If you do not see it, REFRESH/RELOAD page.', { 
+              id: 'migration-toast', 
+              duration: 10000,
+              style: {
+                background: 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))',
+                border: '1px solid rgba(52, 168, 83, 0.2)',
+                padding: '16px',
+                color: '#34a853'
+              }
+            });
           }
         } else if (migrationResult.code === 'ALREADY_DB_ONLY') {
           // Already in DB-only mode, update our ref

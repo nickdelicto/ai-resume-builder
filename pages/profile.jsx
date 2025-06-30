@@ -1556,7 +1556,7 @@ export default function ProfilePage() {
             Your Profile
           </h1>
           
-          <div style={{ 
+          {/* <div style={{ 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center',
@@ -1618,7 +1618,7 @@ export default function ProfilePage() {
                 </p>
               </div>
             )}
-          </div>
+          </div> */}
           
           {/* Payment Success Message */}
           <PaymentSuccessMessage />

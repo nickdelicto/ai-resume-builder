@@ -35,7 +35,7 @@ export default function AuthGuard({ children }) {
           
           if (migrationResult.success) {
             if (migrationResult.code === 'MIGRATION_SUCCESS') {
-              toast.success('Your resume data has been synced to your account!', { id: migrationToastIdRef.current });
+              toast.success('Your resume has been synced to your account! ⚠️ If you do not see it, REFRESH/RELOAD page.', { id: migrationToastIdRef.current, duration: 10000 });
             } else if (migrationResult.code === 'NO_DATA_TO_MIGRATE') {
               toast.dismiss(migrationToastIdRef.current);
             } else {
