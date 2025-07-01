@@ -1,15 +1,10 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "../../../lib/prisma";
-import chromium from 'chrome-aws-lambda';
+import puppeteer from 'puppeteer';
 
 // Detect development environment
 const isDev = process.env.NODE_ENV === 'development';
-
-// Use puppeteer in dev and puppeteer-core in production
-const puppeteer = isDev 
-  ? require('puppeteer') 
-  : require('puppeteer-core');
 
 /**
  * API endpoint to directly download a resume as PDF
@@ -99,29 +94,16 @@ export default async function handler(req, res) {
       ? 'http://localhost:3000' 
       : process.env.NEXT_PUBLIC_BASE_URL || 'https://yourproductionsite.com';
     
-    // Launch browser with appropriate settings
-    if (isDev) {
-      browser = await puppeteer.launch({
-        headless: "new",
-        args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox',
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process'
-        ]
-      });
-    } else {
-      // For production (AWS Lambda environment)
-      browser = await puppeteer.launch({
-        args: [
-          ...chromium.args,
-          '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process'
-        ],
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
-      });
-    }
+    // Launch browser with consistent settings for both dev and production
+    browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process'
+      ]
+    });
 
     const page = await browser.newPage();
     
