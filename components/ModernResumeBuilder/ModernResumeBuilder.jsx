@@ -20,6 +20,7 @@ import { FaArrowLeft, FaPencilAlt, FaBriefcase, FaInfoCircle, FaTimes, FaLightbu
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
+import { useResumeSelection } from '../common/ResumeSelectionProvider';
 
 // Helper function to mark localStorage data for migration to database
 // This can be imported and called when a user signs in from another component
@@ -2303,6 +2304,9 @@ const ModernResumeBuilder = ({
     }
   };
 
+  // Get the resume selection modal functionality
+  const { navigateToPricing } = useResumeSelection();
+
   // Replace the download handler with Puppeteer-based logic
   const handleDownloadPDF = async () => {
     // Check if user is authenticated
@@ -2334,7 +2338,7 @@ const ModernResumeBuilder = ({
       return;
     }
 
-    // If we already know the resume isn't eligible, redirect directly to subscription page
+    // If we already know the resume isn't eligible, redirect to subscription page using the modal
     if ((!isEligibleForDownload || (subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) && currentResumeId) {
       // Save the current state before redirecting
       localStorage.setItem('pending_resume_download', 'true');
@@ -2345,8 +2349,9 @@ const ModernResumeBuilder = ({
       // Store the current resume ID to maintain context after purchase
       localStorage.setItem('pending_download_resume_id', currentResumeId);
       
-      // Redirect to subscription page with download action
-      router.push(`/subscription?action=download&resumeId=${currentResumeId}`);
+      // Use the resume selection modal to navigate to subscription page
+      // Pass false for forceModal to skip the modal and use the current resumeId directly
+      navigateToPricing(`/subscription?action=download&resumeId=${currentResumeId}`, false);
       return;
     }
 
@@ -3044,7 +3049,7 @@ const ModernResumeBuilder = ({
                 if (response.ok) {
                   const result = await response.json();
                   if (result.success) {
-                    console.log('📊 Successfully saved imported data to database');
+                    console.log('�� Successfully saved imported data to database');
                     
                     // Update UI with imported data
                     setResumeData(importedData);
@@ -3299,6 +3304,9 @@ const ModernResumeBuilder = ({
             planName: planDisplayName,
             expirationDate: data.expirationDate
           });
+          
+          // Store the plan name in localStorage for other components to access
+          localStorage.setItem('current_subscription_plan', planDisplayName);
         }
       } catch (error) {
         console.error('Error checking subscription details:', error);

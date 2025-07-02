@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { startNewResume } from '../../lib/resumeUtils';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { useResumeSelection } from './ResumeSelectionProvider';
 
 const Navigation = () => {
   const { data: session, status } = useSession();
@@ -15,6 +16,7 @@ const Navigation = () => {
   const [hoveredDesktopItem, setHoveredDesktopItem] = useState(null);
   const [hoveredResumeButton, setHoveredResumeButton] = useState(false);
   const [isProcessingNewResume, setIsProcessingNewResume] = useState(false);
+  const { navigateToPricing } = useResumeSelection();
   
   // Close menu when route changes
   useEffect(() => {
@@ -98,6 +100,13 @@ const Navigation = () => {
     }
   };
 
+  // Handle pricing navigation with resume selection
+  const handlePricingNavigation = (e) => {
+    e.preventDefault();
+    navigateToPricing('/subscription', true);
+    setIsMenuOpen(false);
+  };
+
   // Style objects for sign in button
   const signInButtonStyle = {
     background: isSignInHovered ? "#c5d9fc" : "#d8e8ff",
@@ -112,7 +121,8 @@ const Navigation = () => {
     border: "none",
     transition: "all 0.2s ease",
     fontFamily: "'Figtree', 'Inter', sans-serif",
-    boxShadow: isSignInHovered ? "0 2px 8px rgba(0,0,0,0.05)" : "none"
+    boxShadow: isSignInHovered ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+    whiteSpace: "nowrap" // Prevent text wrapping
   };
   
   // Style for new resume button
@@ -411,8 +421,9 @@ const Navigation = () => {
                       My Profile
                     </Link>
                     
-                    <Link 
+                    <a 
                       href="/subscription" 
+                      onClick={handlePricingNavigation}
                       style={dropdownItemStyles.item('subscription-desktop')}
                       onMouseEnter={() => setHoveredDesktopItem('subscription-desktop')}
                       onMouseLeave={() => setHoveredDesktopItem(null)}
@@ -433,7 +444,7 @@ const Navigation = () => {
                         <line x1="1" y1="10" x2="23" y2="10"></line>
                       </svg>
                       Pricing
-                    </Link>
+                    </a>
                   </div>
                   
                   <div className="dropdown-section">
@@ -600,8 +611,9 @@ const Navigation = () => {
                 My Profile
               </Link>
               
-              <Link 
+              <a 
                 href="/subscription"
+                onClick={handlePricingNavigation}
                 style={mobileMenuItemStyles.menuItem('subscription')}
                 onMouseEnter={() => setHoveredMenuItem('subscription')}
                 onMouseLeave={() => setHoveredMenuItem(null)}
@@ -622,7 +634,7 @@ const Navigation = () => {
                   <line x1="1" y1="10" x2="23" y2="10"></line>
                 </svg>
                 Pricing
-              </Link>
+              </a>
               
               <Link 
                 href="/profile#resumes"
@@ -950,8 +962,12 @@ const Navigation = () => {
         /* Responsive styles */
         @media (max-width: 768px) {
           .nav-logo {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             padding: 0.15rem 0;
+          }
+          
+          .logo-text {
+            font-size: 1.5rem;
           }
           
           .tagline-container {
@@ -989,6 +1005,62 @@ const Navigation = () => {
           .mobile-menu.open {
             max-height: 500px;
             opacity: 1;
+          }
+          
+          .nav-content {
+            padding: 0 0.5rem;
+          }
+          
+          .index-sign-in-button {
+            padding: 8px 16px !important;
+            font-size: 14px !important;
+            min-width: 80px;
+            text-align: center;
+            justify-content: center;
+          }
+          
+          .nav-container {
+            padding: 0.75rem 0.75rem;
+          }
+          
+          .logo-container {
+            align-items: center;
+          }
+          
+          .logo-container img {
+            width: 32px;
+            height: 32px;
+          }
+          
+          .nav-controls {
+            gap: 0.5rem;
+          }
+        }
+        
+        /* Small mobile screens */
+        @media (max-width: 360px) {
+          .nav-logo {
+            font-size: 1.5rem;
+          }
+          
+          .logo-text {
+            font-size: 1.2rem;
+          }
+          
+          .nav-content {
+            padding: 0 0.3rem;
+            height: 50px;
+          }
+          
+          .index-sign-in-button {
+            padding: 6px 12px !important;
+            font-size: 13px !important;
+          }
+          
+          .logo-container img {
+            width: 28px;
+            height: 28px;
+            margin-right: 6px !important;
           }
         }
         

@@ -37,13 +37,17 @@ export default async function handler(req, res) {
       }
     });
 
-    // Return the resumes
+    // Return the resumes with success flag
     return res.status(200).json({
+      success: true,
       count: resumes.length,
       resumes: resumes
     });
   } catch (error) {
     console.error('Error fetching user resumes:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 } 

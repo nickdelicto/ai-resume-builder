@@ -248,7 +248,7 @@ export function LandingPage() {
 
         <section className="py-20 bg-purple-600 text-white text-center">
           <h2 className="text-4xl font-bold mb-4">Ready to Build Your Perfect Resume?</h2>
-          <p className="text-xl mb-8">Join thousands of job seekers who have landed their dream jobs with IntelliResume</p>
+          <p className="text-xl mb-8">Join thousands of job seekers who WILL land their dream jobs with IntelliResume</p>
           <Button 
             size="lg" 
             variant="secondary" 

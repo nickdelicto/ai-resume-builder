@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { ResumeServiceProvider } from '../lib/contexts/ResumeServiceContext';
 import { Toaster } from 'react-hot-toast';
 import React from 'react';
+import ResumeSelectionProvider from '../components/common/ResumeSelectionProvider';
 
 // Simple error boundary component to handle context errors gracefully
 class ErrorBoundary extends React.Component {
@@ -70,6 +71,7 @@ export default function MyApp({ Component, pageProps }) {
     <SessionProvider session={pageProps.session}>
       <ErrorBoundary>
         <ResumeServiceProvider>
+          <ResumeSelectionProvider>
           <div className="app-wrapper">
           {!isPdfCapturePage && <Navigation />}
           <div className={`app-container ${isBuilderPage ? 'pt-14' : isPdfCapturePage ? 'pt-0' : 'pt-20'}`}>
@@ -88,9 +90,22 @@ export default function MyApp({ Component, pageProps }) {
             .app-container {
               flex: 1 0 auto;
             }
+            
+            /* Hide reCAPTCHA badge except on contact page */
+            .grecaptcha-badge {
+              visibility: hidden !important;
+              opacity: 0 !important;
+            }
+            
+            /* Only show badge on contact page */
+            body.contact-page .grecaptcha-badge {
+              visibility: visible !important;
+              opacity: 1 !important;
+            }
           `}</style>
           
           <Toaster position="bottom-center" />
+          </ResumeSelectionProvider>
         </ResumeServiceProvider>
       </ErrorBoundary>
     </SessionProvider>

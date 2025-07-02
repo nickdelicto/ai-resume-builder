@@ -122,10 +122,14 @@ export default async function handler(req, res) {
           name: 'IntelliResume Cancellation', 
           email: process.env.EMAIL_FROM || 'noreply@intelliresume.net' 
         };
-        sendSmtpEmail.to = [
-          { email: 'delictodelight@gmail.com' },
-          { email: 'nick@intelliresume.net' }
-        ];
+        
+        // Get admin emails from environment variable - support multiple emails separated by semicolons
+        const adminEmails = process.env.ADMIN_EMAIL 
+          ? process.env.ADMIN_EMAIL.split(';').map(email => email.trim())
+          : ["delictodelight@gmail.com"]; // Fallback to default email
+        
+        // Convert admin emails to the format expected by Brevo
+        sendSmtpEmail.to = adminEmails.map(email => ({ email }));
         
         // Add reply-to with the user's email so you can respond directly to them
         sendSmtpEmail.replyTo = {
@@ -154,10 +158,15 @@ export default async function handler(req, res) {
         }
       });
 
-      // Send the email to both recipients
+      // Get admin emails from environment variable - support multiple emails separated by semicolons
+      const adminEmails = process.env.ADMIN_EMAIL 
+        ? process.env.ADMIN_EMAIL.split(';').map(email => email.trim()).join(', ')
+        : "delictodelight@gmail.com"; // Fallback to default email
+
+      // Send the email to all admin recipients
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || 'noreply@intelliresume.net',
-        to: 'delictodelight@gmail.com, nick@intelliresume.net',
+        to: adminEmails,
         subject: `Subscription Cancellation: ${user.email}`,
         html: emailContent,
         replyTo: user.email

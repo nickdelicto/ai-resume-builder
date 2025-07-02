@@ -159,6 +159,12 @@ export default function SubscriptionPage({ dbPlans }) {
         metadata.action = 'download';
       }
       
+      // Add resumeId to metadata if available
+      if (resumeId) {
+        metadata.resumeId = resumeId;
+        console.log(`Adding resumeId to checkout metadata: ${resumeId}`);
+      }
+      
       // If user is upgrading or downgrading, add the current subscription ID
       if ((isPlanUpgrade(selectedPlan) || isPlanDowngrade(selectedPlan)) && activeSubscription) {
         metadata.previousSubscriptionId = activeSubscription.id;

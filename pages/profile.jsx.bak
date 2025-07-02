@@ -969,9 +969,9 @@ export default function ProfilePage() {
                 </p>
               </div>
               <a 
-                href={hasActiveSubscription && eligibleResumeIds.includes(paymentSuccessResume.id) ? `/api/resume/direct-download?id=${paymentSuccessResume.id}` : '#'} 
+                href={isEligibleForDownload ? `/api/resume/direct-download?id=${paymentSuccessResume.id}` : '#'} 
                 onClick={(e) => {
-                  if (!hasActiveSubscription || !eligibleResumeIds.includes(paymentSuccessResume.id)) {
+                  if (!isEligibleForDownload) {
                     e.preventDefault();
                     toast.error('You need to purchase a plan to download this resume');
                     router.push(`/subscription?action=download&resumeId=${paymentSuccessResume.id}`);
@@ -985,7 +985,7 @@ export default function ProfilePage() {
                 style={{
                 textDecoration: 'none',
                 padding: '8px 16px',
-                background: hasActiveSubscription && eligibleResumeIds.includes(paymentSuccessResume.id) ? '#1a73e8' : '#f39c12',
+                background: isEligibleForDownload ? '#1a73e8' : '#f39c12',
                 color: 'white',
                 borderRadius: '4px',
                 fontSize: '14px',
@@ -1014,13 +1014,13 @@ export default function ProfilePage() {
                   </>
                 ) : (
                   <>
-                    {hasActiveSubscription && eligibleResumeIds.includes(paymentSuccessResume.id) ? (
+                    {eligibleResumeIds.includes(paymentSuccessResume.id) ? (
                       <>
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
                         Download
                       </>
                     ) : (
@@ -1226,14 +1226,10 @@ export default function ProfilePage() {
         } else {
           console.error('Failed to fetch one-time subscriptions');
         }
-      } else if (eligibilityData.eligible && (eligibilityData.plan === 'weekly' || eligibilityData.plan === 'monthly')) {
-        // For weekly/monthly subscription plans, all resumes are eligible
-        console.log(`Subscription plan detected (${eligibilityData.plan}), all resumes are eligible`);
-        setEligibleResumeIds(userResumes.map(resume => resume.id));
       } else {
-        // For free plans or expired plans, no resumes are eligible
-        console.log('Free or expired plan detected, no resumes are eligible for download');
-        setEligibleResumeIds([]);
+        // For other plan types, all resumes are eligible
+        console.log(`Non-one-time plan detected (${eligibilityData.plan || subscriptionDetails.planName}), all resumes are eligible`);
+        setEligibleResumeIds(userResumes.map(resume => resume.id));
       }
     } catch (error) {
       console.error('Error checking resume eligibility:', error);
@@ -1833,7 +1829,7 @@ export default function ProfilePage() {
                     </p>
                   </div>
                   
-                <a href="#" onClick={handlePricingNavigation} style={{
+                <Link href="/subscription" style={{
                   textDecoration: 'none',
                     padding: isSmallScreen ? '12px 20px' : '14px 24px',
                     background: 'white',
@@ -1854,7 +1850,7 @@ export default function ProfilePage() {
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                       <polyline points="12 5 19 12 12 19"></polyline>
                     </svg>
-                </a>
+                </Link>
                 </div>
               </div>
             )}
@@ -2221,78 +2217,79 @@ export default function ProfilePage() {
                             )}
                           </button>
                           
-                          {/* Modified: Always show download/buy plan button regardless of subscription status */}
-                          <a 
-                            href={hasActiveSubscription && eligibleResumeIds.includes(resume.id) ? `/api/resume/direct-download?id=${resume.id}` : '#'} 
-                            onClick={(e) => {
-                              if (!hasActiveSubscription || !eligibleResumeIds.includes(resume.id)) {
+                          {hasActiveSubscription && (
+                            <a 
+                              href={eligibleResumeIds.includes(resume.id) ? `/api/resume/direct-download?id=${resume.id}` : '#'} 
+                              onClick={(e) => {
+                                if (!eligibleResumeIds.includes(resume.id)) {
+                                  e.preventDefault();
+                                  toast.error('You need to purchase a plan to download this resume');
+                                  router.push(`/subscription?action=download&resumeId=${resume.id}`);
+                                  return;
+                                }
+                                
                                 e.preventDefault();
-                                toast.error('You need to purchase a plan to download this resume');
-                                router.push(`/subscription?action=download&resumeId=${resume.id}`);
-                                return;
-                              }
-                              
-                              e.preventDefault();
-                              handleDownloadClick(resume.id);
-                              window.location.href = `/api/resume/direct-download?id=${resume.id}`;
-                            }}
-                            style={{
-                            textDecoration: 'none',
-                            padding: '8px 15px',
-                            borderRadius: '6px',
-                              background: hasActiveSubscription && eligibleResumeIds.includes(resume.id) ? '#34a853' : '#f39c12',
-                            color: 'white',
-                            fontSize: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                              gap: '5px',
-                              cursor: downloadingResumeId === resume.id ? 'wait' : 'pointer',
-                              opacity: downloadingResumeId === resume.id ? '0.8' : '1',
-                              border: 'none',
-                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                              fontWeight: '500',
-                              transition: 'all 0.2s ease',
-                              minWidth: isSmallScreen ? '40px' : 'auto',
-                              flex: isSmallScreen ? '1 0 auto' : '0 0 auto'
-                            }}
-                          >
-                            {downloadingResumeId === resume.id ? (
-                              <>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                                  <line x1="12" y1="2" x2="12" y2="6"></line>
-                                  <line x1="12" y1="18" x2="12" y2="22"></line>
-                                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-                                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-                                  <line x1="2" y1="12" x2="6" y2="12"></line>
-                                  <line x1="18" y1="12" x2="22" y2="12"></line>
-                                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-                                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-                                </svg>
-                                Downloading...
-                              </>
-                            ) : (
-                              <>
-                                {hasActiveSubscription && eligibleResumeIds.includes(resume.id) ? (
-                                  <>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                      <polyline points="7 10 12 15 17 10"></polyline>
-                                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                                    </svg>
-                                    Download
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                                      <line x1="1" y1="10" x2="23" y2="10"></line>
-                                    </svg>
-                                    Buy Plan
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </a>
+                                handleDownloadClick(resume.id);
+                                window.location.href = `/api/resume/direct-download?id=${resume.id}`;
+                              }}
+                              style={{
+                              textDecoration: 'none',
+                              padding: '8px 15px',
+                              borderRadius: '6px',
+                                background: eligibleResumeIds.includes(resume.id) ? '#34a853' : '#f39c12',
+                              color: 'white',
+                              fontSize: '14px',
+                              display: 'flex',
+                              alignItems: 'center',
+                                gap: '5px',
+                                cursor: downloadingResumeId === resume.id ? 'wait' : 'pointer',
+                                opacity: downloadingResumeId === resume.id ? '0.8' : '1',
+                                border: 'none',
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease',
+                                minWidth: isSmallScreen ? '40px' : 'auto',
+                                flex: isSmallScreen ? '1 0 auto' : '0 0 auto'
+                              }}
+                            >
+                              {downloadingResumeId === resume.id ? (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                                    <line x1="12" y1="2" x2="12" y2="6"></line>
+                                    <line x1="12" y1="18" x2="12" y2="22"></line>
+                                    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                                    <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                                    <line x1="2" y1="12" x2="6" y2="12"></line>
+                                    <line x1="18" y1="12" x2="22" y2="12"></line>
+                                    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                                    <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                                  </svg>
+                                  Downloading...
+                                </>
+                              ) : (
+                                <>
+                                  {eligibleResumeIds.includes(resume.id) ? (
+                                <>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                              </svg>
+                              Download
+                                    </>
+                                  ) : (
+                                    <>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                      </svg>
+                                      Buy Plan
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            </a>
+                          )}
                           
                           <Link href={`/resume/edit/${resume.id}`} style={{
                             textDecoration: 'none',

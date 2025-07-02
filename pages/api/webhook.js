@@ -227,10 +227,39 @@ export default async function handler(req, res) {
           planExpirationDate: currentPeriodEnd
         });
         
-        // If this was a download action, find the user's most recent resume
-        // and store its ID in the subscription metadata for easy access
+        // If this was a download action, store the resumeId in the subscription metadata
         if (isDownloadAction) {
           try {
+            // Get the resumeId from the checkout session metadata
+            const resumeId = session.metadata.resumeId;
+            
+            if (resumeId) {
+              // Verify this resume exists and belongs to the user
+              const resume = await prisma.resumeData.findFirst({
+                where: { 
+                  id: resumeId,
+                  userId: userId
+                },
+                select: { id: true }
+              });
+              
+              if (resume) {
+                // Update the subscription with the specific resumeId
+                await prisma.userSubscription.update({
+                  where: { id: userSubscription.id },
+                  data: {
+                    metadata: {
+                      specificResumeId: resumeId,
+                      isDownloadAction: true
+                    }
+                  }
+                });
+                
+                console.log(`Download action: Using specific resume ${resumeId} for user ${userId}`);
+              } else {
+                console.log(`Download action: Resume ${resumeId} not found or doesn't belong to user ${userId}`);
+                
+                // Fallback to most recent resume if the specific one isn't found
             const mostRecentResume = await prisma.resumeData.findFirst({
               where: { userId: userId },
               orderBy: { updatedAt: 'desc' },
@@ -238,33 +267,47 @@ export default async function handler(req, res) {
             });
             
             if (mostRecentResume) {
-              // Update the subscription with the most recent resume ID
               await prisma.userSubscription.update({
                 where: { id: userSubscription.id },
                 data: {
                   metadata: {
                     mostRecentResumeId: mostRecentResume.id,
-                    isDownloadAction: true
+                        isDownloadAction: true,
+                        fallbackToMostRecent: true
                   }
                 }
               });
               
-              console.log(`Download action: Found most recent resume ${mostRecentResume.id} for user ${userId}`);
+                  console.log(`Download action: Fallback to most recent resume ${mostRecentResume.id} for user ${userId}`);
+                }
+              }
             } else {
-              console.log(`Download action: No resumes found for user ${userId}`);
+              console.log(`Download action: No resumeId provided in checkout session metadata for user ${userId}`);
               
-              // Even if no resume was found, still mark this as a download action
+              // Fallback to most recent resume if no specific resumeId was provided
+              const mostRecentResume = await prisma.resumeData.findFirst({
+                where: { userId: userId },
+                orderBy: { updatedAt: 'desc' },
+                select: { id: true }
+              });
+              
+              if (mostRecentResume) {
               await prisma.userSubscription.update({
                 where: { id: userSubscription.id },
                 data: {
                   metadata: {
-                    isDownloadAction: true
+                      mostRecentResumeId: mostRecentResume.id,
+                      isDownloadAction: true,
+                      fallbackToMostRecent: true
+                    }
                   }
+                });
+                
+                console.log(`Download action: Using most recent resume ${mostRecentResume.id} for user ${userId} (no specific ID provided)`);
                 }
-              });
             }
           } catch (error) {
-            console.error(`Error finding most recent resume: ${error.message}`);
+            console.error(`Error handling resume for download action: ${error.message}`);
             // Continue even if there's an error finding the resume
           }
         }

@@ -95,15 +95,15 @@ export default async function handler(req, res) {
       : process.env.NEXT_PUBLIC_BASE_URL || 'https://yourproductionsite.com';
     
     // Launch browser with consistent settings for both dev and production
-    browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process'
-      ]
-    });
+      browser = await puppeteer.launch({
+        headless: "new",
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process'
+        ]
+      });
 
     const page = await browser.newPage();
     

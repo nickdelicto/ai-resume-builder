@@ -31,8 +31,8 @@ const Footer = () => {
           <ul className="footer-links">
             <li><Link href="/privacy">Privacy Policy</Link></li>
             <li><Link href="/terms">Terms of Service</Link></li>
-            <li><Link href="#">Contact Us</Link></li>
-            <li><Link href="#">About Us</Link></li>
+            <li><Link href="/contact">Contact Us</Link></li>
+            <li><Link href="/about">About Us</Link></li>
           </ul>
           
           <div className="footer-social-links">
