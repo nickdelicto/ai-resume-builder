@@ -175,6 +175,7 @@ const HomePage = () => {
           name="description" 
           content="Build a professional resume from scratch, improve your existing resume, or tailor your resume to a specific job with our intelligent AI." 
         />
+        <meta name="msvalidate.01" content="8A8CC04EB09B83CF537FA7136E0A09D6" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
