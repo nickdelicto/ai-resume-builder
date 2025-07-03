@@ -1,0 +1,62 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#f8fafc" />
+  
+  <!-- App Header -->
+  <rect x="0" y="0" width="800" height="60" fill="#1a73e8" />
+  <text x="70" y="38" font-family="Arial" font-size="20" fill="white" font-weight="bold">IntelliResume</text>
+  
+  <!-- Sidebar -->
+  <rect x="0" y="60" width="200" height="540" fill="#f1f5f9" />
+  
+  <!-- Sidebar Menu Items -->
+  <rect x="20" y="100" width="160" height="40" rx="5" fill="#e0e7ff" />
+  <text x="45" y="125" font-family="Arial" font-size="14" fill="#1a73e8">Personal Info</text>
+  
+  <rect x="20" y="150" width="160" height="40" rx="5" fill="#f8fafc" />
+  <text x="45" y="175" font-family="Arial" font-size="14" fill="#64748b">Experience</text>
+  
+  <rect x="20" y="200" width="160" height="40" rx="5" fill="#f8fafc" />
+  <text x="45" y="225" font-family="Arial" font-size="14" fill="#64748b">Education</text>
+  
+  <rect x="20" y="250" width="160" height="40" rx="5" fill="#f8fafc" />
+  <text x="45" y="275" font-family="Arial" font-size="14" fill="#64748b">Skills</text>
+  
+  <rect x="20" y="300" width="160" height="40" rx="5" fill="#f8fafc" />
+  <text x="45" y="325" font-family="Arial" font-size="14" fill="#64748b">Projects</text>
+  
+  <!-- Main Content Area -->
+  <rect x="220" y="80" width="560" height="500" rx="5" fill="white" stroke="#e2e8f0" stroke-width="1" />
+  
+  <!-- Form Fields -->
+  <text x="250" y="120" font-family="Arial" font-size="18" font-weight="bold" fill="#333">Personal Information</text>
+  
+  <text x="250" y="160" font-family="Arial" font-size="14" fill="#64748b">Full Name</text>
+  <rect x="250" y="170" width="240" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="270" y="195" font-family="Arial" font-size="14" fill="#94a3b8">John Smith</text>
+  
+  <text x="510" y="160" font-family="Arial" font-size="14" fill="#64748b">Job Title</text>
+  <rect x="510" y="170" width="240" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="530" y="195" font-family="Arial" font-size="14" fill="#94a3b8">Software Engineer</text>
+  
+  <text x="250" y="240" font-family="Arial" font-size="14" fill="#64748b">Email</text>
+  <rect x="250" y="250" width="240" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="270" y="275" font-family="Arial" font-size="14" fill="#94a3b8">john@example.com</text>
+  
+  <text x="510" y="240" font-family="Arial" font-size="14" fill="#64748b">Phone</text>
+  <rect x="510" y="250" width="240" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="530" y="275" font-family="Arial" font-size="14" fill="#94a3b8">(555) 123-4567</text>
+  
+  <text x="250" y="320" font-family="Arial" font-size="14" fill="#64748b">Location</text>
+  <rect x="250" y="330" width="500" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="270" y="355" font-family="Arial" font-size="14" fill="#94a3b8">San Francisco, CA</text>
+  
+  <text x="250" y="400" font-family="Arial" font-size="14" fill="#64748b">Summary</text>
+  <rect x="250" y="410" width="500" height="80" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="270" y="435" font-family="Arial" font-size="14" fill="#94a3b8">Experienced software engineer with a passion for...</text>
+  
+  <!-- AI Assistant -->
+  <rect x="250" y="510" width="500" height="50" rx="25" fill="#edf2ff" stroke="#1a73e8" stroke-width="1" stroke-dasharray="5,5" />
+  <text x="290" y="540" font-family="Arial" font-size="14" fill="#1a73e8">AI Suggestion: Add more specific technical skills to stand out</text>
+  <circle cx="270" cy="535" r="12" fill="#1a73e8" />
+  <text x="270" y="540" font-family="Arial" font-size="14" fill="white" text-anchor="middle">AI</text>
+</svg> 

@@ -7,6 +7,8 @@ import { ResumeServiceProvider } from '../lib/contexts/ResumeServiceContext';
 import { Toaster } from 'react-hot-toast';
 import React from 'react';
 import ResumeSelectionProvider from '../components/common/ResumeSelectionProvider';
+import StructuredData from '../components/common/StructuredData';
+import Head from 'next/head';
 
 // Simple error boundary component to handle context errors gracefully
 class ErrorBoundary extends React.Component {
@@ -72,6 +74,13 @@ export default function MyApp({ Component, pageProps }) {
       <ErrorBoundary>
         <ResumeServiceProvider>
           <ResumeSelectionProvider>
+            <Head>
+              {/* Default meta tags that can be overridden by individual pages */}
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="description" content="IntelliResume - Intelligent AI-powered resume builder that creates professional, ATS-optimized resumes tailored for specific job applications." />
+              {/* Structured Data for SEO */}
+              <StructuredData />
+            </Head>
           <div className="app-wrapper">
           {!isPdfCapturePage && <Navigation />}
           <div className={`app-container ${isBuilderPage ? 'pt-14' : isPdfCapturePage ? 'pt-0' : 'pt-20'}`}>
@@ -90,18 +99,18 @@ export default function MyApp({ Component, pageProps }) {
             .app-container {
               flex: 1 0 auto;
             }
-            
-            /* Hide reCAPTCHA badge except on contact page */
-            .grecaptcha-badge {
-              visibility: hidden !important;
-              opacity: 0 !important;
-            }
-            
-            /* Only show badge on contact page */
-            body.contact-page .grecaptcha-badge {
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
+              
+              /* Hide reCAPTCHA badge except on contact page */
+              .grecaptcha-badge {
+                visibility: hidden !important;
+                opacity: 0 !important;
+              }
+              
+              /* Only show badge on contact page */
+              body.contact-page .grecaptcha-badge {
+                visibility: visible !important;
+                opacity: 1 !important;
+              }
           `}</style>
           
           <Toaster position="bottom-center" />

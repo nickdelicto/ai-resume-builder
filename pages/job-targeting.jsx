@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Meta from '../components/common/Meta';
 
 const JobTargetingPage = () => {
   const [jobDescription, setJobDescription] = useState('');
@@ -69,13 +69,12 @@ const JobTargetingPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Tailor Resume to Job | Modern Resume Builder</title>
-        <meta 
-          name="description" 
-          content="Optimize your resume for a specific job by tailoring it to match keywords and requirements in the job description." 
+      <Meta
+        title="Tailor Your Resume to a Job | IntelliResume"
+        description="Optimize your resume for a specific job posting. Our AI will analyze the job description and tailor your resume to match the requirements."
+        canonicalUrl="https://intelliresume.net/job-targeting"
+        keywords="resume tailoring, job application, ATS optimization, job targeting, resume matching"
         />
-      </Head>
       
       <div style={{
         maxWidth: '800px',

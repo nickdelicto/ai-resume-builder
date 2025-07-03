@@ -1,13 +1,14 @@
 import React from 'react';
-import Head from 'next/head';
+import Meta from '../components/common/Meta';
 
 export default function PrivacyPolicy() {
   return (
     <>
-      <Head>
-        <title>Privacy Policy | IntelliResume</title>
-        <meta name="description" content="Privacy Policy for IntelliResume - AI-powered resume builder" />
-      </Head>
+      <Meta
+        title="Privacy Policy | IntelliResume"
+        description="Privacy Policy for IntelliResume - AI-powered resume builder"
+        keywords="privacy policy, data protection, personal information, resume builder privacy"
+      />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>

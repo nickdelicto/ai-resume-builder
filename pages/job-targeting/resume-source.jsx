@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Meta from '../../components/common/Meta';
 
 const ResumeSourcePage = () => {
   const [jobContext, setJobContext] = useState(null);
@@ -73,6 +73,13 @@ const ResumeSourcePage = () => {
   
   if (isLoading) {
     return (
+      <>
+        <Meta
+          title="Choose Resume Source | IntelliResume"
+          description="Choose to create a new resume or import an existing one to tailor for your target job position."
+          canonicalUrl="https://intelliresume.net/job-targeting/resume-source"
+          keywords="resume source, create resume, import resume, job targeting, resume tailoring"
+        />
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -101,18 +108,18 @@ const ResumeSourcePage = () => {
           `}</style>
         </div>
       </div>
+      </>
     );
   }
   
   return (
     <>
-      <Head>
-        <title>Choose Resume Source | Modern Resume Builder</title>
-        <meta 
-          name="description" 
-          content="Choose to create a new resume or import an existing one to tailor for your target job." 
-        />
-      </Head>
+      <Meta
+        title="Choose Resume Source | IntelliResume"
+        description="Choose to create a new resume or import an existing one to tailor for your target job position."
+        canonicalUrl="https://intelliresume.net/job-targeting/resume-source"
+        keywords="resume source, create resume, import resume, job targeting, resume tailoring"
+      />
       
       <div style={{
         maxWidth: '800px',

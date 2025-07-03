@@ -1,13 +1,14 @@
 import React from 'react';
-import Head from 'next/head';
+import Meta from '../components/common/Meta';
 
 export default function TermsOfService() {
   return (
     <>
-      <Head>
-        <title>Terms of Service | IntelliResume</title>
-        <meta name="description" content="Terms of Service for IntelliResume - AI-powered resume builder" />
-      </Head>
+      <Meta
+        title="Terms of Service | IntelliResume"
+        description="Terms of Service for IntelliResume - AI-powered resume builder"
+        keywords="terms of service, legal terms, IntelliResume terms, resume builder terms"
+      />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>

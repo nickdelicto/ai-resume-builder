@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import Meta from '../components/common/Meta';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -139,6 +140,11 @@ export default function PaymentSuccessPage() {
   if (_session === null || isVerifying) {
     return (
       <div className="container">
+        <Meta
+          title="Payment Processing | IntelliResume"
+          description="Processing your payment for IntelliResume subscription."
+          keywords="payment processing, subscription confirmation, resume builder payment"
+        />
         <div style={{ 
           maxWidth: '600px', 
           margin: '80px auto', 
@@ -180,6 +186,11 @@ export default function PaymentSuccessPage() {
     
     return (
       <div className="container">
+        <Meta
+          title="Payment Successful | IntelliResume"
+          description="Your payment was successful. Your IntelliResume subscription is now active."
+          keywords="payment success, subscription active, resume builder subscription"
+        />
         <div style={{ 
           maxWidth: '600px', 
           margin: '80px auto', 
@@ -281,6 +292,11 @@ export default function PaymentSuccessPage() {
   if (verificationStatus === 'error') {
     return (
       <div className="container">
+        <Meta
+          title="Payment Verification Failed | IntelliResume"
+          description="There was an issue verifying your payment for IntelliResume."
+          keywords="payment error, verification failed, payment issue"
+        />
         <div style={{ 
           maxWidth: '600px', 
           margin: '80px auto', 

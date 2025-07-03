@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /auth/signin
+Disallow: /resume-template-capture
+Disallow: /resume-preview-capture
+Disallow: /profile
+Disallow: /resume/edit/
+
+# Sitemap location
+Sitemap: https://intelliresume.net/sitemap.xml 

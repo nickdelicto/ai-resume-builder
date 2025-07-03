@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Meta from '../components/common/Meta';
 
 // Dynamically import ImportFlow with SSR disabled
 const ImportFlow = dynamic(
@@ -26,6 +26,13 @@ const LoadingFallback = () => {
   }
 
   return (
+    <>
+      <Meta
+        title="Import Your Existing Resume | IntelliResume"
+        description="Upload your existing resume and let our AI enhance it. We'll analyze your resume and suggest improvements to make it ATS-friendly."
+        canonicalUrl="https://intelliresume.net/resume-import"
+        keywords="resume import, upload resume, improve resume, enhance resume, AI resume analysis"
+      />
     <div style={{
       display: 'flex',
       justifyContent: 'center',
@@ -123,6 +130,7 @@ const LoadingFallback = () => {
         `}</style>
       </div>
     </div>
+    </>
   );
 };
 
@@ -346,11 +354,12 @@ const ResumeImportPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Import Your Resume | Modern Resume Builder</title>
-        <meta name="description" content="Import your existing resume and let our AI enhance it for better results. Upload PDF, DOCX, or TXT files." />
-      </Head>
-      
+      <Meta
+        title="Import Your Existing Resume | IntelliResume"
+        description="Upload your existing resume and let our AI enhance it. We'll analyze your resume and suggest improvements to make it ATS-friendly."
+        canonicalUrl="https://intelliresume.net/resume-import"
+        keywords="resume import, upload resume, improve resume, enhance resume, AI resume analysis"
+      />
       <ImportFlow onComplete={handleImportComplete} />
     </>
   );

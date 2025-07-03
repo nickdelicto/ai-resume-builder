@@ -1,0 +1,28 @@
+# IntelliResume
+
+> IntelliResume is an intelligent AI-powered resume builder that helps job seekers create professional, ATS-optimized resumes tailored for specific job applications.
+
+We help job seekers stand out with resumes that pass through Applicant Tracking Systems (ATS) and impress hiring managers. Our platform combines AI technology with proven resume formats to create professional documents that get interviews.
+
+## Main Features
+
+- [Resume Builder](https://intelliresume.net/new-resume-builder): Create professional resumes in minutes with AI assistance
+- [ATS-Optimized Templates](https://intelliresume.net): Choose from templates designed to pass through applicant tracking systems
+- [Resume Tailoring](https://intelliresume.net/job-targeting): Customize your resume for specific job listings with AI recommendations
+
+## About Us
+
+- [About Us](https://intelliresume.net/about): Learn about our founder Nick Githinji and how IntelliResume was created to solve the frustration of managing multiple tailored resumes
+- [Pricing](https://intelliresume.net/subscription): Subscription plans including one-time downloads, weekly, and monthly options
+
+## Resources
+
+- [Contact Us](https://intelliresume.net/contact): Get help with your resume or subscription
+- [Privacy Policy](https://intelliresume.net/privacy): How we protect your personal information
+- [Terms of Service](https://intelliresume.net/terms): Rules for using our service
+
+## FAQ
+
+- What makes IntelliResume different? Our focus on ATS optimization ensures your resume gets past automated screening systems.
+- Is IntelliResume free to use? You can create resumes for free, but downloading requires a subscription plan starting at $4.99/week.
+- How does the resume tailoring feature work? Upload your existing resume and a job description, and our AI will suggest targeted changes to match the job requirements. 

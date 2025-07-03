@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useResumeSelection } from '../components/common/ResumeSelectionProvider';
+import Meta from '../components/common/Meta';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -3451,6 +3452,12 @@ export default function ProfilePage() {
   
   // If not authenticated but not redirected yet, show login prompt
   return (
+    <>
+      <Meta 
+      title="Sign In Required | IntelliResume" 
+      description="Please sign in to view your IntelliResume profile and manage your resumes" 
+      keywords="IntelliResume sign in, IntelliResume login, IntelliResume profile"
+    />
     <div className="container">
       <div style={{ 
         maxWidth: '800px', 
@@ -3477,5 +3484,6 @@ export default function ProfilePage() {
         </Link>
       </div>
     </div>
+    </>
   );
 } 

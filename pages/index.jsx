@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/ResumeLanding.module.css'; // We'll create this later
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
+import Meta from '../components/common/Meta';
 
 // Add a styled component for highlighted words
 const HighlightedWord = ({ children }) => (
@@ -169,17 +169,11 @@ const HomePage = () => {
   
   return (
     <>
-      <Head>
-        <title>Intelligent AI Resume Builder | Create, Improve, or Tailor Your Resume</title>
-        <meta 
-          name="description" 
-          content="Build a professional resume from scratch, improve your existing resume, or tailor your resume to a specific job with our intelligent AI." 
-        />
-        <meta name="msvalidate.01" content="8A8CC04EB09B83CF537FA7136E0A09D6" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
+      <Meta 
+        title="Intelligent AI Resume Builder | Create, Improve, or Tailor Your Resume"
+        description="Build a professional resume from scratch, improve your existing resume, or tailor your resume to a specific job with our intelligent AI."
+        keywords="AI resume builder, professional resume, ATS resume, job application, resume tailoring"
+      />
       
       {/* Session status indicator - Removed as navbar handles this */}
       

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Head from 'next/head';
+import Meta from '../components/common/Meta';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -200,10 +200,11 @@ export default function ContactPage() {
 
   return (
     <>
-      <Head>
-        <title>Contact Us | IntelliResume</title>
-        <meta name="description" content="Get in touch with the IntelliResume team. We're here to help with any questions about our resume builder." />
-      </Head>
+      <Meta
+        title="Contact Us | IntelliResume"
+        description="Get in touch with the IntelliResume team. We're here to help with any questions about our resume builder."
+        keywords="contact IntelliResume, resume builder support, help with resume, customer support"
+      />
 
       <div className="contact-container">
         <div className="contact-header">

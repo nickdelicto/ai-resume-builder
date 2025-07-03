@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { prisma } from '../lib/prisma';
+import Meta from '../components/common/Meta';
 
 export default function SubscriptionPage({ dbPlans }) {
   const { data: session, status } = useSession();
@@ -235,6 +236,13 @@ export default function SubscriptionPage({ dbPlans }) {
       !isLoadingSubscription;
     
     return (
+      <>
+        <Meta 
+          title="Resume Builder Subscription Plans | IntelliResume"
+          description="Choose the perfect subscription plan for your job search. Create, download, and tailor professional ATS-optimized resumes with our intelligent AI-powered resume builder."
+          keywords="resume subscription, resume builder plans, ATS resume download, job application tools"
+        />
+        
       <div className="container">
         <div style={{ 
           maxWidth: '1000px', 
@@ -755,6 +763,7 @@ export default function SubscriptionPage({ dbPlans }) {
           </div>
         </div>
       </div>
+      </>
     );
   }
   

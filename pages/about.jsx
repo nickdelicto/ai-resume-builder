@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Meta from '../components/common/Meta';
 
 export default function AboutPage() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -250,15 +251,39 @@ export default function AboutPage() {
 
   return (
     <>
-      <Head>
-        <title>About IntelliResume | My Story</title>
-        <meta name="description" content="The story behind IntelliResume - how a frustrating job search led to creating a tool that makes resume creation and tailoring simple and effective." />
-      </Head>
+      <Meta
+        title="About IntelliResume | Our Story"
+        description="Learn how IntelliResume was created to solve the frustrations of job applications and help job seekers create effective, ATS-friendly resumes."
+        keywords="about IntelliResume, resume builder story, ATS resume, job application tool"
+      />
 
       <div className="about-page">
         <style jsx>{`
           .about-page {
             font-family: 'Figtree', 'Inter', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+            color: #333;
+            line-height: 1.6;
+          }
+          
+          h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+          }
+          
+          .about-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+          }
+          
+          .about-page {
             color: #333;
             line-height: 1.6;
           }
