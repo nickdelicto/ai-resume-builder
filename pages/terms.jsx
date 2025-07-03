@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
+import StickyHeader from '../components/common/StickyHeader';
 
 export default function TermsOfService() {
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -67,97 +68,7 @@ export default function TermsOfService() {
       />
       
       {/* Sticky Header that appears on scroll */}
-      {showStickyHeader && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          background: 'white',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          padding: '12px 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: 1000,
-          animation: 'slideDown 0.3s forwards',
-        }}>
-          <div style={{
-            fontSize: '18px',
-            fontWeight: '700',
-            color: '#1a73e8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            {/* Logo - using the exact same SVG as in Navigation.jsx */}
-            <Image 
-              src="/logo.svg" 
-              alt="IntelliResume Logo" 
-              width={28} 
-              height={28} 
-              style={{ position: 'relative', top: '-2px' }}
-              priority
-            />
-            IntelliResume
-          </div>
-          <div style={{
-            display: 'flex',
-            gap: '15px',
-            alignItems: 'center',
-          }}>
-            <span style={{
-              fontSize: '15px',
-              color: '#333',
-              fontWeight: '500',
-              display: 'none',
-              '@media (min-width: 768px)': {
-                display: 'block',
-              }
-            }}
-            className="hide-on-mobile">
-              Ready to build your resume?
-            </span>
-            <button
-              onClick={handleBuildNewClick}
-              className="animated-button"
-              style={{
-                padding: '14px 28px',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '700',
-                fontSize: '17px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                background: 'linear-gradient(-45deg, #12b886, #1a73e8, #f59f00, #12b886)',
-                backgroundSize: '300% 300%',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                transform: 'translateY(0)',
-                minWidth: '220px',
-                justifyContent: 'center',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 15px rgba(0,0,0,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
-              }}
-            >
-              Start Building Resume
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+      {showStickyHeader && <StickyHeader />}
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
@@ -321,9 +232,9 @@ export default function TermsOfService() {
           }
           
           .animated-button {
-            padding: 16px 24px !important;
-            font-size: 18px !important;
-            width: 100% !important;
+            padding: 12px 20px !important;
+            font-size: 15px !important;
+            width: auto !important;
             max-width: none !important;
             min-width: 0 !important;
           }
