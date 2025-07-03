@@ -1,9 +1,27 @@
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
+import { useState, useEffect } from 'react';
 
 const StickyHeader = () => {
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check screen size on mount and when window resizes
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Initial check
+    checkScreenSize();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Clean up event listener
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleBuildNewClick = async () => {
     // Show loading toast if available
@@ -101,7 +119,7 @@ const StickyHeader = () => {
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             transform: 'translateY(0)',
-            minWidth: '220px',
+            minWidth: isMobile ? 'auto' : '220px',
             justifyContent: 'center',
           }}
           onMouseOver={(e) => {
@@ -113,7 +131,7 @@ const StickyHeader = () => {
             e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
           }}
         >
-          Start Building Resume
+          {isMobile ? 'Build Resume' : 'Start Building Resume'}
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
