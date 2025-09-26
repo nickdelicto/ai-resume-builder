@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Resume Example Blog Post",
+  "description": "Schema for occupation-specific resume example blog posts",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "slug",
+    "category",
+    "occupation",
+    "publishedDate",
+    "author",
+    "content",
+    "seo"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the blog post"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the blog post"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly version of the title",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category ID the post belongs to"
+    },
+    "occupation": {
+      "type": "string",
+      "description": "Occupation ID the resume example is for"
+    },
+    "publishedDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date when the post was published"
+    },
+    "updatedDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date when the post was last updated"
+    },
+    "author": {
+      "type": "object",
+      "required": ["name", "avatar"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the author"
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL to the author's avatar image"
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short biography of the author"
+        }
+      }
+    },
+    "featuredImage": {
+      "type": "object",
+      "required": ["src", "alt"],
+      "properties": {
+        "src": {
+          "type": "string",
+          "description": "URL to the featured image"
+        },
+        "alt": {
+          "type": "string",
+          "description": "Alt text for the featured image"
+        },
+        "caption": {
+          "type": "string",
+          "description": "Caption for the featured image"
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "required": ["introduction", "sections"],
+      "properties": {
+        "introduction": {
+          "type": "string",
+          "description": "Introduction paragraph(s) for the blog post"
+        },
+        "sections": {
+          "type": "array",
+          "description": "Content sections of the blog post",
+          "items": {
+            "type": "object",
+            "required": ["title", "content"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Section title"
+              },
+              "id": {
+                "type": "string",
+                "description": "Section ID for anchor links"
+              },
+              "content": {
+                "type": "string",
+                "description": "Section content in HTML or Markdown format"
+              }
+            }
+          }
+        },
+        "resumeExample": {
+          "type": "object",
+          "description": "Example resume for the occupation",
+          "properties": {
+            "template": {
+              "type": "string",
+              "description": "Template used for the resume example"
+            },
+            "content": {
+              "type": "object",
+              "description": "Content of the resume example"
+            },
+            "image": {
+              "type": "string",
+              "description": "URL to the image of the resume example"
+            }
+          }
+        },
+        "skillsSection": {
+          "type": "object",
+          "properties": {
+            "hardSkills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of hard skills for the occupation"
+            },
+            "softSkills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of soft skills for the occupation"
+            }
+          }
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "Conclusion paragraph(s) for the blog post"
+        }
+      }
+    },
+    "seo": {
+      "type": "object",
+      "required": ["title", "description"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "SEO title for the blog post"
+        },
+        "description": {
+          "type": "string",
+          "description": "SEO description for the blog post"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "SEO keywords for the blog post"
+        },
+        "ogImage": {
+          "type": "string",
+          "description": "URL to the Open Graph image"
+        }
+      }
+    },
+    "relatedPosts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of related blog posts"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags associated with the blog post"
+    }
+  }
+} 

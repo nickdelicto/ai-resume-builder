@@ -1,0 +1,122 @@
+{
+  "occupations": [
+    {
+      "id": "nurse-practitioner",
+      "title": "Nurse Practitioner",
+      "slug": "nurse-practitioner-resume",
+      "category": "healthcare",
+      "description": "Comprehensive guide and examples for creating a professional Nurse Practitioner resume that highlights clinical skills, certifications, and patient care experience.",
+      "keySkills": [
+        "Patient Assessment",
+        "Medication Management",
+        "Treatment Planning",
+        "Electronic Medical Records (EMR)",
+        "Clinical Documentation",
+        "Patient Education",
+        "Collaborative Care",
+        "Diagnostic Testing"
+      ],
+      "certifications": [
+        "Family Nurse Practitioner (FNP)",
+        "Adult-Gerontology Nurse Practitioner (AGNP)",
+        "Pediatric Nurse Practitioner (PNP)",
+        "Basic Life Support (BLS)",
+        "Advanced Cardiac Life Support (ACLS)"
+      ],
+      "sampleBulletPoints": [
+        "Conducted comprehensive health assessments for 20+ patients daily, developing and implementing treatment plans that improved patient outcomes by 35%",
+        "Collaborated with multidisciplinary healthcare teams to provide holistic care, resulting in 28% reduction in hospital readmissions",
+        "Managed medication protocols for chronic disease patients, achieving 95% medication adherence rate",
+        "Implemented new telehealth program that increased access to care for rural patients by 40%"
+      ],
+      "resumeTemplates": ["ats", "modern", "professional"],
+      "searchVolume": 9500,
+      "seo": {
+        "title": "Nurse Practitioner Resume Example & Writing Guide | AI Resume Builder",
+        "description": "Professional Nurse Practitioner resume example with expert writing tips. Learn how to showcase your clinical skills, certifications, and patient care experience.",
+        "keywords": ["nurse practitioner resume", "NP resume", "healthcare resume", "medical resume", "clinical resume"]
+      },
+      "relatedOccupations": ["registered-nurse", "physician-assistant", "clinical-nurse-specialist"]
+    },
+    {
+      "id": "software-engineer",
+      "title": "Software Engineer",
+      "slug": "software-engineer-resume",
+      "category": "technology",
+      "description": "Comprehensive guide and examples for creating a professional Software Engineer resume that highlights technical skills, project experience, and software development expertise.",
+      "keySkills": [
+        "JavaScript/TypeScript",
+        "React.js",
+        "Node.js",
+        "Python",
+        "Java",
+        "SQL/NoSQL Databases",
+        "RESTful APIs",
+        "CI/CD",
+        "Cloud Services (AWS/Azure/GCP)",
+        "Agile Development"
+      ],
+      "certifications": [
+        "AWS Certified Developer",
+        "Microsoft Certified: Azure Developer Associate",
+        "Google Cloud Professional Developer",
+        "Certified Scrum Developer",
+        "Oracle Certified Professional, Java SE"
+      ],
+      "sampleBulletPoints": [
+        "Developed scalable microservices architecture that improved system performance by 40% and reduced API response time by 65%",
+        "Implemented automated CI/CD pipeline that reduced deployment time from 3 hours to 15 minutes and decreased production bugs by 30%",
+        "Designed and built RESTful APIs serving 1M+ daily requests with 99.9% uptime",
+        "Led migration from monolithic architecture to microservices, resulting in 50% faster feature development cycles"
+      ],
+      "resumeTemplates": ["ats", "modern", "minimal"],
+      "searchVolume": 22000,
+      "seo": {
+        "title": "Software Engineer Resume Example & Writing Guide | AI Resume Builder",
+        "description": "Professional Software Engineer resume example with expert writing tips. Learn how to showcase your technical skills, projects, and software development expertise.",
+        "keywords": ["software engineer resume", "developer resume", "programming resume", "tech resume", "coding resume"]
+      },
+      "relatedOccupations": ["frontend-developer", "backend-developer", "full-stack-developer", "devops-engineer"]
+    },
+    {
+      "id": "project-manager",
+      "title": "Project Manager",
+      "slug": "project-manager-resume",
+      "category": "business",
+      "description": "Comprehensive guide and examples for creating a professional Project Manager resume that highlights leadership skills, project delivery experience, and organizational expertise.",
+      "keySkills": [
+        "Project Planning",
+        "Agile/Scrum Methodology",
+        "Risk Management",
+        "Stakeholder Communication",
+        "Budgeting",
+        "Resource Allocation",
+        "Microsoft Project",
+        "Jira",
+        "Change Management",
+        "Team Leadership"
+      ],
+      "certifications": [
+        "Project Management Professional (PMP)",
+        "Certified ScrumMaster (CSM)",
+        "PRINCE2 Practitioner",
+        "Certified Associate in Project Management (CAPM)",
+        "Professional Scrum Product Owner (PSPO)"
+      ],
+      "sampleBulletPoints": [
+        "Led cross-functional team of 15 members to deliver $2.5M enterprise software implementation project on time and 10% under budget",
+        "Managed portfolio of 8 concurrent projects with combined budget of $5M, achieving 100% on-time delivery rate",
+        "Implemented Agile methodology across department, increasing team productivity by 35% and reducing time-to-market by 40%",
+        "Developed comprehensive risk management strategy that identified and mitigated 12 critical project risks, preventing potential $800K in losses"
+      ],
+      "resumeTemplates": ["professional", "executive", "modern"],
+      "searchVolume": 18000,
+      "seo": {
+        "title": "Project Manager Resume Example & Writing Guide | AI Resume Builder",
+        "description": "Professional Project Manager resume example with expert writing tips. Learn how to showcase your leadership skills, project delivery experience, and organizational expertise.",
+        "keywords": ["project manager resume", "PM resume", "program manager resume", "project management resume", "PMP resume"]
+      },
+      "relatedOccupations": ["program-manager", "product-manager", "scrum-master", "business-analyst"]
+    }
+  ]
+} 

@@ -1,0 +1,118 @@
+/* 
+ * FeaturedImage.module.css
+ * Styling for blog post featured images
+ */
+
+/* Regular image container */
+.featuredImage {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+/* SVG featured image */
+.featuredSvg {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.svgContainer {
+  max-width: 100%;
+  max-height: 300px;
+}
+
+.svgContainer svg {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+/* Placeholder featured image */
+.featuredPlaceholder {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 300px;
+}
+
+.placeholderIcon {
+  margin-bottom: 1.5rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.placeholderTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #1a202c;
+  max-width: 80%;
+  line-height: 1.3;
+}
+
+.placeholderType {
+  display: inline-block;
+  padding: 0.35rem 1rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.7);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .featuredSvg,
+  .featuredPlaceholder {
+    min-height: 250px;
+    padding: 2rem 1.5rem;
+  }
+  
+  .placeholderIcon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1rem;
+  }
+  
+  .placeholderTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .featuredSvg,
+  .featuredPlaceholder {
+    min-height: 200px;
+    padding: 1.5rem 1rem;
+  }
+  
+  .placeholderIcon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .placeholderTitle {
+    font-size: 1.25rem;
+  }
+} 

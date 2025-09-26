@@ -1,0 +1,133 @@
+{
+  "categories": [
+    {
+      "id": "resume-examples",
+      "name": "Resume Examples",
+      "slug": "resume-examples",
+      "description": "Industry-specific resume examples crafted by experts to help you create the perfect resume.",
+      "icon": "file-alt",
+      "color": "#4299e1",
+      "featured": true,
+      "contentType": "Resume Example",
+      "seo": {
+        "title": "Resume Examples & Templates | AI Resume Builder",
+        "description": "Browse our collection of professional resume examples and templates for various industries and job roles. Use our AI-powered resume builder to create your own.",
+        "keywords": ["resume examples", "resume templates", "resume samples", "CV examples", "professional resume"]
+      }
+    },
+    {
+      "id": "job-descriptions",
+      "name": "Job Descriptions",
+      "slug": "job-descriptions",
+      "description": "Detailed job descriptions for various roles to help you understand employer expectations and tailor your resume accordingly.",
+      "icon": "clipboard-list",
+      "color": "#48bb78",
+      "featured": true,
+      "contentType": "Job Description",
+      "seo": {
+        "title": "Job Descriptions & Requirements | AI Resume Builder",
+        "description": "Comprehensive job descriptions for various roles and industries. Learn about job requirements, responsibilities, and skills to tailor your resume effectively.",
+        "keywords": ["job descriptions", "job requirements", "career information", "job responsibilities", "job duties"]
+      }
+    },
+    {
+      "id": "career-advice",
+      "name": "Career Advice",
+      "slug": "career-advice",
+      "description": "Professional tips and strategies for job searching, interviews, and career advancement to help you succeed in your professional journey.",
+      "icon": "lightbulb",
+      "color": "#ed8936",
+      "featured": true,
+      "contentType": "Career Advice",
+      "seo": {
+        "title": "Career Advice & Job Search Tips | AI Resume Builder",
+        "description": "Expert career advice, job search strategies, interview tips, and professional development guidance to help you advance your career.",
+        "keywords": ["career advice", "job search tips", "interview preparation", "career development", "professional growth"]
+      }
+    },
+    {
+      "id": "healthcare",
+      "name": "Healthcare",
+      "slug": "healthcare",
+      "description": "Resume examples and guides for healthcare professionals, including nurses, physicians, medical technicians, and healthcare administrators.",
+      "icon": "stethoscope",
+      "color": "#4CAF50",
+      "featured": true,
+      "seo": {
+        "title": "Healthcare Resume Examples & Templates | AI Resume Builder",
+        "description": "Professional healthcare resume examples and templates for nurses, physicians, medical technicians, and healthcare administrators. Create an ATS-optimized healthcare resume.",
+        "keywords": ["healthcare resume", "medical resume", "nurse resume", "physician CV", "healthcare CV"]
+      }
+    },
+    {
+      "id": "technology",
+      "name": "Technology",
+      "slug": "technology",
+      "description": "Resume examples and guides for technology professionals, including software engineers, data scientists, IT specialists, and product managers.",
+      "icon": "code",
+      "color": "#2196F3",
+      "featured": true,
+      "seo": {
+        "title": "Technology & IT Resume Examples | AI Resume Builder",
+        "description": "Professional technology resume examples and templates for software engineers, data scientists, IT specialists, and product managers. Create an ATS-optimized tech resume.",
+        "keywords": ["tech resume", "software engineer resume", "IT resume", "developer resume", "data scientist resume"]
+      }
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "slug": "business",
+      "description": "Resume examples and guides for business professionals, including project managers, business analysts, consultants, and executives.",
+      "icon": "briefcase",
+      "color": "#FF9800",
+      "featured": true,
+      "seo": {
+        "title": "Business & Management Resume Examples | AI Resume Builder",
+        "description": "Professional business resume examples and templates for project managers, business analysts, consultants, and executives. Create an ATS-optimized business resume.",
+        "keywords": ["business resume", "management resume", "executive resume", "consultant resume", "project manager resume"]
+      }
+    },
+    {
+      "id": "education",
+      "name": "Education",
+      "slug": "education",
+      "description": "Resume examples and guides for education professionals, including teachers, professors, school administrators, and educational consultants.",
+      "icon": "school",
+      "color": "#9C27B0",
+      "featured": false,
+      "seo": {
+        "title": "Education Resume Examples & Templates | AI Resume Builder",
+        "description": "Professional education resume examples and templates for teachers, professors, school administrators, and educational consultants. Create an ATS-optimized education resume.",
+        "keywords": ["teacher resume", "education resume", "professor CV", "teaching resume", "education CV"]
+      }
+    },
+    {
+      "id": "creative",
+      "name": "Creative",
+      "slug": "creative",
+      "description": "Resume examples and guides for creative professionals, including designers, writers, artists, and marketing specialists.",
+      "icon": "palette",
+      "color": "#E91E63",
+      "featured": false,
+      "seo": {
+        "title": "Creative Resume Examples & Templates | AI Resume Builder",
+        "description": "Professional creative resume examples and templates for designers, writers, artists, and marketing specialists. Create an ATS-optimized creative resume.",
+        "keywords": ["creative resume", "designer resume", "writer resume", "artist CV", "marketing resume"]
+      }
+    },
+    {
+      "id": "service",
+      "name": "Service Industry",
+      "slug": "service-industry",
+      "description": "Resume examples and guides for service industry professionals, including customer service representatives, hospitality workers, and retail managers.",
+      "icon": "concierge-bell",
+      "color": "#795548",
+      "featured": false,
+      "seo": {
+        "title": "Service Industry Resume Examples | AI Resume Builder",
+        "description": "Professional service industry resume examples and templates for customer service representatives, hospitality workers, and retail managers. Create an ATS-optimized service industry resume.",
+        "keywords": ["customer service resume", "hospitality resume", "retail resume", "service industry CV", "restaurant resume"]
+      }
+    }
+  ]
+} 

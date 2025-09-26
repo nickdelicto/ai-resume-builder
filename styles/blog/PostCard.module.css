@@ -1,0 +1,233 @@
+/* 
+ * PostCard.module.css
+ * Styling for blog post cards
+ */
+
+.postCard {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.postCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.postLink {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+}
+
+.image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.postCard:hover .image {
+  transform: scale(1.05);
+}
+
+.placeholderImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f7fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a0aec0;
+}
+
+.typeBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+
+.content {
+  padding: 1.25rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #1a202c;
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: auto;
+}
+
+.date {
+  font-weight: 500;
+}
+
+.separator {
+  margin: 0 0.5rem;
+}
+
+.readTime {
+  font-weight: 500;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1rem;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+}
+
+.categoryBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  z-index: 2;
+}
+
+.resumeExample {
+  background-color: #4299e1;
+}
+
+.jobDescription {
+  background-color: #48bb78;
+}
+
+.careerAdvice {
+  background-color: #ed8936;
+}
+
+.updateBadge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  background-color: #ebf5ff;
+  color: #3182ce;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.readMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.readMore:hover {
+  gap: 0.5rem;
+}
+
+.readMoreIcon {
+  transition: transform 0.2s ease;
+}
+
+.readMore:hover .readMoreIcon {
+  transform: translateX(2px);
+}
+
+.imagePlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+.imagePlaceholder span {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.specificTitle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+  color: white;
+  padding: 1.5rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.buildResumeButtonContainer {
+  padding: 0 1.5rem 1.5rem;
+  margin-top: -0.5rem;
+}
+
+@media (max-width: 768px) {
+  .buildResumeButtonContainer {
+    padding: 0 1.25rem 1.25rem;
+  }
+} 

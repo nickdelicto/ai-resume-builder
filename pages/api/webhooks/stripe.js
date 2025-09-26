@@ -246,6 +246,10 @@ async function handleInvoicePaymentSucceeded(invoice) {
   console.log('Invoice payment succeeded for subscription:', invoice.subscription);
   
   try {
+    // Retrieve the subscription details from Stripe to get current_period_end
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripeSubscription = await stripe.subscriptions.retrieve(invoice.subscription);
+    
     // Find the user subscription in our database
     const userSubscription = await prisma.userSubscription.findFirst({
       where: {
@@ -263,6 +267,29 @@ async function handleInvoicePaymentSucceeded(invoice) {
       console.log(`No matching subscription found for Stripe ID: ${invoice.subscription}`);
       return;
     }
+    
+    // Update the subscription periods in our database
+    await prisma.userSubscription.update({
+      where: { id: userSubscription.id },
+      data: {
+        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+        status: 'active',
+        updatedAt: new Date()
+      }
+    });
+    
+    // CRITICAL FIX: Update the user's planType and planExpirationDate
+    // This was missing and causing users to revert to free plan after renewal
+    await prisma.user.update({
+      where: { id: userSubscription.userId },
+      data: {
+        planType: userSubscription.planId, // Use the plan ID from the subscription
+        planExpirationDate: new Date(stripeSubscription.current_period_end * 1000)
+      }
+    });
+    
+    console.log(`Updated user ${userSubscription.userId} plan to ${userSubscription.planId} with expiration ${new Date(stripeSubscription.current_period_end * 1000)}`);
 
     // Check if there's an active discount
     if (userSubscription.discounts.length > 0) {
@@ -284,6 +311,22 @@ async function handleInvoicePaymentSucceeded(invoice) {
         }
       }).catch(err => {
         console.error('Error logging renewal event:', err);
+      });
+    } else {
+      // Log standard renewal without discount
+      await prisma.userEvent.create({
+        data: {
+          userId: userSubscription.userId,
+          type: 'subscription_renewed',
+          metadata: {
+            subscriptionId: userSubscription.id,
+            invoiceId: invoice.id,
+            amountPaid: invoice.amount_paid / 100,
+            currency: invoice.currency
+          }
+        }
+      }).catch(err => {
+        console.error('Error logging standard renewal event:', err);
       });
     }
   } catch (error) {

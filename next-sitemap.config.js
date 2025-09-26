@@ -11,7 +11,8 @@ module.exports = {
     '/resume/edit/*',
     '/builder/new',     // Exclude duplicate paths
     '/builder/import',  // Exclude duplicate paths
-    '/builder/target'   // Exclude duplicate paths
+    '/builder/target',  // Exclude duplicate paths
+    '/blog-sitemap.xml' // Exclude the blog sitemap endpoint itself
   ],
   generateIndexSitemap: false,
   outDir: 'public',
@@ -42,6 +43,16 @@ module.exports = {
       return {
         loc: path,
         changefreq: 'weekly',
+        priority: 0.9,
+        lastmod: new Date().toISOString(),
+      }
+    }
+    
+    // Blog pages
+    if (path === '/blog') {
+      return {
+        loc: path,
+        changefreq: 'daily',
         priority: 0.9,
         lastmod: new Date().toISOString(),
       }

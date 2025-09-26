@@ -33,7 +33,7 @@ const Footer = () => {
             <li><Link href="/terms">Terms of Service</Link></li>
             <li><Link href="/contact">Contact Us</Link></li>
             <li><Link href="/about">About Us</Link></li>
-            <li><Link href="/sitemap.xml" target="_blank">Sitemap</Link></li>
+            <li><Link href="/sitemap.xml" target="_blank" rel="noopener noreferrer">Sitemap</Link></li>
           </ul>
           
           <div className="footer-social-links">

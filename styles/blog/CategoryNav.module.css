@@ -1,0 +1,63 @@
+/* 
+ * CategoryNav.module.css
+ * Styling for blog category navigation
+ */
+
+.categoryNav {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.categoryNavInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.categoryNavInner::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.categoryLink {
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.categoryLink:hover {
+  color: var(--primary-blue);
+  background-color: rgba(66, 153, 225, 0.08);
+}
+
+.categoryLink.active {
+  color: var(--primary-blue);
+  background-color: rgba(66, 153, 225, 0.12);
+  font-weight: 600;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .categoryNavInner {
+    padding: 0 0.5rem;
+  }
+  
+  .categoryLink {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+} 

@@ -1,0 +1,179 @@
+/* 
+ * TableOfContents.module.css
+ * Styling for blog post table of contents
+ */
+
+.tableOfContents {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
+  position: sticky;
+  top: 5rem;
+}
+
+.tocTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1a202c;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.tocNav {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f9fafb;
+  padding-right: 0.5rem;
+}
+
+.tocNav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tocNav::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.tocNav::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 6px;
+}
+
+.tocList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tocItem {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  position: relative;
+}
+
+.tocItem:last-child {
+  margin-bottom: 0;
+}
+
+.tocLink {
+  color: #4b5563;
+  text-decoration: none;
+  display: block;
+  transition: color 0.2s ease;
+  line-height: 1.4;
+}
+
+.tocLink:hover {
+  color: var(--primary-blue);
+}
+
+.active .tocLink {
+  color: var(--primary-blue);
+  font-weight: 500;
+}
+
+/* Mobile ToC */
+.mobileToC {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+}
+
+.mobileToCButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileToCButton:hover {
+  background-color: #2b6cb0;
+  transform: translateY(-2px);
+}
+
+.mobileToCDropdown {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  right: 0;
+  width: 280px;
+  max-height: 60vh;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobileToCHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mobileToCHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.mobileToCHeader button {
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.mobileToCHeader button:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Show mobile ToC on smaller screens */
+@media (max-width: 768px) {
+  .tableOfContents {
+    display: none;
+  }
+  
+  .mobileToC {
+    display: block;
+  }
+  
+  .mobileToCDropdown .tocNav {
+    max-height: 50vh;
+    padding: 0.75rem;
+  }
+} 
