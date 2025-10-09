@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import styles from './Sections.module.css';
+import { useDrag, useDrop } from 'react-dnd';
 
 const Education = ({ data, updateData }) => {
+  // Helper function to generate unique ID
+  const generateEducationId = () => `edu_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
   // Ensure data is always an array with at least one default item
   const [educations, setEducations] = useState(() => {
     const defaultEducation = { 
+      id: generateEducationId(),
       degree: '', 
       school: '', 
       location: '', 
@@ -18,6 +23,7 @@ const Education = ({ data, updateData }) => {
     
     // Normalize each education to ensure it has all required properties
     return data.map(edu => ({
+      id: edu.id || generateEducationId(), // Add ID if missing
       degree: edu.degree || '',
       school: edu.school || '',
       location: edu.location || '',
@@ -32,6 +38,7 @@ const Education = ({ data, updateData }) => {
     if (data && Array.isArray(data) && data.length > 0) {
       // Normalize the data to ensure all required fields exist
       const normalizedData = data.map(edu => ({
+        id: edu.id || generateEducationId(), // Add ID if missing
         degree: edu.degree || '',
         school: edu.school || '',
         location: edu.location || '',
@@ -72,6 +79,7 @@ const Education = ({ data, updateData }) => {
       
       // Reset educations to a default array with one item if it's invalid
       const defaultEducation = { 
+        id: generateEducationId(),
         degree: '', 
         school: '', 
         location: '', 
@@ -88,6 +96,7 @@ const Education = ({ data, updateData }) => {
     const updatedEducations = [
       ...educations,
       { 
+        id: generateEducationId(),
         degree: '', 
         school: '', 
         location: '', 
@@ -130,6 +139,105 @@ const Education = ({ data, updateData }) => {
     updateData(updatedEducations);
   };
 
+  // Helper function to truncate text for tab display
+  const truncateText = (text, maxLength = 25) => {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  // Function to handle education reordering
+  const moveEducation = (fromIndex, toIndex) => {
+    if (fromIndex === toIndex) return;
+    
+    const reorderedEducations = [...educations];
+    const [movedEducation] = reorderedEducations.splice(fromIndex, 1);
+    reorderedEducations.splice(toIndex, 0, movedEducation);
+    
+    setEducations(reorderedEducations);
+    updateData(reorderedEducations);
+    
+    // Update currentIndex if needed
+    if (currentIndex === fromIndex) {
+      setCurrentIndex(toIndex);
+    } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
+      setCurrentIndex(currentIndex - 1);
+    } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  // Draggable Education Tab Component
+  const DraggableEducationTab = ({ edu, index, isActive, onTabClick, onRemove }) => {
+    const [{ isDragging }, drag] = useDrag({
+      type: 'EDUCATION',
+      item: { id: edu.id, index },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    });
+
+    const [, drop] = useDrop({
+      accept: 'EDUCATION',
+      hover: (draggedItem) => {
+        if (draggedItem.index === index) {
+          return;
+        }
+        moveEducation(draggedItem.index, index);
+        draggedItem.index = index;
+      },
+    });
+
+    // Handle click with drag prevention
+    const handleTabClick = (e) => {
+      // Don't trigger tab change if we're dragging or if click was on drag handle
+      if (isDragging || e.target.closest(`.${styles.dragHandle}`)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      onTabClick(index);
+    };
+
+    return (
+      <div 
+        ref={(node) => drag(drop(node))}
+        className={`${styles.experienceTab} ${isActive ? styles.activeTab : ''} ${isDragging ? styles.draggingTab : ''}`}
+        onClick={handleTabClick}
+        style={{ opacity: isDragging ? 0.5 : 1 }}
+      >
+        <span className={styles.tabContent}>
+          {(edu?.degree || edu?.school) 
+            ? `${truncateText(edu?.degree || 'Degree')} at ${truncateText(edu?.school || 'School')}` 
+            : `Education ${index + 1}`}
+        </span>
+        
+        {/* Drag Handle */}
+        <div 
+          className={styles.dragHandle}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <span className={styles.dragIcon}>☰</span>
+        </div>
+        
+        {Array.isArray(educations) && educations.length > 1 && (
+          <button 
+            className={styles.removeButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(index);
+            }}
+            aria-label="Remove education"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={styles.sectionContainer}>
       <h2 className={styles.sectionTitle}>Education</h2>
@@ -140,29 +248,14 @@ const Education = ({ data, updateData }) => {
       {/* Education Tabs Navigation */}
       <div className={styles.experienceTabs}>
         {Array.isArray(educations) && educations.map((edu, index) => (
-          <div 
-            key={index}
-            className={`${styles.experienceTab} ${index === currentIndex ? styles.activeTab : ''}`}
-            onClick={() => setCurrentIndex(index)}
-          >
-            <span className={styles.tabContent}>
-              {(edu?.degree || edu?.school) 
-                ? `${edu?.degree || 'Degree'} at ${edu?.school || 'School'}` 
-                : `Education ${index + 1}`}
-            </span>
-            {Array.isArray(educations) && educations.length > 1 && (
-              <button 
-                className={styles.removeButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeEducation(index);
-                }}
-                aria-label="Remove education"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <DraggableEducationTab
+            key={edu.id}
+            edu={edu}
+            index={index}
+            isActive={index === currentIndex}
+            onTabClick={setCurrentIndex}
+            onRemove={removeEducation}
+          />
         ))}
         
         <button 

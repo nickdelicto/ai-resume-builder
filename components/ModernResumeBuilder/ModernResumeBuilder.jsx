@@ -10,6 +10,8 @@ import Experience from '../ResumeBuilder/sections/Experience';
 import Education from '../ResumeBuilder/sections/Education';
 import Skills from '../ResumeBuilder/sections/Skills';
 import AdditionalInfo from '../ResumeBuilder/sections/AdditionalInfo';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { saveResumeData as saveToLocalStorage, getResumeData as getFromLocalStorage, saveResumeProgress, getResumeProgress } from '../ResumeBuilder/utils/localStorage';
 import { loadResumeData, saveResumeData, startNewResume, migrateToDatabase } from '../../lib/resumeUtils';
 import { useResumeService } from '../../lib/contexts/ResumeServiceContext';
@@ -3317,13 +3319,14 @@ const ModernResumeBuilder = ({
   }, [serviceIsAuthenticated]);
 
   return (
-    <ResumeProvider value={{ resumeData, updateResumeData, jobContext: internalJobContext, selectedTemplate }}>
-      <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
-      <div className={styles.resumeBuilder}>
+    <DndProvider backend={HTML5Backend}>
+      <ResumeProvider value={{ resumeData, updateResumeData, jobContext: internalJobContext, selectedTemplate }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        </Head>
+        <div className={styles.resumeBuilder}>
         {console.log('📊 ModernResumeBuilder - Rendering with internalJobContext:', 
           internalJobContext ? {
             exists: true,
@@ -3569,7 +3572,8 @@ const ModernResumeBuilder = ({
           </button>
         </div>
       </div>
-    </ResumeProvider>
+      </ResumeProvider>
+    </DndProvider>
   );
 };
 

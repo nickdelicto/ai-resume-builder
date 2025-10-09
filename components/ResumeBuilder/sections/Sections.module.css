@@ -178,6 +178,21 @@ select.formInput {
   max-height: 180px;
   overflow-y: auto;
   padding-right: 10px;
+  position: relative;
+}
+
+.experienceTabs::before {
+  content: "💡 Tip: Drag the ☰ handle to reorder items";
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-size: 12px;
+  color: #6c757d;
+  background-color: rgba(108, 117, 125, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .experienceTab {
@@ -250,6 +265,89 @@ select.formInput {
 .removeButton:hover {
   color: #e03131;
   background-color: rgba(224, 49, 49, 0.1);
+}
+
+/* Drag and Drop Styles for Experience Tabs */
+.draggingTab {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dragHandle {
+  margin-left: 8px;
+  cursor: grab;
+  color: #495057;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  background-color: rgba(73, 80, 87, 0.15);
+  border: 2px solid rgba(73, 80, 87, 0.3);
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dragHandle:hover {
+  color: #212529;
+  background-color: rgba(73, 80, 87, 0.25);
+  border-color: rgba(73, 80, 87, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+  background-color: rgba(108, 117, 125, 0.25);
+  transform: scale(0.95);
+}
+
+.dragHandle::before {
+  content: "Drag to reorder";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #495057;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.dragHandle::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-bottom-color: #495057;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  margin-top: -4px;
+}
+
+.dragHandle:hover::before,
+.dragHandle:hover::after {
+  opacity: 1;
+}
+
+.dragIcon {
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+  font-weight: 900;
+  color: #212529;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .addItemButton {
