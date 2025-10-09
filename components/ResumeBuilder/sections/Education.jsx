@@ -206,6 +206,7 @@ const Education = ({ data, updateData }) => {
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
         <span className={styles.tabContent}>
+          <span className={styles.tabNumber}>{index + 1}.</span>
           {(edu?.degree || edu?.school) 
             ? `${truncateText(edu?.degree || 'Degree')} at ${truncateText(edu?.school || 'School')}` 
             : `Education ${index + 1}`}

@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     // Call OpenAI with the newer SDK format
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: prompt,
       temperature: 0.7,
       max_tokens: 2000,

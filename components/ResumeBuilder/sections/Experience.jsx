@@ -608,8 +608,9 @@ const Experience = ({ data, updateData, jobContext }) => {
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
         <span className={styles.tabContent}>
-          {(exp?.title || exp?.company) 
-            ? `${truncateText(exp?.title || 'Position')} at ${truncateText(exp?.company || 'Company')}` 
+          <span className={styles.tabNumber}>{index + 1}.</span>
+          {(exp?.title || exp?.company)
+            ? `${truncateText(exp?.title || 'Position')} at ${truncateText(exp?.company || 'Company')}`
             : `Experience ${index + 1}`}
         </span>
         
