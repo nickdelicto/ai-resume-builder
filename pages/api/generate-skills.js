@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     // Call OpenAI with the newer SDK format
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4o-mini",
       messages: prompt,
       temperature: 0.7,
       max_tokens: 2000,
@@ -109,6 +109,11 @@ export default async function handler(req, res) {
 
     if (error.response) {
       // OpenAI API error
+      console.error('OpenAI API error details:', {
+        status: error.response.status,
+        data: error.response.data,
+        message: error.message
+      });
       return res.status(error.response.status).json({
         error: 'AI service error',
         details: error.response.data
