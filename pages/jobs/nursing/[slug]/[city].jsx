@@ -226,7 +226,22 @@ export default function CityJobPage({
               RN Jobs in {cityDisplayName}, {stateDisplayName}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
-              Find Registered Nurse (RN) positions in {cityDisplayName}, {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers. Apply today!
+              {pagination?.total > 0 ? (
+                <>
+                  {cityDisplayName}, {stateDisplayName} has <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                  {stats?.specialties && stats.specialties.length > 0 ? (
+                    <> across <strong>{stats.specialties.length}</strong> {stats.specialties.length === 1 ? 'specialty' : 'specialties'}</>
+                  ) : null}
+                  {stats?.specialties && stats.specialties.length > 0 ? (
+                    <> including {stats.specialties.slice(0, 3).map(s => s.specialty).join(', ')}{stats.specialties.length > 3 ? ` and ${stats.specialties.length - 3} more` : ''}</>
+                  ) : (
+                    <> including ICU, ER, Travel, and other specialties</>
+                  )}
+                  . Browse nursing positions at top healthcare employers. Apply today!
+                </>
+              ) : (
+                <>Find Registered Nurse (RN) positions in {cityDisplayName}, {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers. Apply today!</>
+              )}
             </p>
             {pagination && pagination.total > 0 && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">

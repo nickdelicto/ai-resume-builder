@@ -106,8 +106,8 @@ export default function NursingJobsPage() {
   const seoMeta = seoUtils.generateListingPageMetaTags 
     ? seoUtils.generateListingPageMetaTags(filters || {}, pagination || null)
     : {
-        title: 'RN Nursing Jobs | IntelliResume',
-        description: 'Find Registered Nurse (RN) jobs at top healthcare employers.',
+        title: 'RN Nursing Jobs in USA | IntelliResume',
+        description: 'Find Registered Nurse (RN) jobs across the United States at top healthcare employers.',
         keywords: 'registered nurse, rn jobs, nursing jobs',
         canonicalUrl: 'https://intelliresume.net/jobs/nursing',
         ogImage: 'https://intelliresume.net/og-image-jobs.png'
@@ -176,10 +176,10 @@ export default function NursingJobsPage() {
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              Registered Nurse (RN) Jobs
+              Registered Nurse (RN) Jobs in USA
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              Find nursing opportunities at top healthcare employers. Search by location, specialty, and more.
+              Find nursing opportunities at top healthcare employers across the United States. Search by location, specialty, and more.
             </p>
             {pagination && pagination.total > 0 && (
               <div className="mt-4 inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">

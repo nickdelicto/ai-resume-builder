@@ -263,7 +263,24 @@ export default function JobDetailPage({
                 RN Jobs in {stateDisplayName}
               </h1>
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
-                Find Registered Nurse (RN) positions across {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers.{stats?.cities && stats.cities.length > 0 && ` Jobs available in ${stats.cities.slice(0, 3).map(c => c.city).join(', ')}${stats.cities.length > 3 ? ' and more cities' : ''}.`} Apply today!
+                {pagination?.total > 0 ? (
+                  <>
+                    {stateDisplayName} has <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                    {stats?.cities && stats.cities.length > 0 ? (
+                      <> across <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
+                    ) : null}
+                    {stats?.cities && stats.cities.length > 0 ? (
+                      <> including {stats.cities.slice(0, 3).map(c => c.city).join(', ')}{stats.cities.length > 3 ? ` and ${stats.cities.length - 3} more` : ''}</>
+                    ) : null}
+                    . Browse {stats?.specialties && stats.specialties.length > 0 ? (
+                      <>specialties like {stats.specialties.slice(0, 3).map(s => s.specialty).join(', ')}{stats.specialties.length > 3 ? ' and more' : ''}</>
+                    ) : (
+                      <>ICU, ER, Travel, and other nursing specialties</>
+                    )} at top healthcare employers. Apply today!
+                  </>
+                ) : (
+                  <>Find Registered Nurse (RN) positions across {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers. Apply today!</>
+                )}
               </p>
               {pagination && pagination.total > 0 && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">

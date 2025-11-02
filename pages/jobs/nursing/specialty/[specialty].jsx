@@ -200,7 +200,24 @@ export default function SpecialtyJobPage({
               {specialtyDisplayName} RN Jobs
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
-              Find {specialtyDisplayName} Registered Nurse (RN) positions nationwide. Browse {specialtyDisplayName.toLowerCase()} nursing jobs at top healthcare employers. Apply today!
+              {pagination?.total > 0 ? (
+                <>
+                  Find <strong>{pagination.total}</strong> {specialtyDisplayName} Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                  {stats?.states && stats.states.length > 0 ? (
+                    <> across <strong>{stats.states.length}</strong> {stats.states.length === 1 ? 'state' : 'states'}</>
+                  ) : null}
+                  {stats?.cities && stats.cities.length > 0 ? (
+                    <> in <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
+                  ) : null}
+                  . Browse {specialtyDisplayName.toLowerCase()} nursing positions at top healthcare employers
+                  {stats?.employers && stats.employers.length > 0 ? (
+                    <> including {stats.employers.slice(0, 3).map(e => e.employer?.name || 'Employer').join(', ')}{stats.employers.length > 3 ? ` and ${stats.employers.length - 3} more` : ''}</>
+                  ) : null}
+                  . Apply today!
+                </>
+              ) : (
+                <>Find {specialtyDisplayName} Registered Nurse (RN) positions nationwide. Browse {specialtyDisplayName.toLowerCase()} nursing jobs at top healthcare employers. Apply today!</>
+              )}
             </p>
             {pagination && pagination.total > 0 && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">

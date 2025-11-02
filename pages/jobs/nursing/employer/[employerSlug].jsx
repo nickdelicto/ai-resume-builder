@@ -200,7 +200,27 @@ export default function EmployerJobPage({
               {employerDisplayName} RN Jobs
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
-              Find Registered Nurse (RN) positions at {employerDisplayName}. Browse ICU, ER, Travel, and other nursing specialties. Apply today!
+              {pagination?.total > 0 ? (
+                <>
+                  {employerDisplayName} has <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                  {stats?.states && stats.states.length > 0 ? (
+                    <> across <strong>{stats.states.length}</strong> {stats.states.length === 1 ? 'state' : 'states'}</>
+                  ) : null}
+                  {stats?.cities && stats.cities.length > 0 ? (
+                    <> in <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
+                  ) : null}
+                  {stats?.cities && stats.cities.length > 0 ? (
+                    <> including {stats.cities.slice(0, 3).map(c => c.city).join(', ')}{stats.cities.length > 3 ? ` and ${stats.cities.length - 3} more` : ''}</>
+                  ) : null}
+                  . Browse {stats?.specialties && stats.specialties.length > 0 ? (
+                    <>specialties like {stats.specialties.slice(0, 3).map(s => s.specialty).join(', ')}{stats.specialties.length > 3 ? ' and more' : ''}</>
+                  ) : (
+                    <>ICU, ER, Travel, and other nursing specialties</>
+                  )}. Apply today!
+                </>
+              ) : (
+                <>Find Registered Nurse (RN) positions at {employerDisplayName}. Browse ICU, ER, Travel, and other nursing specialties. Apply today!</>
+              )}
             </p>
             {pagination && pagination.total > 0 && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
