@@ -29,6 +29,15 @@ yarn-error.log*
 .env*.local
 .env
 
+# scraper logs (generated on VPS)
+logs/
+*.log
+
+# backup and temporary files
+*.bak
+*.tmp
+*.backup
+
 # vercel
 .vercel
 

@@ -11,4 +11,5 @@ Disallow: /resume/edit/
 
 # Sitemap locations
 Sitemap: https://intelliresume.net/sitemap.xml
-Sitemap: https://intelliresume.net/blog-sitemap.xml 
+Sitemap: https://intelliresume.net/blog-sitemap.xml
+Sitemap: https://intelliresume.net/jobs-sitemap.xml 

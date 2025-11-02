@@ -342,9 +342,54 @@ const Navigation = () => {
             </div>
           </div>
         </Link>
+
+        {/* Main Navigation Links */}
+        <nav className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '40px' }}>
+          <Link 
+            href="/jobs/nursing"
+            className="jobs-nav-button"
+            style={{
+              fontFamily: "'Figtree', 'Inter', sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: router.pathname.startsWith('/jobs') ? 'rgba(34, 168, 83, 0.15)' : 'rgba(34, 168, 83, 0.1)',
+              color: '#22a853',
+              border: '1px solid rgba(34, 168, 83, 0.4)',
+              borderRadius: '8px',
+              padding: '0.4rem 0.8rem',
+              fontWeight: router.pathname.startsWith('/jobs') ? '600' : '500',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease',
+              textDecoration: 'none',
+              transform: router.pathname.startsWith('/jobs') ? 'none' : 'none',
+              boxShadow: router.pathname.startsWith('/jobs') ? '0 3px 10px rgba(34, 168, 83, 0.15)' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (!router.pathname.startsWith('/jobs')) {
+                e.currentTarget.style.backgroundColor = 'rgba(34, 168, 83, 0.15)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 3px 10px rgba(34, 168, 83, 0.15)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!router.pathname.startsWith('/jobs')) {
+                e.currentTarget.style.backgroundColor = 'rgba(34, 168, 83, 0.1)';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
+              }
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span>Jobs</span>
+          </Link>
+        </nav>
         
         {/* Right-side controls: Sign In/User Menu + Mobile Menu */}
-        <div className="nav-controls">
+        <div className="nav-controls mobile-nav-spacing">
           {/* Authentication Controls */}
           {status === 'authenticated' ? (
             <div className="auth-controls">
@@ -518,27 +563,29 @@ const Navigation = () => {
             </Link>
           )}
           
-          {/* Mobile Menu Button */}
-          <button 
-            className="mobile-menu-button"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {isMenuOpen ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </>
-              ) : (
-                <>
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </>
-              )}
-            </svg>
-          </button>
+          {/* Mobile Menu Button - Only show when authenticated */}
+          {status === 'authenticated' && (
+            <button 
+              className="mobile-menu-button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {isMenuOpen ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </>
+                )}
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       
@@ -558,6 +605,30 @@ const Navigation = () => {
             </div>
             
             <div style={mobileMenuItemStyles.container}>
+              <Link 
+                href="/jobs/nursing"
+                style={mobileMenuItemStyles.menuItem('jobs')}
+                onMouseEnter={() => setHoveredMenuItem('jobs')}
+                onMouseLeave={() => setHoveredMenuItem(null)}
+              >
+                <svg 
+                  style={mobileMenuItemStyles.icon(hoveredMenuItem === 'jobs')} 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="18" 
+                  height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                Jobs
+              </Link>
+
               <button 
                 onClick={handleNewResume}
                 style={{
@@ -936,9 +1007,11 @@ const Navigation = () => {
           background: linear-gradient(135deg, #f8f9fc, #edf2ff);
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
           padding: 16px;
-          overflow: hidden;
+          overflow-y: auto;
+          overflow-x: hidden;
           transition: all 0.3s ease;
           z-index: 1000;
+          -webkit-overflow-scrolling: touch;
         }
         
         .mobile-menu.closed {
@@ -949,15 +1022,18 @@ const Navigation = () => {
           visibility: hidden;
         }
         
-        .mobile-menu.open {
-          max-height: 500px;
-          opacity: 1;
-          visibility: visible;
-        }
-        
-        .mobile-menu-content {
-          font-family: 'Figtree', 'Inter', sans-serif;
-        }
+          .mobile-menu.open {
+            max-height: calc(100vh - 80px);
+            opacity: 1;
+            visibility: visible;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          .mobile-menu-content {
+            font-family: 'Figtree', 'Inter', sans-serif;
+            max-height: 100%;
+          }
                 
         /* Responsive styles */
         @media (max-width: 768px) {
@@ -1003,12 +1079,34 @@ const Navigation = () => {
           }
           
           .mobile-menu.open {
-            max-height: 500px;
+            max-height: calc(100vh - 80px);
             opacity: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          .mobile-menu-content {
+            max-height: 100%;
           }
           
           .nav-content {
             padding: 0 0.5rem;
+          }
+          
+          /* Add spacing between nav-links and nav-controls on mobile */
+          .mobile-nav-spacing {
+            margin-left: 20px;
+          }
+          
+          /* Ensure nav-links maintains proper spacing from logo on mobile */
+          .nav-links {
+            margin-left: 20px !important;
+          }
+          
+          /* Jobs button styling for mobile */
+          .jobs-nav-button {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
           }
           
           .index-sign-in-button {

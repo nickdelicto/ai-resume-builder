@@ -34,16 +34,16 @@ model Session {
 }
 
 model User {
-  id                 String             @id @default(cuid())
+  id                 String                 @id @default(cuid())
   name               String?
-  email              String?            @unique
+  email              String?                @unique
   emailVerified      DateTime?
   image              String?
-  isNewUser          Boolean            @default(true)
-  planType           String             @default("free")
+  isNewUser          Boolean                @default(true)
+  planType           String                 @default("free")
   planExpirationDate DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
   accounts           Account[]
   resumeData         ResumeData[]
   sessions           Session[]
@@ -88,7 +88,7 @@ model SubscriptionPlan {
 }
 
 model UserSubscription {
-  id                    String                @id @default(cuid())
+  id                    String                 @id @default(cuid())
   userId                String
   planId                String
   stripeCustomerId      String?
@@ -97,12 +97,12 @@ model UserSubscription {
   status                String
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime
-  cancelAtPeriodEnd     Boolean               @default(false)
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
+  cancelAtPeriodEnd     Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   metadata              Json?
-  plan                  SubscriptionPlan      @relation(fields: [planId], references: [id])
-  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  SubscriptionPlan       @relation(fields: [planId], references: [id])
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   discounts             SubscriptionDiscount[]
 }
 
@@ -118,8 +118,8 @@ model KVStore {
 model FeedbackEntry {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // e.g., 'cancellation', 'feature_request', etc.
-  content   Json     // Flexible structure for different types of feedback
+  type      String // e.g., 'cancellation', 'feature_request', etc.
+  content   Json // Flexible structure for different types of feedback
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -130,8 +130,8 @@ model FeedbackEntry {
 model UserEvent {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // e.g., 'retention_discount_applied', 'subscription_canceled', etc.
-  metadata  Json?    // Additional data about the event
+  type      String // e.g., 'retention_discount_applied', 'subscription_canceled', etc.
+  metadata  Json? // Additional data about the event
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -139,21 +139,122 @@ model UserEvent {
 
 // Add SubscriptionDiscount model for tracking discounts
 model SubscriptionDiscount {
-  id                String           @id @default(cuid())
-  subscriptionId    String
-  userId            String
-  discountPercent   Float
-  originalPrice     Float
-  discountedPrice   Float
-  stripeCouponId    String?
-  appliedAt         DateTime         @default(now())
-  expiresAt         DateTime?        // Null means forever
-  isActive          Boolean          @default(true)
-  reason            String?          // e.g., 'retention', 'promotion', etc.
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id              String    @id @default(cuid())
+  subscriptionId  String
+  userId          String
+  discountPercent Float
+  originalPrice   Float
+  discountedPrice Float
+  stripeCouponId  String?
+  appliedAt       DateTime  @default(now())
+  expiresAt       DateTime? // Null means forever
+  isActive        Boolean   @default(true)
+  reason          String? // e.g., 'retention', 'promotion', etc.
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // Relations
-  subscription      UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// RN Job Board Models - For Programmatic SEO Job Board Feature
+// ============================================================================
+
+// Stores information about healthcare employers we scrape jobs from
+model HealthcareEmployer {
+  id            String       @id @default(cuid())
+  name          String       @unique // Company name like "Cleveland Clinic"
+  slug          String       @unique // URL-friendly version like "cleveland-clinic" for /jobs/nursing/cleveland-clinic
+  careerPageUrl String // Where we scrape from
+  atsPlatform   String? // ATS platform used: "custom", "workday", "icims", etc.
+  isActive      Boolean      @default(true) // Whether we're still scraping from them
+  lastScraped   DateTime? // When we last scraped them
+  jobs          NursingJob[] // All job postings from this employer
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([isActive, lastScraped])
+}
+
+// Stores individual RN job postings scraped from healthcare employers
+model NursingJob {
+  id String @id @default(cuid())
+
+  // Basic Information
+  title      String // Job title like "ICU Registered Nurse"
+  employerId String // Which company this job is from
+  employer   HealthcareEmployer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  // Location Information (critical for SEO location-based pages)
+  location String // Full location string like "Mayfield Heights, OH 44124"
+  city     String // Normalized city name like "Mayfield Heights"
+  state    String // Normalized state abbreviation like "OH"
+  zipCode  String? // Optional zip code
+  isRemote Boolean @default(false) // True if remote position
+
+  // Job Classification (for specialty pages and filtering)
+  jobType         String? // Employment type: "full-time", "part-time", "prn", "contract"
+  shiftType       String? // Shift type: "days", "nights", "evenings", "variable", "rotating"
+  specialty       String? // RN specialty: "ICU", "ER", "Travel", "Med-Surg", "Home Health", etc.
+  experienceLevel String? // Experience required: "new-grad", "experienced", "senior"
+
+  // Job Details
+  description      String  @db.Text // Full job description
+  requirements     String? @db.Text // Qualifications and requirements
+  responsibilities String? @db.Text // Job responsibilities
+  benefits         String? @db.Text // Benefits information if available
+  department       String? // Department or facility name
+
+  // Compensation Information (if available)
+  salaryMin      Int? // Minimum salary if listed (raw value as scraped)
+  salaryMax      Int? // Maximum salary if listed (raw value as scraped)
+  salaryCurrency String? @default("USD") // Currency code
+  salaryType     String? // "hourly" or "annual" - how the salary is specified
+  // Normalized values for comparison/statistics (allows comparing hourly vs annual jobs)
+  salaryMinHourly Int? // Normalized hourly equivalent (annual/2080 if annual, same if hourly)
+  salaryMaxHourly Int? // Normalized hourly equivalent
+  salaryMinAnnual Int? // Normalized annual equivalent (hourly*2080 if hourly, same if annual)
+  salaryMaxAnnual Int? // Normalized annual equivalent
+
+  // Source Tracking
+  sourceUrl   String  @unique // Original job posting URL where users can apply
+  sourceJobId String? // Job ID from employer's system (for deduplication)
+
+  // Status Tracking
+  isActive            Boolean   @default(true) // Whether job is still open
+  postedDate          DateTime? // When job was posted (if available)
+  expiresDate         DateTime? // When job expires (if available from source)
+  calculatedExpiresDate DateTime? // Calculated expiry (scrapedAt + 60 days) if no expiresDate provided
+
+  // SEO Fields (for programmatic SEO pages)
+  slug            String   @unique // URL-friendly version like "icu-rn-mayfield-heights-12345"
+  metaDescription String? // Short description for SEO meta tags
+  keywords        String[] // Array of keywords for AI SEO like ["icu", "registered nurse", "ohio"]
+
+  // Timestamps
+  scrapedAt DateTime @default(now()) // When we scraped this job
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for fast queries
+  @@index([state, city]) // For location-based pages like /jobs/nursing/ohio/chicago
+  @@index([specialty]) // For specialty pages like /jobs/nursing/icu
+  @@index([employerId, isActive]) // For employer pages like /jobs/nursing/cleveland-clinic
+  @@index([isActive, scrapedAt]) // For filtering active jobs by freshness
+  @@index([slug]) // For job detail page lookups
+  @@index([jobType, specialty]) // For filtering by type and specialty
+}
+
+// Reference table for normalized location data (prevents duplicates and ensures consistency)
+model Location {
+  id        String  @id @default(cuid())
+  city      String // City name
+  state     String // State abbreviation like "OH"
+  stateFull String // Full state name like "Ohio"
+  region    String? // Optional region like "Midwest", "Northeast", etc.
+
+  @@unique([city, state])
+  @@index([state])
 }
