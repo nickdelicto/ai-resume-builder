@@ -164,15 +164,26 @@ async function removePlaceholderJobs() {
     
     if (jobsWithIncompleteJD.length > 0) {
       console.log(`   ✅ Found ${jobsWithIncompleteJD.length} jobs with incomplete descriptions (no JD content)\n`);
+      console.log(`   📋 Listing incomplete jobs with URLs for manual verification:\n`);
+      jobsWithIncompleteJD.forEach((job, index) => {
+        console.log(`   ${index + 1}. ${job.title.substring(0, 70)}`);
+        console.log(`      Description: "${job.description}"`);
+        console.log(`      Length: ${job.description.length} chars`);
+        console.log(`      🔗 Website URL: ${job.sourceUrl || 'N/A'}`);
+        console.log(`      Employer: ${job.employer.name}\n`);
+      });
     } else {
       console.log(`   ✅ Found 0 jobs with incomplete descriptions\n`);
     }
     
     // Combine both lists (remove duplicates by ID)
+    // If a job has exact placeholder text, use that. Otherwise, if it's incomplete, include it too.
     const allPlaceholderJobs = [...jobsWithExactPlaceholder];
-    const incompleteIds = new Set(jobsWithIncompleteJD.map(j => j.id));
+    const exactPlaceholderIds = new Set(jobsWithExactPlaceholder.map(j => j.id));
+    
+    // Add incomplete jobs that aren't already in the exact placeholder list
     jobsWithIncompleteJD.forEach(job => {
-      if (!incompleteIds.has(job.id)) {
+      if (!exactPlaceholderIds.has(job.id)) {
         allPlaceholderJobs.push(job);
       }
     });
@@ -189,8 +200,11 @@ async function removePlaceholderJobs() {
       console.log('');
     }
     
-    console.log(`⚠️  Found ${placeholderJobs.length} jobs with placeholder OR incomplete descriptions:\n`);
-    console.log(`   (Includes jobs with placeholder text AND jobs with metadata-only descriptions < 120 chars)\n`);
+    console.log('═'.repeat(70));
+    console.log(`\n⚠️  TOTAL: Found ${placeholderJobs.length} jobs to review:\n`);
+    console.log(`   - Jobs with exact placeholder text: ${jobsWithExactPlaceholder.length}`);
+    console.log(`   - Jobs with incomplete descriptions: ${jobsWithIncompleteJD.length}`);
+    console.log(`   - Total unique jobs: ${placeholderJobs.length}\n`);
     
     // Show sample of jobs to be deactivated
     if (placeholderJobs.length > 0) {
