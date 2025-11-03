@@ -136,10 +136,27 @@ async function removePlaceholderJobs() {
       // Check for very short descriptions (might be incomplete)
       const shortJobs = allJobs.filter(job => job.description && job.description.length < 200);
       console.log(`📏 Found ${shortJobs.length} jobs with descriptions < 200 chars (might be incomplete)\n`);
-      if (shortJobs.length > 0 && shortJobs.length <= 10) {
-        shortJobs.forEach((job, index) => {
-          console.log(`   ${index + 1}. ${job.title.substring(0, 50)}`);
-          console.log(`      Description: "${job.description}"`);
+      console.log('   Showing ALL short descriptions for review:\n');
+      shortJobs.forEach((job, index) => {
+        console.log(`   ${index + 1}. ${job.title.substring(0, 60)} (${job.employer.name})`);
+        console.log(`      Full description: "${job.description}"`);
+        console.log(`      Length: ${job.description.length} chars`);
+        console.log(`      URL: ${job.sourceUrl || 'N/A'}\n`);
+      });
+      
+      // Also check if any descriptions contain partial matches
+      console.log('🔍 Checking for partial matches (case-insensitive substring search)...\n');
+      const partialMatches = allJobs.filter(job => {
+        if (!job.description) return false;
+        const desc = job.description.toLowerCase();
+        return desc.includes('description') && desc.includes('updated') && desc.includes('visit');
+      });
+      
+      if (partialMatches.length > 0) {
+        console.log(`   Found ${partialMatches.length} jobs with partial match keywords:\n`);
+        partialMatches.slice(0, 10).forEach((job, index) => {
+          console.log(`   ${index + 1}. ${job.title.substring(0, 60)}`);
+          console.log(`      Description: "${job.description.substring(0, 200)}${job.description.length > 200 ? '...' : ''}"`);
           console.log(`      Length: ${job.description.length} chars\n`);
         });
       }
