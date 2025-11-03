@@ -18,40 +18,49 @@ const prisma = new PrismaClient();
 function isPlaceholderDescription(description) {
   if (!description) return true;
   
-  const descLower = description.toLowerCase().trim();
+  // Normalize: lowercase, normalize whitespace (multiple spaces -> single space)
+  const normalized = description
+    .toLowerCase()
+    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+    .replace(/[.,;:!?]+/g, ' ') // Remove punctuation (might vary)
+    .trim();
   
-  // Check for placeholder text patterns
-  const placeholderPatterns = [
-    /job\s+description\s+is\s+being\s+updated/i,
-    /please\s+visit\s+(?:the\s+)?employer\s+website\s+(?:for\s+)?full\s+details/i,
-    /please\s+visit\s+(?:the\s+)?employer\s+website/i,
-    /visit\s+(?:the\s+)?employer\s+website\s+(?:for\s+)?full\s+details/i,
-    /description\s+coming\s+soon/i,
-    /description\s+to\s+be\s+added/i,
-    /details\s+to\s+follow/i,
-    /job\s+description\s+not\s+available/i,
-    /description\s+will\s+be\s+updated/i
-  ];
-  
-  // Check for placeholder patterns regardless of length
-  for (const pattern of placeholderPatterns) {
-    if (pattern.test(descLower)) {
-      return true;
-    }
+  // Pattern 1: "Job description is being updated" - core message
+  // Check with flexible whitespace handling
+  if (/job\s+description\s+is\s+being\s+updated/i.test(normalized)) {
+    return true;
   }
   
-  // Also check if description is suspiciously short (likely timeout/truncation)
-  if (descLower.length < 200) {
-    const genericPatterns = [
+  // Pattern 2: Check if it contains BOTH key phrases
+  // "job description is being updated" AND ("please visit" OR "employer website")
+  const hasCoreMessage = /job\s+description\s+is\s+being\s+updated/i.test(normalized);
+  const hasVisitMessage = normalized.includes('please visit') || normalized.includes('employer website') || normalized.includes('visit the employer');
+  
+  if (hasCoreMessage && hasVisitMessage) {
+    return true;
+  }
+  
+  // Pattern 3: Even if core message missing, if it's very short and has "please visit employer website"
+  // This catches variations where the first part might be missing
+  if (normalized.length < 300 && hasVisitMessage && normalized.includes('full details')) {
+    return true;
+  }
+  
+  // Pattern 4: Very short descriptions that are clearly placeholders
+  if (normalized.length < 200) {
+    const shortPlaceholderPatterns = [
+      /^job\s+description\s+is\s+being\s+updated/i,
+      /^description\s+is\s+being\s+updated/i,
+      /job\s+description\s+not\s+available/i,
       /^job\s+description\s*$/i,
       /^description\s*$/i,
       /^details\s*$/i,
-      /^n\/a/i,
-      /^not\s+available/i
+      /^n\/a$/i,
+      /^not\s+available$/i
     ];
     
-    for (const pattern of genericPatterns) {
-      if (pattern.test(descLower)) {
+    for (const pattern of shortPlaceholderPatterns) {
+      if (pattern.test(normalized)) {
         return true;
       }
     }
@@ -84,10 +93,31 @@ async function removePlaceholderJobs() {
     
     console.log(`📊 Found ${allJobs.length} active jobs in database\n`);
     
+    // Debug: Show sample descriptions to see what we're working with
+    if (allJobs.length > 0) {
+      console.log('📝 Sample descriptions from database (first 3):');
+      allJobs.slice(0, 3).forEach((job, index) => {
+        const preview = job.description ? job.description.substring(0, 150) : 'NO DESCRIPTION';
+        console.log(`   ${index + 1}. ${job.title.substring(0, 50)}...`);
+        console.log(`      Description: "${preview}"`);
+        console.log(`      Length: ${job.description ? job.description.length : 0} chars\n`);
+      });
+    }
+    
     // Filter jobs with placeholder descriptions
     const placeholderJobs = allJobs.filter(job => {
       return isPlaceholderDescription(job.description);
     });
+    
+    // Debug: Show first few matches to verify pattern is working
+    if (placeholderJobs.length > 0) {
+      console.log('✓ First few matched jobs:');
+      placeholderJobs.slice(0, 5).forEach((job, index) => {
+        console.log(`   ${index + 1}. ${job.title.substring(0, 50)}...`);
+        console.log(`      Description preview: "${job.description ? job.description.substring(0, 100) : 'NO DESCRIPTION'}..."`);
+      });
+      console.log('');
+    }
     
     console.log(`⚠️  Found ${placeholderJobs.length} jobs with placeholder descriptions:\n`);
     

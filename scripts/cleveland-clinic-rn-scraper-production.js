@@ -798,10 +798,81 @@ class ClevelandClinicRNScraper {
       // Navigate to the job details page
       await page.goto(job.link, { 
         waitUntil: 'networkidle2',
-        timeout: 15000 
+        timeout: 20000 // Increased from 15s to 20s for slow-loading pages
       });
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for description element to appear (handles dynamic loading)
+      // Try multiple selectors to find the description container
+      try {
+        await page.waitForSelector('.jd-desc, [class*="job-desc"], [class*="desc-full"], [class*="description"]', {
+          timeout: 12000,
+          visible: false // Don't require visible, just in DOM
+        });
+      } catch (waitError) {
+        // If selector doesn't appear, continue anyway - might still extract from page
+        console.log(`   ⚠️  Description element not found with waitForSelector, continuing...`);
+      }
+      
+      // Poll for actual content to load (not placeholder) - best practice for dynamic content
+      // Check multiple times to ensure JavaScript has populated the description
+      const maxWaitTime = 10000; // Maximum 10 seconds total wait
+      const pollInterval = 500; // Check every 500ms
+      const maxPolls = maxWaitTime / pollInterval; // 20 polls max
+      let descriptionLoaded = false;
+      let placeholderDetected = false;
+      
+      for (let i = 0; i < maxPolls; i++) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        
+        // Check if description has been populated with real content
+        const descriptionCheck = await page.evaluate(() => {
+          // Try to find description container
+          const container = document.querySelector('.jd-desc, [class*="job-desc"], [class*="desc-full"], [class*="description"]');
+          if (!container) return { hasContent: false, isPlaceholder: false };
+          
+          const text = container.textContent || '';
+          const textLower = text.toLowerCase();
+          
+          // Check for placeholder text
+          const isPlaceholder = /job\s+description\s+is\s+being\s+updated/i.test(textLower) ||
+                               (textLower.includes('please visit') && textLower.includes('employer website') && text.length < 500);
+          
+          // Check if we have substantial real content (not placeholder)
+          const hasRealContent = text.length > 500 && 
+                                !isPlaceholder &&
+                                text.split(' ').length > 50; // At least 50 words
+          
+          return { hasContent: hasRealContent, isPlaceholder: isPlaceholder, length: text.length };
+        });
+        
+        if (descriptionCheck.isPlaceholder) {
+          placeholderDetected = true;
+          // If placeholder detected, wait a bit more in case it's just initial state
+          if (i < maxPolls - 2) {
+            continue; // Keep waiting, might load real content
+          } else {
+            // We've waited enough, still seeing placeholder
+            break;
+          }
+        }
+        
+        if (descriptionCheck.hasContent) {
+          descriptionLoaded = true;
+          break; // Got real content, proceed
+        }
+      }
+      
+      // If we detected placeholder and never got real content, mark as failed
+      if (placeholderDetected && !descriptionLoaded) {
+        console.log(`   ⚠️  Placeholder text detected after waiting ${maxWaitTime/1000}s - skipping job`);
+        return {
+          title: job.title,
+          location: job.location,
+          description: job.rawText.substring(0, 1000),
+          sourceUrl: job.link,
+          extractionFailed: true // Flag that extraction failed (placeholder never replaced)
+        };
+      }
       
       // Remove all scripts, styles, and hidden elements BEFORE extracting content
       await page.evaluate(() => {
