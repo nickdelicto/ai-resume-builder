@@ -557,19 +557,40 @@ class ClevelandClinicRNScraper {
     
     const descLower = description.toLowerCase().trim();
     
-    // Check for placeholder text patterns
+    // Check for placeholder text patterns - check REGARDLESS of length
+    // Common placeholder text that indicates JD is not available
     const placeholderPatterns = [
       /job\s+description\s+is\s+being\s+updated/i,
+      /please\s+visit\s+(?:the\s+)?employer\s+website\s+(?:for\s+)?full\s+details/i,
       /please\s+visit\s+(?:the\s+)?employer\s+website/i,
-      /full\s+details/i,
+      /visit\s+(?:the\s+)?employer\s+website\s+(?:for\s+)?full\s+details/i,
       /description\s+coming\s+soon/i,
       /description\s+to\s+be\s+added/i,
-      /details\s+to\s+follow/i
+      /details\s+to\s+follow/i,
+      /job\s+description\s+not\s+available/i,
+      /description\s+will\s+be\s+updated/i
     ];
     
-    // If description is very short and contains placeholder text
+    // Check for placeholder patterns regardless of length
+    for (const pattern of placeholderPatterns) {
+      if (pattern.test(descLower)) {
+        return true;
+      }
+    }
+    
+    // Also check if description is suspiciously short (likely timeout/truncation)
+    // If less than 200 chars and contains generic text, likely placeholder
     if (descLower.length < 200) {
-      for (const pattern of placeholderPatterns) {
+      // Check for very generic/empty descriptions
+      const genericPatterns = [
+        /^job\s+description\s*$/i,
+        /^description\s*$/i,
+        /^details\s*$/i,
+        /^n\/a/i,
+        /^not\s+available/i
+      ];
+      
+      for (const pattern of genericPatterns) {
         if (pattern.test(descLower)) {
           return true;
         }
@@ -607,6 +628,17 @@ class ClevelandClinicRNScraper {
     // Validate RN requirement: must have RN/Registered Nurse in title OR full description
     const title = job.title || jobDetails.title || '';
     const fullDescription = jobDetails.description || job.rawText || '';
+    
+    // Check if extraction failed (timeout, error, etc.) - skip these jobs
+    if (jobDetails.extractionFailed) {
+      throw new Error(`Job "${title}" - JD extraction failed (timeout/error). Skipping to avoid incomplete data.`);
+    }
+    
+    // Check if description is too short (likely truncated or timeout) - skip these
+    // Real job descriptions should be at least 500 characters
+    if (!fullDescription || fullDescription.trim().length < 500) {
+      throw new Error(`Job "${title}" - Description too short (${fullDescription ? fullDescription.length : 0} chars). Likely incomplete. Skipping.`);
+    }
     
     // Check for placeholder/incomplete description
     const isPlaceholder = this.isPlaceholderDescription(fullDescription);
@@ -757,7 +789,8 @@ class ClevelandClinicRNScraper {
         title: job.title,
         location: job.location,
         description: job.rawText.substring(0, 1000),
-        sourceUrl: null
+        sourceUrl: null,
+        extractionFailed: true // Flag for missing link
       };
     }
     
@@ -1366,11 +1399,13 @@ class ClevelandClinicRNScraper {
       
     } catch (error) {
       console.log(`⚠️ Error getting job details: ${error.message}`);
+      // Return with extractionFailed flag - indicates timeout or extraction failure
       return {
         title: job.title,
         location: job.location,
         description: job.rawText.substring(0, 1000),
-        sourceUrl: job.link
+        sourceUrl: job.link,
+        extractionFailed: true // Flag that extraction failed (timeout, error, etc.)
       };
     }
   }
