@@ -171,18 +171,24 @@ async function removePlaceholderJobs() {
       
       // ALSO check: Very short descriptions that are just metadata (extraction likely failed)
       // These look like: "TitleJobTypeLocation, STFacility" - no actual description content
+      // These happen when JD extraction times out or fails, and only listing page metadata is saved
       if (job.description && job.description.length < 200) {
         const desc = job.description;
         
         // If it looks like just concatenated metadata (title + job type + location)
-        // Pattern: No spaces between words, or very little structure, no sentence-like content
-        const hasSentenceStructure = /[.!?]/.test(desc) || desc.split(' ').length > 15;
-        const looksLikeMetadata = !hasSentenceStructure && desc.length < 120;
+        // Pattern: No sentence punctuation, few words, looks like concatenated fields
+        const hasSentenceStructure = /[.!?]/.test(desc);
+        const wordCount = desc.split(/\s+/).length;
+        const looksLikeMetadata = !hasSentenceStructure && wordCount < 15 && desc.length < 120;
         
         // Also check if it's missing key description words that would appear in real descriptions
-        const hasDescriptionContent = /\b(?:performs|responsibilities|requirements|experience|skills|must have|provide|assist|manage|implement|collaborate|assess|evaluate)\b/i.test(desc);
+        const hasDescriptionContent = /\b(?:performs|responsibilities|requirements|experience|skills|must have|provide|assist|manage|implement|collaborate|assess|evaluate|duties|functions|work with|care for)\b/i.test(desc);
         
-        if (looksLikeMetadata || (!hasDescriptionContent && desc.length < 120)) {
+        // Pattern: If it's very short and looks like concatenated fields without spaces
+        // Examples: "RN Homecare Visit NurseFull TimeIndependence, OHBusiness Operations Ctr"
+        const hasConcatenatedFields = /[A-Z][a-z]+(?:[A-Z][a-z]+)+/.test(desc) && wordCount < 10;
+        
+        if (looksLikeMetadata || hasConcatenatedFields || (!hasDescriptionContent && desc.length < 120)) {
           return true; // This is likely an incomplete description from failed extraction
         }
       }
