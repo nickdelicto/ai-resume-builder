@@ -102,6 +102,37 @@ async function removePlaceholderJobs() {
         console.log(`      Description: "${preview}"`);
         console.log(`      Length: ${job.description ? job.description.length : 0} chars\n`);
       });
+      
+      // Also search for jobs with the exact placeholder phrase
+      console.log('🔍 Searching for jobs containing "Job description is being updated"...\n');
+      const jobsWithPlaceholderText = allJobs.filter(job => {
+        if (!job.description) return false;
+        const descLower = job.description.toLowerCase();
+        return descLower.includes('job description is being updated') || 
+               descLower.includes('please visit') && descLower.includes('employer website');
+      });
+      
+      if (jobsWithPlaceholderText.length > 0) {
+        console.log(`   Found ${jobsWithPlaceholderText.length} jobs with placeholder-related text:\n`);
+        jobsWithPlaceholderText.slice(0, 5).forEach((job, index) => {
+          console.log(`   ${index + 1}. ${job.title.substring(0, 60)}`);
+          console.log(`      Full description: "${job.description}"`);
+          console.log(`      Length: ${job.description.length} chars\n`);
+        });
+      } else {
+        console.log('   No jobs found with "job description is being updated" or "please visit employer website"\n');
+      }
+      
+      // Check for very short descriptions (might be incomplete)
+      const shortJobs = allJobs.filter(job => job.description && job.description.length < 200);
+      console.log(`📏 Found ${shortJobs.length} jobs with descriptions < 200 chars (might be incomplete)\n`);
+      if (shortJobs.length > 0 && shortJobs.length <= 10) {
+        shortJobs.forEach((job, index) => {
+          console.log(`   ${index + 1}. ${job.title.substring(0, 50)}`);
+          console.log(`      Description: "${job.description}"`);
+          console.log(`      Length: ${job.description.length} chars\n`);
+        });
+      }
     }
     
     // Filter jobs with placeholder descriptions
