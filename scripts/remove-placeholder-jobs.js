@@ -109,92 +109,75 @@ async function removePlaceholderJobs() {
         console.log(`      Length: ${job.description ? job.description.length : 0} chars\n`);
       });
       
-      // Also search for jobs with the exact placeholder phrase
-      console.log('🔍 Searching for jobs containing the EXACT placeholder phrase...\n');
-      console.log('   Looking for: "Job description is being updated. Please visit the employer website for full details."\n');
-      const jobsWithPlaceholderText = allJobs.filter(job => {
-        if (!job.description) return false;
-        const descLower = job.description.toLowerCase();
-        // Check for the complete phrase or key components
-        return descLower.includes('job description is being updated') && 
-               descLower.includes('please visit') && 
-               descLower.includes('employer website') &&
-               descLower.includes('full details');
-      });
-      
-      if (jobsWithPlaceholderText.length > 0) {
-        console.log(`   Found ${jobsWithPlaceholderText.length} jobs with placeholder-related text:\n`);
-        jobsWithPlaceholderText.slice(0, 5).forEach((job, index) => {
-          console.log(`   ${index + 1}. ${job.title.substring(0, 60)}`);
-          console.log(`      Full description: "${job.description}"`);
-          console.log(`      Length: ${job.description.length} chars\n`);
-        });
-      } else {
-        console.log('   No jobs found with "job description is being updated" or "please visit employer website"\n');
-      }
-      
-      // Check for very short descriptions (might be incomplete)
-      const shortJobs = allJobs.filter(job => job.description && job.description.length < 200);
-      console.log(`📏 Found ${shortJobs.length} jobs with descriptions < 200 chars (might be incomplete)\n`);
-      console.log('   Showing ALL short descriptions for review:\n');
-      shortJobs.forEach((job, index) => {
-        console.log(`   ${index + 1}. ${job.title.substring(0, 60)} (${job.employer.name})`);
-        console.log(`      Full description: "${job.description}"`);
-        console.log(`      Length: ${job.description.length} chars`);
-        console.log(`      URL: ${job.sourceUrl || 'N/A'}\n`);
-      });
-      
-      // Also check if any descriptions contain partial matches
-      console.log('🔍 Checking for partial matches (case-insensitive substring search)...\n');
-      const partialMatches = allJobs.filter(job => {
-        if (!job.description) return false;
-        const desc = job.description.toLowerCase();
-        return desc.includes('description') && desc.includes('updated') && desc.includes('visit');
-      });
-      
-      if (partialMatches.length > 0) {
-        console.log(`   Found ${partialMatches.length} jobs with partial match keywords:\n`);
-        partialMatches.slice(0, 10).forEach((job, index) => {
-          console.log(`   ${index + 1}. ${job.title.substring(0, 60)}`);
-          console.log(`      Description: "${job.description.substring(0, 200)}${job.description.length > 200 ? '...' : ''}"`);
-          console.log(`      Length: ${job.description.length} chars\n`);
-        });
-      }
+      // Show which jobs will be matched
+      console.log('📋 Checking for placeholder text in ALL descriptions...\n');
     }
     
-    // Filter jobs with placeholder descriptions OR incomplete descriptions (just metadata)
-    const placeholderJobs = allJobs.filter(job => {
-      // Check if it's a known placeholder pattern
-      if (isPlaceholderDescription(job.description)) {
-        return true;
-      }
+    // SIMPLE APPROACH: Find jobs where description contains the exact placeholder text
+    // The exact line: "Job description is being updated. Please visit the employer website for full details."
+    console.log('🔍 Searching description field for exact placeholder text...\n');
+    console.log('   Looking for: "Job description is being updated. Please visit the employer website for full details."\n');
+    
+    const jobsWithExactPlaceholder = allJobs.filter(job => {
+      if (!job.description) return false;
+      const desc = job.description.toLowerCase();
       
-      // ALSO check: Very short descriptions that are just metadata (extraction likely failed)
-      // These look like: "TitleJobTypeLocation, STFacility" - no actual description content
-      // These happen when JD extraction times out or fails, and only listing page metadata is saved
-      if (job.description && job.description.length < 200) {
-        const desc = job.description;
-        
-        // If it looks like just concatenated metadata (title + job type + location)
-        // Pattern: No sentence punctuation, few words, looks like concatenated fields
-        const hasSentenceStructure = /[.!?]/.test(desc);
-        const wordCount = desc.split(/\s+/).length;
-        const looksLikeMetadata = !hasSentenceStructure && wordCount < 15 && desc.length < 120;
-        
-        // Also check if it's missing key description words that would appear in real descriptions
-        const hasDescriptionContent = /\b(?:performs|responsibilities|requirements|experience|skills|must have|provide|assist|manage|implement|collaborate|assess|evaluate|duties|functions|work with|care for)\b/i.test(desc);
-        
-        // Pattern: If it's very short and looks like concatenated fields without spaces
-        // Examples: "RN Homecare Visit NurseFull TimeIndependence, OHBusiness Operations Ctr"
-        const hasConcatenatedFields = /[A-Z][a-z]+(?:[A-Z][a-z]+)+/.test(desc) && wordCount < 10;
-        
-        if (looksLikeMetadata || hasConcatenatedFields || (!hasDescriptionContent && desc.length < 120)) {
-          return true; // This is likely an incomplete description from failed extraction
-        }
-      }
+      // Simple check: Does it contain all the key parts of the placeholder?
+      const hasAllParts = desc.includes('job description is being updated') && 
+                          desc.includes('please visit') && 
+                          desc.includes('employer website') &&
+                          desc.includes('full details');
       
-      return false;
+      return hasAllParts;
     });
+    
+    if (jobsWithExactPlaceholder.length > 0) {
+      console.log(`   ✅ Found ${jobsWithExactPlaceholder.length} jobs with exact placeholder text!\n`);
+      jobsWithExactPlaceholder.slice(0, 5).forEach((job, index) => {
+        console.log(`   ${index + 1}. ${job.title.substring(0, 60)}`);
+        console.log(`      Description: "${job.description.substring(0, 150)}${job.description.length > 150 ? '...' : ''}"`);
+        console.log(`      URL: ${job.sourceUrl || 'N/A'}\n`);
+      });
+    } else {
+      console.log(`   ⚠️  Found 0 jobs with exact placeholder text in database\n`);
+      console.log(`   This means either:`);
+      console.log(`   1. The placeholder text is not stored in the description field`);
+      console.log(`   2. It was filtered out during scraping`);
+      console.log(`   3. The descriptions are stored differently\n`);
+    }
+    
+    // Also check for jobs with very short descriptions that lack JD content
+    // These are jobs where extraction failed and only metadata was saved
+    console.log('🔍 Also checking for incomplete descriptions (< 150 chars, no JD keywords)...\n');
+    const jobsWithIncompleteJD = allJobs.filter(job => {
+      if (!job.description || job.description.length >= 150) return false;
+      
+      const desc = job.description;
+      
+      // Check if it has actual job description keywords
+      // Real JDs have: verbs, responsibilities, requirements, etc.
+      const hasJDContent = /\b(?:performs|responsibilities|requirements|experience|skills|must have|provide|assist|manage|implement|collaborate|assess|evaluate|duties|functions|work with|care for|patient|nursing|clinical|medical|treatment)\b/i.test(desc);
+      
+      // If it's short and lacks JD keywords, it's likely incomplete
+      return !hasJDContent;
+    });
+    
+    if (jobsWithIncompleteJD.length > 0) {
+      console.log(`   ✅ Found ${jobsWithIncompleteJD.length} jobs with incomplete descriptions (no JD content)\n`);
+    } else {
+      console.log(`   ✅ Found 0 jobs with incomplete descriptions\n`);
+    }
+    
+    // Combine both lists (remove duplicates by ID)
+    const allPlaceholderJobs = [...jobsWithExactPlaceholder];
+    const incompleteIds = new Set(jobsWithIncompleteJD.map(j => j.id));
+    jobsWithIncompleteJD.forEach(job => {
+      if (!incompleteIds.has(job.id)) {
+        allPlaceholderJobs.push(job);
+      }
+    });
+    
+    const placeholderJobs = allPlaceholderJobs;
     
     // Debug: Show first few matches to verify pattern is working
     if (placeholderJobs.length > 0) {
