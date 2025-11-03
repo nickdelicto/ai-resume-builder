@@ -18,37 +18,43 @@ const prisma = new PrismaClient();
 function isPlaceholderDescription(description) {
   if (!description) return true;
   
-  // Normalize: lowercase, normalize whitespace (multiple spaces -> single space)
-  const normalized = description
-    .toLowerCase()
-    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-    .replace(/[.,;:!?]+/g, ' ') // Remove punctuation (might vary)
-    .trim();
+  const descLower = description.toLowerCase().trim();
   
-  // Pattern 1: "Job description is being updated" - core message
-  // Check with flexible whitespace handling
-  if (/job\s+description\s+is\s+being\s+updated/i.test(normalized)) {
+  // PRIMARY CHECK: Match the EXACT phrase from the website
+  // "Job description is being updated. Please visit the employer website for full details."
+  // This is the exact phrase that appears on all problematic listings
+  
+  // Pattern 1: Complete exact phrase (flexible whitespace and punctuation)
+  // Match: "job description is being updated" followed by "please visit the employer website for full details"
+  const exactPhrasePattern = /job\s+description\s+is\s+being\s+updated[^a-z]*please\s+visit\s+(?:the\s+)?employer\s+website\s+for\s+full\s+details/i;
+  if (exactPhrasePattern.test(descLower)) {
     return true;
   }
   
-  // Pattern 2: Check if it contains BOTH key phrases
-  // "job description is being updated" AND ("please visit" OR "employer website")
-  const hasCoreMessage = /job\s+description\s+is\s+being\s+updated/i.test(normalized);
-  const hasVisitMessage = normalized.includes('please visit') || normalized.includes('employer website') || normalized.includes('visit the employer');
+  // Pattern 2: Both parts present (more flexible - handles punctuation variations)
+  // Check if it contains ALL key components:
+  // - "job description is being updated"
+  // - "please visit"
+  // - "employer website" 
+  // - "full details"
+  const hasPart1 = /job\s+description\s+is\s+being\s+updated/i.test(descLower);
+  const hasPart2a = descLower.includes('please visit');
+  const hasPart2b = descLower.includes('employer website');
+  const hasPart2c = descLower.includes('full details');
   
-  if (hasCoreMessage && hasVisitMessage) {
+  if (hasPart1 && hasPart2a && hasPart2b && hasPart2c) {
     return true;
   }
   
-  // Pattern 3: Even if core message missing, if it's very short and has "please visit employer website"
-  // This catches variations where the first part might be missing
-  if (normalized.length < 300 && hasVisitMessage && normalized.includes('full details')) {
+  // Pattern 3: Just the core message (if description is very short)
+  // Sometimes only first part is present in incomplete extractions
+  if (descLower.length < 200 && /job\s+description\s+is\s+being\s+updated/i.test(descLower)) {
     return true;
   }
   
-  // Pattern 4: Very short descriptions that are clearly placeholders
-  if (normalized.length < 200) {
-    const shortPlaceholderPatterns = [
+  // Pattern 4: Generic placeholder patterns (for other edge cases)
+  if (descLower.length < 200) {
+    const genericPatterns = [
       /^job\s+description\s+is\s+being\s+updated/i,
       /^description\s+is\s+being\s+updated/i,
       /job\s+description\s+not\s+available/i,
@@ -59,8 +65,8 @@ function isPlaceholderDescription(description) {
       /^not\s+available$/i
     ];
     
-    for (const pattern of shortPlaceholderPatterns) {
-      if (pattern.test(normalized)) {
+    for (const pattern of genericPatterns) {
+      if (pattern.test(descLower)) {
         return true;
       }
     }
@@ -104,12 +110,16 @@ async function removePlaceholderJobs() {
       });
       
       // Also search for jobs with the exact placeholder phrase
-      console.log('🔍 Searching for jobs containing "Job description is being updated"...\n');
+      console.log('🔍 Searching for jobs containing the EXACT placeholder phrase...\n');
+      console.log('   Looking for: "Job description is being updated. Please visit the employer website for full details."\n');
       const jobsWithPlaceholderText = allJobs.filter(job => {
         if (!job.description) return false;
         const descLower = job.description.toLowerCase();
-        return descLower.includes('job description is being updated') || 
-               descLower.includes('please visit') && descLower.includes('employer website');
+        // Check for the complete phrase or key components
+        return descLower.includes('job description is being updated') && 
+               descLower.includes('please visit') && 
+               descLower.includes('employer website') &&
+               descLower.includes('full details');
       });
       
       if (jobsWithPlaceholderText.length > 0) {
