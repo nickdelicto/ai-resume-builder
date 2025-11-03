@@ -162,9 +162,32 @@ async function removePlaceholderJobs() {
       }
     }
     
-    // Filter jobs with placeholder descriptions
+    // Filter jobs with placeholder descriptions OR incomplete descriptions (just metadata)
     const placeholderJobs = allJobs.filter(job => {
-      return isPlaceholderDescription(job.description);
+      // Check if it's a known placeholder pattern
+      if (isPlaceholderDescription(job.description)) {
+        return true;
+      }
+      
+      // ALSO check: Very short descriptions that are just metadata (extraction likely failed)
+      // These look like: "TitleJobTypeLocation, STFacility" - no actual description content
+      if (job.description && job.description.length < 200) {
+        const desc = job.description;
+        
+        // If it looks like just concatenated metadata (title + job type + location)
+        // Pattern: No spaces between words, or very little structure, no sentence-like content
+        const hasSentenceStructure = /[.!?]/.test(desc) || desc.split(' ').length > 15;
+        const looksLikeMetadata = !hasSentenceStructure && desc.length < 120;
+        
+        // Also check if it's missing key description words that would appear in real descriptions
+        const hasDescriptionContent = /\b(?:performs|responsibilities|requirements|experience|skills|must have|provide|assist|manage|implement|collaborate|assess|evaluate)\b/i.test(desc);
+        
+        if (looksLikeMetadata || (!hasDescriptionContent && desc.length < 120)) {
+          return true; // This is likely an incomplete description from failed extraction
+        }
+      }
+      
+      return false;
     });
     
     // Debug: Show first few matches to verify pattern is working
@@ -177,7 +200,8 @@ async function removePlaceholderJobs() {
       console.log('');
     }
     
-    console.log(`⚠️  Found ${placeholderJobs.length} jobs with placeholder descriptions:\n`);
+    console.log(`⚠️  Found ${placeholderJobs.length} jobs with placeholder OR incomplete descriptions:\n`);
+    console.log(`   (Includes jobs with placeholder text AND jobs with metadata-only descriptions < 120 chars)\n`);
     
     // Show sample of jobs to be deactivated
     if (placeholderJobs.length > 0) {
