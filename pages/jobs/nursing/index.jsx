@@ -13,6 +13,12 @@ export default function NursingJobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
+  const [browseStats, setBrowseStats] = useState({
+    states: [],
+    employers: [],
+    specialties: []
+  });
+  const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
   // Initialize filters from URL query params
   const [filters, setFilters] = useState({
     state: router.query.state || '',
@@ -37,6 +43,26 @@ export default function NursingJobsPage() {
   useEffect(() => {
     fetchJobs();
   }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.search]);
+
+  // Fetch browse statistics on mount
+  useEffect(() => {
+    fetchBrowseStats();
+  }, []);
+
+  const fetchBrowseStats = async () => {
+    try {
+      const response = await fetch('/api/jobs/browse-stats');
+      const data = await response.json();
+      
+      if (data.success) {
+        setBrowseStats(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching browse stats:', err);
+    } finally {
+      setBrowseStatsLoading(false);
+    }
+  };
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -194,19 +220,141 @@ export default function NursingJobsPage() {
             )}
           </div>
 
-          {/* Filters */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+          {/* Browse Sections - Quick Navigation to Programmatic Pages */}
+          {!browseStatsLoading && (browseStats.states.length > 0 || browseStats.employers.length > 0 || browseStats.specialties.length > 0) && (
+            <div className="mb-8 space-y-6">
+              {/* Browse by State */}
+              {browseStats.states.length > 0 && (
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-2 border-blue-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900">Browse by State</h2>
+                    <span className="text-sm text-gray-600">({browseStats.states.length} states)</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    {browseStats.states.map((state) => {
+                      // Generate state slug - try state code first, fallback to full name lowercase
+                      const stateSlug = state.code.toLowerCase();
+                      return (
+                        <Link
+                          key={state.code}
+                          href={`/jobs/nursing/${stateSlug}`}
+                          className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-blue-300 bg-white hover:border-blue-500 hover:bg-blue-50 hover:shadow-md transition-all"
+                        >
+                          <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
+                            {state.fullName}
+                          </span>
+                          <span className="text-xs font-semibold text-blue-600 group-hover:text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                            {state.count}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Browse by Employer */}
+              {browseStats.employers.length > 0 && (
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border-2 border-green-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-700" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900">Browse by Employer</h2>
+                    <span className="text-sm text-gray-600">(Top {browseStats.employers.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {browseStats.employers.map((employer) => (
+                      <Link
+                        key={employer.slug}
+                        href={`/jobs/nursing/employer/${employer.slug}`}
+                        className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-green-300 bg-white hover:border-green-500 hover:bg-green-50 hover:shadow-md transition-all"
+                      >
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 flex-1 truncate">
+                          {employer.name}
+                        </span>
+                        <span className="text-xs font-semibold text-green-600 group-hover:text-green-700 bg-green-100 px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
+                          {employer.count}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Browse by Specialty */}
+              {browseStats.specialties.length > 0 && (
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border-2 border-purple-200">
             <div className="flex items-center gap-2 mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-700" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                    </svg>
+                    <h2 className="text-lg font-semibold text-gray-900">Browse by Specialty</h2>
+                    <span className="text-sm text-gray-600">({browseStats.specialties.length} specialties)</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    {browseStats.specialties.map((specialty) => (
+                      <Link
+                        key={specialty.slug}
+                        href={`/jobs/nursing/specialty/${specialty.slug}`}
+                        className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-purple-300 bg-white hover:border-purple-500 hover:bg-purple-50 hover:shadow-md transition-all"
+                      >
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">
+                          {specialty.name}
+                        </span>
+                        <span className="text-xs font-semibold text-purple-600 group-hover:text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                          {specialty.count}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Filter Section - Clear visual separation */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-gray-300 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
               </svg>
-              <h2 className="text-lg font-semibold text-gray-900">Filter Jobs</h2>
+                <h2 className="text-base font-bold text-gray-800">Filter & Search Jobs</h2>
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <p className="text-center text-sm text-gray-600 mb-4">
+              Use the filters below to narrow down your search results
+            </p>
+          </div>
+
+          {/* Filters - Tool-style card with distinct dark appearance */}
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-xl p-6 mb-8 border-2 border-gray-600 relative overflow-hidden">
+            {/* More visible diagonal stripe pattern overlay */}
+            <div className="absolute inset-0 opacity-15 pointer-events-none" style={{
+              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px)`
+            }}></div>
+            
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded-lg border border-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-200" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-semibold text-gray-100">Refine Your Search</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
                     Search
@@ -217,14 +365,14 @@ export default function NursingJobsPage() {
                   placeholder="Job title, keywords..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-gray-900"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
                     City
@@ -235,14 +383,14 @@ export default function NursingJobsPage() {
                   placeholder="e.g., Cleveland, Independence"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
                     State
@@ -259,9 +407,9 @@ export default function NursingJobsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                     </svg>
@@ -271,7 +419,7 @@ export default function NursingJobsPage() {
                 <select
                   value={filters.specialty}
                   onChange={(e) => handleFilterChange('specialty', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900"
                 >
                   <option value="">All Specialties</option>
                   <option value="ICU">ICU</option>
@@ -287,9 +435,9 @@ export default function NursingJobsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
                     Job Type
@@ -298,7 +446,7 @@ export default function NursingJobsPage() {
                 <select
                   value={filters.jobType}
                   onChange={(e) => handleFilterChange('jobType', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900"
                 >
                   <option value="">All Types</option>
                   <option value="full-time">Full Time</option>
@@ -311,9 +459,9 @@ export default function NursingJobsPage() {
             
             {/* Active Filters Display */}
             {(filters.state || filters.city || filters.specialty || filters.jobType || filters.search) && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-600">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-gray-600 font-medium">Active filters:</span>
+                  <span className="text-sm text-gray-300 font-medium">Active filters:</span>
                   {filters.search && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                       "{filters.search}"
@@ -356,6 +504,7 @@ export default function NursingJobsPage() {
                 </div>
               </div>
             )}
+            </div>
           </div>
 
           {/* Jobs List */}
