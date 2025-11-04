@@ -16,7 +16,23 @@ const Navigation = () => {
   const [hoveredDesktopItem, setHoveredDesktopItem] = useState(null);
   const [hoveredResumeButton, setHoveredResumeButton] = useState(false);
   const [isProcessingNewResume, setIsProcessingNewResume] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { navigateToPricing } = useResumeSelection();
+  
+  // Detect if we're on mobile to conditionally render logo icon
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Check on mount
+    checkMobile();
+    
+    // Check on resize
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Close menu when route changes
   useEffect(() => {
@@ -327,15 +343,19 @@ const Navigation = () => {
         <Link href="/" className="nav-logo">
           <div className="logo-with-text">
             <div className="logo-container">
-              <Image 
-                src="/logo.svg" 
-                alt="IntelliResume Logo" 
-                width={40} 
-                height={40} 
-                style={{ marginRight: '10px', position: 'relative', top: '-2px' }}
-                priority
-              />
-          <span className="logo-text">IntelliResume</span>
+              {/* Only render logo icon on desktop/tablet, hide completely on mobile to save space */}
+              {!isMobile && (
+                <Image 
+                  src="/logo.svg" 
+                  alt="IntelliResume Logo" 
+                  width={40} 
+                  height={40} 
+                  className="logo-icon"
+                  style={{ marginRight: '10px', position: 'relative', top: '-2px' }}
+                  priority
+                />
+              )}
+              <span className="logo-text">IntelliResume</span>
             </div>
             <div className="tagline-container">
               <span className="nav-tagline">Building careers, one resume at a time</span>
@@ -803,6 +823,7 @@ const Navigation = () => {
           -webkit-text-fill-color: transparent;
           text-shadow: 0 2px 4px rgba(0,0,0,0.08);
           font-weight: 900;
+          font-size: 2.0rem; /* Increased font size for better visibility on desktop */
         }
         
         .tagline-container {
@@ -1094,13 +1115,15 @@ const Navigation = () => {
           }
           
           /* Add spacing between nav-links and nav-controls on mobile */
+          /* Balanced spacing for even distribution between Logo, Jobs, and Sign In */
           .mobile-nav-spacing {
-            margin-left: 20px;
+            margin-left: 16px;
           }
           
           /* Ensure nav-links maintains proper spacing from logo on mobile */
+          /* Balanced spacing - matching the gap between Jobs and Sign In for visual harmony */
           .nav-links {
-            margin-left: 20px !important;
+            margin-left: 16px !important;
           }
           
           /* Jobs button styling for mobile */
@@ -1125,13 +1148,16 @@ const Navigation = () => {
             align-items: center;
           }
           
-          .logo-container img {
-            width: 32px;
-            height: 32px;
+          /* Logo icon is conditionally rendered (not rendered on mobile), so no CSS needed */
+          /* Logo text spacing adjustment for mobile */
+          .logo-text {
+            margin-left: 0;
           }
           
+          /* Ensure consistent spacing between Jobs and Sign In buttons on mobile */
           .nav-controls {
             gap: 0.5rem;
+            margin-left: 0; /* Remove any extra margin, spacing handled by mobile-nav-spacing */
           }
         }
         
@@ -1155,10 +1181,10 @@ const Navigation = () => {
             font-size: 13px !important;
           }
           
-          .logo-container img {
-            width: 28px;
-            height: 28px;
-            margin-right: 6px !important;
+          /* Logo icon is conditionally rendered (not rendered on mobile), so no CSS needed */
+          /* Logo text remains visible on small screens */
+          .logo-text {
+            margin-left: 0;
           }
         }
         
