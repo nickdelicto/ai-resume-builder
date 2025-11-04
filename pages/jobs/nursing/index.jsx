@@ -156,15 +156,21 @@ export default function NursingJobsPage() {
               "mainEntity": {
                 "@type": "ItemList",
                 "numberOfItems": pagination?.total || 0,
-                "itemListElement": jobs.slice(0, 10).map((job, index) => ({
-                  "@type": "ListItem",
-                  "position": index + 1,
-                  "item": {
-                    "@type": "JobPosting",
-                    "name": job.title,
-                    "url": `https://intelliresume.net/jobs/nursing/${job.slug}`
-                  }
-                }))
+                "itemListElement": jobs.slice(0, 10).map((job, index) => {
+                  // Generate complete JobPosting schema for each job
+                  // This includes all required fields: title, description, hiringOrganization, 
+                  // jobLocation, datePosted, employmentType, validThrough, etc.
+                  const jobPostingSchema = seoUtils.generateJobPostingSchema(job);
+                  
+                  // Only include if schema was generated successfully
+                  if (!jobPostingSchema) return null;
+                  
+                  return {
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "item": jobPostingSchema  // Complete schema with all required fields
+                  };
+                }).filter(Boolean)  // Remove any null entries
               }
             })
           }}

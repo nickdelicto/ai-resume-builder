@@ -81,20 +81,34 @@ export async function getServerSideProps({ res }) {
       xml += `  </url>\n`;
     };
 
+    // 0. Main jobs listing page (always include this)
+    addUrl(
+      '/jobs/nursing',
+      null,
+      'daily',
+      '0.8'
+    );
+
     // 1. Individual job pages (highest priority - these are most specific)
-    jobs.forEach(job => {
-      addUrl(
-        `/jobs/nursing/${job.slug}`,
-        job.updatedAt,
-        'weekly',
-        '0.8'
-      );
-    });
+    if (jobs && Array.isArray(jobs)) {
+      jobs.forEach(job => {
+        if (job && job.slug) {
+          addUrl(
+            `/jobs/nursing/${job.slug}`,
+            job.updatedAt,
+            'weekly',
+            '0.8'
+          );
+        }
+      });
+    }
 
     // 2. State pages (high priority - location-based searches)
-    states.forEach(stateData => {
-      const stateCode = stateData.state.toLowerCase();
-      const stateFullName = getStateFullName(stateData.state);
+    if (states && Array.isArray(states)) {
+      states.forEach(stateData => {
+        if (!stateData || !stateData.state) return;
+        const stateCode = stateData.state.toLowerCase();
+        const stateFullName = getStateFullName(stateData.state);
       
       // Add state code URL (e.g., /jobs/nursing/oh)
       addUrl(
@@ -114,40 +128,50 @@ export async function getServerSideProps({ res }) {
           '0.7'
         );
       }
-    });
+      });
+    }
 
     // 3. City pages (high priority - very specific location searches)
-    cities.forEach(cityData => {
-      const stateCode = cityData.state.toLowerCase();
-      const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
+    if (cities && Array.isArray(cities)) {
+      cities.forEach(cityData => {
+        if (!cityData || !cityData.state || !cityData.city) return;
+        const stateCode = cityData.state.toLowerCase();
+        const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
       addUrl(
         `/jobs/nursing/${stateCode}/${citySlug}`,
         null,
         'weekly',
         '0.7'
       );
-    });
+      });
+    }
 
     // 4. Specialty pages
-    specialties.forEach(specData => {
-      const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-');
+    if (specialties && Array.isArray(specialties)) {
+      specialties.forEach(specData => {
+        if (!specData || !specData.specialty) return;
+        const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-');
       addUrl(
         `/jobs/nursing/specialty/${specialtySlug}`,
         null,
         'weekly',
         '0.7'
       );
-    });
+      });
+    }
 
     // 5. Employer pages
-    employers.forEach(employer => {
-      addUrl(
-        `/jobs/nursing/employer/${employer.slug}`,
+    if (employers && Array.isArray(employers)) {
+      employers.forEach(employer => {
+        if (!employer || !employer.slug) return;
+        addUrl(
+          `/jobs/nursing/employer/${employer.slug}`,
         null,
         'weekly',
         '0.7'
       );
-    });
+      });
+    }
 
     // Close XML
     xml += '</urlset>';
@@ -166,8 +190,10 @@ export async function getServerSideProps({ res }) {
 
   } catch (error) {
     console.error('Error generating job sitemap:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     
-    // Return minimal sitemap on error
+    // Return minimal sitemap on error (at least the main page)
     const errorXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>

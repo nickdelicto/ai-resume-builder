@@ -99,7 +99,7 @@ export default function CityJobPage({
           <title>Error | IntelliResume</title>
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
-        <div className="text-center">
+          <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">No Jobs Found</h1>
           <p className="text-gray-600 mb-6">No jobs found for this location.</p>
             <Link
@@ -157,15 +157,21 @@ export default function CityJobPage({
               "mainEntity": {
                 "@type": "ItemList",
                 "numberOfItems": pagination?.total || 0,
-                "itemListElement": jobs.slice(0, 10).map((jobItem, index) => ({
-                  "@type": "ListItem",
-                  "position": index + 1,
-                  "item": {
-                    "@type": "JobPosting",
-                    "name": jobItem.title,
-                    "url": `https://intelliresume.net/jobs/nursing/${jobItem.slug}`
-                  }
-                }))
+                "itemListElement": jobs.slice(0, 10).map((jobItem, index) => {
+                  // Generate complete JobPosting schema for each job
+                  // This includes all required fields: title, description, hiringOrganization, 
+                  // jobLocation, datePosted, employmentType, validThrough, etc.
+                  const jobPostingSchema = seoUtils.generateJobPostingSchema(jobItem);
+                  
+                  // Only include if schema was generated successfully
+                  if (!jobPostingSchema) return null;
+                  
+                  return {
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "item": jobPostingSchema  // Complete schema with all required fields
+                  };
+                }).filter(Boolean)  // Remove any null entries
               }
             })
           }}
