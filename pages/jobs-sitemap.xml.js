@@ -52,10 +52,10 @@ export async function getServerSideProps({ res }) {
         },
         _count: { id: true }
       }),
-      // All employers with jobs
+      // All employers with jobs (relation is called 'jobs' in schema, not 'nursingJobs')
       prisma.healthcareEmployer.findMany({
         where: {
-          nursingJobs: {
+          jobs: {
             some: {
               isActive: true
             }
