@@ -192,8 +192,8 @@ export default function NursingJobsPage() {
                   if (!jobPostingSchema) return null;
                   
                   return {
-                    "@type": "ListItem",
-                    "position": index + 1,
+                  "@type": "ListItem",
+                  "position": index + 1,
                     "item": jobPostingSchema  // Complete schema with all required fields
                   };
                 }).filter(Boolean)  // Remove any null entries
@@ -349,8 +349,8 @@ export default function NursingJobsPage() {
                   </svg>
                   <span className="text-sm font-semibold text-gray-100">Refine Your Search</span>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   <span className="flex items-center gap-1 text-gray-200">

@@ -23,9 +23,6 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || ''
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://intelliresume.net'
   
-  // Debug: Log all requests to verify middleware is running
-  console.log(`[Middleware] Request: ${request.url}, Host: ${host}, IsIP: ${isIPAddress(host)}`)
-  
   // If request is coming via IP address, redirect to domain
   if (isIPAddress(host)) {
     // Get the pathname from the request URL
@@ -33,7 +30,6 @@ export async function middleware(request: NextRequest) {
     const search = new URL(request.url).search
     // Construct the redirect URL using the domain
     const redirectUrl = `${siteUrl}${pathname}${search}`
-    console.log(`🔄 [IP REDIRECT] Host: ${host}, Path: ${pathname}, Redirecting to: ${redirectUrl}`)
     return NextResponse.redirect(redirectUrl, 301) // 301 permanent redirect for SEO
   }
 
