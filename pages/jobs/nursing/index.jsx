@@ -132,8 +132,8 @@ export default function NursingJobsPage() {
   const seoMeta = seoUtils.generateListingPageMetaTags 
     ? seoUtils.generateListingPageMetaTags(filters || {}, pagination || null)
     : {
-        title: 'RN Nursing Jobs in USA | IntelliResume',
-        description: 'Find Registered Nurse (RN) jobs across the United States at top healthcare employers.',
+        title: '10,000+ RN Jobs Nationwide - Hiring Now!',
+        description: 'Browse 10,000+ Registered Nurse (RN) jobs with salary info. Apply directly to top hospitals and healthcare facilities nationwide. Start your search today!',
         keywords: 'registered nurse, rn jobs, nursing jobs',
         canonicalUrl: 'https://intelliresume.net/jobs/nursing',
         ogImage: 'https://intelliresume.net/og-image-jobs.png'
