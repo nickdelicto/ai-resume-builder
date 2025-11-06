@@ -2,7 +2,41 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
+// Helper function to check if a string is an IP address (IPv4 or IPv6)
+// Handles both with and without port numbers
+function isIPAddress(host: string): boolean {
+  // Remove port if present (e.g., "192.168.1.1:3000" -> "192.168.1.1")
+  const hostWithoutPort = host.split(':')[0]
+  
+  // IPv4 pattern: 1.2.3.4 or 192.168.1.1
+  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/
+  // IPv6 pattern: 2001:0db8:85a3:0000:0000:8a2e:0370:7334 or ::1
+  // Note: IPv6 with port is like [2001::1]:3000, but Host header usually has brackets removed
+  const ipv6Pattern = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$|^::1$|^::/
+  
+  return ipv4Pattern.test(hostWithoutPort) || ipv6Pattern.test(hostWithoutPort)
+}
+
 export async function middleware(request: NextRequest) {
+  // CRITICAL: Redirect IP address requests to domain (Bing SEO fix)
+  // This prevents Bing from indexing IP URLs which show as unsecured
+  const host = request.headers.get('host') || ''
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://intelliresume.net'
+  
+  // Debug: Log all requests to verify middleware is running
+  console.log(`[Middleware] Request: ${request.url}, Host: ${host}, IsIP: ${isIPAddress(host)}`)
+  
+  // If request is coming via IP address, redirect to domain
+  if (isIPAddress(host)) {
+    // Get the pathname from the request URL
+    const pathname = new URL(request.url).pathname
+    const search = new URL(request.url).search
+    // Construct the redirect URL using the domain
+    const redirectUrl = `${siteUrl}${pathname}${search}`
+    console.log(`🔄 [IP REDIRECT] Host: ${host}, Path: ${pathname}, Redirecting to: ${redirectUrl}`)
+    return NextResponse.redirect(redirectUrl, 301) // 301 permanent redirect for SEO
+  }
+
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
   if (token) {
@@ -35,8 +69,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard',
-    '/resume-builder',
-    '/pricing',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }
