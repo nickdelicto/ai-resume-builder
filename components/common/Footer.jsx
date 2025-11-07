@@ -8,7 +8,8 @@ const Footer = () => {
   return (
     <footer className="footer-container">
       <div className="footer-content">
-        <div className="footer-brand">
+        {/* Brand Section - Spans top */}
+        <div className="footer-brand-full">
           <Link href="/" className="footer-logo">
             <div className="logo-container">
               <Image 
@@ -19,23 +20,65 @@ const Footer = () => {
                 style={{ marginRight: '8px' }}
                 priority
               />
-            <span className="footer-logo-text">IntelliResume</span>
+              <span className="footer-logo-text">IntelliResume</span>
             </div>
           </Link>
           <p className="footer-tagline">
             Building careers, one resume at a time
           </p>
         </div>
-        
-        <div className="footer-links-section">
-          <ul className="footer-links">
-            <li><Link href="/privacy">Privacy Policy</Link></li>
-            <li><Link href="/terms">Terms of Service</Link></li>
-            <li><Link href="/contact">Contact Us</Link></li>
-            <li><Link href="/about">About Us</Link></li>
-            <li><Link href="/sitemap.xml" target="_blank" rel="noopener noreferrer">Sitemap</Link></li>
-          </ul>
-          
+
+        {/* Navigation Columns */}
+        <div className="footer-nav-columns">
+          {/* Column 1: Resume Builder */}
+          <div className="footer-nav-column">
+            <h3 className="footer-column-title">Build Your Resume</h3>
+            <ul className="footer-nav-links">
+              <li><Link href="/builder/new">Build New Resume</Link></li>
+              <li><Link href="/builder/import">Improve Existing Resume</Link></li>
+              <li><Link href="/builder/target">Tailor to Job Description</Link></li>
+              <li><Link href="/blog">Blog</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 2: RN Jobs by State */}
+          <div className="footer-nav-column">
+            <h3 className="footer-column-title">
+              RN Jobs by State
+              <span className="footer-hiring-badge">(Hiring!)</span>
+            </h3>
+            <ul className="footer-nav-links">
+              <li><Link href="/jobs/nursing/oh">Ohio</Link></li>
+              <li><Link href="/jobs/nursing/ny">New York</Link></li>
+              <li><Link href="/jobs/nursing/fl">Florida</Link></li>
+              <li><Link href="/jobs/nursing/ca">California</Link></li>
+              <li><Link href="/jobs/nursing/tx">Texas</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 3: Salary Info */}
+          <div className="footer-nav-column">
+            <h3 className="footer-column-title">Salary Data</h3>
+            <ul className="footer-nav-links">
+              <li><Link href="#">Average RN Salary</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 4: Resources & Support */}
+          <div className="footer-nav-column">
+            <h3 className="footer-column-title">Resources & Support</h3>
+            <ul className="footer-nav-links">
+              <li><Link href="/about">About Us</Link></li>
+              <li><Link href="/contact">Contact Us</Link></li>
+              <li><Link href="/privacy">Privacy Policy</Link></li>
+              <li><Link href="/terms">Terms of Service</Link></li>
+              <li><Link href="/sitemap.xml" target="_blank" rel="noopener noreferrer">Sitemap</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Social Links */}
+        <div className="footer-social-section">
           <div className="footer-social-links">
             <a href="#" aria-label="LinkedIn" className="footer-social-link">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -73,16 +116,11 @@ const Footer = () => {
         .footer-content {
           max-width: 1200px;
           margin: 0 auto;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: space-between;
-          gap: 2rem;
         }
         
-        .footer-brand {
-          flex: 1;
-          min-width: 250px;
-          margin-bottom: 1.5rem;
+        .footer-brand-full {
+          text-align: center;
+          margin-bottom: 3rem;
         }
         
         .footer-logo {
@@ -94,6 +132,7 @@ const Footer = () => {
         .logo-container {
           display: flex;
           align-items: center;
+          justify-content: center;
         }
         
         .footer-logo-text {
@@ -111,33 +150,73 @@ const Footer = () => {
           margin-top: 0.5rem;
         }
         
-        .footer-links-section {
+        .footer-nav-columns {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 2.5rem;
+          margin-bottom: 2.5rem;
+        }
+        
+        .footer-nav-column {
           display: flex;
           flex-direction: column;
-          align-items: flex-end;
         }
         
-        .footer-links {
+        .footer-column-title {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin: 0 0 1rem 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+        
+        .footer-hiring-badge {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #059669;
+          font-style: italic;
+          transform: rotate(-2deg);
+          text-transform: none;
+          letter-spacing: 0.3px;
+          display: inline-block;
+          position: relative;
+          top: -1px;
+        }
+        
+        .footer-nav-links {
           list-style: none;
           padding: 0;
-          margin: 0 0 1.5rem 0;
+          margin: 0;
           display: flex;
-          gap: 1.5rem;
+          flex-direction: column;
+          gap: 0.75rem;
         }
         
-        .footer-links li {
-          margin-bottom: 0;
+        .footer-nav-links li {
+          margin: 0;
         }
         
-        .footer-links a {
+        .footer-nav-links a {
           color: #64748b;
           text-decoration: none;
           font-size: 0.95rem;
           transition: color 0.2s ease;
+          display: inline-block;
         }
         
-        .footer-links a:hover {
+        .footer-nav-links a:hover {
           color: #1a73e8;
+        }
+        
+        .footer-social-section {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 2rem;
         }
         
         .footer-social-links {
@@ -176,43 +255,33 @@ const Footer = () => {
           font-size: 0.875rem;
         }
         
-        @media (max-width: 768px) {
-          .footer-content {
-            flex-direction: column;
+        @media (max-width: 1024px) {
+          .footer-nav-columns {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+          }
+        }
+        
+        @media (max-width: 640px) {
+          .footer-nav-columns {
+            grid-template-columns: 1fr;
+            gap: 2rem;
           }
           
-          .footer-brand {
-            text-align: center;
+          .footer-brand-full {
             margin-bottom: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          
-          .footer-logo {
-            display: flex;
-            justify-content: center;
-          }
-          
-          .logo-container {
-            display: inline-flex;
-            justify-content: center;
           }
           
           .footer-tagline {
-            text-align: center;
-            max-width: 240px;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
           }
           
-          .footer-links-section {
-            width: 100%;
-            align-items: center;
-          }
-          
-          .footer-links {
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem 1.5rem;
+          .footer-column-title {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
           }
         }
       `}</style>
