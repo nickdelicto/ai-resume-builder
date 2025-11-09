@@ -16,7 +16,8 @@ export default function NursingJobsPage() {
   const [browseStats, setBrowseStats] = useState({
     states: [],
     employers: [],
-    specialties: []
+    specialties: [],
+    jobTypes: []
   });
   const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
   // Initialize filters from URL query params
@@ -422,15 +423,11 @@ export default function NursingJobsPage() {
                   className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900"
                 >
                   <option value="">All Specialties</option>
-                  <option value="ICU">ICU</option>
-                  <option value="ER">ER</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Home Health">Home Health</option>
-                  <option value="Hospice">Hospice</option>
-                  <option value="Med-Surg">Med-Surg</option>
-                  <option value="Ambulatory">Ambulatory</option>
-                  <option value="OR">Operating Room</option>
-                  <option value="Pediatrics">Pediatrics</option>
+                  {browseStats.specialties.map((specialty) => (
+                    <option key={specialty.name} value={specialty.name}>
+                      {specialty.name} ({specialty.count})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -449,10 +446,11 @@ export default function NursingJobsPage() {
                   className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900"
                 >
                   <option value="">All Types</option>
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="prn">PRN</option>
-                  <option value="contract">Contract</option>
+                  {browseStats.jobTypes.map((jobType) => (
+                    <option key={jobType.name} value={jobType.name}>
+                      {jobType.name} ({jobType.count})
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

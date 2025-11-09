@@ -1,3 +1,4 @@
+import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -115,6 +116,83 @@ export default function JobDetailPage({
     }
     
     return cleaned;
+  };
+
+  // Render markdown-formatted text to React elements
+  // Handles: **bold**, ## headings, bullet points
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+    
+    const lines = text.split('\n');
+    const elements = [];
+    let key = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (!line) {
+        // Empty line - add spacing
+        elements.push(<br key={key++} />);
+        continue;
+      }
+      
+      // Check for markdown heading (## Heading)
+      const headingMatch = line.match(/^(#{2,6})\s+(.+)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const headingText = headingMatch[2];
+        const HeadingTag = `h${Math.min(level + 1, 6)}`; // ## -> h3, ### -> h4, etc.
+        elements.push(
+          React.createElement(
+            HeadingTag,
+            { 
+              key: key++, 
+              className: `font-bold text-gray-900 mb-3 mt-6 ${
+                level === 2 ? 'text-xl' : level === 3 ? 'text-lg' : 'text-base'
+              }` 
+            },
+            headingText
+          )
+        );
+        continue;
+      }
+      
+      // Check for bullet point
+      if (line.startsWith('•')) {
+        const bulletText = line.substring(1).trim();
+        // Check if it contains bold markdown
+        const parts = bulletText.split(/(\*\*[^*]+\*\*)/g);
+        const bulletContent = parts.map((part, idx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={idx} className="font-bold">{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+        
+        elements.push(
+          <div key={key++} className="flex items-start gap-2 mb-2">
+            <span className="text-blue-600 mt-1 font-bold flex-shrink-0">•</span>
+            <span className="flex-1 leading-relaxed">{bulletContent}</span>
+          </div>
+        );
+        continue;
+      }
+      
+      // Regular paragraph - check for bold markdown
+      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      const paragraphContent = parts.map((part, idx) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={idx} className="font-bold">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+      
+      elements.push(
+        <p key={key++} className="leading-relaxed mb-3">{paragraphContent}</p>
+      );
+    }
+    
+    return elements;
   };
 
   // Handle page change for state pages
@@ -793,79 +871,15 @@ export default function JobDetailPage({
                         </div>
                       )}
                       
-                      {/* Render content sections */}
+                      {/* Render content sections using markdown renderer */}
                       {sections.map((section, idx) => {
                         const trimmedSection = section.trim();
                         if (!trimmedSection) return null;
                         
-                        // Check if this section starts with a header
-                        const sectionLines = trimmedSection.split('\n');
-                        const firstLine = sectionLines[0]?.trim() || '';
-                        
-                        // Check if first line is a section header
-                        // Updated to include Northwell-specific sections like "Responsibility", "Qualification", "Additional Salary Detail"
-                        // Handle "Qualifications:" with colon AND "*Additional Salary Detail" with asterisk
-                        // Remove asterisk/colon before testing
-                        const cleanedFirstLine = firstLine.replace(/^\*\s*/, '').replace(/:\s*$/, '').trim();
-                        const isHeaderLine = /^(Minimum|Preferred|Requirements|Responsibilities|Responsibility|Qualification|Qualifications|Benefits|Physical|Personal Protective|Pay Range|About|Overview|Summary|Skills|Duties|Key|Additional Salary Detail)$/i.test(cleanedFirstLine);
-                        
-                        // Get content (everything except the first line if it's a header)
-                        const contentLines = isHeaderLine ? sectionLines.slice(1) : sectionLines;
-                        
                         return (
                           <div key={idx} className={idx > 0 || metadataLines.length > 0 ? 'mt-8 pt-6 border-t border-gray-200' : ''}>
-                            {isHeaderLine && (
-                              <h3 className="text-lg font-bold text-gray-900 mb-4">{cleanedFirstLine}</h3>
-                            )}
                             <div className="space-y-2">
-                              {(() => {
-                                const content = contentLines.join('\n');
-                                const paragraphs = content.split('\n');
-                                const result = [];
-                                
-                                for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
-                                  const para = paragraphs[pIdx].trim();
-                                  const nextPara = pIdx < paragraphs.length - 1 ? paragraphs[pIdx + 1].trim() : '';
-                                  
-                                  if (!para) continue;
-                                  
-                                  // Check if current line is just a bullet, and next line has text
-                                  if (para === '•' || para === '• ') {
-                                    if (nextPara && !nextPara.startsWith('•')) {
-                                      // Combine bullet with next line
-                                      result.push(
-                                        <div key={pIdx} className="flex items-start gap-2">
-                                          <span className="text-blue-600 mt-1 font-bold flex-shrink-0">•</span>
-                                          <span className="flex-1 leading-relaxed">{nextPara}</span>
-                                        </div>
-                                      );
-                                      pIdx++; // Skip next line since we combined it
-                                    } else {
-                                      // Just a bullet, render it
-                                      result.push(
-                                        <div key={pIdx} className="flex items-start gap-2">
-                                          <span className="text-blue-600 mt-1 font-bold flex-shrink-0">•</span>
-                                        </div>
-                                      );
-                                    }
-                                  } else if (para.startsWith('•')) {
-                                    // Bullet with text on same line
-                                    result.push(
-                                      <div key={pIdx} className="flex items-start gap-2">
-                                        <span className="text-blue-600 mt-1 font-bold flex-shrink-0">•</span>
-                                        <span className="flex-1 leading-relaxed">{para.substring(1).trim()}</span>
-                                      </div>
-                                    );
-                                  } else {
-                                    // Regular paragraph
-                                    result.push(
-                                      <p key={pIdx} className="leading-relaxed">{para}</p>
-                                    );
-                                  }
-                                }
-                                
-                                return result;
-                              })()}
+                              {renderMarkdown(trimmedSection)}
                             </div>
                           </div>
                         );

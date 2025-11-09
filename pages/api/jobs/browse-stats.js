@@ -46,6 +46,14 @@ export default async function handler(req, res) {
       orderBy: { specialty: 'asc' }
     });
 
+    // Get all job types with counts
+    const jobTypes = await prisma.nursingJob.groupBy({
+      by: ['jobType'],
+      where: { isActive: true, jobType: { not: null } },
+      _count: { id: true },
+      orderBy: { jobType: 'asc' }
+    });
+
     // Format states with full names
     const statesFormatted = states.map(s => ({
       code: s.state,
@@ -75,12 +83,20 @@ export default async function handler(req, res) {
       slug: s.specialty.toLowerCase().replace(/\s+/g, '-')
     }));
 
+    // Format job types
+    const jobTypesFormatted = jobTypes.map(jt => ({
+      name: jt.jobType,
+      count: jt._count.id,
+      slug: jt.jobType.toLowerCase().replace(/\s+/g, '-')
+    }));
+
     return res.status(200).json({
       success: true,
       data: {
         states: statesFormatted,
         employers: employersFormatted,
-        specialties: specialtiesFormatted
+        specialties: specialtiesFormatted,
+        jobTypes: jobTypesFormatted
       }
     });
 
