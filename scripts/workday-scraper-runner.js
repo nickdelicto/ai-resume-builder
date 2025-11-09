@@ -13,6 +13,7 @@
  */
 
 const WorkdayRNScraper = require('./workday-rn-scraper-base');
+const WorkdayAdventistScraper = require('./workday-adventist-scraper');
 const { getConfig, getAllConfigs, getEmployerSlugs } = require('./workday-employer-configs');
 
 // Parse command line arguments
@@ -38,10 +39,20 @@ async function runScraperForEmployer(slug) {
     return { success: false, error: 'Configuration not found' };
   }
   
-  const scraper = new WorkdayRNScraper(config, {
-    saveToDatabase: !noSave,
-    maxPages: maxPages
-  });
+  // Select the appropriate scraper based on employer
+  // Use Adventist-specific scraper for Adventist, base scraper for others (UHS, etc.)
+  let scraper;
+  if (slug === 'adventist') {
+    scraper = new WorkdayAdventistScraper(config, {
+      saveToDatabase: !noSave,
+      maxPages: maxPages
+    });
+  } else {
+    scraper = new WorkdayRNScraper(config, {
+      saveToDatabase: !noSave,
+      maxPages: maxPages
+    });
+  }
   
   const results = await scraper.scrapeRNJobs();
   

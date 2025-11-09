@@ -34,6 +34,21 @@ const workdayConfigs = {
     selectors: {}
   },
 
+  /**
+   * Adventist Healthcare
+   * Example URL: https://adventisthealthcare.wd1.myworkdayjobs.com/en-US/AdventistHealthCareCareers/jobs?jobFamilyGroup=...
+   */
+  'adventist': {
+    employerName: 'Adventist Healthcare',
+    baseUrl: 'https://adventisthealthcare.wd1.myworkdayjobs.com/AdventistHealthCareCareers',
+    searchUrl: 'https://adventisthealthcare.wd1.myworkdayjobs.com/en-US/AdventistHealthCareCareers/jobs?jobFamilyGroup=9416f98c4684018c48128eb5ea01c45e&jobFamilyGroup=e206486d6e03019c59818eac7386fa1b',
+    careerPageUrl: 'https://adventisthealthcare.wd1.myworkdayjobs.com/AdventistHealthCareCareers',
+    filters: {
+      jobFamilyGroup: ['9416f98c4684018c48128eb5ea01c45e', 'e206486d6e03019c59818eac7386fa1b'] // Nursing categories
+    },
+    selectors: {}
+  },
+
   // Add more employers here as you discover them
   // Example template:
   /*
