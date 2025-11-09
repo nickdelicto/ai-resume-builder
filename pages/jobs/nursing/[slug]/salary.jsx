@@ -78,7 +78,7 @@ export default function StateSalaryPage({
         <meta name="keywords" content={seoMeta.keywords} />
         
         {/* Canonical URL */}
-        <link rel="canonical" href={seoMeta.canonicalUrl} />
+        <link rel="canonical" href={seoMeta.canonicalUrl} key="canonical" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />

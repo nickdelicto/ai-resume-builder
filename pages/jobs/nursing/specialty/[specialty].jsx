@@ -105,7 +105,7 @@ export default function SpecialtyJobPage({
         <meta name="keywords" content={seoMeta.keywords} />
         
         {/* Canonical URL */}
-        <link rel="canonical" href={seoMeta.canonicalUrl} />
+        <link rel="canonical" href={seoMeta.canonicalUrl} key="canonical" />
         
         {/* Robots - INDEX THIS PAGE */}
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
