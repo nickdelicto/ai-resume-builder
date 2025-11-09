@@ -44,8 +44,7 @@ export default function Document() {
         <meta property="twitter:description" content="Create professional, ATS-optimized resumes with our intelligent AI-powered resume builder. Tailored for specific job applications." />
         <meta property="twitter:image" content="https://intelliresume.net/og-image.png" />
         
-        {/* Canonical URL */}
-        <link rel="canonical" href="https://intelliresume.net" />
+        {/* Note: Canonical URLs are handled per-page via Meta.jsx component */}
         
         {/* Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
