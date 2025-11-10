@@ -70,11 +70,23 @@ export async function getServerSideProps({ res }) {
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
+    // Helper to escape XML special characters
+    const escapeXml = (str) => {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    };
+
     // Helper to add URL entry
     const addUrl = (path, lastmod, changefreq = 'weekly', priority = '0.7') => {
       const lastmodDate = lastmod ? new Date(lastmod).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      const escapedUrl = escapeXml(`${baseUrl}${path}`);
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}${path}</loc>\n`;
+      xml += `    <loc>${escapedUrl}</loc>\n`;
       xml += `    <lastmod>${lastmodDate}</lastmod>\n`;
       xml += `    <changefreq>${changefreq}</changefreq>\n`;
       xml += `    <priority>${priority}</priority>\n`;

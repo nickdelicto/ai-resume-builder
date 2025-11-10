@@ -21,6 +21,17 @@ export const getServerSideProps = async ({ res }) => {
 
 async function generateSitemap(baseUrl) {
   try {
+    // Helper to escape XML special characters
+    const escapeXml = (str) => {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    };
+    
     // Get all blog posts and categories
     const allPosts = await getAllPosts();
     const categories = await getCategories();
@@ -38,7 +49,7 @@ async function generateSitemap(baseUrl) {
     
     // Add blog main page
     xml += `  <url>\n`;
-    xml += `    <loc>${baseUrl}/blog</loc>\n`;
+    xml += `    <loc>${escapeXml(`${baseUrl}/blog`)}</loc>\n`;
     xml += `    <changefreq>weekly</changefreq>\n`;
     xml += `    <priority>0.8</priority>\n`;
     xml += `  </url>\n`;
@@ -46,7 +57,7 @@ async function generateSitemap(baseUrl) {
     // Add blog categories
     categories.forEach(category => {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/blog/${category.slug}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${baseUrl}/blog/${category.slug}`)}</loc>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.7</priority>\n`;
       xml += `  </url>\n`;
@@ -55,7 +66,7 @@ async function generateSitemap(baseUrl) {
     // Add content silo pages
     contentSilos.forEach(silo => {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/blog/${silo}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${baseUrl}/blog/${silo}`)}</loc>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.7</priority>\n`;
       xml += `  </url>\n`;
@@ -66,7 +77,7 @@ async function generateSitemap(baseUrl) {
       const lastmod = post.updatedDate || post.publishedDate;
       
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}/blog/${post.category}/${post.slug}</loc>\n`;
+      xml += `    <loc>${escapeXml(`${baseUrl}/blog/${post.category}/${post.slug}`)}</loc>\n`;
       
       if (lastmod) {
         const formattedDate = new Date(lastmod).toISOString().split('T')[0];
