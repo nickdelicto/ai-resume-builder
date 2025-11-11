@@ -1510,10 +1510,19 @@ class ClevelandClinicRNScraper {
 
 // Run the scraper if called directly
 if (require.main === module) {
-  // For testing: limit to 10 pages (uncomment to test with limited pages)
-  // const scraper = new ClevelandClinicRNScraper({ maxPages: 10 });
-  // For production: no limit (defaults to 100 pages max)
-  const scraper = new ClevelandClinicRNScraper();
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const maxPagesIndex = args.indexOf('--max-pages');
+  const maxPages = maxPagesIndex !== -1 ? parseInt(args[maxPagesIndex + 1]) : null;
+  
+  // Create scraper with options
+  const options = {};
+  if (maxPages) {
+    options.maxPages = maxPages;
+    console.log(`🔧 Running with --max-pages ${maxPages}`);
+  }
+  
+  const scraper = new ClevelandClinicRNScraper(options);
   scraper.scrapeRNJobs()
     .then(result => {
       if (result.success) {

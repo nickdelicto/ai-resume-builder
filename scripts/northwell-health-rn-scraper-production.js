@@ -1706,10 +1706,19 @@ class NorthwellHealthRNScraper {
 
 // Run the scraper if called directly
 if (require.main === module) {
-  // Production: scrape all pages (or set maxPages for testing)
-  // const scraper = new NorthwellHealthRNScraper({ maxPages: 10 }); // Test with 10 pages
-  const scraper = new NorthwellHealthRNScraper(); // No limit - scrape all pages (max 100 safety limit)
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const maxPagesIndex = args.indexOf('--max-pages');
+  const maxPages = maxPagesIndex !== -1 ? parseInt(args[maxPagesIndex + 1]) : null;
   
+  // Create scraper with options
+  const options = {};
+  if (maxPages) {
+    options.maxPages = maxPages;
+    console.log(`🔧 Running with --max-pages ${maxPages}`);
+  }
+  
+  const scraper = new NorthwellHealthRNScraper(options);
   scraper.scrapeRNJobs()
     .then(result => {
       if (result.success) {
