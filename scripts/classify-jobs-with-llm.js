@@ -120,6 +120,24 @@ Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
 - "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator
 - Return null if not specified or unclear
 
+**CRITICAL: Keep all JSON values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
+
+GOOD examples (concise):
+{
+  "specialty": "ICU",
+  "jobType": "Full Time",
+  "shiftType": "nights",
+  "experienceLevel": "Experienced"
+}
+
+BAD examples (too verbose - DO NOT do this):
+{
+  "specialty": "ICU - Intensive Care with trauma focus",
+  "jobType": "Full Time - 40 hours per week with benefits",
+  "shiftType": "nights - primarily 7pm-7am shifts",
+  "experienceLevel": "Experienced - requires 2-3 years"
+}
+
 **Return your answer ONLY as valid JSON in this exact format:**
 {
   "isStaffRN": true or false,
@@ -151,7 +169,7 @@ async function classifyJob(job) {
         }
       ],
       // Note: GPT-5 only supports default temperature (1), no custom values
-      max_completion_tokens: 600, // Increased to ensure complete JSON responses (was 300, caused truncation)
+      max_completion_tokens: 1500, // Generous headroom to prevent truncation (AI typically uses 150-250 tokens)
       response_format: { type: 'json_object' } // Force JSON response
     });
     
