@@ -85,9 +85,15 @@ function buildClassificationPrompt(job) {
 
 ---
 
-**Task 1: Verify this is a Staff Registered Nurse (RN) position**
-- Return TRUE if: Staff RN, Bedside RN, Clinical RN, Unit RN
-- Return FALSE if: Nurse Practitioner (NP), CRNA, CNS, LPN, LVN, CNA, Management, Director, Educator
+**Task 1: Verify this is a Registered Nurse (RN) position that requires ONLY an RN license**
+- Return TRUE if: Staff RN, Bedside RN, Clinical RN, Unit RN, Charge Nurse, Nurse Manager, Assistant Nurse Manager, Team Lead, Coordinator (if only requires RN license)
+- Return FALSE ONLY if the position requires an ADVANCED NURSING DEGREE:
+  * Nurse Practitioner (NP) - requires Master's/DNP
+  * CRNA (Certified Registered Nurse Anesthetist) - requires Master's/DNP
+  * CNS (Clinical Nurse Specialist) - requires Master's/DNP
+  * CNM (Certified Nurse Midwife) - requires Master's/DNP
+  * OR if it's NOT an RN position at all: LPN, LVN, CNA, Medical Assistant, non-nursing roles
+- KEY: If the job only requires RN license (BSN or Associate degree acceptable), return TRUE even if it's a leadership/management role
 
 **Task 2: Assign the MOST ACCURATE specialty**
 Choose ONE from this list: ${SPECIALTIES.join(', ')}
@@ -111,14 +117,15 @@ Options: days, nights, evenings, variable, rotating, null
 - "rotating" = Rotating shifts required
 - Return null if not specified or unclear
 
-**Task 5: Detect experience level**
+**Task 5: Detect experience level (use context clues from title, qualifications, and description)**
 Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
-- "Entry Level" = Explicitly states entry level or 0-1 year required
-- "New Grad" = New graduate, residency, fellowship, GN, or new grad program
-- "Experienced" = Requires 1-3 years experience
-- "Senior" = Requires 3+ years, senior RN, or advanced clinical expertise
-- "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator
-- Return null if not specified or unclear
+- "Entry Level" = Explicitly states entry level, 0-1 year required, or minimal experience needed
+- "New Grad" = New graduate, residency, fellowship, GN, new grad program, or "new to specialty" language
+- "Experienced" = Requires 1-3 years experience, or moderate clinical skills mentioned in qualifications
+- "Senior" = Requires 3+ years, senior RN title, advanced clinical expertise, specialty certifications required
+- "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator, assistant manager in title or responsibilities
+- Use CONTEXT CLUES: Look at qualifications, required experience, certifications, and job responsibilities to infer level
+- Return null ONLY if truly ambiguous with no hints in title, qualifications, or description
 
 **CRITICAL: Keep all JSON values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
 
@@ -212,9 +219,9 @@ function calculateCost(usage) {
  */
 async function main() {
   try {
-    // Build query to fetch jobs
+    // Build query to fetch jobs - only process pending (inactive) jobs
     const whereClause = {
-      isActive: true
+      isActive: false  // Only classify jobs that are pending LLM validation
     };
     
     // Filter by employer if specified
@@ -303,19 +310,15 @@ async function main() {
               specialty: c.specialty,
               jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
               shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
-              experienceLevel: c.experienceLevel || job.experienceLevel // Keep existing if LLM didn't detect
+              experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
+              isActive: true  // ✅ Activate job - validated as Staff RN
             }
           });
           console.log(`   💾 Updated in database`);
+          console.log(`   ✅ Job activated and live on site`);
         } else if (!isTestMode && !c.isStaffRN) {
-          // Mark as inactive if not a staff RN position
-          await prisma.nursingJob.update({
-            where: { id: job.id },
-            data: {
-              isActive: false
-            }
-          });
-          console.log(`   🚫 Marked as inactive (not a staff RN position)`);
+          // Keep as inactive if not a staff RN position (will never appear on site)
+          console.log(`   🚫 Kept inactive (not a staff RN position - will not appear on site)`);
         }
         
       } else {
