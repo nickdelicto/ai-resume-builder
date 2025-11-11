@@ -54,6 +54,14 @@ export default async function handler(req, res) {
       orderBy: { jobType: 'asc' }
     });
 
+    // Get all experience levels with counts
+    const experienceLevels = await prisma.nursingJob.groupBy({
+      by: ['experienceLevel'],
+      where: { isActive: true, experienceLevel: { not: null } },
+      _count: { id: true },
+      orderBy: { experienceLevel: 'asc' }
+    });
+
     // Format states with full names
     const statesFormatted = states.map(s => ({
       code: s.state,
@@ -76,18 +84,96 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .sort((a, b) => b.count - a.count); // Sort by count descending
 
-    // Format specialties
-    const specialtiesFormatted = specialties.map(s => ({
-      name: s.specialty,
-      count: s._count.id,
-      slug: s.specialty.toLowerCase().replace(/\s+/g, '-')
-    }));
+    // Format specialties and merge case-insensitive duplicates
+    const specialtiesMap = new Map();
+    const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
+    
+    specialties.forEach(s => {
+      const specialtyValue = s.specialty; // Raw DB value
+      
+      // Handle legacy "All Specialties" tags - convert to "General Nursing"
+      // (New jobs use "Float Pool" or "General Nursing", but old DB entries might have "All Specialties")
+      if (specialtyValue && specialtyValue.toLowerCase() === 'all specialties') {
+        // Treat legacy "All Specialties" as "General Nursing"
+        const displayName = 'General Nursing';
+        if (specialtiesMap.has(displayName)) {
+          specialtiesMap.get(displayName).count += s._count.id;
+        } else {
+          specialtiesMap.set(displayName, {
+            name: displayName,
+            count: s._count.id,
+            slug: displayName.toLowerCase().replace(/\s+/g, '-')
+          });
+        }
+        return; // Skip normal processing
+      }
+      
+      // Normalize to Title Case, but keep common nursing acronyms in ALL CAPS
+      const displayName = specialtyValue
+        .split(' ')
+        .map(word => {
+          const upperWord = word.toUpperCase();
+          // Keep nursing acronyms in all caps
+          if (nursingAcronyms.includes(upperWord)) {
+            return upperWord;
+          }
+          // Title case for everything else
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(' ');
+      
+      // Merge duplicates by displayName (case-insensitive)
+      if (specialtiesMap.has(displayName)) {
+        specialtiesMap.get(displayName).count += s._count.id;
+      } else {
+        specialtiesMap.set(displayName, {
+          name: displayName,
+          count: s._count.id,
+          slug: displayName.toLowerCase().replace(/\s+/g, '-')
+        });
+      }
+    });
+    const specialtiesFormatted = Array.from(specialtiesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-    // Format job types
-    const jobTypesFormatted = jobTypes.map(jt => ({
-      name: jt.jobType,
-      count: jt._count.id,
-      slug: jt.jobType.toLowerCase().replace(/\s+/g, '-')
+    // Format job types with proper capitalization and merge duplicates (PRN, Per Diem in caps)
+    const jobTypesMap = new Map();
+    jobTypes.forEach(jt => {
+      const jobTypeValue = jt.jobType; // Raw DB value
+      // Normalize and capitalize properly for display
+      let displayName = jobTypeValue;
+      if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem') {
+        displayName = 'PRN';
+      } else {
+        // Title case for others (Full Time, Part Time, etc.)
+        displayName = jobTypeValue.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+      }
+      
+      // Merge duplicates by displayName
+      if (jobTypesMap.has(displayName)) {
+        const entry = jobTypesMap.get(displayName);
+        entry.count += jt._count.id;
+        // Collect all raw DB values for this display name
+        if (!entry.dbValues.includes(jobTypeValue)) {
+          entry.dbValues.push(jobTypeValue);
+        }
+      } else {
+        jobTypesMap.set(displayName, {
+          name: displayName,
+          count: jt._count.id,
+          slug: displayName.toLowerCase().replace(/\s+/g, '-'),
+          dbValues: [jobTypeValue] // Store original DB value(s) for filtering
+        });
+      }
+    });
+    const jobTypesFormatted = Array.from(jobTypesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Format experience levels
+    const experienceLevelsFormatted = experienceLevels.map(el => ({
+      name: el.experienceLevel,
+      count: el._count.id,
+      slug: el.experienceLevel.toLowerCase().replace(/\s+/g, '-')
     }));
 
     return res.status(200).json({
@@ -96,7 +182,8 @@ export default async function handler(req, res) {
         states: statesFormatted,
         employers: employersFormatted,
         specialties: specialtiesFormatted,
-        jobTypes: jobTypesFormatted
+        jobTypes: jobTypesFormatted,
+        experienceLevels: experienceLevelsFormatted
       }
     });
 
