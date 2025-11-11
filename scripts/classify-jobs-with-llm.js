@@ -27,10 +27,11 @@ const openai = new OpenAI({
 
 // All supported specialties (extracted from detectSpecialty function)
 const SPECIALTIES = [
-  'All Specialties',
   'Ambulatory',
   'Cardiac',
   'ER',
+  'Float Pool',
+  'General Nursing',
   'Geriatrics',
   'Home Care',
   'Home Health',
@@ -99,10 +100,15 @@ function buildClassificationPrompt(job) {
 Choose ONE from this list: ${SPECIALTIES.join(', ')}
 
 Guidelines:
-- If job clearly specifies a unit/specialty, use that
-- If job is multi-specialty or rotational, use "All Specialties"
-- If uncertain, use "All Specialties"
+- If job clearly specifies a unit/specialty, use that specific specialty (ICU, ER, OR, etc.)
+- Use "Float Pool" ONLY if job explicitly mentions: float, floating, multi-specialty, rotational between units, or can work in any unit
+- Use "General Nursing" ONLY if no specific specialty can be determined from title or description (rare - try to find a specialty first)
 - Prioritize specific specialties over general ones
+- Examples:
+  * "Float Pool RN" or "Multi-Specialty RN" → Float Pool
+  * "ICU RN" → ICU
+  * "Emergency Department Nurse" → ER
+  * "Generic RN with vague description" → General Nursing
 
 **Task 3: Detect employment type**
 Options: Full Time, Part Time, PRN, Per Diem, Contract, Travel, null
