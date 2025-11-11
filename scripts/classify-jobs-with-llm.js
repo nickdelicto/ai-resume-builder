@@ -127,8 +127,7 @@ Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
   "jobType": "Full Time" or "Part Time" or "PRN" or "Per Diem" or "Contract" or "Travel" or null,
   "shiftType": "days" or "nights" or "evenings" or "variable" or "rotating" or null,
   "experienceLevel": "Entry Level" or "New Grad" or "Experienced" or "Senior" or "Leadership" or null,
-  "confidence": 0.95,
-  "reasoning": "1-2 sentence explanation ONLY (keep it brief)"
+  "confidence": 0.95
 }`;
 }
 
@@ -264,7 +263,6 @@ async function main() {
         console.log(`      Shift Type: ${c.shiftType || 'not specified'}`);
         console.log(`      Experience: ${c.experienceLevel || 'not specified'}`);
         console.log(`      Confidence: ${(c.confidence * 100).toFixed(0)}%`);
-        console.log(`      Reasoning: ${c.reasoning}`);
         console.log(`   💰 Cost: $${result.cost.toFixed(6)} | Tokens: ${result.tokensUsed}`);
         
         results.push({
@@ -276,8 +274,7 @@ async function main() {
           jobType: c.jobType,
           shiftType: c.shiftType,
           experienceLevel: c.experienceLevel,
-          confidence: c.confidence,
-          reasoning: c.reasoning
+          confidence: c.confidence
         });
         
         // Update database if not in test mode
