@@ -17,7 +17,8 @@ export default function NursingJobsPage() {
     states: [],
     employers: [],
     specialties: [],
-    jobTypes: []
+    jobTypes: [],
+    experienceLevels: []
   });
   const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
   // Initialize filters from URL query params
@@ -26,6 +27,7 @@ export default function NursingJobsPage() {
     city: router.query.city || '',
     specialty: router.query.specialty || '',
     jobType: router.query.jobType || '',
+    experienceLevel: router.query.experienceLevel || '',
     search: router.query.search || ''
   });
 
@@ -36,14 +38,15 @@ export default function NursingJobsPage() {
       city: router.query.city || '',
       specialty: router.query.specialty || '',
       jobType: router.query.jobType || '',
+      experienceLevel: router.query.experienceLevel || '',
       search: router.query.search || ''
     });
-  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.search]);
+  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.search]);
 
   // Fetch jobs when filters or page changes
   useEffect(() => {
     fetchJobs();
-  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.search]);
+  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.search]);
 
   // Fetch browse statistics on mount
   useEffect(() => {
@@ -76,6 +79,7 @@ export default function NursingJobsPage() {
         city: router.query.city || '',
         specialty: router.query.specialty || '',
         jobType: router.query.jobType || '',
+        experienceLevel: router.query.experienceLevel || '',
         search: router.query.search || ''
       };
 
@@ -437,7 +441,7 @@ export default function NursingJobsPage() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                    Job Type
+                    Employment Type
                   </span>
                 </label>
                 <select
@@ -453,10 +457,33 @@ export default function NursingJobsPage() {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  <span className="flex items-center gap-1 text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                    Experience Level
+                  </span>
+                </label>
+                <select
+                  value={filters.experienceLevel}
+                  onChange={(e) => handleFilterChange('experienceLevel', e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900"
+                >
+                  <option value="">All Levels</option>
+                  {browseStats.experienceLevels.map((level) => (
+                    <option key={level.name} value={level.name}>
+                      {level.name} ({level.count})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             {/* Active Filters Display */}
-            {(filters.state || filters.city || filters.specialty || filters.jobType || filters.search) && (
+            {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
               <div className="mt-4 pt-4 border-t border-gray-600">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-gray-300 font-medium">Active filters:</span>
@@ -490,9 +517,15 @@ export default function NursingJobsPage() {
                       <button onClick={() => handleFilterChange('jobType', '')} className="hover:text-orange-900">×</button>
                     </span>
                   )}
+                  {filters.experienceLevel && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                      {filters.experienceLevel}
+                      <button onClick={() => handleFilterChange('experienceLevel', '')} className="hover:text-purple-900">×</button>
+                    </span>
+                  )}
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="text-sm text-red-600 hover:text-red-800 font-medium"
@@ -532,7 +565,7 @@ export default function NursingJobsPage() {
               <p className="text-gray-600 mb-6">Try adjusting your filters or search terms.</p>
               <button
                 onClick={() => {
-                  setFilters({ state: '', city: '', specialty: '', jobType: '', search: '' });
+                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
                   router.push('/jobs/nursing', undefined, { shallow: true });
                 }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -597,7 +630,18 @@ export default function NursingJobsPage() {
                           <div className="flex flex-wrap items-center gap-2 mb-3">
                             {job.specialty && (
                               <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                {job.specialty}
+                                {(() => {
+                                  // Map legacy "All Specialties" to "General Nursing"
+                                  if (job.specialty.toLowerCase() === 'all specialties') {
+                                    return 'General Nursing';
+                                  }
+                                  // Keep nursing acronyms in ALL CAPS
+                                  const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
+                                  return job.specialty.split(' ').map(word => {
+                                    const upperWord = word.toUpperCase();
+                                    return nursingAcronyms.includes(upperWord) ? upperWord : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                  }).join(' ');
+                                })()}
                               </span>
                             )}
                             {job.jobType && (

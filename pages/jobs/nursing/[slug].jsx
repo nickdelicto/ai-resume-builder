@@ -499,7 +499,18 @@ export default function JobDetailPage({
                         <div className="flex flex-wrap items-center gap-2">
                           {jobItem.specialty && (
                             <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                              {jobItem.specialty}
+                              {(() => {
+                                // Map legacy "All Specialties" to "General Nursing"
+                                if (jobItem.specialty.toLowerCase() === 'all specialties') {
+                                  return 'General Nursing';
+                                }
+                                // Keep nursing acronyms in ALL CAPS
+                                const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
+                                return jobItem.specialty.split(' ').map(word => {
+                                  const upperWord = word.toUpperCase();
+                                  return nursingAcronyms.includes(upperWord) ? upperWord : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                }).join(' ');
+                              })()}
                             </span>
                           )}
                           {jobItem.jobType && (
