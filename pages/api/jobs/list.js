@@ -20,6 +20,7 @@ export default async function handler(req, res) {
       specialty,
       employerSlug,
       jobType,
+      experienceLevel,
       search,
       isActive = true
     } = req.query;
@@ -46,9 +47,20 @@ export default async function handler(req, res) {
       };
     }
 
-    // Filter by specialty
+    // Filter by specialty (case-insensitive, handle legacy "All Specialties")
     if (specialty) {
-      where.specialty = specialty;
+      // If user selects "General Nursing", also match legacy "All Specialties" tags
+      if (specialty.toLowerCase() === 'general nursing') {
+        // Use IN to match multiple possible values
+        where.specialty = {
+          in: ['General Nursing', 'general nursing', 'All Specialties', 'all specialties']
+        };
+      } else {
+        where.specialty = {
+          mode: 'insensitive',
+          equals: specialty
+        };
+      }
     }
 
     // Filter by employer
@@ -58,9 +70,32 @@ export default async function handler(req, res) {
       };
     }
 
-    // Filter by job type
+    // Filter by job type (handle case-insensitive and multiple formats)
     if (jobType) {
-      where.jobType = jobType;
+      // Normalize input to match possible DB values
+      // Frontend sends display format (e.g., "PRN", "Full Time")
+      // DB might have "prn", "full time", "Full Time", "per diem", etc.
+      const normalized = jobType.toLowerCase();
+      if (normalized === 'prn') {
+        // Match any variation of PRN/Per Diem
+        where.jobType = {
+          in: ['prn', 'PRN', 'per diem', 'Per Diem']
+        };
+      } else {
+        // Case-insensitive match for others
+        where.jobType = {
+          mode: 'insensitive',
+          equals: jobType
+        };
+      }
+    }
+
+    // Filter by experience level (case-insensitive)
+    if (experienceLevel) {
+      where.experienceLevel = {
+        mode: 'insensitive',
+        equals: experienceLevel
+      };
     }
 
     // Search in title and description
