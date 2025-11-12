@@ -515,7 +515,7 @@ export default function JobDetailPage({
                           )}
                           {jobItem.jobType && (
                             <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                              {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                              {jobItem.jobType.toLowerCase() === 'prn' || jobItem.jobType.toLowerCase() === 'per diem' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
                             </span>
                           )}
                           {jobItem.shiftType && (
@@ -730,7 +730,7 @@ export default function JobDetailPage({
               )}
               {job.jobType && (
                 <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                  {job.jobType === 'prn' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                  {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
                 </span>
               )}
               {job.shiftType && (

@@ -128,7 +128,7 @@ export default async function handler(req, res) {
       } else {
         specialtiesMap.set(displayName, {
           name: displayName,
-          count: s._count.id,
+      count: s._count.id,
           slug: displayName.toLowerCase().replace(/\s+/g, '-')
         });
       }
@@ -144,8 +144,10 @@ export default async function handler(req, res) {
       if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem') {
         displayName = 'PRN';
       } else {
-        // Title case for others (Full Time, Part Time, etc.)
-        displayName = jobTypeValue.split(' ').map(word => 
+        // Replace hyphens with spaces BEFORE processing (Full-time → Full Time)
+        // Then title case for consistent display
+        const normalizedValue = jobTypeValue.replace(/-/g, ' ');
+        displayName = normalizedValue.split(' ').map(word => 
           word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ');
       }
@@ -169,12 +171,28 @@ export default async function handler(req, res) {
     });
     const jobTypesFormatted = Array.from(jobTypesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-    // Format experience levels
-    const experienceLevelsFormatted = experienceLevels.map(el => ({
-      name: el.experienceLevel,
-      count: el._count.id,
-      slug: el.experienceLevel.toLowerCase().replace(/\s+/g, '-')
-    }));
+    // Format experience levels and merge case-insensitive duplicates
+    const experienceLevelsMap = new Map();
+    experienceLevels.forEach(el => {
+      const experienceLevelValue = el.experienceLevel; // Raw DB value
+      // Normalize to Title Case for consistent display
+      const displayName = experienceLevelValue
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      // Merge duplicates by displayName (case-insensitive)
+      if (experienceLevelsMap.has(displayName)) {
+        experienceLevelsMap.get(displayName).count += el._count.id;
+      } else {
+        experienceLevelsMap.set(displayName, {
+          name: displayName,
+          count: el._count.id,
+          slug: displayName.toLowerCase().replace(/\s+/g, '-')
+        });
+      }
+    });
+    const experienceLevelsFormatted = Array.from(experienceLevelsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
     return res.status(200).json({
       success: true,

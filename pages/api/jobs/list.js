@@ -74,15 +74,25 @@ export default async function handler(req, res) {
     if (jobType) {
       // Normalize input to match possible DB values
       // Frontend sends display format (e.g., "PRN", "Full Time")
-      // DB might have "prn", "full time", "Full Time", "per diem", etc.
+      // DB might have "prn", "full time", "Full Time", "Full-time", "Part-time", "per diem", etc.
       const normalized = jobType.toLowerCase();
       if (normalized === 'prn') {
         // Match any variation of PRN/Per Diem
         where.jobType = {
           in: ['prn', 'PRN', 'per diem', 'Per Diem']
         };
+      } else if (normalized === 'full time') {
+        // Match both space and hyphen versions
+        where.jobType = {
+          in: ['Full Time', 'full time', 'Full-time', 'full-time']
+        };
+      } else if (normalized === 'part time') {
+        // Match both space and hyphen versions
+        where.jobType = {
+          in: ['Part Time', 'part time', 'Part-time', 'part-time']
+        };
       } else {
-        // Case-insensitive match for others
+        // Case-insensitive match for others (Contract, Travel, etc.)
         where.jobType = {
           mode: 'insensitive',
           equals: jobType
