@@ -1759,14 +1759,14 @@ class WorkdayAdventistScraper {
           const titleLower = title.toLowerCase();
           // Check for explicit employment type keywords in title
           if (titleLower.match(/\bfull[\s-]?time\b/i) || titleLower.match(/\bft\b/i)) {
-            employmentType = 'Full Time';
+              employmentType = 'Full Time';
           } else if (titleLower.match(/\bpart[\s-]?time\b/i) || titleLower.match(/\bpt\b/i)) {
-            employmentType = 'Part Time';
+              employmentType = 'Part Time';
           } else if (titleLower.match(/\bprn\b/i) || titleLower.match(/\bper[\s-]?diem\b/i)) {
             employmentType = 'PRN';
           } else if (titleLower.match(/\bcontract\b/i)) {
             employmentType = 'Contract';
-          }
+            }
         }
         
         // *** METHOD 2: Check briefcase icon / data-automation-id field (Adventist usually has this) ***
@@ -1831,9 +1831,9 @@ class WorkdayAdventistScraper {
           } else if (titleLower.match(/\bvariable\b/i) || titleLower.match(/\bvaried\b/i) || 
                      titleLower.match(/\bmultiple\b/i) || titleLower.match(/\bflexible\b/i)) {
             shiftType = 'variable';
+            }
           }
-        }
-        
+          
         // If shift not in title, leave as null
         // Do NOT check description, Schedule field, or other fields (Adventist-specific)
 
