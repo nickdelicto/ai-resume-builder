@@ -403,7 +403,7 @@ export default function NursingJobsPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., OH, CA"
+                  placeholder="NY, CA, FL, MA, TX, OH..."
                   value={filters.state}
                   onChange={(e) => handleFilterChange('state', e.target.value.toUpperCase())}
                   maxLength="2"
@@ -646,7 +646,7 @@ export default function NursingJobsPage() {
                             )}
                             {job.jobType && (
                               <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                                {job.jobType === 'prn' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                                {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
                               </span>
                             )}
                             {job.shiftType && (
