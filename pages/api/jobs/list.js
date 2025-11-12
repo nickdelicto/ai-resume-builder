@@ -47,15 +47,22 @@ export default async function handler(req, res) {
       };
     }
 
-    // Filter by specialty (case-insensitive, handle legacy "All Specialties")
+    // Filter by specialty (case-insensitive, handle legacy tags and hyphen variations)
     if (specialty) {
+      const normalized = specialty.toLowerCase();
       // If user selects "General Nursing", also match legacy "All Specialties" tags
-      if (specialty.toLowerCase() === 'general nursing') {
+      if (normalized === 'general nursing') {
         // Use IN to match multiple possible values
         where.specialty = {
           in: ['General Nursing', 'general nursing', 'All Specialties', 'all specialties']
         };
+      } else if (normalized === 'med surg') {
+        // Match both space and hyphen versions
+        where.specialty = {
+          in: ['Med Surg', 'med surg', 'Med-Surg', 'med-surg']
+        };
       } else {
+        // Case-insensitive match for others
         where.specialty = {
           mode: 'insensitive',
           equals: specialty
@@ -100,12 +107,21 @@ export default async function handler(req, res) {
       }
     }
 
-    // Filter by experience level (case-insensitive)
+    // Filter by experience level (handle case-insensitive and hyphen variations)
     if (experienceLevel) {
-      where.experienceLevel = {
-        mode: 'insensitive',
-        equals: experienceLevel
-      };
+      const normalized = experienceLevel.toLowerCase();
+      if (normalized === 'new grad') {
+        // Match both space and hyphen versions
+        where.experienceLevel = {
+          in: ['New Grad', 'new grad', 'New-Grad', 'new-grad']
+        };
+      } else {
+        // Case-insensitive match for others (Entry Level, Experienced, Senior, Leadership)
+        where.experienceLevel = {
+          mode: 'insensitive',
+          equals: experienceLevel
+        };
+      }
     }
 
     // Search in title and description

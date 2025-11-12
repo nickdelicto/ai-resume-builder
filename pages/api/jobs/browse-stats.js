@@ -108,8 +108,10 @@ export default async function handler(req, res) {
         return; // Skip normal processing
       }
       
-      // Normalize to Title Case, but keep common nursing acronyms in ALL CAPS
-      const displayName = specialtyValue
+      // Replace hyphens with spaces BEFORE processing (Med-Surg → Med Surg)
+      // Then normalize to Title Case, but keep common nursing acronyms in ALL CAPS
+      const normalizedValue = specialtyValue.replace(/-/g, ' ');
+      const displayName = normalizedValue
         .split(' ')
         .map(word => {
           const upperWord = word.toUpperCase();
@@ -175,8 +177,10 @@ export default async function handler(req, res) {
     const experienceLevelsMap = new Map();
     experienceLevels.forEach(el => {
       const experienceLevelValue = el.experienceLevel; // Raw DB value
-      // Normalize to Title Case for consistent display
-      const displayName = experienceLevelValue
+      // Replace hyphens with spaces BEFORE processing (new-grad → New Grad)
+      // Then normalize to Title Case for consistent display
+      const normalizedValue = experienceLevelValue.replace(/-/g, ' ');
+      const displayName = normalizedValue
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
