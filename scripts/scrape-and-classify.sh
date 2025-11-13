@@ -52,18 +52,14 @@ send_email() {
   local subject="$1"
   local body="$2"
   
-  # Check if mail command is available
-  if command -v mail &> /dev/null; then
-    echo "$body" | mail -s "$subject" "$ADMIN_EMAIL"
-    echo "📧 Email sent to $ADMIN_EMAIL"
-  elif command -v sendmail &> /dev/null; then
-    # Alternative: use sendmail if available
-    echo -e "Subject: $subject\n\n$body" | sendmail "$ADMIN_EMAIL"
-    echo "📧 Email sent to $ADMIN_EMAIL (via sendmail)"
+  # Use Node.js email sender with existing SMTP configuration (Brevo)
+  if node "$PROJECT_ROOT/scripts/send-email.js" "$subject" "$body" 2>/dev/null; then
+    echo "📧 Email sent successfully via SMTP"
   else
-    echo "⚠️  WARNING: mail/sendmail not installed. Cannot send email notification."
-    echo "   To enable email notifications, install mailutils:"
-    echo "   sudo apt-get install mailutils"
+    echo "⚠️  WARNING: Failed to send email notification"
+    echo "   Check SMTP credentials in .env file"
+    echo "   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS"
+    echo "   - EMAIL_FROM, ADMIN_EMAIL"
   fi
 }
 
