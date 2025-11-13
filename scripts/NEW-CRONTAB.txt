@@ -1,0 +1,57 @@
+# ============================================================================
+# UPDATED CRONTAB - Scrape and Classify Automation
+# ============================================================================
+# 
+# WHAT CHANGED:
+# - Old: Scrapers ran alone, jobs stayed inactive until manual classification
+# - New: Scrapers automatically trigger classifier, jobs go live immediately
+# 
+# BENEFITS:
+# - Jobs are automatically activated after scraping
+# - Email alerts if scraper or classifier fails
+# - Better error handling (classifier skipped if scraper fails)
+# - Comprehensive logging
+#
+# TO INSTALL:
+#   1. Run: crontab -e
+#   2. Replace your old cron jobs with the lines below
+#   3. Save and exit
+# ============================================================================
+
+# Cleveland Clinic - Every other Sunday at 2 AM EST (7 AM UTC)
+0 7 * * 0 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh cleveland-clinic
+
+# UHS - Every other Monday at 2 AM EST (7 AM UTC)
+0 7 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh uhs
+
+# Adventist Healthcare - Every other Monday at 3 AM EST (8 AM UTC) - runs 1 hour after UHS
+0 8 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh adventist
+
+# Northwell Health - PAUSED (uncomment to enable)
+# 0 9 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh northwell-health
+
+# ============================================================================
+# IMPORTANT NOTES:
+# ============================================================================
+# 
+# Email Notifications:
+#   - Failures will email: delictodelight@gmail.com
+#   - Make sure 'mail' is installed: sudo apt-get install mailutils
+#
+# Logs Location:
+#   - /home/intelliresume/ai-resume-builder/logs/
+#   - Auto-cleanup after 30 days
+#
+# Manual Testing:
+#   cd /home/intelliresume/ai-resume-builder
+#   ./scripts/scrape-and-classify.sh cleveland-clinic
+#
+# View Recent Logs:
+#   ls -lt /home/intelliresume/ai-resume-builder/logs/ | head
+#   tail -f /home/intelliresume/ai-resume-builder/logs/scrape-classify-summary.log
+#
+# Check Cron Status:
+#   crontab -l                    # List current cron jobs
+#   grep CRON /var/log/syslog     # View cron execution logs
+# ============================================================================
+

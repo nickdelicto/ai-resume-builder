@@ -1,0 +1,313 @@
+#!/bin/bash
+
+###############################################################################
+# Scrape and Classify Wrapper Script
+# 
+# This script runs a job scraper followed by the LLM classifier (only if 
+# scraper succeeds). Includes error handling and email notifications.
+#
+# Usage: 
+#   ./scrape-and-classify.sh [employer-slug]
+#
+# Examples:
+#   ./scrape-and-classify.sh cleveland-clinic
+#   ./scrape-and-classify.sh uhs
+#   ./scrape-and-classify.sh adventist
+#
+# Features:
+# - Runs scraper first, then classifier (only if scraper succeeds)
+# - Logs everything to separate log files
+# - Sends email alerts on failure
+# - Cleans up old logs (30+ days)
+###############################################################################
+
+# Configuration
+EMPLOYER_SLUG=$1
+MAX_PAGES=$2  # Optional: limit pages for testing
+ADMIN_EMAIL="delictodelight@gmail.com"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+LOG_DIR="$PROJECT_ROOT/logs"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+DATE_READABLE=$(date +"%Y-%m-%d %H:%M:%S")
+
+# Create logs directory if it doesn't exist
+mkdir -p "$LOG_DIR"
+
+# Log files
+SCRAPER_LOG="$LOG_DIR/${EMPLOYER_SLUG}_scraper_${TIMESTAMP}.log"
+CLASSIFIER_LOG="$LOG_DIR/${EMPLOYER_SLUG}_classifier_${TIMESTAMP}.log"
+SUMMARY_LOG="$LOG_DIR/scrape-classify-summary.log"
+
+# Colors for terminal output (if running interactively)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+###############################################################################
+# Function: Send email notification
+###############################################################################
+send_email() {
+  local subject="$1"
+  local body="$2"
+  
+  # Check if mail command is available
+  if command -v mail &> /dev/null; then
+    echo "$body" | mail -s "$subject" "$ADMIN_EMAIL"
+    echo "📧 Email sent to $ADMIN_EMAIL"
+  elif command -v sendmail &> /dev/null; then
+    # Alternative: use sendmail if available
+    echo -e "Subject: $subject\n\n$body" | sendmail "$ADMIN_EMAIL"
+    echo "📧 Email sent to $ADMIN_EMAIL (via sendmail)"
+  else
+    echo "⚠️  WARNING: mail/sendmail not installed. Cannot send email notification."
+    echo "   To enable email notifications, install mailutils:"
+    echo "   sudo apt-get install mailutils"
+  fi
+}
+
+###############################################################################
+# Function: Log message to both console and summary log
+###############################################################################
+log_message() {
+  local message="$1"
+  echo "$message"
+  echo "[$DATE_READABLE] $message" >> "$SUMMARY_LOG"
+}
+
+###############################################################################
+# Validate input
+###############################################################################
+if [ -z "$EMPLOYER_SLUG" ]; then
+  echo "❌ ERROR: Employer slug required"
+  echo ""
+  echo "Usage: $0 [employer-slug] [max-pages]"
+  echo ""
+  echo "Examples:"
+  echo "  $0 cleveland-clinic           # Scrape all pages"
+  echo "  $0 cleveland-clinic 1         # Scrape only 1 page (testing)"
+  echo "  $0 uhs 3                      # Scrape only 3 pages"
+  echo ""
+  echo "Available employers:"
+  echo "  - cleveland-clinic"
+  echo "  - uhs"
+  echo "  - adventist"
+  echo "  - northwell-health"
+  exit 1
+fi
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
+###############################################################################
+# STEP 1: Run the scraper
+###############################################################################
+log_message "=========================================="
+log_message "🚀 Starting scrape-and-classify for: $EMPLOYER_SLUG"
+log_message "=========================================="
+log_message ""
+if [ -n "$MAX_PAGES" ]; then
+  log_message "🔧 TEST MODE: Limiting to $MAX_PAGES page(s)"
+fi
+log_message "📂 Logs:"
+log_message "   Scraper: $SCRAPER_LOG"
+log_message "   Classifier: $CLASSIFIER_LOG"
+log_message ""
+
+log_message "STEP 1/2: Running scraper for $EMPLOYER_SLUG..."
+
+# Determine which scraper to run based on employer slug
+# Build scraper command with optional --max-pages parameter
+case $EMPLOYER_SLUG in
+  cleveland-clinic)
+    # Cleveland Clinic uses custom scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/cleveland-clinic-rn-scraper-production.js" --max-pages "$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/cleveland-clinic-rn-scraper-production.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+  
+  uhs)
+    # UHS uses Workday scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" uhs --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" uhs > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+  
+  adventist)
+    # Adventist uses Workday scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" adventist --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" adventist > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+  
+  northwell-health)
+    # Northwell Health uses custom scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper-production.js" --max-pages "$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper-production.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+  
+  *)
+    log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
+    log_message ""
+    log_message "Available employers:"
+    log_message "  - cleveland-clinic"
+    log_message "  - uhs"
+    log_message "  - adventist"
+    log_message "  - northwell-health"
+    
+    # Send failure email
+    send_email "❌ Scraper Failed: Unknown Employer" \
+"Scraper execution failed for unknown employer: $EMPLOYER_SLUG
+
+Available employers: cleveland-clinic, uhs, adventist, northwell-health
+
+Time: $DATE_READABLE
+Hostname: $(hostname)"
+    
+    exit 1
+    ;;
+esac
+
+# Check scraper exit code
+if [ $SCRAPER_EXIT_CODE -eq 0 ]; then
+  log_message "✅ Scraper completed successfully (exit code: 0)"
+else
+  log_message "❌ Scraper FAILED (exit code: $SCRAPER_EXIT_CODE)"
+  log_message ""
+  log_message "📋 Last 20 lines of scraper log:"
+  tail -20 "$SCRAPER_LOG" | while IFS= read -r line; do
+    log_message "   $line"
+  done
+  
+  # Send failure email
+  EMAIL_SUBJECT="❌ Scraper Failed: $EMPLOYER_SLUG"
+  EMAIL_BODY="The scraper for $EMPLOYER_SLUG has FAILED.
+
+Exit Code: $SCRAPER_EXIT_CODE
+Time: $DATE_READABLE
+Hostname: $(hostname)
+
+Scraper Log: $SCRAPER_LOG
+
+Last 20 lines of log:
+$(tail -20 "$SCRAPER_LOG")
+
+---
+Classification was SKIPPED because the scraper failed.
+No API charges incurred."
+
+  send_email "$EMAIL_SUBJECT" "$EMAIL_BODY"
+  
+  log_message ""
+  log_message "🚫 SKIPPING classifier because scraper failed"
+  log_message "   (This prevents wasting OpenAI API calls)"
+  log_message ""
+  log_message "=========================================="
+  log_message "❌ FAILED: Scraper error"
+  log_message "=========================================="
+  
+  exit $SCRAPER_EXIT_CODE
+fi
+
+###############################################################################
+# STEP 2: Run the LLM classifier (only if scraper succeeded)
+###############################################################################
+log_message ""
+log_message "STEP 2/2: Running LLM classifier for $EMPLOYER_SLUG..."
+
+# Run classifier with employer filter
+node "$PROJECT_ROOT/scripts/classify-jobs-with-llm.js" --employer="$EMPLOYER_SLUG" > "$CLASSIFIER_LOG" 2>&1
+CLASSIFIER_EXIT_CODE=$?
+
+# Check classifier exit code
+if [ $CLASSIFIER_EXIT_CODE -eq 0 ]; then
+  log_message "✅ Classifier completed successfully (exit code: 0)"
+  
+  # Extract classification stats from log (if available)
+  SUCCESSFUL_COUNT=$(grep -oP '✅ Successful: \K\d+' "$CLASSIFIER_LOG" | head -1)
+  FAILED_COUNT=$(grep -oP '❌ Failed: \K\d+' "$CLASSIFIER_LOG" | head -1)
+  TOTAL_COST=$(grep -oP '💰 Total Cost: \$\K[\d.]+' "$CLASSIFIER_LOG" | head -1)
+  
+  log_message ""
+  log_message "📊 Classification Results:"
+  log_message "   ✅ Successful: ${SUCCESSFUL_COUNT:-N/A}"
+  log_message "   ❌ Failed: ${FAILED_COUNT:-N/A}"
+  log_message "   💰 Cost: \$${TOTAL_COST:-N/A}"
+  
+  log_message ""
+  log_message "=========================================="
+  log_message "✅ SUCCESS: Both scraper and classifier completed"
+  log_message "=========================================="
+  
+else
+  log_message "❌ Classifier FAILED (exit code: $CLASSIFIER_EXIT_CODE)"
+  log_message ""
+  log_message "📋 Last 20 lines of classifier log:"
+  tail -20 "$CLASSIFIER_LOG" | while IFS= read -r line; do
+    log_message "   $line"
+  done
+  
+  # Send failure email
+  EMAIL_SUBJECT="❌ Classifier Failed: $EMPLOYER_SLUG"
+  EMAIL_BODY="The LLM classifier for $EMPLOYER_SLUG has FAILED.
+
+Exit Code: $CLASSIFIER_EXIT_CODE
+Time: $DATE_READABLE
+Hostname: $(hostname)
+
+Classifier Log: $CLASSIFIER_LOG
+
+Last 20 lines of log:
+$(tail -20 "$CLASSIFIER_LOG")
+
+---
+NOTE: The scraper completed successfully, but jobs were NOT activated 
+because the classifier failed. Jobs remain in pending state (isActive: false).
+
+Possible causes:
+- OpenAI API key invalid or quota exceeded
+- Network connectivity issues
+- Database connection issues"
+
+  send_email "$EMAIL_SUBJECT" "$EMAIL_BODY"
+  
+  log_message ""
+  log_message "=========================================="
+  log_message "⚠️  PARTIAL FAILURE: Scraper succeeded, classifier failed"
+  log_message "=========================================="
+  
+  exit $CLASSIFIER_EXIT_CODE
+fi
+
+###############################################################################
+# Cleanup: Remove old logs (30+ days)
+###############################################################################
+log_message ""
+log_message "🧹 Cleaning up old logs (30+ days)..."
+find "$LOG_DIR" -name "*.log" -mtime +30 -delete 2>/dev/null
+DELETED_COUNT=$?
+if [ $DELETED_COUNT -eq 0 ]; then
+  log_message "✅ Old logs cleaned up"
+else
+  log_message "ℹ️  No old logs to clean up"
+fi
+
+log_message ""
+log_message "🎉 All done!"
+
+exit 0
+
