@@ -225,9 +225,10 @@ function calculateCost(usage) {
  */
 async function main() {
   try {
-    // Build query to fetch jobs - only process pending (inactive) jobs
+    // Build query to fetch jobs - only process jobs that haven't been classified yet
     const whereClause = {
-      isActive: false  // Only classify jobs that are pending LLM validation
+      isActive: false,      // Only classify inactive jobs (pending or expired)
+      classifiedAt: null    // Only classify jobs that haven't been classified yet (prevents re-activating expired jobs)
     };
     
     // Filter by employer if specified
@@ -317,13 +318,20 @@ async function main() {
               jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
               shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
               experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
-              isActive: true  // ✅ Activate job - validated as Staff RN
+              isActive: true,       // ✅ Activate job - validated as Staff RN
+              classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
             }
           });
           console.log(`   💾 Updated in database`);
           console.log(`   ✅ Job activated and live on site`);
         } else if (!isTestMode && !c.isStaffRN) {
-          // Keep as inactive if not a staff RN position (will never appear on site)
+          // Mark as classified but keep inactive (not a staff RN position - will never appear on site)
+          await prisma.nursingJob.update({
+            where: { id: job.id },
+            data: {
+              classifiedAt: new Date()  // ✅ Mark as classified even if rejected (prevents reprocessing)
+            }
+          });
           console.log(`   🚫 Kept inactive (not a staff RN position - will not appear on site)`);
         }
         
