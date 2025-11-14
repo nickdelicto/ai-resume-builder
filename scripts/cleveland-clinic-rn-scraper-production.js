@@ -643,6 +643,11 @@ class ClevelandClinicRNScraper {
     // Check for placeholder/incomplete description
     const isPlaceholder = this.isPlaceholderDescription(fullDescription);
     
+    // Skip jobs with placeholder descriptions - can't classify accurately
+    if (isPlaceholder) {
+      throw new Error(`Job "${title}" has placeholder/incomplete description - cannot verify requirements`);
+    }
+    
     // Check for RN exclusion context (assists RN, works with RN, etc.)
     const hasExclusionContext = this.hasRNExclusionContext(fullDescription);
     
@@ -651,19 +656,9 @@ class ClevelandClinicRNScraper {
       throw new Error(`Job "${title}" mentions RN but in supporting role context (assists/works with RN), not requiring RN license`);
     }
     
-    // Skip jobs with placeholder descriptions - can't verify RN requirement
-    if (isPlaceholder) {
-      throw new Error(`Job "${title}" has placeholder/incomplete description - cannot verify RN requirement`);
-    }
-    
-    // Description exists - check for RN requirement
-    const titleHasRN = this.hasRNMention(title);
-    const descriptionHasRN = this.hasRNMention(fullDescription);
-    
-    // If title doesn't have RN, description must have it
-    if (!titleHasRN && !descriptionHasRN) {
-      throw new Error(`Job "${title}" does not explicitly mention RN or Registered Nurse in title or description`);
-    }
+    // ✅ RELAXED VALIDATION: Let LLM classifier determine if this is a Staff RN position
+    // The scraper's job is to collect nursing jobs; the classifier validates if they're Staff RN roles
+    // This allows Nurse Manager, Assistant Nurse Manager, and other leadership positions through
     
     // Parse location
     const locationParts = this.parseLocation(job.location || jobDetails.location);
@@ -894,6 +889,45 @@ class ClevelandClinicRNScraper {
         );
         elementsToHide.forEach(el => el.style.display = 'none');
       });
+
+      // ✅ NEW: Click "Read More" button to expand full job description
+      // Cleveland Clinic jobs have truncated descriptions with a "Read More" button
+      try {
+        const readMoreExpanded = await page.evaluate(() => {
+          // Look for "Read More" or "Read Less" button (can be <button> or <a> tag)
+          const elements = Array.from(document.querySelectorAll('button, a'));
+          const readMoreButton = elements.find(el => {
+            const text = el.textContent.trim().toLowerCase();
+            // Match "read more" or "read less" (exact match with whitespace tolerance)
+            return text === 'read more' || text === 'read less';
+          });
+          
+          if (readMoreButton) {
+            // Check if content is already expanded (button says "Read Less")
+            const isExpanded = readMoreButton.textContent.toLowerCase().includes('less');
+            
+            if (!isExpanded) {
+              // Content is collapsed, click to expand
+              readMoreButton.click();
+              return true; // We clicked it
+            } else {
+              // Already expanded
+              return false; // No click needed
+            }
+          }
+          
+          return false; // No button found
+        });
+        
+        if (readMoreExpanded) {
+          // Wait for content to expand after clicking
+          console.log(`   ✅ Clicked "Read More" to expand full job description`);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5s for animation/loading
+        }
+      } catch (readMoreError) {
+        // Button might not exist on all jobs or clicking failed - that's OK, continue
+        console.log(`   ⚠️  Could not click Read More button: ${readMoreError.message}`);
+      }
 
       // Extract detailed job information
       const jobDetails = await page.evaluate(() => {
@@ -1169,23 +1203,54 @@ class ClevelandClinicRNScraper {
         };
         
         // Find description element - Cleveland Clinic specific
-        // Pay Range is in a separate .jd-salary element, so we need to get the parent container
-        // that includes both jd-description and jd-salary
+        // NOTE: Pay Range is in a SEPARATE element (.jd-salary) from the main description
+        // Structure: <div class="full-ejd full-text"> contains .jd-description + .jd-salary + .eoe-ejd
+        // We need to extract from the PARENT container to get both description AND salary
         let description = null;
         
-        // First, try to find the parent container (jd-desc) that has both description and salary
-        const parentContainer = document.querySelector('.jd-desc, [class*="job-desc"], [class*="desc-full"]');
+        // Try to find the parent container that has ALL content
+        let fullContainer = document.querySelector('.full-ejd.full-text, .full-text, [class*="full-ejd"]');
         
-        if (parentContainer) {
-          // We found the parent container - extract from it (includes both description and salary)
-          const containerClone = parentContainer.cloneNode(true);
+        if (fullContainer) {
+          // Extract from parent container (includes .jd-description + .jd-salary)
+          // The htmlToFormattedText() function will stop at "The policy of Cleveland Clinic..."
+          const containerClone = fullContainer.cloneNode(true);
           containerClone.querySelectorAll('script, style').forEach(el => el.remove());
           
-          // Extract formatted version from the entire container
+          // Extract formatted version - stops at legal/policy text
           const formattedText = htmlToFormattedText(containerClone);
           
           if (formattedText && formattedText.length > 500) {
             description = formattedText;
+          }
+        }
+        
+        // Fallback: if parent container not found, use .jd-description (pick longest)
+        if (!description) {
+          const descriptionElements = document.querySelectorAll('.jd-description');
+          
+          if (descriptionElements.length > 0) {
+            let longestElement = null;
+            let longestLength = 0;
+            
+            descriptionElements.forEach(el => {
+              const text = el.textContent || '';
+              if (text.length > longestLength) {
+                longestLength = text.length;
+                longestElement = el;
+              }
+            });
+            
+            if (longestElement) {
+              const containerClone = longestElement.cloneNode(true);
+              containerClone.querySelectorAll('script, style').forEach(el => el.remove());
+              
+              const formattedText = htmlToFormattedText(containerClone);
+              
+              if (formattedText && formattedText.length > 500) {
+                description = formattedText;
+              }
+            }
           }
         }
         
@@ -1454,7 +1519,7 @@ class ClevelandClinicRNScraper {
           description: formattedDescription,
           requirements: getCleanText(document.querySelector('[class*="requirement"], [class*="qualification"]')),
           responsibilities: getCleanText(document.querySelector('[class*="responsibility"], [class*="duty"]')),
-          benefits: getCleanText(document.querySelector('[class*="benefit"]')),
+          benefits: null, // Not extracted - generic HR text, not job-specific
           department: department || getCleanText(document.querySelector('[class*="department"], [class*="division"], [class*="facility"]')),
           employmentType: employmentType || null,
           shiftType: shiftType || null,
