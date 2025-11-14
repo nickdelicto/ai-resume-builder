@@ -1640,7 +1640,7 @@ class NorthwellHealthRNScraper {
           description: formattedDescription,
           requirements: getCleanText(document.querySelector('[class*="requirement"], [class*="qualification"]')),
           responsibilities: getCleanText(document.querySelector('[class*="responsibility"], [class*="duty"]')),
-          benefits: getCleanText(document.querySelector('[class*="benefit"]')),
+          benefits: null, // Not extracted - generic HR text, not job-specific
           department: department || getCleanText(document.querySelector('[class*="department"], [class*="division"], [class*="facility"]')),
           employmentType: employmentType || null,
           shiftType: shiftType || null,

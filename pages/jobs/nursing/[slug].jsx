@@ -119,7 +119,7 @@ export default function JobDetailPage({
   };
 
   // Render markdown-formatted text to React elements
-  // Handles: **bold**, ## headings, bullet points
+  // Handles: **bold**, ## headings, bullet points, section headers (text ending with :)
   const renderMarkdown = (text) => {
     if (!text) return null;
     
@@ -157,6 +157,18 @@ export default function JobDetailPage({
         continue;
       }
       
+      // Check for section headers (text ending with colon, like "Pay Range:" or "Physical Requirements:")
+      // These should be short (< 60 chars) and NOT be metadata lines (req#, Location, etc.)
+      const isMetadataPattern = /^(req#|Location|Facilities|Professional Area|Department|Job Code|Schedule|Shift|Posted Date|Experience Level):/i;
+      if (line.endsWith(':') && line.length < 60 && !isMetadataPattern.test(line)) {
+        elements.push(
+          <h3 key={key++} className="font-bold text-gray-900 text-lg mb-3 mt-6">
+            {line}
+          </h3>
+        );
+        continue;
+      }
+      
       // Check for bullet point
       if (line.startsWith('•')) {
         const bulletText = line.substring(1).trim();
@@ -171,7 +183,7 @@ export default function JobDetailPage({
         
         elements.push(
           <div key={key++} className="flex items-start gap-2 mb-2">
-            <span className="text-blue-600 mt-1 font-bold flex-shrink-0">•</span>
+            <span className="text-blue-600 font-bold flex-shrink-0 leading-relaxed">•</span>
             <span className="flex-1 leading-relaxed">{bulletContent}</span>
           </div>
         );
