@@ -211,6 +211,8 @@ const deletedUrls = [
   "https://intelliresume.net/jobs/nursing/rn-emergency-department-cleveland-oh-22500878",
   "https://intelliresume.net/jobs/nursing/assistant-nurse-manager-euclid-oh-22126291",
   "https://intelliresume.net/jobs/nursing/rn-geriatric-psych-cleveland-oh-22148233",
+  "https://intelliresume.net/jobs/nursing/rn-ambulatory-head-and-neck-specialty-cleveland-oh-22113712",
+  "https://intelliresume.net/jobs/nursing/new-grad-rn-resident-med-surg-mayfield-hts-oh-22417366",
   "https://intelliresume.net/resume-builder",
 ];
 
