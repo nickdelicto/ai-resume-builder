@@ -29,6 +29,112 @@ const JobTargetingPage = () => {
     }
   }, []);
 
+  // Pre-populate form fields from URL parameters (when coming from job listing page)
+  useEffect(() => {
+    if (router.isReady) {
+      const fetchJobData = async () => {
+        try {
+          // Option 1: Fetch job data from API using slug (preferred method - no truncation!)
+          if (router.query.jobSlug) {
+            const slug = router.query.jobSlug;
+            console.log('📊 JobTargetingPage - Fetching full job data for slug:', slug);
+            
+            setIsLoading(true);
+            const response = await fetch(`/api/jobs/${slug}`);
+            
+            if (response.ok) {
+              const data = await response.json();
+              const job = data.data.job;
+              
+              // Build comprehensive job description with ALL data (no truncation!)
+              let fullJobDescription = '';
+              
+              if (job.description) {
+                fullJobDescription += job.description;
+              }
+              
+              if (job.requirements) {
+                fullJobDescription += '\n\nRequirements:\n' + job.requirements;
+              }
+              
+              if (job.responsibilities) {
+                fullJobDescription += '\n\nResponsibilities:\n' + job.responsibilities;
+              }
+              
+              // Add pay range if available
+              if (job.salaryMin || job.salaryMax) {
+                const payMin = job.salaryMin ? `$${job.salaryMin.toLocaleString()}` : '';
+                const payMax = job.salaryMax ? `$${job.salaryMax.toLocaleString()}` : '';
+                const payType = job.salaryType || 'year';
+                
+                if (payMin && payMax) {
+                  fullJobDescription += `\n\nPay Range: ${payMin} - ${payMax} per ${payType}`;
+                } else if (payMin) {
+                  fullJobDescription += `\n\nPay: ${payMin} per ${payType}`;
+                } else if (payMax) {
+                  fullJobDescription += `\n\nPay: Up to ${payMax} per ${payType}`;
+                }
+              }
+              
+              // Set form fields with COMPLETE data
+              setJobTitle(job.title);
+              setJobDescription(fullJobDescription);
+              setIsLoading(false);
+              
+              console.log('📊 JobTargetingPage - Successfully pre-populated from API (FULL data, no truncation)');
+              
+              // Track analytics
+              if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+                window.gtag('event', 'job_targeting_prepopulated', {
+                  event_category: 'Job Targeting',
+                  event_label: 'Pre-populated from job listing via API',
+                  job_title: job.title,
+                  employer: job.employer?.name,
+                  location: `${job.city}, ${job.state}`
+                });
+              }
+            } else {
+              console.error('📊 JobTargetingPage - Failed to fetch job data:', response.status);
+              setError('Failed to load job data. Please try again.');
+              setIsLoading(false);
+            }
+          }
+          // Option 2: Legacy support for direct URL params (backward compatibility)
+          else if (router.query.title || router.query.description) {
+            if (router.query.title) {
+              const decodedTitle = decodeURIComponent(router.query.title);
+              setJobTitle(decodedTitle);
+              console.log('📊 JobTargetingPage - Pre-populated job title from URL (legacy)');
+            }
+            
+            if (router.query.description) {
+              const decodedDescription = decodeURIComponent(router.query.description);
+              setJobDescription(decodedDescription);
+              console.log('📊 JobTargetingPage - Pre-populated job description from URL (legacy)');
+            }
+
+            // Track analytics
+            if (router.query.title && router.query.description) {
+              if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+                window.gtag('event', 'job_targeting_prepopulated', {
+                  event_category: 'Job Targeting',
+                  event_label: 'Pre-populated from URL params (legacy)',
+                  job_title: router.query.title
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('📊 JobTargetingPage - Error fetching/reading job data:', error);
+          setError('There was an error loading the job information. Please try again.');
+          setIsLoading(false);
+        }
+      };
+      
+      fetchJobData();
+    }
+  }, [router.isReady, router.query.jobSlug, router.query.title, router.query.description]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     

@@ -992,24 +992,55 @@ export default function JobDetailPage({
             </div>
           </div>
 
-          {/* Apply Button - Placed after job description so users read everything first */}
+          {/* Action Buttons - Apply and Tailor Resume */}
           <div className="mb-8">
-            <a
-              href={job.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden"
-            >
-              {/* Shine effect on hover */}
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-              
-              <span className="relative z-10 flex items-center gap-3">
-                Apply Now
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </a>
+            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+              {/* Apply Now Button - Primary CTA */}
+              <a
+                href={job.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden"
+              >
+                {/* Shine effect on hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+                
+                <span className="relative z-10 flex items-center gap-3">
+                  Apply Job Now
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+              </a>
+
+              {/* Tailor Resume Button - Secondary CTA */}
+              <a
+                href={`/job-targeting?jobSlug=${job.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  // Track analytics
+                  if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+                    window.gtag('event', 'tailor_resume_click', {
+                      event_category: 'Job Actions',
+                      event_label: 'Tailor Resume to Job',
+                      job_title: job.title,
+                      employer: job.employer?.name,
+                      location: `${job.city}, ${job.state}`
+                    });
+                  }
+                }}
+                className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-white text-green-600 border-2 border-green-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:bg-green-50 transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <span className="flex items-center gap-3">
+                  {/* Target/Bullseye Icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Tailor Resume to Job
+                </span>
+              </a>
+            </div>
           </div>
 
           {/* Additional Information - Quick Summary */}
