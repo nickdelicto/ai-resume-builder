@@ -259,3 +259,14 @@ model Location {
   @@unique([city, state])
   @@index([state])
 }
+
+// Track deleted job slugs to return 410 Gone instead of 404 Not Found
+// This improves SEO by telling search engines the page is permanently removed
+model DeletedJob {
+  id        String   @id @default(cuid())
+  slug      String   @unique // The job slug that was deleted
+  deletedAt DateTime @default(now()) // When it was deleted
+  reason    String?  // Optional: why it was deleted (e.g., "testing cleanup", "duplicate", etc.)
+
+  @@index([slug]) // Fast lookup when checking if a slug was deleted
+}

@@ -8,11 +8,12 @@ import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
 const seoUtils = require('../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
+const { PrismaClient } = require('@prisma/client');
 
 /**
  * Server-Side Rendering: Fetch data before rendering
  */
-export async function getServerSideProps({ params, query }) {
+export async function getServerSideProps({ params, query, res }) {
   const { slug } = params;
   const page = query.page || '1';
 
@@ -39,6 +40,33 @@ export async function getServerSideProps({ params, query }) {
       const result = await fetchJobBySlug(slug);
       
       if (!result || !result.job) {
+        // Check if this job was deleted (return 410 Gone for better SEO)
+        const prisma = new PrismaClient();
+        
+        try {
+          const deletedJob = await prisma.deletedJob.findUnique({
+            where: { slug }
+          });
+          
+          if (deletedJob) {
+            // Job was deleted - return 410 Gone (tells Google to deindex permanently)
+            res.statusCode = 410;
+            await prisma.$disconnect();
+            return {
+              props: {
+                isGone: true,
+                slug: slug
+              }
+            };
+          }
+          
+          await prisma.$disconnect();
+        } catch (dbError) {
+          console.error('Error checking DeletedJob:', dbError);
+          await prisma.$disconnect();
+        }
+        
+        // Job never existed - return 404
         return {
           notFound: true
         };
@@ -71,7 +99,9 @@ export default function JobDetailPage({
   stats = null,
   job = null,
   relatedJobs = [],
-  error = null
+  error = null,
+  isGone = false,
+  slug = null
 }) {
   const router = useRouter();
 
@@ -212,6 +242,54 @@ export default function JobDetailPage({
     const currentSlug = router.query?.slug || (isStatePage && stateCode ? stateCode.toLowerCase() : '');
     router.push(`/jobs/nursing/${currentSlug}?page=${newPage}`);
   };
+
+  // 410 Gone state (deleted job)
+  if (isGone) {
+    return (
+      <>
+        <Head>
+          <title>Job No Longer Available | IntelliResume</title>
+          <meta name="robots" content="noindex, follow" />
+        </Head>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+          <div className="max-w-2xl mx-auto px-6 py-12 text-center">
+            <div className="mb-8">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-100 rounded-full mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                This Job Position Is Unavailable
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                This position is no longer available. It may have been filled, expired, or removed by the employer.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Looking for Similar Opportunities?</h2>
+              <p className="text-gray-600 mb-6">
+                Browse our current nursing job openings to find positions that match your skills and interests.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/jobs/nursing"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Browse All Nursing Jobs
+                </Link>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // Error state
   if (error) {
