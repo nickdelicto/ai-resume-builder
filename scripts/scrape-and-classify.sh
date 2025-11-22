@@ -88,7 +88,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "Available employers:"
   echo "  - cleveland-clinic"
   echo "  - uhs"
-  echo "  - adventist"
+  echo "  - adventist-healthcare"
   echo "  - northwell-health"
   exit 1
 fi
@@ -136,8 +136,8 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
   
-  adventist)
-    # Adventist uses Workday scraper
+  adventist-healthcare)
+    # Adventist Healthcare uses Workday scraper
     if [ -n "$MAX_PAGES" ]; then
       /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" adventist --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
     else
@@ -162,14 +162,14 @@ case $EMPLOYER_SLUG in
     log_message "Available employers:"
     log_message "  - cleveland-clinic"
     log_message "  - uhs"
-    log_message "  - adventist"
+    log_message "  - adventist-healthcare"
     log_message "  - northwell-health"
     
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist, northwell-health
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

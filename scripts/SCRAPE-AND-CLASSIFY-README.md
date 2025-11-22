@@ -35,7 +35,7 @@ cd ~/ai-resume-builder
 ./scripts/scrape-and-classify.sh uhs
 
 # Adventist Healthcare
-./scripts/scrape-and-classify.sh adventist
+./scripts/scrape-and-classify.sh adventist-healthcare
 
 # Northwell Health
 ./scripts/scrape-and-classify.sh northwell-health
@@ -51,7 +51,7 @@ See the "Updated Crontab" section below.
 |--------------|--------------|-------------|
 | `cleveland-clinic` | Custom | Cleveland Clinic (Ohio) |
 | `uhs` | Workday | United Health Services (New York) |
-| `adventist` | Workday | Adventist Healthcare (Maryland) |
+| `adventist-healthcare` | Workday | Adventist Healthcare (Maryland) |
 | `northwell-health` | Custom | Northwell Health (New York) |
 
 ## How It Works
@@ -172,7 +172,7 @@ Replace your current cron jobs with these:
 0 7 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh uhs
 
 # Adventist Healthcare - Every other Monday at 3 AM EST (8 AM UTC)
-0 8 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh adventist
+0 8 * * 1 [ $(expr $(date +\%U) \% 2) -eq 0 ] && /home/intelliresume/ai-resume-builder/scripts/scrape-and-classify.sh adventist-healthcare
 ```
 
 **To update your crontab:**
@@ -313,7 +313,7 @@ node scripts/cleveland-clinic-rn-scraper-production.js
 # UHS
 node scripts/workday-scraper-runner.js uhs
 
-# Adventist
+# Adventist Healthcare
 node scripts/workday-scraper-runner.js adventist
 ```
 
