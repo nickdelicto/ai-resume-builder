@@ -50,8 +50,9 @@ const SPECIALTIES = [
   'Progressive Care',
   'Radiology',
   'Rehabilitation',
-  'Telemetry',
-  'Travel'
+  'Telemetry'
+  // Note: "Travel" is NOT a specialty - it's a job type (employment model)
+  // Travel nurses still have a specialty (ICU, ER, etc.)
 ];
 
 // Parse command line arguments
@@ -113,7 +114,18 @@ Guidelines:
 
 **Task 3: Detect employment type**
 Options: Full Time, Part Time, PRN, Per Diem, Contract, Travel, null
+
+Guidelines:
+- "Full Time" = Permanent position, typically 36-40 hours/week
+- "Part Time" = Permanent position, less than 36 hours/week
+- "PRN" or "Per Diem" = As needed, on-call, flexible schedule
+- "Contract" = Temporary local assignment (3-6 months), NO relocation typically required
+- "Travel" = Temporary assignment (typically 13 weeks) with RELOCATION to different city/state, may include housing stipends
 - Return null if unclear or not specified
+
+Key distinction for Contract vs Travel:
+- If job mentions relocation, housing stipend, travel benefits, or assignments in different cities, and/or is a travel nurse assignment → "Travel"
+- If job is temporary/contract but at a local facility with no mention or indication that it is a travel nurse assignment or relocation → "Contract"
 
 **Task 4: Detect shift type**
 Options: days, nights, evenings, variable, rotating, null
