@@ -134,6 +134,16 @@ Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
 - Use CONTEXT CLUES: Look at qualifications, required experience, certifications, and job responsibilities to infer level
 - Return null ONLY if truly ambiguous with no hints in title, qualifications, or description
 
+**Task 6: Extract or validate location**
+Current scraped location: City="${job.city || 'null'}", State="${job.state || 'null'}"
+
+If the scraped location is missing (null) or seems invalid:
+- Look in the job title or full description for the actual city and state
+- If job is remote/virtual/work-from-home, return city: "Remote", state: null
+- If job mentions multiple locations, return the PRIMARY/FIRST location only
+- Return ONLY valid 2-letter US state codes (AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY, DC)
+- If location truly cannot be determined, return city: null, state: null
+
 **CRITICAL: Keep all JSON values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
 
 GOOD examples (concise):
@@ -159,6 +169,8 @@ BAD examples (too verbose - DO NOT do this):
   "jobType": "Full Time" or "Part Time" or "PRN" or "Per Diem" or "Contract" or "Travel" or null,
   "shiftType": "days" or "nights" or "evenings" or "variable" or "rotating" or null,
   "experienceLevel": "Entry Level" or "New Grad" or "Experienced" or "Senior" or "Leadership" or null,
+  "city": "City Name" or "Remote" or null,
+  "state": "OH" or null (2-letter code only),
   "confidence": 0.95
 }`;
 }
@@ -304,6 +316,7 @@ async function main() {
         console.log(`      Job Type: ${c.jobType || 'not specified'}`);
         console.log(`      Shift Type: ${c.shiftType || 'not specified'}`);
         console.log(`      Experience: ${c.experienceLevel || 'not specified'}`);
+        console.log(`      Location: ${c.city || 'unknown'}, ${c.state || 'unknown'}`);
         console.log(`      Confidence: ${(c.confidence * 100).toFixed(0)}%`);
         console.log(`   💰 Cost: $${result.cost.toFixed(6)} | Tokens: ${result.tokensUsed}`);
         
@@ -316,26 +329,45 @@ async function main() {
           jobType: c.jobType,
           shiftType: c.shiftType,
           experienceLevel: c.experienceLevel,
+          city: c.city,
+          state: c.state,
           confidence: c.confidence
         });
         
         // Update database if not in test mode
-        if (!isTestMode && c.isStaffRN) {
+        if (!isTestMode && c.isStaffRN && c.city && c.state) {
+          // Staff RN with valid location → Activate job
           await prisma.nursingJob.update({
             where: { id: job.id },
             data: {
+              city: c.city,           // Update with LLM-extracted location
+              state: c.state,         // Update with LLM-validated state
               specialty: c.specialty,
               jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
               shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
               experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
-              isActive: true,       // ✅ Activate job - validated as Staff RN
+              isActive: true,       // ✅ Activate job - validated as Staff RN with location
               classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
             }
           });
-          console.log(`   💾 Updated in database`);
+          console.log(`   💾 Updated in database with location: ${c.city}, ${c.state}`);
           console.log(`   ✅ Job activated and live on site`);
+        } else if (!isTestMode && c.isStaffRN && (!c.city || !c.state)) {
+          // Staff RN but no valid location → Keep inactive but mark as classified
+          await prisma.nursingJob.update({
+            where: { id: job.id },
+            data: {
+              specialty: c.specialty,
+              jobType: c.jobType || job.jobType,
+              shiftType: c.shiftType || job.shiftType,
+              experienceLevel: c.experienceLevel || job.experienceLevel,
+              isActive: false,      // ❌ Keep inactive - no valid location
+              classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
+            }
+          });
+          console.log(`   🚫 Staff RN but location unknown (${c.city || 'null'}, ${c.state || 'null'}) - kept inactive`);
         } else if (!isTestMode && !c.isStaffRN) {
-          // Mark as classified but keep inactive (not a staff RN position - will never appear on site)
+          // Not a staff RN position → Keep inactive
           await prisma.nursingJob.update({
             where: { id: job.id },
             data: {
