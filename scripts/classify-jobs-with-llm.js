@@ -7,6 +7,7 @@
  * - Assigns accurate specialty (ICU, ER, Med-Surg, etc.)
  * - Detects job type (Full Time, Part Time, PRN, etc.)
  * - Formats description into clean, standardized markdown
+ * - Only classifies jobs scraped within last 48 hours (prevents stale jobs from being activated)
  * 
  * Usage:
  *   node scripts/classify-jobs-with-llm.js [--test] [--limit=20] [--employer=cleveland-clinic]
@@ -225,10 +226,17 @@ function calculateCost(usage) {
  */
 async function main() {
   try {
+    // Calculate 48-hour cutoff (prevent classifying old stale jobs)
+    const fortyEightHoursAgo = new Date();
+    fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
+    
     // Build query to fetch jobs - only process jobs that haven't been classified yet
     const whereClause = {
       isActive: false,      // Only classify inactive jobs (pending or expired)
-      classifiedAt: null    // Only classify jobs that haven't been classified yet (prevents re-activating expired jobs)
+      classifiedAt: null,   // Only classify jobs that haven't been classified yet (prevents re-activating expired jobs)
+      scrapedAt: {
+        gte: fortyEightHoursAgo  // Only classify jobs scraped within last 48 hours (prevents old stale jobs from being activated)
+      }
     };
     
     // Filter by employer if specified
@@ -245,6 +253,8 @@ async function main() {
       whereClause.employerId = employer.id;
       console.log(`📍 Filtering: ${employer.name}\n`);
     }
+    
+    console.log(`⏰ Only classifying jobs scraped within last 48 hours (after ${fortyEightHoursAgo.toISOString()})\n`);
     
     // Fetch jobs to classify
     const jobs = await prisma.nursingJob.findMany({
