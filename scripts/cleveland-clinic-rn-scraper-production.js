@@ -20,7 +20,9 @@ const JobBoardService = require('../lib/services/JobBoardService');
 class ClevelandClinicRNScraper {
   constructor(options = {}) {
     this.baseUrl = 'https://jobs.clevelandclinic.org/';
-    this.searchUrl = 'https://jobs.clevelandclinic.org/job-search-results/?keyword=nurse';
+    // Use Professional Area filters instead of keyword search for more accurate RN job targeting
+    // This filters to: Nursing - Experienced, New Grad, Leadership, and Non Patient Care categories
+    this.searchUrl = 'https://jobs.clevelandclinic.org/job-search-results/?category[]=Nursing%20-%20Experienced&category[]=Nursing%20-%20New%20Grad&category[]=Nursing%20Leadership&category[]=Nursing%20Non%20Patient%20Care';
     this.employerName = 'Cleveland Clinic';
     this.employerSlug = generateEmployerSlug(this.employerName);
     this.careerPageUrl = this.baseUrl;
@@ -729,6 +731,9 @@ class ClevelandClinicRNScraper {
       return { city: null, state: null, zipCode: null };
     }
     
+    // Valid US state codes (prevents fake states like "EX", "ST", "ED" from words like EXTERNAL, STAFF, EDUCATION)
+    const validUSStates = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
+    
     // Clean the string first
     const clean = locationString.trim();
     
@@ -742,11 +747,15 @@ class ClevelandClinicRNScraper {
     for (const pattern of patterns) {
       const match = clean.match(pattern);
       if (match && match[2] && match[2].length === 2) {
-        return {
-          city: match[1],
-          state: match[2],
-          zipCode: match[3] || null
-        };
+        const state = match[2];
+        // Validate state code is a real US state
+        if (validUSStates.includes(state)) {
+          return {
+            city: match[1],
+            state: state,
+            zipCode: match[3] || null
+          };
+        }
       }
     }
     
@@ -755,11 +764,15 @@ class ClevelandClinicRNScraper {
     if (parts.length >= 2) {
       const stateMatch = parts[1].match(/([A-Z]{2})/);
       if (stateMatch) {
-        return {
-          city: parts[0],
-          state: stateMatch[1],
-          zipCode: parts[1].match(/\d{5}/)?.[0] || null
-        };
+        const state = stateMatch[1];
+        // Validate state code is a real US state
+        if (validUSStates.includes(state)) {
+          return {
+            city: parts[0],
+            state: state,
+            zipCode: parts[1].match(/\d{5}/)?.[0] || null
+          };
+        }
       }
     }
     
@@ -767,14 +780,18 @@ class ClevelandClinicRNScraper {
     const stateMatch = clean.match(/\b([A-Z]{2})\b/);
     if (stateMatch) {
       const state = stateMatch[1];
-      const cityPart = clean.split(',')[0] || clean.split(state)[0];
-      return {
-        city: cityPart.trim() || null,
-        state: state,
-        zipCode: clean.match(/\d{5}/)?.[0] || null
-      };
+      // Validate state code is a real US state
+      if (validUSStates.includes(state)) {
+        const cityPart = clean.split(',')[0] || clean.split(state)[0];
+        return {
+          city: cityPart.trim() || null,
+          state: state,
+          zipCode: clean.match(/\d{5}/)?.[0] || null
+        };
+      }
     }
     
+    // Could not parse valid location (either no location found, or invalid state code)
     return { city: null, state: null, zipCode: null };
   }
 
