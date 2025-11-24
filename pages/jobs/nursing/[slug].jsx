@@ -614,8 +614,8 @@ export default function JobDetailPage({
                             </span>
                           )}
                           {jobItem.experienceLevel && (
-                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
-                              {jobItem.experienceLevel.replace('-', ' ')}
+                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                              {jobItem.experienceLevel}
                             </span>
                           )}
                         </div>
@@ -829,8 +829,8 @@ export default function JobDetailPage({
                 </span>
               )}
               {job.experienceLevel && (
-                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium capitalize">
-                  {job.experienceLevel.replace('-', ' ')}
+                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                  {job.experienceLevel}
                 </span>
               )}
             </div>
@@ -959,7 +959,7 @@ export default function JobDetailPage({
                             {job.experienceLevel && (
                               <div className="flex items-start gap-2">
                                 <span className="font-bold text-gray-900 min-w-[120px]">Experience Level:</span>
-                                <span className="text-gray-700 capitalize">{job.experienceLevel.replace('-', ' ')}</span>
+                                <span className="text-gray-700">{job.experienceLevel}</span>
                               </div>
                             )}
                             {job.scrapedAt && (

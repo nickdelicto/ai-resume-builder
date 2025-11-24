@@ -20,6 +20,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const OpenAI = require('openai');
+const { normalizeExperienceLevel } = require('../lib/utils/experienceLevelUtils');
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({
@@ -136,15 +137,33 @@ Options: days, nights, evenings, variable, rotating, null
 - "rotating" = Rotating shifts required
 - Return null if not specified or unclear
 
-**Task 5: Detect experience level (use context clues from title, qualifications, and description)**
+**Task 5: Detect experience level (REQUIRED - use context clues and make educated inferences)**
 Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
-- "Entry Level" = Explicitly states entry level, 0-1 year required, or minimal experience needed
-- "New Grad" = New graduate, residency, fellowship, GN, new grad program, or "new to specialty" language
-- "Experienced" = Requires 1-3 years experience, or moderate clinical skills mentioned in qualifications
-- "Senior" = Requires 3+ years, senior RN title, advanced clinical expertise, specialty certifications required
-- "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator, assistant manager in title or responsibilities
-- Use CONTEXT CLUES: Look at qualifications, required experience, certifications, and job responsibilities to infer level
-- Return null ONLY if truly ambiguous with no hints in title, qualifications, or description
+
+CRITICAL: You MUST assign an experience level to almost every job. Return null ONLY if the posting is extremely vague with ZERO context clues.
+
+Guidelines for assignment:
+- "Entry Level" = States 0-1 year OR minimal requirements OR "will train" OR "no experience required"
+- "New Grad" = Residency/fellowship/GN program OR explicitly welcomes new graduates OR "new grad RN" in title
+- "Experienced" = DEFAULT for standard staff RN positions OR requires 1-3+ years OR "previous RN experience required/preferred" OR specialty requires competency (ICU, ER, OR)
+- "Senior" = Requires 3-5+ years OR specialty certifications required (CCRN, CEN, CCRN-K, etc.) OR "senior RN" in title OR advanced clinical expertise mentioned
+- "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator, assistant manager in title OR supervisory/management responsibilities listed
+
+Context Clues to Use (IMPORTANT):
+- ICU/ER/Critical Care/OR positions typically need experience → Default to "Experienced" or "Senior"
+- Med-Surg/Telemetry with no experience stated → Default to "Experienced" 
+- Float Pool/Travel positions usually need experience → Default to "Experienced"
+- Specialty certifications required (CCRN, CEN, OCN, etc.) → "Senior"
+- Residency/Fellowship programs → "New Grad"
+- Charge/Lead/Manager/Coordinator in title → "Leadership"
+- Home Health/Hospice typically need experience → "Experienced"
+
+Decision Logic:
+1. Check title for explicit indicators (Residency, New Grad, Senior, Charge, Manager)
+2. Check requirements for years of experience or certifications
+3. Consider specialty complexity (ICU is harder than Med-Surg for new grads)
+4. When uncertain between Entry/Experienced/Senior → Pick "Experienced" as safe default for staff positions
+5. Return null ONLY if posting has NO title hints, NO requirement hints, AND NO specialty context
 
 **Task 6: Extract or validate location**
 Current scraped location: City="${job.city || 'null'}", State="${job.state || 'null'}"
@@ -212,6 +231,12 @@ async function classifyJob(job) {
     });
     
     const result = JSON.parse(response.choices[0].message.content);
+    
+    // Normalize experience level to proper Title Case format
+    // Handles LLM variations like "new-grad", "senior", "experienced"
+    if (result.experienceLevel) {
+      result.experienceLevel = normalizeExperienceLevel(result.experienceLevel);
+    }
     
     return {
       success: true,
