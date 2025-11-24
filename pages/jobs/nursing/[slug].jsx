@@ -505,15 +505,19 @@ export default function JobDetailPage({
                           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Specialties</h3>
                         </div>
                         <div className="space-y-3">
-                          {stats.specialties.slice(0, 5).map((spec, idx) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between items-center py-1"
-                            >
-                              <span className="text-gray-900 font-medium">{spec.specialty}</span>
-                              <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
-                            </div>
-                          ))}
+                          {stats.specialties.slice(0, 5).map((spec, idx) => {
+                            const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+                            return (
+                              <Link
+                                key={idx}
+                                href={`/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}`}
+                                className="flex justify-between items-center py-1 group hover:text-purple-600 transition-colors"
+                              >
+                                <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
+                                <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

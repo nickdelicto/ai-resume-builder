@@ -5,14 +5,16 @@ import Head from 'next/head';
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../../lib/jobScraperUtils');
-const { detectStateFromSlug, fetchCitySalaryStats } = require('../../../../../lib/services/jobPageData');
+const { detectStateFromSlug, fetchCitySalaryStats, fetchStateSpecialtySalaryStats } = require('../../../../../lib/services/jobPageData');
 const { formatSalary, formatSalaryRange } = require('../../../../../lib/utils/salaryStatsUtils');
+const { isValidSpecialtySlug, slugToSpecialty } = require('../../../../../lib/constants/specialties');
 
 /**
  * Server-Side Rendering: Fetch salary data before rendering
+ * This handles BOTH city salary pages AND state+specialty salary pages
  */
 export async function getServerSideProps({ params }) {
-  const { slug, city } = params;
+  const { slug, cityOrSpecialty } = params;
 
   try {
     // Validate that slug is a valid state
@@ -24,25 +26,52 @@ export async function getServerSideProps({ params }) {
       };
     }
 
-    // Fetch salary statistics
-    const result = await fetchCitySalaryStats(stateInfo.stateCode, city);
-    
-    if (!result) {
+    // Check if this is a specialty or a city
+    const isSpecialty = isValidSpecialtySlug(cityOrSpecialty);
+
+    if (isSpecialty) {
+      // STATE + SPECIALTY SALARY PAGE (e.g., /ohio/icu/salary)
+      const result = await fetchStateSpecialtySalaryStats(stateInfo.stateCode, cityOrSpecialty);
+      
+      if (!result) {
+        return {
+          notFound: true
+        };
+      }
+
       return {
-        notFound: true
+        props: {
+          stateCode: stateInfo.stateCode,
+          stateFullName: stateInfo.stateFullName,
+          specialtyName: result.specialty,
+          salaryStats: result.salaryStats,
+          cities: result.cities,
+          allStates: result.allStates,
+          isSpecialtyPage: true
+        }
+      };
+    } else {
+      // CITY SALARY PAGE (e.g., /ohio/cleveland/salary)
+      const result = await fetchCitySalaryStats(stateInfo.stateCode, cityOrSpecialty);
+      
+      if (!result) {
+        return {
+          notFound: true
+        };
+      }
+
+      return {
+        props: {
+          stateCode: stateInfo.stateCode,
+          stateFullName: stateInfo.stateFullName,
+          cityName: result.city,
+          salaryStats: result.salaryStats,
+          cities: result.cities,
+          allStates: result.allStates,
+          isSpecialtyPage: false
+        }
       };
     }
-
-    return {
-      props: {
-        stateCode: stateInfo.stateCode,
-        stateFullName: stateInfo.stateFullName,
-        cityName: result.city,
-        salaryStats: result.salaryStats,
-        cities: result.cities,
-        allStates: result.allStates
-      }
-    };
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
     return {
@@ -51,24 +80,39 @@ export async function getServerSideProps({ params }) {
   }
 }
 
-export default function CitySalaryPage({ 
+export default function CityOrSpecialtySalaryPage({ 
   stateCode = null,
   stateFullName = null,
   cityName = null,
+  specialtyName = null,
   salaryStats = null,
   cities = [],
-  allStates = []
+  allStates = [],
+  isSpecialtyPage = false
 }) {
   const router = useRouter();
-  const location = `${cityName}, ${stateFullName || stateCode}`;
+  
+  // Determine location based on page type
+  const location = isSpecialtyPage 
+    ? stateFullName || stateCode  // Just the state name for specialty pages
+    : `${cityName}, ${stateFullName || stateCode}`;
+  
   const jobCount = salaryStats?.jobCount || 0;
 
-  // Generate SEO meta tags
-  const seoMeta = seoUtils.generateSalaryPageMetaTags(location, 'city', salaryStats);
+  // Generate SEO meta tags - pass specialty separately for better formatting
+  const seoMeta = isSpecialtyPage
+    ? seoUtils.generateSalaryPageMetaTags(location, 'state-specialty', salaryStats, specialtyName)
+    : seoUtils.generateSalaryPageMetaTags(location, 'city', salaryStats);
 
-  // Generate city slug helper
+  // Generate slug helpers
   const generateCitySlug = (cityName) => {
+    if (!cityName) return '';
     return cityName.toLowerCase().replace(/\s+/g, '-');
+  };
+  
+  const generateSpecialtySlug = (specialtyName) => {
+    if (!specialtyName) return '';
+    return specialtyName.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
   };
 
   return (
@@ -108,7 +152,38 @@ export default function CitySalaryPage({
               "url": seoMeta.canonicalUrl,
               "breadcrumb": {
                 "@type": "BreadcrumbList",
-                "itemListElement": [
+                "itemListElement": isSpecialtyPage ? [
+                  {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://intelliresume.net"
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "RN Jobs",
+                    "item": "https://intelliresume.net/jobs/nursing"
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": `${stateFullName || stateCode} RN Jobs`,
+                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 4,
+                    "name": `${specialtyName} RN Jobs in ${stateFullName || stateCode}`,
+                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 5,
+                    "name": `Average ${specialtyName} RN Salary in ${stateFullName || stateCode}`,
+                    "item": seoMeta.canonicalUrl
+                  }
+                ] : [
                   {
                     "@type": "ListItem",
                     "position": 1,
@@ -151,16 +226,19 @@ export default function CitySalaryPage({
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              Average RN Salary in {location}
+              {isSpecialtyPage 
+                ? `Average ${specialtyName} RN Salary in ${location}`
+                : `Average RN Salary in ${location}`
+              }
             </h1>
             {jobCount > 0 ? (
               <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                Based on {jobCount} job{jobCount === 1 ? '' : 's'} with salary data
+                Based on {jobCount} {isSpecialtyPage ? `${specialtyName} ` : ''}job{jobCount === 1 ? '' : 's'} with salary data
                 {jobCount === 1 && <span className="text-sm text-gray-500 block mt-1">*Based on limited data</span>}
               </p>
             ) : (
               <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                Salary data not yet available for this location
+                Salary data not yet available for {isSpecialtyPage ? `${specialtyName} RN positions in ` : 'this location'}
               </p>
             )}
           </div>
@@ -179,7 +257,12 @@ export default function CitySalaryPage({
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Average Hourly RN Salary in {location}</h2>
+                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                        {isSpecialtyPage 
+                          ? `Average Hourly ${specialtyName} RN Salary in ${location}`
+                          : `Average Hourly RN Salary in ${location}`
+                        }
+                      </h2>
                     </div>
                     <div className="text-3xl font-bold text-green-700 mb-2">
                       {formatSalary(salaryStats.hourly.average, 'hourly')}
@@ -200,7 +283,12 @@ export default function CitySalaryPage({
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Average Annual RN Salary in {location}</h2>
+                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                        {isSpecialtyPage 
+                          ? `Average Annual ${specialtyName} RN Salary in ${location}`
+                          : `Average Annual RN Salary in ${location}`
+                        }
+                      </h2>
                     </div>
                     <div className="text-3xl font-bold text-blue-700 mb-2">
                       {formatSalary(salaryStats.annual.average, 'annual')}
@@ -220,7 +308,12 @@ export default function CitySalaryPage({
                           <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">RN Salary Range in {location}</h2>
+                      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                        {isSpecialtyPage 
+                          ? `${specialtyName} RN Salary Range in ${location}`
+                          : `RN Salary Range in ${location}`
+                        }
+                      </h2>
                     </div>
                     <div className="space-y-2">
                       {salaryStats?.hourly && (
@@ -246,8 +339,8 @@ export default function CitySalaryPage({
 
               {/* Breakdown Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* By Specialty */}
-                {salaryStats?.bySpecialty && salaryStats.bySpecialty.length > 0 && (
+                {/* By Specialty - Only show on state/city pages, NOT on specialty pages */}
+                {salaryStats?.bySpecialty && salaryStats.bySpecialty.length > 0 && !isSpecialtyPage && (
                   <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="p-2 bg-purple-50 rounded-lg">
@@ -301,14 +394,19 @@ export default function CitySalaryPage({
 
                 {/* By Employer */}
                 {salaryStats?.byEmployer && salaryStats.byEmployer.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
+                  <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200 ${isSpecialtyPage ? 'md:col-span-2' : ''}`}>
                     <div className="flex items-center gap-2 mb-4">
                       <div className="p-2 bg-green-50 rounded-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">Salary by Employer in {location}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {isSpecialtyPage 
+                          ? `${specialtyName} RN Salary by Employer in ${location}`
+                          : `Salary by Employer in ${location}`
+                        }
+                      </h3>
                     </div>
                     <div className="space-y-3">
                       {salaryStats.byEmployer.map((emp, idx) => (
@@ -359,10 +457,13 @@ export default function CitySalaryPage({
               {/* Link to Jobs */}
               <div className="mb-8 text-center">
                 <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`}
+                  href={isSpecialtyPage 
+                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                    : `/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`
+                  }
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
-                  View {jobCount}+ RN Jobs in {location}
+                  View {jobCount}+ {isSpecialtyPage ? `${specialtyName} ` : ''}RN Jobs in {isSpecialtyPage ? stateFullName : location}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
@@ -384,10 +485,13 @@ export default function CitySalaryPage({
                   We continuously update our database with the latest job postings and salary information.
                 </p>
                 <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`}
+                  href={isSpecialtyPage 
+                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                    : `/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`
+                  }
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
-                  Browse RN Jobs in {location}
+                  Browse RN Jobs {isSpecialtyPage ? `for ${specialtyName} in ${stateFullName}` : `in ${location}`}
                 </Link>
               </div>
             </div>
@@ -395,23 +499,31 @@ export default function CitySalaryPage({
 
           {/* Browse Navigation */}
           <div className="space-y-6">
-            {/* Browse Other Cities in State */}
+            {/* Browse Other Cities/Specialties */}
             {cities.length > 0 && (
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-2 border-blue-200">
                 <div className="flex items-center gap-2 mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
-                  <h2 className="text-lg font-semibold text-gray-900">Browse Salary by City in {stateFullName || stateCode}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {isSpecialtyPage 
+                      ? `Browse ${specialtyName} RN Salary by City in ${stateFullName || stateCode}` 
+                      : `Browse Salary by City in ${stateFullName || stateCode}`
+                    }
+                  </h2>
                   <span className="text-sm text-gray-600">({cities.length} cities)</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                   {cities.map((cityData) => {
                     const citySlug = generateCitySlug(cityData.city);
+                    const linkHref = isSpecialtyPage
+                      ? `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${generateSpecialtySlug(specialtyName)}/salary`
+                      : `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/salary`;
                     return (
                       <Link
                         key={cityData.city}
-                        href={`/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/salary`}
+                        href={linkHref}
                         className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-blue-300 bg-white hover:border-blue-500 hover:bg-blue-50 hover:shadow-md transition-all"
                       >
                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
@@ -434,7 +546,12 @@ export default function CitySalaryPage({
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
-                  <h2 className="text-lg font-semibold text-gray-900">Browse Salary by State</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {isSpecialtyPage 
+                      ? `Browse ${specialtyName} RN Salary by State`
+                      : 'Browse Salary by State'
+                    }
+                  </h2>
                   <span className="text-sm text-gray-600">({allStates.length} states)</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
@@ -442,10 +559,13 @@ export default function CitySalaryPage({
                     const stateFullNameDisplay = getStateFullName(stateData.state);
                     const stateDisplay = stateFullNameDisplay || stateData.state;
                     const stateSlug = stateData.state.toLowerCase();
+                    const linkHref = isSpecialtyPage
+                      ? `/jobs/nursing/${stateSlug}/${generateSpecialtySlug(specialtyName)}/salary`
+                      : `/jobs/nursing/${stateSlug}/salary`;
                     return (
                       <Link
                         key={stateData.state}
-                        href={`/jobs/nursing/${stateSlug}/salary`}
+                        href={linkHref}
                         className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-gray-300 bg-white hover:border-gray-500 hover:bg-gray-50 hover:shadow-md transition-all"
                       >
                         <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
