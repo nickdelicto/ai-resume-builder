@@ -23,7 +23,9 @@ export async function getServerSideProps({ res }) {
       states,
       cities,
       specialties,
-      employers
+      employers,
+      stateSpecialties,
+      citySpecialties
     ] = await Promise.all([
       // All active jobs
       prisma.nursingJob.findMany({
@@ -63,6 +65,24 @@ export async function getServerSideProps({ res }) {
         },
         select: { slug: true },
         orderBy: { name: 'asc' }
+      }),
+      // All state + specialty combinations
+      prisma.nursingJob.groupBy({
+        by: ['state', 'specialty'],
+        where: {
+          isActive: true,
+          specialty: { not: null }
+        },
+        _count: { id: true }
+      }),
+      // All city + specialty combinations
+      prisma.nursingJob.groupBy({
+        by: ['state', 'city', 'specialty'],
+        where: {
+          isActive: true,
+          specialty: { not: null }
+        },
+        _count: { id: true }
       })
     ]);
 
@@ -149,30 +169,121 @@ export async function getServerSideProps({ res }) {
         if (!cityData || !cityData.state || !cityData.city) return;
         const stateCode = cityData.state.toLowerCase();
         const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
-      addUrl(
-        `/jobs/nursing/${stateCode}/${citySlug}`,
-        null,
-        'weekly',
-        '0.7'
-      );
+        addUrl(
+          `/jobs/nursing/${stateCode}/${citySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
       });
     }
 
-    // 4. Specialty pages
+    // 4. State salary pages
+    if (states && Array.isArray(states)) {
+      states.forEach(stateData => {
+        if (!stateData || !stateData.state) return;
+        const stateCode = stateData.state.toLowerCase();
+        addUrl(
+          `/jobs/nursing/${stateCode}/salary`,
+          null,
+          'weekly',
+          '0.6'
+        );
+      });
+    }
+
+    // 5. City salary pages
+    if (cities && Array.isArray(cities)) {
+      cities.forEach(cityData => {
+        if (!cityData || !cityData.state || !cityData.city) return;
+        const stateCode = cityData.state.toLowerCase();
+        const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
+        addUrl(
+          `/jobs/nursing/${stateCode}/${citySlug}/salary`,
+          null,
+          'weekly',
+          '0.6'
+        );
+      });
+    }
+
+    // 6. State + Specialty pages (NEW programmatic pages)
+    if (stateSpecialties && Array.isArray(stateSpecialties)) {
+      stateSpecialties.forEach(data => {
+        if (!data || !data.state || !data.specialty) return;
+        const stateCode = data.state.toLowerCase();
+        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/${stateCode}/${specialtySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
+      });
+    }
+
+    // 7. City + Specialty pages (NEW programmatic pages)
+    if (citySpecialties && Array.isArray(citySpecialties)) {
+      citySpecialties.forEach(data => {
+        if (!data || !data.state || !data.city || !data.specialty) return;
+        const stateCode = data.state.toLowerCase();
+        const citySlug = data.city.toLowerCase().replace(/\s+/g, '-');
+        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/${stateCode}/${citySlug}/${specialtySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
+      });
+    }
+
+    // 8. State + Specialty salary pages (NEW programmatic pages)
+    if (stateSpecialties && Array.isArray(stateSpecialties)) {
+      stateSpecialties.forEach(data => {
+        if (!data || !data.state || !data.specialty) return;
+        const stateCode = data.state.toLowerCase();
+        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/${stateCode}/${specialtySlug}/salary`,
+          null,
+          'weekly',
+          '0.6'
+        );
+      });
+    }
+
+    // 9. City + Specialty salary pages (NEW programmatic pages)
+    if (citySpecialties && Array.isArray(citySpecialties)) {
+      citySpecialties.forEach(data => {
+        if (!data || !data.state || !data.city || !data.specialty) return;
+        const stateCode = data.state.toLowerCase();
+        const citySlug = data.city.toLowerCase().replace(/\s+/g, '-');
+        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/${stateCode}/${citySlug}/${specialtySlug}/salary`,
+          null,
+          'weekly',
+          '0.6'
+        );
+      });
+    }
+
+    // 10. National Specialty pages
     if (specialties && Array.isArray(specialties)) {
       specialties.forEach(specData => {
         if (!specData || !specData.specialty) return;
-        const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-');
-      addUrl(
-        `/jobs/nursing/specialty/${specialtySlug}`,
-        null,
-        'weekly',
-        '0.7'
-      );
+        const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/specialty/${specialtySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
       });
     }
 
-    // 5. Employer pages
+    // 11. Employer pages
     if (employers && Array.isArray(employers)) {
       employers.forEach(employer => {
         if (!employer || !employer.slug) return;
