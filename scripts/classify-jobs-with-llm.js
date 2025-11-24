@@ -28,33 +28,10 @@ const openai = new OpenAI({
 });
 
 // All supported specialties (extracted from detectSpecialty function)
-const SPECIALTIES = [
-  'Ambulatory',
-  'Cardiac',
-  'ER',
-  'Float Pool',
-  'General Nursing',
-  'Geriatrics',
-  'Home Care',
-  'Home Health',
-  'Hospice',
-  'ICU',
-  'Labor & Delivery',
-  'Maternity',
-  'Med-Surg',
-  'Mental Health',
-  'NICU',
-  'Oncology',
-  'OR',
-  'PACU',
-  'Pediatrics',
-  'Progressive Care',
-  'Radiology',
-  'Rehabilitation',
-  'Telemetry'
-  // Note: "Travel" is NOT a specialty - it's a job type (employment model)
-  // Travel nurses still have a specialty (ICU, ER, etc.)
-];
+// Import specialties from centralized constants file
+const { SPECIALTIES } = require('../lib/constants/specialties');
+// Note: "Travel" is NOT a specialty - it's a job type (employment model)
+// Travel nurses still have a specialty (ICU, ER, etc.)
 
 // Parse command line arguments
 const args = process.argv.slice(2);
