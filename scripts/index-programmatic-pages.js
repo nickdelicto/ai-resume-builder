@@ -131,13 +131,13 @@ async function generateProgrammaticUrls() {
     // All employer+specialty combinations
     prisma.nursingJob.groupBy({
       by: ['employerId', 'specialty'],
-      where: { isActive: true, employerId: { not: null }, specialty: { not: null } },
+      where: { isActive: true, specialty: { not: null } },
       _count: { id: true }
     }),
     // All employer+job type combinations
     prisma.nursingJob.groupBy({
       by: ['employerId', 'jobType'],
-      where: { isActive: true, employerId: { not: null }, jobType: { not: null } },
+      where: { isActive: true, jobType: { not: null } },
       _count: { id: true }
     })
   ]);

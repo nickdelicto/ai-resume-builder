@@ -92,7 +92,6 @@ export async function getServerSideProps({ res }) {
         by: ['employerId', 'specialty'],
         where: {
           isActive: true,
-          employerId: { not: null },
           specialty: { not: null }
         },
         _count: { id: true }
@@ -102,7 +101,6 @@ export async function getServerSideProps({ res }) {
         by: ['employerId', 'jobType'],
         where: {
           isActive: true,
-          employerId: { not: null },
           jobType: { not: null }
         },
         _count: { id: true }
