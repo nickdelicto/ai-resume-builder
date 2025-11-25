@@ -90,7 +90,7 @@ async function generateProgrammaticUrls() {
   console.log('📊 Fetching data from database...\n');
   
   // Fetch all necessary data
-  const [states, cities, specialties, stateSpecialties, citySpecialties, employers, employerSpecialties] = await Promise.all([
+  const [states, cities, specialties, stateSpecialties, citySpecialties, employers, employerSpecialties, employerJobTypes] = await Promise.all([
     // All states with job counts
     prisma.nursingJob.groupBy({
       by: ['state'],
@@ -133,6 +133,12 @@ async function generateProgrammaticUrls() {
       by: ['employerId', 'specialty'],
       where: { isActive: true, employerId: { not: null }, specialty: { not: null } },
       _count: { id: true }
+    }),
+    // All employer+job type combinations
+    prisma.nursingJob.groupBy({
+      by: ['employerId', 'jobType'],
+      where: { isActive: true, employerId: { not: null }, jobType: { not: null } },
+      _count: { id: true }
     })
   ]);
   
@@ -142,7 +148,8 @@ async function generateProgrammaticUrls() {
   console.log(`   State+Specialty: ${stateSpecialties.length}`);
   console.log(`   City+Specialty: ${citySpecialties.length}`);
   console.log(`   Employers: ${employers.length}`);
-  console.log(`   Employer+Specialty: ${employerSpecialties.length}\n`);
+  console.log(`   Employer+Specialty: ${employerSpecialties.length}`);
+  console.log(`   Employer+JobType: ${employerJobTypes.length}\n`);
   
   // 1. State pages + salary pages
   states.forEach(s => {
@@ -238,6 +245,24 @@ async function generateProgrammaticUrls() {
     urls.push({
       url: `${SITE_URL}/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
       fingerprint: generateFingerprint('employer-specialty', { employerId: e.employerId, specialty: e.specialty, jobCount: e._count.id })
+    });
+  });
+  
+  // 8. Employer+JobType pages
+  const { jobTypeToSlug } = require('../lib/constants/jobTypes');
+  
+  // Reuse employerIdToSlug from above
+  employerJobTypes.forEach(e => {
+    const employerSlug = employerIdToSlug[e.employerId];
+    if (!employerSlug) return;
+    
+    // Normalize job type slug
+    const jobTypeSlug = jobTypeToSlug(e.jobType);
+    if (!jobTypeSlug) return;
+    
+    urls.push({
+      url: `${SITE_URL}/jobs/nursing/employer/${employerSlug}/${jobTypeSlug}`,
+      fingerprint: generateFingerprint('employer-jobtype', { employerId: e.employerId, jobType: e.jobType, jobCount: e._count.id })
     });
   });
   

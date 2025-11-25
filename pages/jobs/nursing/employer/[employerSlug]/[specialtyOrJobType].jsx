@@ -2,36 +2,67 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
-import { fetchEmployerSpecialtyJobs } from '../../../../../lib/services/jobPageData';
-import { generateEmployerSpecialtyPageMetaTags } from '../../../../../lib/seo/jobSEO';
+import { fetchEmployerSpecialtyJobs, fetchEmployerJobTypeJobs } from '../../../../../lib/services/jobPageData';
+import { generateEmployerSpecialtyPageMetaTags, generateEmployerJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
+import { isJobType } from '../../../../../lib/constants/jobTypes';
 
 export async function getServerSideProps({ params, query }) {
-  const { employerSlug, specialty: specialtySlug } = params;
+  const { employerSlug, specialtyOrJobType: slug } = params;
   const page = parseInt(query.page) || 1;
 
   try {
-    const result = await fetchEmployerSpecialtyJobs(employerSlug, specialtySlug, page);
-
-    if (!result) {
-      return { notFound: true };
+    // Detect if this is a job type or specialty
+    const isJobTypePage = isJobType(slug);
+    
+    let result, seoMeta, pageType;
+    
+    if (isJobTypePage) {
+      // Fetch job type data
+      result = await fetchEmployerJobTypeJobs(employerSlug, slug, page);
+      
+      if (!result || !result.employer) {
+        return { notFound: true };
+      }
+      
+      seoMeta = generateEmployerJobTypePageMetaTags(
+        result.employer.name,
+        result.employer.slug,
+        result.jobType,
+        result.jobTypeSlug,
+        result.totalJobs
+      );
+      
+      pageType = 'jobType';
+    } else {
+      // Fetch specialty data
+      result = await fetchEmployerSpecialtyJobs(employerSlug, slug, page);
+      
+      if (!result || !result.employer) {
+        return { notFound: true };
+      }
+      
+      seoMeta = generateEmployerSpecialtyPageMetaTags(
+        result.employer.name,
+        result.employer.slug,
+        result.specialty,
+        slug,
+        result.totalJobs
+      );
+      
+      pageType = 'specialty';
     }
-
-    const seoMeta = generateEmployerSpecialtyPageMetaTags(
-      result.employer.name,
-      result.employer.slug,
-      result.specialty,
-      specialtySlug,
-      result.totalCount
-    );
 
     return {
       props: {
+        pageType,
         employer: JSON.parse(JSON.stringify(result.employer)),
-        specialty: result.specialty,
-        specialtySlug,
+        specialty: result.specialty || null,
+        specialtySlug: pageType === 'specialty' ? slug : null,
+        jobType: result.jobType || null,
+        jobTypeSlug: result.jobTypeSlug || null,
         jobs: JSON.parse(JSON.stringify(result.jobs)),
-        totalCount: result.totalCount,
+        totalJobs: result.totalJobs,
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
@@ -39,22 +70,29 @@ export async function getServerSideProps({ params, query }) {
       }
     };
   } catch (error) {
-    console.error('Error fetching employer specialty jobs:', error);
+    console.error('Error fetching employer specialty/jobType jobs:', error);
     return { notFound: true };
   }
 }
 
-export default function EmployerSpecialtyPage({
+export default function EmployerSpecialtyOrJobTypePage({
+  pageType,
   employer,
   specialty,
   specialtySlug,
+  jobType,
+  jobTypeSlug,
   jobs,
-  totalCount,
+  totalJobs,
   totalPages,
   currentPage,
   stats,
   seoMeta
 }) {
+  // Determine display values based on page type
+  const isJobTypePage = pageType === 'jobType';
+  const displayCategory = isJobTypePage ? jobType : specialty;
+  const categorySlug = isJobTypePage ? jobTypeSlug : specialtySlug;
   // Format salary for job card
   const formatSalary = (minHourly, maxHourly, minAnnual, maxAnnual, salaryType) => {
     if (minHourly && maxHourly) {
@@ -93,17 +131,17 @@ export default function EmployerSpecialtyPage({
               <li><span className="mx-2">/</span></li>
               <li><Link href={`/jobs/nursing/employer/${employer.slug}`} className="hover:text-blue-600">{employer.name}</Link></li>
               <li><span className="mx-2">/</span></li>
-              <li className="text-gray-900 font-medium">{specialty}</li>
+              <li className="text-gray-900 font-medium">{displayCategory}</li>
             </ol>
           </nav>
 
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              {employer.name} {specialty} RN Jobs
+              {employer.name} {displayCategory} RN Jobs
             </h1>
             <p className="text-xl text-gray-600">
-              {totalCount} {specialty} registered nurse {totalCount === 1 ? 'position' : 'positions'} available
+              {totalJobs} {displayCategory.toLowerCase()} registered nurse {totalJobs === 1 ? 'position' : 'positions'} available
             </p>
           </div>
 
@@ -188,7 +226,7 @@ export default function EmployerSpecialtyPage({
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No {specialty} RN Jobs Currently Available at {employer.name}
+                No {displayCategory} RN Jobs Currently Available at {employer.name}
               </h2>
               <p className="text-gray-600 mb-6">
                 New positions are added regularly. Check back soon or explore other opportunities.
@@ -201,10 +239,10 @@ export default function EmployerSpecialtyPage({
                   View All Jobs at {employer.name}
                 </Link>
                 <Link
-                  href={`/jobs/nursing/specialty/${specialtySlug}`}
+                  href={isJobTypePage ? `/jobs/nursing` : `/jobs/nursing/specialty/${categorySlug}`}
                   className="inline-flex items-center justify-center px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
                 >
-                  View All {specialty} Jobs
+                  {isJobTypePage ? 'Browse All RN Jobs' : `View All ${displayCategory} Jobs`}
                 </Link>
               </div>
             </div>
@@ -215,7 +253,7 @@ export default function EmployerSpecialtyPage({
             <div className="flex justify-center items-center gap-2 my-8">
               {currentPage > 1 && (
                 <Link
-                  href={`/jobs/nursing/employer/${employer.slug}/${specialtySlug}?page=${currentPage - 1}`}
+                  href={`/jobs/nursing/employer/${employer.slug}/${categorySlug}?page=${currentPage - 1}`}
                   className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Previous
@@ -228,7 +266,7 @@ export default function EmployerSpecialtyPage({
               
               {currentPage < totalPages && (
                 <Link
-                  href={`/jobs/nursing/employer/${employer.slug}/${specialtySlug}?page=${currentPage + 1}`}
+                  href={`/jobs/nursing/employer/${employer.slug}/${categorySlug}?page=${currentPage + 1}`}
                   className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Next
@@ -237,8 +275,8 @@ export default function EmployerSpecialtyPage({
             </div>
           )}
 
-          {/* Other Specialties at This Employer */}
-          {stats?.otherSpecialties && stats.otherSpecialties.length > 0 && (
+          {/* Footer: Other Specialties (for specialty pages) */}
+          {!isJobTypePage && stats?.otherSpecialties && stats.otherSpecialties.length > 0 && (
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -251,6 +289,94 @@ export default function EmployerSpecialtyPage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.otherSpecialties.map((spec, idx) => {
+                    const specSlug = generateSpecialtySlug(spec.specialty);
+                    
+                    return (
+                      <Link
+                        key={idx}
+                        href={`/jobs/nursing/employer/${employer.slug}/${specSlug}`}
+                        className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-purple-600 transition-colors"
+                      >
+                        <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{spec.specialty}</span>
+                        <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{spec.count}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: Other Job Types (for job type pages) */}
+          {isJobTypePage && stats?.otherJobTypes && stats.otherJobTypes.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Other Job Types at {employer.name}
+                </h2>
+                <p className="text-gray-600">
+                  Explore {stats.otherJobTypes.length} other job {stats.otherJobTypes.length === 1 ? 'type' : 'types'} available at {employer.name}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
+                  {stats.otherJobTypes.map((jt, idx) => (
+                    <Link
+                      key={idx}
+                      href={`/jobs/nursing/employer/${employer.slug}/${jt.slug}`}
+                      className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-blue-600 transition-colors"
+                    >
+                      <span className="text-gray-900 group-hover:text-blue-600 font-medium text-sm">{jt.displayName}</span>
+                      <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{jt.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: Job Types (secondary footer for specialty pages, primary for job type pages with specialties) */}
+          {stats?.jobTypes && stats.jobTypes.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {isJobTypePage ? 'Other Job Types at' : 'Browse by Job Type at'} {employer.name}
+                </h2>
+                <p className="text-gray-600">
+                  Explore {stats.jobTypes.length} job {stats.jobTypes.length === 1 ? 'type' : 'types'} available at {employer.name}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
+                  {stats.jobTypes.map((jt, idx) => (
+                    <Link
+                      key={idx}
+                      href={`/jobs/nursing/employer/${employer.slug}/${jt.slug}`}
+                      className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-green-600 transition-colors"
+                    >
+                      <span className="text-gray-900 group-hover:text-green-600 font-medium text-sm">{jt.displayName}</span>
+                      <span className="text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{jt.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: Specialties (for job type pages only) */}
+          {isJobTypePage && stats?.specialties && stats.specialties.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Browse Specialties at {employer.name}
+                </h2>
+                <p className="text-gray-600">
+                  Explore {stats.specialties.length} nursing {stats.specialties.length === 1 ? 'specialty' : 'specialties'} available at {employer.name}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
+                  {stats.specialties.map((spec, idx) => {
                     const specSlug = generateSpecialtySlug(spec.specialty);
                     
                     return (

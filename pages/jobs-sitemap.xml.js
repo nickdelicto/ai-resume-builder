@@ -10,6 +10,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const { getStateFullName } = require('../lib/jobScraperUtils');
+const { jobTypeToSlug } = require('../lib/constants/jobTypes');
 
 const prisma = new PrismaClient();
 
@@ -26,7 +27,8 @@ export async function getServerSideProps({ res }) {
       employers,
       stateSpecialties,
       citySpecialties,
-      employerSpecialties
+      employerSpecialties,
+      employerJobTypes
     ] = await Promise.all([
       // All active jobs
       prisma.nursingJob.findMany({
@@ -92,6 +94,16 @@ export async function getServerSideProps({ res }) {
           isActive: true,
           employerId: { not: null },
           specialty: { not: null }
+        },
+        _count: { id: true }
+      }),
+      // All employer + job type combinations
+      prisma.nursingJob.groupBy({
+        by: ['employerId', 'jobType'],
+        where: {
+          isActive: true,
+          employerId: { not: null },
+          jobType: { not: null }
         },
         _count: { id: true }
       })
@@ -307,7 +319,7 @@ export async function getServerSideProps({ res }) {
       });
     }
 
-    // 12. Employer + Specialty pages (NEW programmatic pages)
+    // 12. Employer + Specialty pages
     if (employerSpecialties && Array.isArray(employerSpecialties)) {
       // First, get employer slugs for all employerIds
       const employerIds = [...new Set(employerSpecialties.map(e => e.employerId).filter(Boolean))];
@@ -329,6 +341,38 @@ export async function getServerSideProps({ res }) {
         const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
         addUrl(
           `/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
+      });
+    }
+
+    // 13. Employer + Job Type pages
+    if (employerJobTypes && Array.isArray(employerJobTypes)) {
+      // Get employer slugs for all employerIds
+      const employerIds = [...new Set(employerJobTypes.map(e => e.employerId).filter(Boolean))];
+      const employersById = await prisma.healthcareEmployer.findMany({
+        where: { id: { in: employerIds } },
+        select: { id: true, slug: true }
+      });
+      
+      const employerIdToSlug = {};
+      employersById.forEach(emp => {
+        employerIdToSlug[emp.id] = emp.slug;
+      });
+
+      employerJobTypes.forEach(data => {
+        if (!data || !data.employerId || !data.jobType) return;
+        const employerSlug = employerIdToSlug[data.employerId];
+        if (!employerSlug) return;
+        
+        // Normalize job type slug (handles PRN -> per-diem, etc.)
+        const jobTypeSlug = jobTypeToSlug(data.jobType);
+        if (!jobTypeSlug) return;
+        
+        addUrl(
+          `/jobs/nursing/employer/${employerSlug}/${jobTypeSlug}`,
           null,
           'weekly',
           '0.7'
