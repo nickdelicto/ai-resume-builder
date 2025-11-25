@@ -1,0 +1,9 @@
+# IndexNow Programmatic Pages Submission
+# Runs every Wednesday at 1 AM EST (6 AM UTC)
+# Submits state, city, specialty, and salary pages to Bing IndexNow
+
+0 6 * * 3 /usr/bin/node /home/intelliresume/ai-resume-builder/scripts/index-programmatic-pages.js >> /home/intelliresume/ai-resume-builder/logs/indexnow-programmatic.log 2>&1
+
+# Note: This runs SEPARATELY from the job listing submissions (which happen after each scrape)
+# This script only submits pages that have CHANGED since the last run (based on job count fingerprint)
+
