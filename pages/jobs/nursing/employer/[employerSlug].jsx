@@ -310,11 +310,11 @@ export default function EmployerJobPage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.map((spec, idx) => {
-                      const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-');
+                      const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
                       return (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/specialty/${specialtySlug}`}
+                          href={`/jobs/nursing/employer/${employerSlug}/${specialtySlug}`}
                           className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
