@@ -25,7 +25,8 @@ export async function getServerSideProps({ res }) {
       specialties,
       employers,
       stateSpecialties,
-      citySpecialties
+      citySpecialties,
+      employerSpecialties
     ] = await Promise.all([
       // All active jobs
       prisma.nursingJob.findMany({
@@ -80,6 +81,16 @@ export async function getServerSideProps({ res }) {
         by: ['state', 'city', 'specialty'],
         where: {
           isActive: true,
+          specialty: { not: null }
+        },
+        _count: { id: true }
+      }),
+      // All employer + specialty combinations
+      prisma.nursingJob.groupBy({
+        by: ['employerId', 'specialty'],
+        where: {
+          isActive: true,
+          employerId: { not: null },
           specialty: { not: null }
         },
         _count: { id: true }
@@ -293,6 +304,35 @@ export async function getServerSideProps({ res }) {
         'weekly',
         '0.7'
       );
+      });
+    }
+
+    // 12. Employer + Specialty pages (NEW programmatic pages)
+    if (employerSpecialties && Array.isArray(employerSpecialties)) {
+      // First, get employer slugs for all employerIds
+      const employerIds = [...new Set(employerSpecialties.map(e => e.employerId).filter(Boolean))];
+      const employersById = await prisma.healthcareEmployer.findMany({
+        where: { id: { in: employerIds } },
+        select: { id: true, slug: true }
+      });
+      
+      const employerIdToSlug = {};
+      employersById.forEach(emp => {
+        employerIdToSlug[emp.id] = emp.slug;
+      });
+
+      employerSpecialties.forEach(data => {
+        if (!data || !data.employerId || !data.specialty) return;
+        const employerSlug = employerIdToSlug[data.employerId];
+        if (!employerSlug) return;
+        
+        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        addUrl(
+          `/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
+          null,
+          'weekly',
+          '0.7'
+        );
       });
     }
 

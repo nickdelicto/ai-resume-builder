@@ -90,7 +90,7 @@ async function generateProgrammaticUrls() {
   console.log('📊 Fetching data from database...\n');
   
   // Fetch all necessary data
-  const [states, cities, specialties, stateSpecialties, citySpecialties, employers] = await Promise.all([
+  const [states, cities, specialties, stateSpecialties, citySpecialties, employers, employerSpecialties] = await Promise.all([
     // All states with job counts
     prisma.nursingJob.groupBy({
       by: ['state'],
@@ -127,6 +127,12 @@ async function generateProgrammaticUrls() {
         jobs: { some: { isActive: true } }
       },
       select: { slug: true }
+    }),
+    // All employer+specialty combinations
+    prisma.nursingJob.groupBy({
+      by: ['employerId', 'specialty'],
+      where: { isActive: true, employerId: { not: null }, specialty: { not: null } },
+      _count: { id: true }
     })
   ]);
   
@@ -135,7 +141,8 @@ async function generateProgrammaticUrls() {
   console.log(`   Specialties: ${specialties.length}`);
   console.log(`   State+Specialty: ${stateSpecialties.length}`);
   console.log(`   City+Specialty: ${citySpecialties.length}`);
-  console.log(`   Employers: ${employers.length}\n`);
+  console.log(`   Employers: ${employers.length}`);
+  console.log(`   Employer+Specialty: ${employerSpecialties.length}\n`);
   
   // 1. State pages + salary pages
   states.forEach(s => {
@@ -207,6 +214,30 @@ async function generateProgrammaticUrls() {
     urls.push({
       url: `${SITE_URL}/jobs/nursing/employer/${e.slug}`,
       fingerprint: generateFingerprint('employer', { slug: e.slug })
+    });
+  });
+  
+  // 7. Employer+Specialty pages
+  // First, get employer slugs for all employerIds
+  const employerIds = [...new Set(employerSpecialties.map(e => e.employerId).filter(Boolean))];
+  const employersById = await prisma.healthcareEmployer.findMany({
+    where: { id: { in: employerIds } },
+    select: { id: true, slug: true }
+  });
+  
+  const employerIdToSlug = {};
+  employersById.forEach(emp => {
+    employerIdToSlug[emp.id] = emp.slug;
+  });
+
+  employerSpecialties.forEach(e => {
+    const employerSlug = employerIdToSlug[e.employerId];
+    if (!employerSlug) return;
+    
+    const specialtySlug = e.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+    urls.push({
+      url: `${SITE_URL}/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
+      fingerprint: generateFingerprint('employer-specialty', { employerId: e.employerId, specialty: e.specialty, jobCount: e._count.id })
     });
   });
   
