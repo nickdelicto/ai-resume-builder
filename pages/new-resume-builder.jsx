@@ -213,6 +213,7 @@ const NewResumeBuilderPage = () => {
       <Head>
         <title>Resume Builder | Create Professional Resumes</title>
         <meta name="description" content="Build professional resumes with our AI-powered resume builder. Tailor your resume for job applications and get more interviews." />
+        <link rel="canonical" href="https://intelliresume.net/new-resume-builder" />
       </Head>
             <ModernResumeBuilder 
         isAuthenticated={isAuthenticated} 
