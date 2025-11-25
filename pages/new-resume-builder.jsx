@@ -196,18 +196,6 @@ const NewResumeBuilderPage = () => {
     };
   }, [router]);
   
-  // Show loading state while initializing
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-lg">Loading resume builder...</p>
-      </div>
-    </div>
-  );
-  }
-
   return (
     <>
       <Head>
@@ -215,12 +203,23 @@ const NewResumeBuilderPage = () => {
         <meta name="description" content="Build professional resumes with our AI-powered resume builder. Tailor your resume for job applications and get more interviews." />
         <link rel="canonical" href="https://intelliresume.net/new-resume-builder" />
       </Head>
-            <ModernResumeBuilder 
-        isAuthenticated={isAuthenticated} 
-        initialData={importedData}
-        resumeId={urlResumeId || currentResumeId}
-        isNavigatingAway={isNavigatingAway}
-      />
+      
+      {/* Show loading state while initializing */}
+      {!isInitialized ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <p className="mt-4 text-lg">Loading resume builder...</p>
+          </div>
+        </div>
+      ) : (
+        <ModernResumeBuilder 
+          isAuthenticated={isAuthenticated} 
+          initialData={importedData}
+          resumeId={urlResumeId || currentResumeId}
+          isNavigatingAway={isNavigatingAway}
+        />
+      )}
     </>
   );
 };
