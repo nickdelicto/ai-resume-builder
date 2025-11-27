@@ -281,13 +281,13 @@ async function submitBatchToIndexNow(urls) {
   };
   
   try {
-    const response = await fetch('https://api.bing.com/indexnow', {
+    const response = await fetch('https://api.indexnow.org/IndexNow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     
-    if (response.ok) {
+    if (response.ok || response.status === 202) {
       return { success: true, status: response.status };
     } else {
       const text = await response.text();
