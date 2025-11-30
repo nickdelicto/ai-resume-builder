@@ -750,11 +750,11 @@ class ClevelandClinicRNScraper {
         const state = match[2];
         // Validate state code is a real US state
         if (validUSStates.includes(state)) {
-          return {
-            city: match[1],
+        return {
+          city: match[1],
             state: state,
-            zipCode: match[3] || null
-          };
+          zipCode: match[3] || null
+        };
         }
       }
     }
@@ -767,11 +767,11 @@ class ClevelandClinicRNScraper {
         const state = stateMatch[1];
         // Validate state code is a real US state
         if (validUSStates.includes(state)) {
-          return {
-            city: parts[0],
+        return {
+          city: parts[0],
             state: state,
-            zipCode: parts[1].match(/\d{5}/)?.[0] || null
-          };
+          zipCode: parts[1].match(/\d{5}/)?.[0] || null
+        };
         }
       }
     }
@@ -782,12 +782,12 @@ class ClevelandClinicRNScraper {
       const state = stateMatch[1];
       // Validate state code is a real US state
       if (validUSStates.includes(state)) {
-        const cityPart = clean.split(',')[0] || clean.split(state)[0];
-        return {
-          city: cityPart.trim() || null,
-          state: state,
-          zipCode: clean.match(/\d{5}/)?.[0] || null
-        };
+      const cityPart = clean.split(',')[0] || clean.split(state)[0];
+      return {
+        city: cityPart.trim() || null,
+        state: state,
+        zipCode: clean.match(/\d{5}/)?.[0] || null
+      };
       }
     }
     
