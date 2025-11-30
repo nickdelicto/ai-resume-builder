@@ -270,3 +270,30 @@ model DeletedJob {
 
   @@index([slug]) // Fast lookup when checking if a slug was deleted
 }
+
+// Job alert subscriptions for email notifications
+// Users can sign up from salary calculator or job pages to receive matching job alerts
+model JobAlert {
+  id               String   @id @default(cuid())
+  email            String   // User's email address
+  name             String?  // Optional: User's name for personalization
+  
+  // Alert criteria (what jobs to match)
+  specialty        String   // e.g., "ICU", "ER", "Med-Surg"
+  location         String   // Human-readable: "Cleveland, OH" or "Ohio" or "Nationwide"
+  state            String?  // State code: "OH", "CA", etc.
+  city             String?  // City name if location is city-specific
+  
+  // Metadata
+  source           String   // Where they signed up: "salary-calculator", "job-page", etc.
+  active           Boolean  @default(true) // Can be toggled off without deleting
+  unsubscribeToken String   @unique @default(cuid()) // Magic token for preference management
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  lastEmailSent    DateTime? // Track when we last sent them jobs
+  
+  @@index([email, active]) // Fast lookup for active alerts by email
+  @@index([specialty, state]) // Fast lookup for matching jobs
+  @@index([unsubscribeToken]) // Fast token validation
+}
