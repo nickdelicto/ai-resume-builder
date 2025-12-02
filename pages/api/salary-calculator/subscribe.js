@@ -36,6 +36,35 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check total number of active alerts for this email (5 max limit)
+    const totalAlerts = await prisma.jobAlert.count({
+      where: {
+        email: email.toLowerCase().trim(),
+        active: true
+      }
+    });
+
+    if (totalAlerts >= 5) {
+      // Fetch one existing alert to get the unsubscribe token for manage page
+      const existingAlert = await prisma.jobAlert.findFirst({
+        where: {
+          email: email.toLowerCase().trim(),
+          active: true
+        },
+        select: {
+          unsubscribeToken: true
+        }
+      });
+
+      await prisma.$disconnect();
+      return res.status(400).json({
+        error: 'Maximum alerts reached',
+        message: 'You can have up to 5 active job alerts. Please manage your existing alerts to create new ones.',
+        maxReached: true,
+        manageToken: existingAlert?.unsubscribeToken || null
+      });
+    }
+
     // Check if this exact alert already exists (same email + specialty + location)
     const existingAlert = await prisma.jobAlert.findFirst({
       where: {
