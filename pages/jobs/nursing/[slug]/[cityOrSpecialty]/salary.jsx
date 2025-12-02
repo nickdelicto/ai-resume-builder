@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import SalaryCalculatorBanner from '../../../../../components/SalaryCalculatorBanner';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../../lib/seo/jobSEO');
@@ -53,24 +54,24 @@ export async function getServerSideProps({ params }) {
     } else {
       // CITY SALARY PAGE (e.g., /ohio/cleveland/salary)
       const result = await fetchCitySalaryStats(stateInfo.stateCode, cityOrSpecialty);
-      
-      if (!result) {
-        return {
-          notFound: true
-        };
-      }
-
+    
+    if (!result) {
       return {
-        props: {
-          stateCode: stateInfo.stateCode,
-          stateFullName: stateInfo.stateFullName,
-          cityName: result.city,
-          salaryStats: result.salaryStats,
-          cities: result.cities,
+        notFound: true
+      };
+    }
+
+    return {
+      props: {
+        stateCode: stateInfo.stateCode,
+        stateFullName: stateInfo.stateFullName,
+        cityName: result.city,
+        salaryStats: result.salaryStats,
+        cities: result.cities,
           allStates: result.allStates,
           isSpecialtyPage: false
-        }
-      };
+      }
+    };
     }
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
@@ -336,6 +337,9 @@ export default function CityOrSpecialtySalaryPage({
                   </div>
                 )}
               </div>
+
+              {/* Calculator CTA Banner */}
+              <SalaryCalculatorBanner location={location} />
 
               {/* Breakdown Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

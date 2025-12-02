@@ -188,13 +188,109 @@ export default function RNSalaryCalculator() {
     <>
       <Head>
         <title>RN Salary Calculator - Free Nursing Salary Estimator {currentYear} | IntelliResume</title>
-        <meta name="description" content={`Calculate your registered nurse salary based on specialty, location, and experience. Get accurate RN salary estimates for ${currentYear} with our free nursing salary calculator.`} />
+        <meta name="description" content={`Calculate your RN salary based on specialty, location, and experience. Get instant estimates with our free nursing salary calculator. Compare average RN pay by state and city for ${currentYear}.`} />
         <meta name="keywords" content="rn salary calculator, nursing salary calculator, registered nurse salary, nurse pay calculator, nursing salary estimator" />
         <link rel="canonical" href="https://intelliresume.net/jobs/nursing/rn-salary-calculator" />
         <meta property="og:title" content={`RN Salary Calculator - Free Nursing Salary Estimator ${currentYear}`} />
         <meta property="og:description" content={`Calculate your registered nurse salary based on specialty, location, and experience. Get accurate RN salary estimates for ${currentYear}.`} />
         <meta property="og:url" content="https://intelliresume.net/jobs/nursing/rn-salary-calculator" />
         <meta property="og:type" content="website" />
+        
+        {/* Structured Data for SEO and AI Search */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "RN Salary Calculator",
+              "description": `Calculate your registered nurse salary based on specialty, location, and experience. Get accurate RN salary estimates for ${currentYear}.`,
+              "url": "https://intelliresume.net/jobs/nursing/rn-salary-calculator",
+              "applicationCategory": "FinanceApplication",
+              "operatingSystem": "Any",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "featureList": [
+                "Calculate RN salary by specialty",
+                "Location-based salary estimates",
+                "Experience level adjustments",
+                "Job type and shift differentials",
+                "State and national salary comparisons",
+                "Real-time job matching"
+              ]
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What is the average RN salary in the United States?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": `As of ${currentYear}, the average registered nurse salary in the United States ranges from $65,000 to $85,000 annually, depending on location, experience, and specialty. However, this can vary significantly. Some states like California and Massachusetts offer average RN salaries exceeding $100,000.`
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How much do travel nurses make?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Travel nurses typically earn between $50-$80+ per hour, which translates to $100,000-$170,000+ annually when including housing stipends and other benefits. Travel nursing offers the highest earning potential in the nursing profession."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Do night shift nurses make more money?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, night shift nurses typically earn 10-20% more than day shift nurses through shift differentials. Over a year, this can add $7,000-$14,000 to your annual salary."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What nursing specialty pays the most?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Critical care specialties like ICU, ER, and OR typically pay the most among staff nursing positions. Travel nursing across any specialty usually offers the highest total compensation."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How accurate is this salary calculator?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Our salary calculator uses real-time data from actual nursing job postings across the United States, making it highly accurate for current market conditions. The estimates are based on median salaries for your selected specialty and location."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How can I increase my nursing salary?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "To increase your nursing salary: gain specialty certifications, consider travel or per diem positions, work night or weekend shifts, relocate to higher-paying areas, pursue advanced degrees, and negotiate effectively."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is the nursing salary calculator free to use?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! Our RN salary calculator is completely free to use with no registration required. You can run unlimited salary estimates and compare different specialties, locations, and experience levels."
+                  }
+                }
+              ]
+            })
+          }}
+        />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
@@ -356,7 +452,7 @@ export default function RNSalaryCalculator() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{showAdvanced ? '▼' : '▶'}</span>
                   <span className="text-base sm:text-lg font-semibold text-gray-900">
-                    Advanced Options (Optional)
+                    Refine Further (Optional)
                   </span>
                 </div>
                 <span className="text-sm text-gray-500 hidden sm:inline">
@@ -665,20 +761,264 @@ export default function RNSalaryCalculator() {
             </div>
           )}
 
-          {/* CTA to Jobs */}
-          <div className="text-center bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 sm:p-8 border border-purple-100">
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-              Ready to Find Your Next RN Job?
-            </h3>
-            <p className="text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto">
-              Browse thousands of nursing jobs across all specialties and locations
-            </p>
-            <Link
-              href="/jobs/nursing"
-              className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg transition-colors shadow-lg hover:shadow-xl"
-            >
-              Browse RN Jobs →
-            </Link>
+          {/* SEO Content Sections */}
+          <div className="mt-12 space-y-12 max-w-3xl mx-auto">
+            
+            {/* Section 1: How to Use */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                How to Use the RN Salary Calculator
+              </h2>
+              <div className="prose prose-blue max-w-none">
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  Our nursing salary calculator provides accurate, data-driven estimates based on real job postings from hospitals and healthcare facilities across the United States. Simply select your nursing specialty, enter your location (city or state), and adjust your years of experience using the slider.
+                </p>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  For more precise estimates, expand the "Refine Further" section to filter by job type (Full-Time, Per Diem, Travel, Contract) and shift type (Day, Night, Evening). The calculator will instantly show your estimated salary range along with state and national averages for comparison.
+                </p>
+                <p className="text-gray-700 leading-relaxed">
+                  Want to see actual job openings? Enter your email after hitting "Calculate My Salary" button to receive a curated list of matching RN positions sorted by highest pay first. All salary data is updated regularly to reflect current market conditions for {currentYear}.
+                </p>
+              </div>
+            </section>
+
+            {/* Section 2: Understanding Nursing Salaries */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                Understanding Nursing Salaries in {currentYear}
+              </h2>
+              <div className="prose prose-blue max-w-none">
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  Registered nurse salaries vary significantly based on multiple factors including geographic location, specialty certification, experience level, and work setting. In {currentYear}, the nursing job market remains strong with competitive compensation packages across most regions and specialties.
+                </p>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  High-demand specialties like ICU, Emergency Room, and Operating Room typically command premium salaries, while travel nursing positions often offer the highest hourly rates due to their temporary nature and flexibility requirements. Geographic location plays a crucial role. Metropolitan areas and states with higher costs of living generally offer higher RN salaries to attract and retain qualified nurses.
+                </p>
+                <p className="text-gray-700 leading-relaxed">
+                  Shift differentials also impact your total compensation. Night shifts typically pay 10-20% more than day shifts, while weekend and holiday rates can add even more to your base salary. Understanding these factors helps you make informed career decisions and negotiate better compensation packages.
+                </p>
+              </div>
+            </section>
+
+            {/* Section 3: Factors That Impact Salary */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                Factors That Impact Your Nursing Salary
+              </h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Experience Level</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Your years of experience as a registered nurse significantly impact your earning potential. New graduate RNs typically start at lower salaries but can expect steady increases with each year of experience. Nurses with 5+ years of experience often earn 15-25% more than entry-level positions, while those with 10+ years can command premium salaries, especially in specialized roles.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Specialty & Certification</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Specialized certifications like CCRN (Critical Care), CEN (Emergency), or CNOR (Operating Room) can increase your salary by $5,000-$15,000 annually. High-acuity specialties such as ICU, ER, and NICU typically offer higher base salaries due to the advanced skills and critical thinking required. Obtaining specialty certifications demonstrates expertise and often leads to faster career advancement.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Geographic Location</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Location is one of the biggest factors affecting RN salaries. States like California, Massachusetts, and Washington consistently offer the highest RN pay, often exceeding $100,000 annually. Metropolitan areas typically pay more than rural locations, but it's important to consider cost of living when evaluating job offers. Some states with lower salaries may offer better purchasing power due to lower housing and living costs.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Job Type</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Travel nursing positions typically offer the highest hourly rates ($50-$80/hour or more) along with housing stipends and travel reimbursements. Per diem nurses also earn premium hourly rates but without benefits. Full-time staff positions offer lower hourly rates but include comprehensive benefits packages including health insurance, retirement plans, and paid time off. Contract positions fall somewhere in between, offering competitive rates for defined time periods.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Shift Differentials</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Night shift nurses typically earn an additional 10-20% on top of their base hourly rate. Evening shifts often carry a 5-15% differential. Weekend shifts (Friday-Sunday) can add another $2-$10 per hour depending on the facility. Some hospitals offer "baylor" weekend programs where nurses work every weekend for significantly higher pay. These differentials can add thousands of dollars to your annual income.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 4: Highest Paying Specialties */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                Highest Paying Nursing Specialties in {currentYear}
+              </h2>
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Critical Care (ICU)</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$75K - $120K/year</div>
+                      <div className="text-gray-500 text-sm">$36 - $58/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    ICU nurses care for critically ill patients requiring continuous monitoring and advanced interventions. High demand and specialized skills command premium salaries.
+                  </p>
+                  <Link href="/jobs/nursing/specialty/icu" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View ICU RN Jobs →
+                  </Link>
+                </div>
+
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Emergency Room (ER)</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$72K - $115K/year</div>
+                      <div className="text-gray-500 text-sm">$35 - $55/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    ER nurses handle acute, life-threatening situations requiring quick decision-making and diverse clinical skills. Fast-paced environment with competitive compensation.
+                  </p>
+                  <Link href="/jobs/nursing/specialty/emergency-room" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View ER RN Jobs →
+                  </Link>
+                </div>
+
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Operating Room (OR)</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$70K - $110K/year</div>
+                      <div className="text-gray-500 text-sm">$34 - $53/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    OR nurses assist surgeons during procedures, requiring specialized knowledge of surgical techniques and sterile protocols. Highly skilled specialty with excellent pay.
+                  </p>
+                  <Link href="/jobs/nursing/specialty/operating-room" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View OR RN Jobs →
+                  </Link>
+                </div>
+
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Travel Nursing</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$100K - $170K+/year</div>
+                      <div className="text-gray-500 text-sm">$48 - $82+/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    Travel nurses work temporary assignments across different facilities and locations. Highest hourly rates plus housing stipends and travel reimbursements make this the most lucrative option.
+                  </p>
+                  <Link href="/jobs/nursing" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View Travel RN Jobs →
+                  </Link>
+                </div>
+
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Neonatal ICU (NICU)</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$68K - $105K/year</div>
+                      <div className="text-gray-500 text-sm">$33 - $50/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    NICU nurses care for premature and critically ill newborns. Requires advanced skills in neonatal care and often specialized NRP certification.
+                  </p>
+                  <Link href="/jobs/nursing/specialty/nicu" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View NICU RN Jobs →
+                  </Link>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 5: FAQs */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                Frequently Asked Questions About RN Salaries
+              </h2>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    What is the average RN salary in the United States?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    As of {currentYear}, the average registered nurse salary in the United States ranges from $65,000 to $85,000 annually, depending on location, experience, and specialty. However, this can vary greatly. Some states like California and Massachusetts offer average RN salaries exceeding $100,000, while other regions may have lower averages. Use our calculator above to get location-specific estimates.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    How much do travel nurses make?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Travel nurses typically earn between $50-$80+ per hour, which translates to $100,000-$170,000+ annually when including housing stipends and other benefits. During high-demand periods or crisis assignments, rates can be even higher. Travel nursing offers the highest earning potential in the nursing profession due to the flexibility and short-term commitment required.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    Do night shift nurses make more money?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Yes, night shift nurses typically earn 10-20% more than day shift nurses through shift differentials. For example, if your base rate is $35/hour, you might earn an additional $3.50-$7.00 per hour for working nights. Over a year, this can add $7,000-$14,000 to your annual salary. Many facilities also offer additional premiums for weekend and holiday shifts.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    What nursing specialty pays the most?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Critical care specialties like ICU, ER, and OR typically pay the most among staff nursing positions, often $5,000-$15,000 more than general med-surg roles. However, travel nursing across any specialty usually offers the highest total compensation. Certified Registered Nurse Anesthetists (CRNAs) earn the most overall, with salaries often exceeding $150,000, but this requires advanced practice education.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    How accurate is this salary calculator?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Our salary calculator uses real-time data from actual nursing job postings across the United States, making it highly accurate for current market conditions. The estimates are based on median salaries for your selected specialty and location, adjusted for experience level. However, individual offers may vary based on specific facility, exact location within a state, additional certifications, and negotiation. Use our estimates as a starting point for salary expectations and negotiations.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    How can I increase my nursing salary?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    To increase your nursing salary: (1) Gain specialty certifications like CCRN, CEN, or CNOR, (2) Consider travel or per diem positions for higher hourly rates, (3) Work night or weekend shifts to earn differential pay, (4) Relocate to higher-paying states or metropolitan areas, (5) Pursue advanced degrees (BSN, MSN, or DNP), (6) Negotiate salary offers and raises effectively, and (7) Gain experience in high-demand specialties like ICU or ER. Even small changes like picking up extra shifts with differentials can significantly boost your annual income.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    Is the nursing salary calculator free to use?
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    Yes! Our RN salary calculator is completely free to use with no registration required. You can run unlimited salary estimates and compare different specialties, locations, and experience levels. If you'd like to receive matching job opportunities, you can optionally provide your email to get personalized job alerts delivered directly to your inbox.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* CTA to Jobs - After FAQs */}
+            <div className="mt-12 text-center bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 sm:p-8 border border-purple-100">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+                Ready to Find Your Next RN Job?
+              </h3>
+              <p className="text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto">
+                Browse thousands of nursing jobs across all specialties and locations
+              </p>
+              <Link
+                href="/jobs/nursing"
+                className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg transition-colors shadow-lg hover:shadow-xl"
+              >
+                Browse RN Jobs →
+              </Link>
+            </div>
+
           </div>
         </div>
       </div>

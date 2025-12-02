@@ -97,7 +97,11 @@ async function getBaseSalary(specialty, location, jobType = null, shiftType = nu
     salaryMinAnnual: { not: null },
     salaryMaxAnnual: { not: null },
     // Exclude Leadership positions (they skew salary data high)
-    experienceLevel: { not: 'Leadership' }
+    // Use OR to explicitly allow NULL values
+    OR: [
+      { experienceLevel: { not: 'Leadership' } },
+      { experienceLevel: null }
+    ]
   };
   
   // Add optional filters if provided
@@ -191,7 +195,10 @@ async function getBaseSalary(specialty, location, jobType = null, shiftType = nu
       salaryMinAnnual: { not: null },
       salaryMaxAnnual: { not: null },
       state: state,
-      experienceLevel: { not: 'Leadership' }
+      OR: [
+        { experienceLevel: { not: 'Leadership' } },
+        { experienceLevel: null }
+      ]
     };
     
     // Re-apply filters if they were originally provided
@@ -263,7 +270,10 @@ async function getComparisons(specialty, state) {
         specialty: { equals: specialty, mode: 'insensitive' },
         state: state,
         salaryMaxAnnual: { not: null },
-        experienceLevel: { not: 'Leadership' }
+        OR: [
+          { experienceLevel: { not: 'Leadership' } },
+          { experienceLevel: null }
+        ]
       },
       _avg: { salaryMaxAnnual: true }
     });
@@ -276,7 +286,10 @@ async function getComparisons(specialty, state) {
       isActive: true,
       specialty: { equals: specialty, mode: 'insensitive' },
       salaryMaxAnnual: { not: null },
-      experienceLevel: { not: 'Leadership' }
+      OR: [
+        { experienceLevel: { not: 'Leadership' } },
+        { experienceLevel: null }
+      ]
     },
     _avg: { salaryMaxAnnual: true }
   });

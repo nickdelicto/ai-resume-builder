@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import SalaryCalculatorBanner from '../../../../components/SalaryCalculatorBanner';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../lib/seo/jobSEO');
@@ -235,6 +236,9 @@ export default function StateSalaryPage({
                   </div>
                 )}
               </div>
+
+              {/* Calculator CTA Banner */}
+              <SalaryCalculatorBanner location={location} />
 
               {/* Breakdown Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

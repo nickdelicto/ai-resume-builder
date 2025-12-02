@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import SalaryCalculatorBanner from '../../../../../../components/SalaryCalculatorBanner';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../../../lib/seo/jobSEO');
@@ -250,6 +251,9 @@ export default function CitySpecialtySalaryPage({
                   </div>
                 )}
               </div>
+
+              {/* Calculator CTA Banner */}
+              <SalaryCalculatorBanner location={location} />
 
               {/* Salary by Employer */}
               {salaryStats?.byEmployer && salaryStats.byEmployer.length > 0 && (
