@@ -213,12 +213,12 @@ const NewResumeBuilderPage = () => {
           </div>
         </div>
       ) : (
-        <ModernResumeBuilder 
-          isAuthenticated={isAuthenticated} 
-          initialData={importedData}
-          resumeId={urlResumeId || currentResumeId}
-          isNavigatingAway={isNavigatingAway}
-        />
+            <ModernResumeBuilder 
+        isAuthenticated={isAuthenticated} 
+        initialData={importedData}
+        resumeId={urlResumeId || currentResumeId}
+        isNavigatingAway={isNavigatingAway}
+      />
       )}
     </>
   );

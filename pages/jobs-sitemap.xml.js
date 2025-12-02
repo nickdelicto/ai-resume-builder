@@ -190,12 +190,12 @@ export async function getServerSideProps({ res }) {
         if (!cityData || !cityData.state || !cityData.city) return;
         const stateCode = cityData.state.toLowerCase();
         const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
-        addUrl(
-          `/jobs/nursing/${stateCode}/${citySlug}`,
-          null,
-          'weekly',
-          '0.7'
-        );
+      addUrl(
+        `/jobs/nursing/${stateCode}/${citySlug}`,
+        null,
+        'weekly',
+        '0.7'
+      );
       });
     }
 
@@ -295,12 +295,12 @@ export async function getServerSideProps({ res }) {
       specialties.forEach(specData => {
         if (!specData || !specData.specialty) return;
         const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
-        addUrl(
-          `/jobs/nursing/specialty/${specialtySlug}`,
-          null,
-          'weekly',
-          '0.7'
-        );
+      addUrl(
+        `/jobs/nursing/specialty/${specialtySlug}`,
+        null,
+        'weekly',
+        '0.7'
+      );
       });
     }
 
@@ -371,10 +371,10 @@ export async function getServerSideProps({ res }) {
         
         addUrl(
           `/jobs/nursing/employer/${employerSlug}/${jobTypeSlug}`,
-          null,
-          'weekly',
-          '0.7'
-        );
+        null,
+        'weekly',
+        '0.7'
+      );
       });
     }
 
