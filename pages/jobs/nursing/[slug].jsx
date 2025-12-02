@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
+import JobAlertSignup from '../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
@@ -509,12 +511,12 @@ export default function JobDetailPage({
                             const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
                             return (
                               <Link
-                                key={idx}
+                              key={idx}
                                 href={`/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}`}
                                 className="flex justify-between items-center py-1 group hover:text-purple-600 transition-colors"
-                              >
+                            >
                                 <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
-                                <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
+                              <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
                               </Link>
                             );
                           })}
@@ -570,9 +572,9 @@ export default function JobDetailPage({
                 ) : (
                   <>
                     <div className="grid grid-cols-1 gap-4 mb-8">
-                  {jobs.map((jobItem) => (
+                  {jobs.map((jobItem, index) => (
+                    <React.Fragment key={jobItem.id}>
                     <Link
-                      key={jobItem.id}
                       href={`/jobs/nursing/${jobItem.slug}`}
                       className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
                     >
@@ -618,13 +620,25 @@ export default function JobDetailPage({
                             </span>
                           )}
                           {jobItem.experienceLevel && (
-                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                              {jobItem.experienceLevel}
+                              <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                                {jobItem.experienceLevel}
                             </span>
                           )}
                         </div>
                       </div>
                     </Link>
+                      
+                      {/* Job Alert Signup after every 5 listings */}
+                      {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                        <div className="my-6">
+                          <JobAlertSignup 
+                            location={stateDisplayName}
+                            state={stateCode}
+                            compact={true}
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
                   ))}
                     </div>
 
@@ -702,6 +716,20 @@ export default function JobDetailPage({
                 </div>
               </div>
             )}
+
+            {/* Job Alert Signup - Before Footer */}
+            <div className="mt-16" data-job-alert-form>
+              <JobAlertSignup 
+                location={stateDisplayName}
+                state={stateCode}
+              />
+            </div>
+
+            {/* Sticky Bottom CTA Banner */}
+            <StickyJobAlertCTA 
+              specialty=""
+              location={stateDisplayName}
+            />
           </div>
         </div>
       </>
@@ -1000,22 +1028,22 @@ export default function JobDetailPage({
           <div className="mb-8">
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
               {/* Apply Now Button - Primary CTA */}
-              <a
-                href={job.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden"
-              >
-                {/* Shine effect on hover */}
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-                
-                <span className="relative z-10 flex items-center gap-3">
+            <a
+              href={job.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden"
+            >
+              {/* Shine effect on hover */}
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+              
+              <span className="relative z-10 flex items-center gap-3">
                   Apply Job Now
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-              </a>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </a>
 
               {/* Tailor Resume Button - Secondary CTA */}
               <a
@@ -1042,8 +1070,8 @@ export default function JobDetailPage({
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
                   Tailor Resume to Job
-                </span>
-              </a>
+              </span>
+            </a>
             </div>
           </div>
 
@@ -1143,6 +1171,23 @@ export default function JobDetailPage({
               </div>
             </div>
           )}
+
+          {/* Job Alert Signup - After Related Jobs */}
+          <div className="mt-8" data-job-alert-form>
+            <JobAlertSignup 
+              specialty={job.specialty}
+              location={`${job.city}, ${job.state}`}
+              state={job.state}
+              city={job.city}
+            />
+          </div>
+
+          {/* Sticky Bottom CTA Banner */}
+          <StickyJobAlertCTA 
+            specialty={job.specialty}
+            location={`${job.city}, ${job.state}`}
+            jobTitle={job.title}
+          />
         </div>
       </div>
     </>

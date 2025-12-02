@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
+import JobAlertSignup from '../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
 
 // Import SEO utilities (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
@@ -576,12 +578,12 @@ export default function NursingJobsPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-8">
-                {jobs.map((job) => (
-                  <Link
-                    key={job.id}
-                    href={`/jobs/nursing/${job.slug}`}
-                    className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
-                  >
+                {jobs.map((job, index) => (
+                  <React.Fragment key={job.id}>
+                    <Link
+                      href={`/jobs/nursing/${job.slug}`}
+                      className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
+                    >
                     <div className="p-6">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                         <div className="flex-1">
@@ -678,6 +680,16 @@ export default function NursingJobsPage() {
                       </div>
                     </div>
                   </Link>
+                  
+                  {/* Job Alert Signup after every 5 listings */}
+                  {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                    <div className="my-6">
+                      <JobAlertSignup 
+                        compact={true}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
                 ))}
               </div>
 
@@ -729,6 +741,17 @@ export default function NursingJobsPage() {
               )}
             </>
           )}
+
+          {/* Job Alert Signup - Before Footer */}
+          <div className="mt-16" data-job-alert-form>
+            <JobAlertSignup />
+          </div>
+
+          {/* Sticky Bottom CTA Banner */}
+          <StickyJobAlertCTA 
+            specialty=""
+            location=""
+          />
         </div>
       </div>
     </>

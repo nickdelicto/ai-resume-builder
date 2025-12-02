@@ -1,7 +1,10 @@
+import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { formatPayForCard } from '../../../../lib/utils/jobCardUtils';
+import JobAlertSignup from '../../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../lib/seo/jobSEO');
@@ -36,15 +39,15 @@ export async function getServerSideProps({ params, query }) {
     if (isSpecialty) {
       // This is a STATE + SPECIALTY page (e.g., /ohio/icu)
       const result = await fetchStateSpecialtyJobs(stateInfo.stateCode, cityOrSpecialty, page);
-      
-      if (!result) {
-        return {
-          notFound: true
-        };
-      }
-
+    
+    if (!result) {
       return {
-        props: {
+        notFound: true
+      };
+    }
+
+    return {
+      props: {
           pageType: 'state-specialty',
           stateCode: stateInfo.stateCode,
           stateFullName: stateInfo.stateFullName,
@@ -67,14 +70,14 @@ export async function getServerSideProps({ params, query }) {
       return {
         props: {
           pageType: 'city',
-          stateCode: stateInfo.stateCode,
-          stateFullName: stateInfo.stateFullName,
-          cityName: result.city,
-          jobs: result.jobs,
-          pagination: result.pagination,
-          stats: result.statistics
-        }
-      };
+        stateCode: stateInfo.stateCode,
+        stateFullName: stateInfo.stateFullName,
+        cityName: result.city,
+        jobs: result.jobs,
+        pagination: result.pagination,
+        stats: result.statistics
+      }
+    };
     }
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
@@ -135,13 +138,13 @@ export default function CityOrSpecialtyPage({
   } else {
     // City page SEO
     seoMeta = seoUtils.generateCityPageMetaTags(
-      stateCode,
+        stateCode,
       stateDisplayName,
-      cityDisplayName,
-      {
-        total: pagination?.total || 0,
-        specialties: stats?.specialties || []
-      }
+        cityDisplayName,
+        {
+          total: pagination?.total || 0,
+          specialties: stats?.specialties || []
+        }
     );
   }
 
@@ -154,7 +157,7 @@ export default function CityOrSpecialtyPage({
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">No Jobs Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">No Jobs Found</h1>
             <p className="text-gray-600 mb-6">
               {isSpecialtyPage
                 ? `No ${specialtyDisplayName} nursing jobs found in ${stateDisplayName}.`
@@ -368,10 +371,10 @@ export default function CityOrSpecialtyPage({
                       const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
                       return (
                         <Link
-                          key={idx}
+                        key={idx}
                           href={`/jobs/nursing/${stateSlug}/${citySlug}/${specialtySlug}`}
                           className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
-                        >
+                      >
                           <span className="text-gray-900 group-hover:text-purple-600 font-medium">{specData.specialty}</span>
                           <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{specData.count}</span>
                         </Link>
@@ -429,50 +432,64 @@ export default function CityOrSpecialtyPage({
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-8">
-                {jobs.map((jobItem) => (
-                  <Link
-                    key={jobItem.id}
-                    href={`/jobs/nursing/${jobItem.slug}`}
-                    className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
-                  >
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                        {jobItem.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
-                        <span>{jobItem.city}, {jobItem.state}</span>
-                        {jobItem.employer && <span>• {jobItem.employer.name}</span>}
-                        {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
-                          <span className="text-green-700 font-medium">
-                            • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
-                          </span>
-                        )}
+                {jobs.map((jobItem, index) => (
+                  <React.Fragment key={jobItem.id}>
+                    <Link
+                      href={`/jobs/nursing/${jobItem.slug}`}
+                      className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
+                    >
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                          {jobItem.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
+                          <span>{jobItem.city}, {jobItem.state}</span>
+                          {jobItem.employer && <span>• {jobItem.employer.name}</span>}
+                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
+                            <span className="text-green-700 font-medium">
+                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
+                            </span>
+                          )}
+                        </div>
+                        {/* Tags: Job Type, Experience Level */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {jobItem.specialty && (
+                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                              {jobItem.specialty}
+                            </span>
+                          )}
+                          {jobItem.jobType && (
+                            <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                              {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                            </span>
+                          )}
+                          {jobItem.shiftType && (
+                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                              {jobItem.shiftType}
+                            </span>
+                          )}
+                          {jobItem.experienceLevel && (
+                            <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              {normalizeExperienceLevel(jobItem.experienceLevel)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {/* Tags: Job Type, Experience Level */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {jobItem.specialty && (
-                          <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                            {jobItem.specialty}
-                          </span>
-                        )}
-                        {jobItem.jobType && (
-                          <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                            {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                          </span>
-                        )}
-                        {jobItem.shiftType && (
-                          <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
-                            {jobItem.shiftType}
-                          </span>
-                        )}
-                        {jobItem.experienceLevel && (
-                          <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {normalizeExperienceLevel(jobItem.experienceLevel)}
-                          </span>
-                        )}
+                    </Link>
+                    
+                    {/* Job Alert Signup after every 5 listings */}
+                    {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                      <div className="my-6">
+                        <JobAlertSignup 
+                          specialty={isSpecialtyPage ? specialtyName : ''}
+                          location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+                          state={stateCode}
+                          city={isSpecialtyPage ? '' : cityName}
+                          compact={true}
+                        />
                       </div>
-                    </div>
-                  </Link>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
 
@@ -533,33 +550,33 @@ export default function CityOrSpecialtyPage({
 
           {/* Salary Banner (for City Pages) - After job listings, before footer */}
           {!isSpecialtyPage && cityDisplayName && (
-            <div className="mt-12 mb-8">
-              <Link
+          <div className="mt-12 mb-8">
+            <Link
                 href={`/jobs/nursing/${stateCode.toLowerCase()}/${cityOrSpecialty}/salary`}
-                className="group flex items-center justify-between p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl shadow-md hover:shadow-lg hover:border-green-300 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors">
-                      Average RN Salary in {cityDisplayName}, {stateDisplayName}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">View salary ranges, averages by specialty, and employer breakdowns</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-green-600 group-hover:text-green-700 transition-colors">
-                  <span className="font-semibold">View Salaries</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              className="group flex items-center justify-between p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl shadow-md hover:shadow-lg hover:border-green-300 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                   </svg>
                 </div>
-              </Link>
-            </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-700 transition-colors">
+                    Average RN Salary in {cityDisplayName}, {stateDisplayName}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">View salary ranges, averages by specialty, and employer breakdowns</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-green-600 group-hover:text-green-700 transition-colors">
+                <span className="font-semibold">View Salaries</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </Link>
+          </div>
           )}
 
           {/* Footer: Cities with this Specialty (for State + Specialty pages) */}
@@ -629,6 +646,22 @@ export default function CityOrSpecialtyPage({
               </div>
             </div>
           )}
+
+          {/* Job Alert Signup - Before Footer */}
+          <div className="mt-16" data-job-alert-form>
+            <JobAlertSignup 
+              specialty={isSpecialtyPage ? specialtyName : ''}
+              location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+              state={stateCode}
+              city={isSpecialtyPage ? '' : cityName}
+            />
+          </div>
+
+          {/* Sticky Bottom CTA Banner */}
+          <StickyJobAlertCTA 
+            specialty={isSpecialtyPage ? specialtyName : ''}
+            location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+          />
         </div>
       </div>
     </>

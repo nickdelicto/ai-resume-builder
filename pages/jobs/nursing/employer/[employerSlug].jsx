@@ -1,7 +1,10 @@
+import React from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { formatPayForCard } from '../../../../lib/utils/jobCardUtils';
+import JobAlertSignup from '../../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../lib/seo/jobSEO');
@@ -339,49 +342,59 @@ export default function EmployerJobPage({
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-8">
-                {jobs.map((jobItem) => (
-                  <Link
-                    key={jobItem.id}
-                    href={`/jobs/nursing/${jobItem.slug}`}
-                    className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
-                  >
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                        {jobItem.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
-                        <span>{jobItem.city}, {jobItem.state}</span>
-                        {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
-                          <span className="text-green-700 font-medium">
-                            • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
-                          </span>
-                        )}
+                {jobs.map((jobItem, index) => (
+                  <React.Fragment key={jobItem.id}>
+                    <Link
+                      href={`/jobs/nursing/${jobItem.slug}`}
+                      className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
+                    >
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                          {jobItem.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
+                          <span>{jobItem.city}, {jobItem.state}</span>
+                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
+                            <span className="text-green-700 font-medium">
+                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
+                            </span>
+                          )}
+                        </div>
+                        {/* Tags: Specialty, Job Type, Experience Level */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {jobItem.specialty && (
+                            <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              {jobItem.specialty}
+                            </span>
+                          )}
+                          {jobItem.jobType && (
+                            <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                              {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                            </span>
+                          )}
+                          {jobItem.shiftType && (
+                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                              {jobItem.shiftType}
+                            </span>
+                          )}
+                          {jobItem.experienceLevel && (
+                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
+                              {jobItem.experienceLevel.replace('-', ' ')}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {/* Tags: Specialty, Job Type, Experience Level */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {jobItem.specialty && (
-                          <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {jobItem.specialty}
-                          </span>
-                        )}
-                        {jobItem.jobType && (
-                          <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                            {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                          </span>
-                        )}
-                        {jobItem.shiftType && (
-                          <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
-                            {jobItem.shiftType}
-                          </span>
-                        )}
-                        {jobItem.experienceLevel && (
-                          <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
-                            {jobItem.experienceLevel.replace('-', ' ')}
-                          </span>
-                        )}
+                    </Link>
+                    
+                    {/* Job Alert Signup after every 5 listings */}
+                    {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                      <div className="my-6">
+                        <JobAlertSignup 
+                          compact={true}
+                        />
                       </div>
-                    </div>
-                  </Link>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
 
@@ -440,6 +453,17 @@ export default function EmployerJobPage({
               </div>
             </div>
           )}
+
+          {/* Job Alert Signup - Before Footer */}
+          <div className="mt-16" data-job-alert-form>
+            <JobAlertSignup />
+          </div>
+
+          {/* Sticky Bottom CTA Banner */}
+          <StickyJobAlertCTA 
+            specialty=""
+            location={`at ${employer.name}`}
+          />
         </div>
       </div>
     </>

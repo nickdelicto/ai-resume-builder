@@ -2,6 +2,8 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
+import JobAlertSignup from '../../../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
 import { fetchEmployerSpecialtyJobs, fetchEmployerJobTypeJobs } from '../../../../../lib/services/jobPageData';
 import { generateEmployerSpecialtyPageMetaTags, generateEmployerJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
@@ -37,18 +39,18 @@ export async function getServerSideProps({ params, query }) {
     } else {
       // Fetch specialty data
       result = await fetchEmployerSpecialtyJobs(employerSlug, slug, page);
-      
+
       if (!result || !result.employer) {
-        return { notFound: true };
-      }
-      
+      return { notFound: true };
+    }
+
       seoMeta = generateEmployerSpecialtyPageMetaTags(
-        result.employer.name,
-        result.employer.slug,
-        result.specialty,
+      result.employer.name,
+      result.employer.slug,
+      result.specialty,
         slug,
         result.totalJobs
-      );
+    );
       
       pageType = 'specialty';
     }
@@ -148,7 +150,7 @@ export default function EmployerSpecialtyOrJobTypePage({
           {/* Job Listings */}
           {jobs.length > 0 ? (
             <div className="space-y-4 mb-8">
-              {jobs.map((job) => {
+              {jobs.map((job, index) => {
                 const salary = formatSalary(
                   job.salaryMinHourly,
                   job.salaryMaxHourly,
@@ -158,11 +160,11 @@ export default function EmployerSpecialtyOrJobTypePage({
                 );
 
                 return (
-                  <Link
-                    key={job.id}
-                    href={`/jobs/nursing/${job.slug}`}
-                    className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200"
-                  >
+                  <React.Fragment key={job.id}>
+                    <Link
+                      href={`/jobs/nursing/${job.slug}`}
+                      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200"
+                    >
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                       <div className="flex-1">
                         <h2 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600">
@@ -215,6 +217,17 @@ export default function EmployerSpecialtyOrJobTypePage({
                       </div>
                     </div>
                   </Link>
+                  
+                    {/* Job Alert Signup after every 5 listings */}
+                    {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                      <div className="my-6">
+                        <JobAlertSignup 
+                          specialty={pageType === 'specialty' ? specialty : ''}
+                          compact={true}
+                        />
+                      </div>
+                    )}
+                </React.Fragment>
                 );
               })}
             </div>
@@ -395,6 +408,18 @@ export default function EmployerSpecialtyOrJobTypePage({
             </div>
           )}
 
+          {/* Job Alert Signup - Before Footer */}
+          <div className="mt-16" data-job-alert-form>
+            <JobAlertSignup 
+              specialty={pageType === 'specialty' ? specialty : ''}
+            />
+          </div>
+
+          {/* Sticky Bottom CTA Banner */}
+          <StickyJobAlertCTA 
+            specialty={pageType === 'specialty' ? specialty : ''}
+            location={`at ${employer.name}`}
+          />
         </div>
       </div>
     </>
