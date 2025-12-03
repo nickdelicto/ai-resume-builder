@@ -284,6 +284,7 @@ model JobAlert {
   state            String?  // State code: "OH", "CA", etc.
   city             String?  // City name if location is city-specific
   employerId       String?  // Optional: Filter by specific employer
+  employer         HealthcareEmployer? @relation(fields: [employerId], references: [id])
   
   // Metadata
   source           String   // Where they signed up: "salary-calculator", "job-page", etc.
@@ -297,4 +298,5 @@ model JobAlert {
   @@index([email, active]) // Fast lookup for active alerts by email
   @@index([specialty, state]) // Fast lookup for matching jobs
   @@index([unsubscribeToken]) // Fast token validation
+  @@map("jobalert") // Explicitly map to lowercase table name (PostgreSQL default)
 }
