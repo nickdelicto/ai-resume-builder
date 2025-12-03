@@ -172,6 +172,7 @@ model HealthcareEmployer {
   isActive      Boolean      @default(true) // Whether we're still scraping from them
   lastScraped   DateTime? // When we last scraped them
   jobs          NursingJob[] // All job postings from this employer
+  jobAlerts     JobAlert[]   // Job alerts filtered by this employer
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
