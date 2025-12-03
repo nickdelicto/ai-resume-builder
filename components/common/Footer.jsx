@@ -60,6 +60,7 @@ const Footer = () => {
           <div className="footer-nav-column">
             <h3 className="footer-column-title">Salary Data</h3>
             <ul className="footer-nav-links">
+              <li><Link href="/jobs/nursing/rn-salary-calculator">RN Salary Calculator</Link></li>
               <li><Link href="#">Average RN Salary</Link></li>
             </ul>
           </div>

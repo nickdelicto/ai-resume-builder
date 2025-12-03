@@ -218,7 +218,11 @@ export default function NursingJobsPage() {
               Registered Nurse (RN) Jobs in USA
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              Find nursing opportunities at top healthcare employers across the United States. Search by location, specialty, and more.
+              Find nursing opportunities at top healthcare employers across the United States. Search by location, specialty, and more.{' '}
+              
+              <Link href="/jobs/nursing/rn-salary-calculator" className="text-blue-600 hover:text-blue-700 hover:underline font-medium">
+                Also, Calculate your RN salary here →
+              </Link>
             </p>
             {pagination && pagination.total > 0 && (
               <div className="mt-4 inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">

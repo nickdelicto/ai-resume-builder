@@ -373,28 +373,28 @@ const Navigation = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: router.pathname.startsWith('/jobs') ? 'rgba(34, 168, 83, 0.15)' : 'rgba(34, 168, 83, 0.1)',
-              color: '#22a853',
-              border: '1px solid rgba(34, 168, 83, 0.4)',
+              backgroundColor: router.pathname.startsWith('/jobs') ? 'rgba(37, 99, 235, 0.15)' : 'rgba(37, 99, 235, 0.1)',
+              color: '#2563eb',
+              border: '1.5px solid rgba(37, 99, 235, 0.65)',
               borderRadius: '8px',
               padding: '0.4rem 0.8rem',
-              fontWeight: router.pathname.startsWith('/jobs') ? '600' : '500',
+              fontWeight: router.pathname.startsWith('/jobs') ? '700' : '600',
               fontSize: '0.9rem',
               transition: 'all 0.2s ease',
               textDecoration: 'none',
               transform: router.pathname.startsWith('/jobs') ? 'none' : 'none',
-              boxShadow: router.pathname.startsWith('/jobs') ? '0 3px 10px rgba(34, 168, 83, 0.15)' : 'none'
+              boxShadow: router.pathname.startsWith('/jobs') ? '0 3px 10px rgba(37, 99, 235, 0.25)' : 'none'
             }}
             onMouseEnter={(e) => {
               if (!router.pathname.startsWith('/jobs')) {
-                e.currentTarget.style.backgroundColor = 'rgba(34, 168, 83, 0.15)';
+                e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.15)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 3px 10px rgba(34, 168, 83, 0.15)';
+                e.currentTarget.style.boxShadow = '0 3px 10px rgba(37, 99, 235, 0.25)';
               }
             }}
             onMouseLeave={(e) => {
               if (!router.pathname.startsWith('/jobs')) {
-                e.currentTarget.style.backgroundColor = 'rgba(34, 168, 83, 0.1)';
+                e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
                 e.currentTarget.style.transform = 'none';
                 e.currentTarget.style.boxShadow = 'none';
               }
