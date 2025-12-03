@@ -1024,28 +1024,28 @@ export default function JobDetailPage({
             </div>
           </div>
 
-          {/* Action Buttons - Apply and Tailor Resume */}
+          {/* Action Buttons - Apply and Customize Resume */}
           <div className="mb-8">
-            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Apply Now Button - Primary CTA */}
-            <a
-              href={job.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 overflow-hidden"
-            >
-              {/* Shine effect on hover */}
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-              
-              <span className="relative z-10 flex items-center gap-3">
+              <a
+                href={job.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden"
+              >
+                {/* Shine effect on hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+                
+                <span className="relative z-10 flex items-center gap-3">
                   Apply Job Now
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </a>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </span>
+              </a>
 
-              {/* Tailor Resume Button - Secondary CTA */}
+              {/* Customize Resume Button - Secondary CTA (Teal/Cyan healthcare color) */}
               <a
                 href={`/job-targeting?jobSlug=${job.slug}`}
                 target="_blank"
@@ -1053,25 +1053,25 @@ export default function JobDetailPage({
                 onClick={() => {
                   // Track analytics
                   if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
-                    window.gtag('event', 'tailor_resume_click', {
+                    window.gtag('event', 'customize_resume_click', {
                       event_category: 'Job Actions',
-                      event_label: 'Tailor Resume to Job',
+                      event_label: 'Customize Resume to Job',
                       job_title: job.title,
                       employer: job.employer?.name,
                       location: `${job.city}, ${job.state}`
                     });
                   }
                 }}
-                className="group relative inline-flex items-center justify-center w-full md:w-auto px-12 py-4 bg-white text-green-600 border-2 border-green-600 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:bg-green-50 transition-all duration-300 transform hover:-translate-y-1"
+                className="group relative inline-flex items-center justify-center px-8 py-4 bg-white text-teal-600 border-2 border-teal-500 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:bg-teal-50 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <span className="flex items-center gap-3">
-                  {/* Target/Bullseye Icon */}
+                  {/* Document/Customize Icon */}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                   </svg>
-                  Tailor Resume to Job
-              </span>
-            </a>
+                  Customize Your Resume
+                </span>
+              </a>
             </div>
           </div>
 
