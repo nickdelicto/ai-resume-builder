@@ -4,44 +4,47 @@ import { useState, useEffect } from 'react';
  * Reusable Job Alert Signup Component
  * Displays a signup form for job alerts on job listing pages
  * Supports smart pre-filling based on page context
+ * Uses native <select> dropdowns for perfect mobile compatibility
  * 
  * @param {string} specialty - Pre-filled specialty (optional)
- * @param {string} location - Pre-filled location (optional, format: "City, State" or "State")
  * @param {string} state - Pre-filled state code (optional)
  * @param {string} city - Pre-filled city (optional)
  * @param {boolean} compact - If true, shows compact horizontal layout for mid-page placement
  */
-export default function JobAlertSignup({ specialty = '', location = '', state = '', city = '', compact = false }) {
+export default function JobAlertSignup({ specialty = '', state = '', city = '', compact = false }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     specialty: specialty,
-    location: location,
     state: state,
-    city: city
+    city: city,
+    employer: '' // Optional employer filter
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [manageToken, setManageToken] = useState(null); // For "manage alerts" link when limit reached
-  const [locations, setLocations] = useState([]);
+  const [manageToken, setManageToken] = useState(null);
+  
+  // Dropdown options
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [employers, setEmployers] = useState([]);
   const [specialties, setSpecialties] = useState([]);
-  const [locationValid, setLocationValid] = useState(location !== '');
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingEmployers, setLoadingEmployers] = useState(false);
 
-  // Fetch available locations and specialties on mount
+  // Fetch available states and specialties on mount
   useEffect(() => {
     async function fetchOptions() {
       try {
-        // Fetch locations
-        const locRes = await fetch('/api/salary-calculator/locations');
-        const locData = await locRes.json();
-        // Extract just the string values from the API response
-        const locationStrings = (locData.locations || []).map(loc => 
-          typeof loc === 'string' ? loc : loc.value || loc
-        );
-        setLocations(locationStrings);
+        // Fetch states
+        const statesRes = await fetch('/api/job-alerts/states');
+        const statesData = await statesRes.json();
+        if (statesData.states) {
+          setStates(statesData.states);
+        }
 
-        // Fetch specialties (from a static list or API)
+        // Fetch specialties
         const specRes = await fetch('/api/jobs/browse-stats');
         const specData = await specRes.json();
         if (specData.data && specData.data.specialties) {
@@ -54,47 +57,70 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
     fetchOptions();
   }, []);
 
-  // Validate location against available options
+  // Fetch cities when state changes
   useEffect(() => {
-    if (!formData.location) {
-      setLocationValid(false);
-      return;
-    }
-    const isValid = locations.some(loc => 
-      loc.toLowerCase() === formData.location.toLowerCase()
-    );
-    setLocationValid(isValid);
-  }, [formData.location, locations]);
+    async function fetchCities() {
+      if (!formData.state) {
+        setCities([]);
+        setEmployers([]);
+        return;
+      }
 
-  /**
-   * Parse location string into city and state
-   * e.g., "Binghamton, NY" -> { city: "Binghamton", state: "NY" }
-   * or "Ohio" -> { city: null, state: "OH" }
-   */
-  const parseLocation = (locationString) => {
-    if (!locationString) return { city: null, state: null };
-    
-    // Check if it's "City, State" format
-    if (locationString.includes(',')) {
-      const parts = locationString.split(',').map(p => p.trim());
-      return {
-        city: parts[0],
-        state: parts[1]
-      };
+      setLoadingCities(true);
+      try {
+        const res = await fetch(`/api/job-alerts/cities?state=${formData.state}`);
+        const data = await res.json();
+        if (data.cities) {
+          setCities(data.cities);
+        }
+      } catch (err) {
+        console.error('Error fetching cities:', err);
+      } finally {
+        setLoadingCities(false);
+      }
     }
-    
-    // Otherwise, assume it's just a state name
-    return {
-      city: null,
-      state: locationString.trim()
-    };
+    fetchCities();
+  }, [formData.state]);
+
+  // Fetch employers when state or city changes
+  useEffect(() => {
+    async function fetchEmployers() {
+      if (!formData.state) {
+        setEmployers([]);
+        return;
+      }
+
+      setLoadingEmployers(true);
+      try {
+        let url = `/api/job-alerts/employers?state=${formData.state}`;
+        if (formData.city) {
+          url += `&city=${encodeURIComponent(formData.city)}`;
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.employers) {
+          setEmployers(data.employers);
+        }
+      } catch (err) {
+        console.error('Error fetching employers:', err);
+      } finally {
+        setLoadingEmployers(false);
+      }
+    }
+    fetchEmployers();
+  }, [formData.state, formData.city]);
+
+  // Get full state name for display
+  const getStateName = (stateCode) => {
+    const stateObj = states.find(s => s.code === stateCode);
+    return stateObj ? stateObj.name : stateCode;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!locationValid) {
-      setError('Please select a valid location from the dropdown');
+    if (!formData.state) {
+      setError('Please select a state');
       return;
     }
 
@@ -102,16 +128,28 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
     setError('');
 
     try {
-      // Parse location before submitting
-      const { city: parsedCity, state: parsedState } = parseLocation(formData.location);
+      // Build location string for display
+      let locationStr = formData.city 
+        ? `${formData.city}, ${formData.state}` 
+        : getStateName(formData.state);
+      
+      // Add employer to location if selected
+      const selectedEmployer = employers.find(e => e.id === formData.employer);
+      if (selectedEmployer) {
+        locationStr = `${locationStr} (${selectedEmployer.name})`;
+      }
       
       const response = await fetch('/api/salary-calculator/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          city: parsedCity || formData.city,
-          state: parsedState || formData.state
+          name: formData.name,
+          email: formData.email,
+          specialty: formData.specialty,
+          location: locationStr,
+          state: formData.state,
+          city: formData.city || null,
+          employerId: formData.employer || null
         })
       });
 
@@ -119,11 +157,9 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
 
       if (response.ok) {
         setSuccess(true);
-        setFormData({ name: '', email: '', specialty: specialty, location: location, state: state, city: city });
-        // Don't auto-hide success - user must click "Create Another Alert" to reset
+        setFormData({ name: '', email: '', specialty: specialty, state: state, city: city, employer: '' });
       } else {
         setError(data.message || data.error || 'Failed to subscribe');
-        // If user hit 5-alert limit, store token for "manage alerts" link
         if (data.manageToken) {
           setManageToken(data.manageToken);
         }
@@ -133,6 +169,13 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
     } finally {
       setLoading(false);
     }
+  };
+
+  // Reset form handler
+  const handleReset = () => {
+    setSuccess(false);
+    setError('');
+    setManageToken(null);
   };
 
   if (success) {
@@ -153,11 +196,7 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
               </div>
             </div>
             <button
-              onClick={() => {
-                setSuccess(false);
-                setError('');
-                setManageToken(null);
-              }}
+              onClick={handleReset}
               className="bg-white text-green-700 hover:bg-green-50 font-semibold px-4 py-2 rounded-lg transition-all text-sm w-full md:w-auto md:self-start"
             >
               Create Another Alert
@@ -177,17 +216,13 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
         </div>
         <h3 className="text-2xl font-bold mb-2">You're All Set! 🎉</h3>
         <p className="text-green-100 mb-3">
-          We'll send you {formData.specialty || 'RN'} job alerts for {formData.location || 'your area'} every Tuesday at 7 AM EST.
+          We'll send you {formData.specialty || 'RN'} job alerts every Tuesday at 7 AM EST.
         </p>
         <p className="text-sm text-green-100 mb-6">
           Check your inbox for a confirmation email!
         </p>
         <button
-          onClick={() => {
-            setSuccess(false);
-            setError('');
-            setManageToken(null);
-          }}
+          onClick={handleReset}
           className="bg-white text-green-700 hover:bg-green-50 font-semibold px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl"
         >
           Create Another Alert
@@ -203,19 +238,18 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
         <div className="flex flex-col gap-4">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full flex-shrink-0 shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-blue-900">Get Weekly RN Job Alerts</h3>
-              <p className="text-sm text-blue-700">New {specialty || 'nursing'} jobs in {location || 'your area'} • Every Tuesday</p>
+            <div>
+              <h3 className="text-blue-900 font-bold text-base">Get Weekly Job Alerts</h3>
+              <p className="text-blue-700 text-sm">New jobs delivered every Tuesday</p>
             </div>
           </div>
 
-          {/* Form - 2 rows for better spacing */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* Row 1: Name, Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -236,42 +270,71 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
               />
             </div>
 
-            {/* Row 2: Specialty, Location, Button */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Row 2: Specialty */}
+            <select
+              required
+              value={formData.specialty}
+              onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+            >
+              <option value="">Select specialty *</option>
+              {specialties.map(spec => (
+                <option key={spec} value={spec}>{spec}</option>
+              ))}
+            </select>
+
+            {/* Row 3: State, City */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <select
                 required
-                value={formData.specialty}
-                onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
                 className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
               >
-                <option value="">Select specialty *</option>
-                {specialties.map(spec => (
-                  <option key={spec} value={spec}>{spec}</option>
+                <option value="">Select state *</option>
+                {states.map(s => (
+                  <option key={s.code} value={s.code}>{s.name}</option>
                 ))}
               </select>
 
-              <input
-                type="text"
-                required
-                list="locations-list-compact"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Location *"
-                autoComplete="off"
-                className={`px-4 py-2.5 rounded-lg border-2 ${
-                  locationValid || !formData.location ? 'border-blue-200' : 'border-red-400'
-                } bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm`}
-              />
-              <datalist id="locations-list-compact">
-                {locations.map(loc => (
-                  <option key={loc} value={loc} />
+              <select
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
+                disabled={!formData.state || loadingCities}
+                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="">{formData.state ? `All of ${getStateName(formData.state)}` : 'Select state first'}</option>
+                {cities.map(c => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
                 ))}
-              </datalist>
+              </select>
+            </div>
+
+            {/* Row 4: Employer (Optional), Subscribe Button */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <select
+                value={formData.employer}
+                onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
+                disabled={!formData.state || loadingEmployers}
+                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="">
+                  {!formData.state 
+                    ? 'Select state first' 
+                    : loadingEmployers 
+                      ? 'Loading...' 
+                      : 'All Employers (Optional)'
+                  }
+                </option>
+                {employers.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                ))}
+              </select>
 
               <button
                 type="submit"
-                disabled={loading || !locationValid}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm whitespace-nowrap"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm"
               >
                 {loading ? 'Subscribing...' : '📬 Subscribe'}
               </button>
@@ -299,7 +362,7 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
 
             {/* Benefits */}
             <p className="text-center text-blue-700 text-xs font-medium">
-              ✓ Weekly alerts • ✓ Unsubscribe anytime • ✓ 100% Free
+              ✓ Weekly updates &nbsp; ✓ Highest paying first &nbsp; ✓ Unsubscribe anytime
             </p>
           </form>
         </div>
@@ -307,34 +370,32 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
     );
   }
 
+  // FULL VERSION - Large banner for bottom of pages
   return (
-    <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-600 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
-      {/* Decorative Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full translate-x-1/3 -translate-y-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/3 translate-y-1/3"></div>
-      </div>
-
+    <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-600 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></div>
+      
       <div className="relative z-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase mb-4 shadow-md">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-            Weekly Job Alerts
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Never Miss a Fresh RN Job Opening
-          </h2>
-          <p className="text-blue-50 text-lg max-w-2xl mx-auto">
-            Get {specialty || 'tailored RN'} job alerts delivered to your inbox every Tuesday • 100% Free
-          </p>
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold mb-6 shadow-lg">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          FREE JOB ALERTS
         </div>
 
-        {/* Form Card - White container for contrast */}
-        <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-4xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+          Never Miss Your Perfect RN Job
+        </h2>
+        <p className="text-blue-100 text-lg mb-8 max-w-2xl">
+          Get the highest-paying nursing jobs delivered to your inbox every Tuesday morning. 
+          Personalized to your specialty and location preferences.
+        </p>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 max-w-3xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
@@ -367,9 +428,7 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
                   className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Specialty */}
               <div>
                 <label htmlFor="alert-specialty" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -382,43 +441,85 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
                   onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
                 >
-                  <option value="">Select a specialty</option>
+                  <option value="">Select specialty</option>
                   {specialties.map(spec => (
                     <option key={spec} value={spec}>{spec}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Location */}
+              {/* State */}
               <div>
-                <label htmlFor="alert-location" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Location *
+                <label htmlFor="alert-state" className="block text-sm font-semibold text-gray-700 mb-2">
+                  State *
                 </label>
-                <input
-                  type="text"
-                  id="alert-location"
+                <select
+                  id="alert-state"
                   required
-                  list="locations-list"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="e.g., Cleveland, Ohio or Ohio"
-                  autoComplete="off"
-                  className={`w-full px-4 py-3 rounded-lg border-2 ${
-                    locationValid || !formData.location
-                      ? 'border-gray-300'
-                      : 'border-red-400'
-                  } text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all`}
-                />
-                <datalist id="locations-list">
-                  {locations.map(loc => (
-                    <option key={loc} value={loc} />
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
+                >
+                  <option value="">Select state</option>
+                  {states.map(s => (
+                    <option key={s.code} value={s.code}>{s.name}</option>
                   ))}
-                </datalist>
-                {!locationValid && formData.location && (
-                  <p className="text-red-600 text-xs mt-1">
-                    Please select a valid location from the dropdown
-                  </p>
-                )}
+                </select>
+              </div>
+
+              {/* City */}
+              <div>
+                <label htmlFor="alert-city" className="block text-sm font-semibold text-gray-700 mb-2">
+                  City (Optional)
+                </label>
+                <select
+                  id="alert-city"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
+                  disabled={!formData.state || loadingCities}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">
+                    {!formData.state 
+                      ? 'Select state first' 
+                      : loadingCities 
+                        ? 'Loading...' 
+                        : `All of ${getStateName(formData.state)}`
+                    }
+                  </option>
+                  {cities.map(c => (
+                    <option key={c.name} value={c.name}>{c.name} ({c.jobCount} jobs)</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Employer (Optional) */}
+              <div className="md:col-span-2">
+                <label htmlFor="alert-employer" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Specific Employer (Optional)
+                </label>
+                <select
+                  id="alert-employer"
+                  value={formData.employer}
+                  onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
+                  disabled={!formData.state || loadingEmployers}
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">
+                    {!formData.state 
+                      ? 'Select a state first' 
+                      : loadingEmployers 
+                        ? 'Loading employers...' 
+                        : 'All Employers'
+                    }
+                  </option>
+                  {employers.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.jobCount} jobs)</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave blank to get alerts from all employers in your selected location
+                </p>
               </div>
             </div>
 
@@ -445,19 +546,51 @@ export default function JobAlertSignup({ specialty = '', location = '', state = 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !locationValid}
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold text-lg py-4 rounded-lg shadow-xl hover:shadow-2xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 text-lg"
             >
-              {loading ? 'Subscribing...' : '📬 Send Me Job Alerts'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating Alert...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Subscribe to Job Alerts
+                </span>
+              )}
             </button>
 
-            <p className="text-center text-gray-600 text-sm">
-              ✓ Weekly Alerts • ✓ Unsubscribe anytime • ✓ 100% Free
-            </p>
+            {/* Benefits */}
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 pt-2">
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Weekly Updates
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Highest Paying First
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Unsubscribe Anytime
+              </span>
+            </div>
           </form>
         </div>
       </div>
     </div>
   );
 }
-

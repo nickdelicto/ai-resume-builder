@@ -21,8 +21,11 @@ export default function ManageAlertsPage() {
   // New alert form state
   const [showNewAlertForm, setShowNewAlertForm] = useState(false);
   const [newSpecialty, setNewSpecialty] = useState('');
-  const [newLocation, setNewLocation] = useState('');
-  const [locations, setLocations] = useState([]);
+  const [newState, setNewState] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loadingCities, setLoadingCities] = useState(false);
   const [creatingAlert, setCreatingAlert] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(false);
@@ -33,17 +36,42 @@ export default function ManageAlertsPage() {
     fetchAlerts();
   }, [token]);
 
-  // Fetch locations for autocomplete
+  // Fetch states on mount
   useEffect(() => {
-    fetch('/api/salary-calculator/locations')
+    fetch('/api/job-alerts/states')
       .then(res => res.json())
       .then(data => {
-        // Extract just the 'value' from each location object
-        const locationValues = (data.locations || []).map(loc => loc.value);
-        setLocations(locationValues);
+        if (data.states) {
+          setStates(data.states);
+        }
       })
-      .catch(err => console.error('Error fetching locations:', err));
+      .catch(err => console.error('Error fetching states:', err));
   }, []);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (!newState) {
+      setCities([]);
+      return;
+    }
+
+    setLoadingCities(true);
+    fetch(`/api/job-alerts/cities?state=${newState}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.cities) {
+          setCities(data.cities);
+        }
+      })
+      .catch(err => console.error('Error fetching cities:', err))
+      .finally(() => setLoadingCities(false));
+  }, [newState]);
+
+  // Helper to get full state name
+  const getStateName = (stateCode) => {
+    const stateObj = states.find(s => s.code === stateCode);
+    return stateObj ? stateObj.name : stateCode;
+  };
 
   const fetchAlerts = () => {
     fetch(`/api/job-alerts/get-by-token?token=${token}`)
@@ -130,28 +158,28 @@ export default function ManageAlertsPage() {
     setCreateSuccess(false);
 
     // Validate
-    if (!newSpecialty || !newLocation) {
-      setCreateError('Please select both specialty and location');
-      return;
-    }
-
-    // Validate location against autocomplete
-    const validLocation = locations.some(loc => loc === newLocation);
-    if (!validLocation) {
-      setCreateError('Please select a location from the dropdown');
+    if (!newSpecialty || !newState) {
+      setCreateError('Please select both specialty and state');
       return;
     }
 
     setCreatingAlert(true);
 
     try {
+      // Build location string
+      const locationString = newCity 
+        ? `${newCity}, ${newState}` 
+        : getStateName(newState);
+
       const response = await fetch('/api/salary-calculator/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: userEmail,
           specialty: newSpecialty,
-          location: newLocation
+          location: locationString,
+          state: newState,
+          city: newCity || null
         })
       });
 
@@ -160,7 +188,8 @@ export default function ManageAlertsPage() {
       if (data.success) {
         setCreateSuccess(true);
         setNewSpecialty('');
-        setNewLocation('');
+        setNewState('');
+        setNewCity('');
         
         // Refresh alerts list
         fetchAlerts();
@@ -281,29 +310,54 @@ export default function ManageAlertsPage() {
                           </select>
                         </div>
 
-                        {/* Location Autocomplete */}
+                        {/* State Dropdown */}
                         <div>
-                          <label htmlFor="new-location" className="block text-sm font-semibold text-gray-700 mb-2">
-                            Location (City or State) <span className="text-red-600">*</span>
+                          <label htmlFor="new-state" className="block text-sm font-semibold text-gray-700 mb-2">
+                            State <span className="text-red-600">*</span>
                           </label>
-                          <input
-                            type="text"
-                            id="new-location"
-                            list="location-options"
-                            value={newLocation}
-                            onChange={(e) => setNewLocation(e.target.value)}
-                            placeholder="Start typing a city or state..."
+                          <select
+                            id="new-state"
+                            value={newState}
+                            onChange={(e) => {
+                              setNewState(e.target.value);
+                              setNewCity(''); // Reset city when state changes
+                            }}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            autoComplete="off"
                             required
-                          />
-                          <datalist id="location-options">
-                            {locations.map((loc, idx) => (
-                              <option key={idx} value={loc} />
+                          >
+                            <option value="">Select a state...</option>
+                            {states.map(s => (
+                              <option key={s.code} value={s.code}>{s.name}</option>
                             ))}
-                          </datalist>
+                          </select>
+                        </div>
+
+                        {/* City Dropdown */}
+                        <div>
+                          <label htmlFor="new-city" className="block text-sm font-semibold text-gray-700 mb-2">
+                            City (Optional)
+                          </label>
+                          <select
+                            id="new-city"
+                            value={newCity}
+                            onChange={(e) => setNewCity(e.target.value)}
+                            disabled={!newState || loadingCities}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
+                          >
+                            <option value="">
+                              {!newState 
+                                ? 'Select a state first' 
+                                : loadingCities 
+                                  ? 'Loading cities...' 
+                                  : `All of ${getStateName(newState)} (Statewide)`
+                              }
+                            </option>
+                            {cities.map(c => (
+                              <option key={c.name} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
                           <p className="mt-1 text-xs text-gray-500">
-                            Select from the dropdown to ensure accurate matching
+                            Leave blank to get alerts for the entire state
                           </p>
                         </div>
 

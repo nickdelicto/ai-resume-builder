@@ -283,6 +283,7 @@ model JobAlert {
   location         String   // Human-readable: "Cleveland, OH" or "Ohio" or "Nationwide"
   state            String?  // State code: "OH", "CA", etc.
   city             String?  // City name if location is city-specific
+  employerId       String?  // Optional: Filter by specific employer
   
   // Metadata
   source           String   // Where they signed up: "salary-calculator", "job-page", etc.
