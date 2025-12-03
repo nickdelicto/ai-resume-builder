@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { SPECIALTIES } from '../../../lib/constants/specialties';
-import { getStateCode } from '../../../lib/jobScraperUtils';
 
 export default function RNSalaryCalculator() {
   const [specialty, setSpecialty] = useState('');
-  const [location, setLocation] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [experience, setExperience] = useState(3);
   const [jobType, setJobType] = useState('any');
   const [shiftType, setShiftType] = useState('any');
@@ -14,8 +14,13 @@ export default function RNSalaryCalculator() {
   const [loading, setLoading] = useState(false);
   const [salaryData, setSalaryData] = useState(null);
   const [error, setError] = useState(null);
-  const [locations, setLocations] = useState([]);
-  const [loadingLocations, setLoadingLocations] = useState(true);
+  
+  // Location dropdowns
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loadingStates, setLoadingStates] = useState(true);
+  const [loadingCities, setLoadingCities] = useState(false);
+  
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [emailForAlert, setEmailForAlert] = useState('');
   const [subscribing, setSubscribing] = useState(false);
@@ -28,41 +33,71 @@ export default function RNSalaryCalculator() {
   // Get current year for dynamic content
   const currentYear = new Date().getFullYear();
 
-  // Fetch available locations on component mount
+  // Fetch available states on component mount
   useEffect(() => {
-    async function fetchLocations() {
+    async function fetchStates() {
       try {
-        const response = await fetch('/api/salary-calculator/locations');
+        const response = await fetch('/api/job-alerts/states');
         const data = await response.json();
         
         if (data.success) {
-          setLocations(data.locations);
+          setStates(data.states);
         }
       } catch (err) {
-        console.error('Failed to load locations:', err);
+        console.error('Failed to load states:', err);
       } finally {
-        setLoadingLocations(false);
+        setLoadingStates(false);
       }
     }
     
-    fetchLocations();
+    fetchStates();
   }, []);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    async function fetchCities() {
+      if (!selectedState) {
+        setCities([]);
+        return;
+      }
+
+      setLoadingCities(true);
+      try {
+        const response = await fetch(`/api/job-alerts/cities?state=${selectedState}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setCities(data.cities);
+        }
+      } catch (err) {
+        console.error('Failed to load cities:', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    }
+    
+    fetchCities();
+  }, [selectedState]);
+
+  // Helper to get full state name
+  const getStateName = (stateCode) => {
+    const stateObj = states.find(s => s.code === stateCode);
+    return stateObj ? stateObj.name : stateCode;
+  };
+
+  // Build location string for API calls
+  const getLocationString = () => {
+    if (selectedCity) {
+      return `${selectedCity}, ${selectedState}`;
+    }
+    return getStateName(selectedState);
+  };
 
   const handleCalculate = async (e) => {
     e.preventDefault();
     
-    if (!specialty || !location) {
+    if (!specialty || !selectedState) {
       setError('Please fill in all required fields');
-      return;
-    }
-    
-    // Validate location exists in our list (strict validation)
-    const isValidLocation = locations.some(loc => 
-      loc.value.toLowerCase() === location.trim().toLowerCase()
-    );
-    
-    if (!isValidLocation && locations.length > 0) {
-      setError('Please select a valid location from the dropdown list. Start typing to see available options.');
       return;
     }
     
@@ -76,7 +111,7 @@ export default function RNSalaryCalculator() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           specialty,
-          location,
+          location: getLocationString(),
           experience: parseInt(experience),
           jobType: jobType !== 'any' ? jobType : null,
           shiftType: shiftType !== 'any' ? shiftType : null
@@ -133,38 +168,15 @@ export default function RNSalaryCalculator() {
     setSubscribeError(null);
 
     try {
-      // Parse location to extract city and state properly
-      let stateCode = null;
-      let cityName = null;
-      
-      if (location.includes(',')) {
-        // Format: "Cleveland, OH" or "Cleveland, Ohio"
-        const parts = location.split(',').map(s => s.trim());
-        cityName = parts[0];
-        const statePart = parts[1];
-        
-        // Convert state name to code if needed
-        stateCode = statePart.length === 2 
-          ? statePart.toUpperCase() 
-          : getStateCode(statePart) || statePart.toUpperCase();
-      } else {
-        // Just state: "Ohio" or "OH"
-        if (location.length === 2) {
-          stateCode = location.toUpperCase();
-        } else {
-          stateCode = getStateCode(location);
-        }
-      }
-
       const response = await fetch('/api/salary-calculator/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: emailForAlert,
           specialty,
-          location,
-          state: stateCode,
-          city: cityName
+          location: getLocationString(),
+          state: selectedState,
+          city: selectedCity || null
         })
       });
 
@@ -293,7 +305,7 @@ export default function RNSalaryCalculator() {
         />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-purple-100" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           
           {/* Breadcrumbs */}
@@ -312,18 +324,18 @@ export default function RNSalaryCalculator() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
               💰 RN Salary Calculator
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto font-medium">
               See what you should be earning in {currentYear}. Get personalized salary estimates based on your specialty, location, and experience.
             </p>
-            <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-1 font-medium">
+                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Takes 10 seconds
               </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <span className="flex items-center gap-1 font-medium">
+                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 100% Free
@@ -332,7 +344,7 @@ export default function RNSalaryCalculator() {
           </div>
 
           {/* Calculator Form */}
-          <form onSubmit={handleCalculate} className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 sm:p-8 mb-8">
+          <form onSubmit={handleCalculate} className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-6 sm:p-8 mb-8">
             
             {/* Specialty Selection */}
             <div className="mb-6 sm:mb-8">
@@ -343,7 +355,7 @@ export default function RNSalaryCalculator() {
                 id="specialty"
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 transition-colors bg-white"
                 required
               >
                 <option value="">Select a specialty...</option>
@@ -353,58 +365,76 @@ export default function RNSalaryCalculator() {
               </select>
             </div>
 
-            {/* Location Input with Autocomplete */}
+            {/* Location Selection - Two Dropdowns */}
             <div className="mb-6 sm:mb-8">
-              <label htmlFor="location" className="block text-base sm:text-lg font-semibold text-gray-900 mb-3">
+              <label className="block text-base sm:text-lg font-semibold text-gray-900 mb-3">
                 2. Where do you work (or want to work)? <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  list="location-suggestions"
-                  autoComplete="off"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder={loadingLocations ? "Loading locations..." : "Start typing: Cleveland, OH or Ohio"}
-                  className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  required
-                  disabled={loadingLocations}
-                />
-                {location && locations.length > 0 && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {locations.some(loc => loc.value.toLowerCase() === location.trim().toLowerCase()) ? (
-                      <span className="text-green-600 text-xl">✓</span>
-                    ) : (
-                      <span className="text-orange-500 text-xl">⚠</span>
-                    )}
-                  </div>
-                )}
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* State Dropdown */}
+                <div>
+                  <label htmlFor="state" className="block text-sm font-medium text-cyan-800 mb-2">
+                    State
+                  </label>
+                  <select
+                    id="state"
+                    value={selectedState}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value);
+                      setSelectedCity(''); // Reset city when state changes
+                    }}
+                    className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600 transition-colors bg-white"
+                    required
+                    disabled={loadingStates}
+                  >
+                    <option value="">
+                      {loadingStates ? 'Loading states...' : 'Select a state...'}
+                    </option>
+                    {states.map((state) => (
+                      <option key={state.code} value={state.code}>
+                        {state.name} ({state.jobCount} jobs)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* City Dropdown */}
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-cyan-800 mb-2">
+                    City (Optional)
+                  </label>
+                  <select
+                    id="city"
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity(e.target.value)}
+                    className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600 transition-colors disabled:bg-gray-100 disabled:text-gray-400 bg-white"
+                    disabled={!selectedState || loadingCities}
+                  >
+                    <option value="">
+                      {!selectedState 
+                        ? 'Select a state first' 
+                        : loadingCities 
+                          ? 'Loading cities...' 
+                          : `All of ${getStateName(selectedState)} (Statewide)`
+                      }
+                    </option>
+                    {cities.map((city) => (
+                      <option key={city.name} value={city.name}>
+                        {city.name} ({city.jobCount} jobs)
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <datalist id="location-suggestions">
-                {locations.map((loc, idx) => (
-                  <option key={idx} value={loc.value}>
-                    {loc.label}
-                  </option>
-                ))}
-              </datalist>
+              
               <p className="mt-2 text-sm text-gray-500">
-                {loadingLocations ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Loading available locations...
-                  </span>
-                ) : location && !locations.some(loc => loc.value.toLowerCase() === location.trim().toLowerCase()) ? (
-                  <span className="text-orange-600">
-                    ⚠️ Please select a location from the dropdown suggestions
-                  </span>
-                ) : (
-                  `Type to search ${locations.length} available locations (cities or states)`
-                )}
+                {selectedState && !selectedCity 
+                  ? `📍 Calculating statewide average for ${getStateName(selectedState)}`
+                  : selectedCity 
+                    ? `📍 Calculating salary for ${selectedCity}, ${getStateName(selectedState)}`
+                    : 'Select a state to continue. Optionally narrow down to a specific city.'
+                }
               </p>
             </div>
 
@@ -424,20 +454,20 @@ export default function RNSalaryCalculator() {
                   onChange={(e) => setExperience(parseInt(e.target.value))}
                   className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(experience / 20) * 100}%, #e5e7eb ${(experience / 20) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${(experience / 20) * 100}%, #e5e7eb ${(experience / 20) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex justify-between items-center mt-3">
-                  <span className="text-sm text-gray-500">0 years</span>
+                  <span className="text-sm text-indigo-600 font-medium">0 years</span>
                   <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-blue-600">
+                    <div className="text-2xl sm:text-3xl font-bold text-indigo-700">
                       {experience === 20 ? '20+' : experience}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-indigo-600 font-medium">
                       {experience === 0 ? 'New Grad' : experience === 1 ? 'year' : 'years'}
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500">20+ years</span>
+                  <span className="text-sm text-indigo-600 font-medium">20+ years</span>
                 </div>
               </div>
             </div>
@@ -447,15 +477,15 @@ export default function RNSalaryCalculator() {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border-2 border-gray-200 transition-colors text-left"
+                className="w-full flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100 rounded-xl border-2 border-purple-300 transition-colors text-left"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{showAdvanced ? '▼' : '▶'}</span>
-                  <span className="text-base sm:text-lg font-semibold text-gray-900">
+                  <span className="text-lg text-purple-600">{showAdvanced ? '▼' : '▶'}</span>
+                  <span className="text-base sm:text-lg font-semibold text-purple-900">
                     Refine Further (Optional)
                   </span>
                 </div>
-                <span className="text-sm text-gray-500 hidden sm:inline">
+                <span className="text-sm text-purple-600 hidden sm:inline font-medium">
                   {showAdvanced ? 'Hide' : 'Refine by job type & shift'}
                 </span>
               </button>
@@ -465,14 +495,14 @@ export default function RNSalaryCalculator() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Job Type Dropdown */}
                     <div>
-                      <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="jobType" className="block text-sm font-medium text-purple-800 mb-2">
                         Job Type
                       </label>
                       <select
                         id="jobType"
                         value={jobType}
                         onChange={(e) => setJobType(e.target.value)}
-                        className="w-full px-3 py-2 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                        className="w-full px-3 py-2 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-white"
                       >
                         <option value="any">Any Type</option>
                         <option value="Full Time">Full Time</option>
@@ -485,14 +515,14 @@ export default function RNSalaryCalculator() {
 
                     {/* Shift Type Dropdown */}
                     <div>
-                      <label htmlFor="shiftType" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="shiftType" className="block text-sm font-medium text-purple-800 mb-2">
                         Shift
                       </label>
                       <select
                         id="shiftType"
                         value={shiftType}
                         onChange={(e) => setShiftType(e.target.value)}
-                        className="w-full px-3 py-2 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                        className="w-full px-3 py-2 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-white"
                       >
                         <option value="any">Any Shift</option>
                         <option value="days">Days</option>
@@ -504,7 +534,7 @@ export default function RNSalaryCalculator() {
                     </div>
                   </div>
                   
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-purple-700 mt-3 font-medium">
                     💡 These filters help narrow results. If limited data is available, we'll automatically broaden the search.
                   </p>
                 </div>
@@ -515,7 +545,7 @@ export default function RNSalaryCalculator() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 sm:py-5 px-6 rounded-xl text-lg sm:text-xl transition-colors shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-5 sm:py-6 px-6 rounded-xl text-lg sm:text-xl transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] transform border-2 border-white/20"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -530,7 +560,7 @@ export default function RNSalaryCalculator() {
               )}
             </button>
 
-            <p className="text-center text-sm text-gray-500 mt-4">
+            <p className="text-center text-sm text-gray-600 mt-4 font-medium">
               ⚡ Instant results • No signup required
             </p>
           </form>
@@ -559,7 +589,7 @@ export default function RNSalaryCalculator() {
                   Your Estimated Salary
                 </h2>
                 <p className="text-gray-600 mb-2">
-                  {specialty} RN • {location} • {experience} {experience === 1 ? 'year' : 'years'} experience
+                  {specialty} RN • {getLocationString()} • {experience} {experience === 1 ? 'year' : 'years'} experience
                 </p>
                 
                 {/* Show which filters were applied */}
@@ -586,7 +616,7 @@ export default function RNSalaryCalculator() {
                     {formatCurrency(salaryData.salary.annual.min)} - {formatCurrency(salaryData.salary.annual.max)}
                   </div>
                   <div className="text-lg sm:text-xl text-gray-700">
-                    per year (${salaryData.salary.hourly.min} - ${salaryData.salary.hourly.max}/hour)
+                    (${salaryData.salary.hourly.min} - ${salaryData.salary.hourly.max}/hour)
                   </div>
                   {salaryData.metadata.fallbackToState && (
                     <p className="text-sm text-blue-600 mt-2">
@@ -635,7 +665,7 @@ export default function RNSalaryCalculator() {
                     💼 See {specialty} RN Jobs Matching Your Estimate
                   </p>
                   <p className="text-gray-600 mb-6">
-                    Get actual {specialty} positions in {location} sorted by salary. We'll email you:
+                    Get actual {specialty} positions in {getLocationString()} sorted by salary. We'll email you:
                   </p>
                   
                   <ul className="text-left max-w-md mx-auto mb-6 space-y-2 text-sm sm:text-base text-gray-700">
@@ -666,7 +696,7 @@ export default function RNSalaryCalculator() {
                         <div>
                           <h4 className="font-semibold text-green-900 mb-1">✅ You're all set!</h4>
                           <p className="text-green-700 text-sm">
-                            We'll email you matching {specialty} RN jobs in {location} shortly. Check your inbox!
+                            We'll email you matching {specialty} RN jobs in {getLocationString()} shortly. Check your inbox!
                           </p>
                         </div>
                       </div>
@@ -679,7 +709,7 @@ export default function RNSalaryCalculator() {
                           value={emailForAlert}
                           onChange={(e) => setEmailForAlert(e.target.value)}
                           placeholder="Enter your email"
-                          className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
                           disabled={subscribing}
                         />
                         <button 
@@ -1026,23 +1056,37 @@ export default function RNSalaryCalculator() {
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #4f46e5;
           cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          border: 4px solid white;
+          box-shadow: 0 3px 8px rgba(79, 70, 229, 0.4);
+          transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+          background: #4338ca;
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.6);
+          transform: scale(1.1);
         }
 
         .slider::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
-          background: #3b82f6;
+          background: #4f46e5;
           cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          border: 4px solid white;
+          box-shadow: 0 3px 8px rgba(79, 70, 229, 0.4);
+          transition: all 0.2s ease;
+        }
+        
+        .slider::-moz-range-thumb:hover {
+          background: #4338ca;
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.6);
+          transform: scale(1.1);
         }
       `}</style>
     </>
