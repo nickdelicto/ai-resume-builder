@@ -172,7 +172,9 @@ export default function JobDetailPage({
       const headingMatch = line.match(/^(#{2,6})\s+(.+)$/);
       if (headingMatch) {
         const level = headingMatch[1].length;
-        const headingText = headingMatch[2];
+        let headingText = headingMatch[2];
+        // Remove **bold** markers from headings (already bold by default)
+        headingText = headingText.replace(/\*\*(.+?)\*\*/g, '$1');
         const HeadingTag = `h${Math.min(level + 1, 6)}`; // ## -> h3, ### -> h4, etc.
         elements.push(
           React.createElement(
@@ -189,10 +191,29 @@ export default function JobDetailPage({
         continue;
       }
       
+      // Check for metadata-style lines (Label: Value) where we want to bold only the label
+      const metadataMatch = line.match(/^([^:]+):\s*(.+)$/);
+      if (metadataMatch && line.length < 120) {
+        const label = metadataMatch[1].trim();
+        const value = metadataMatch[2].trim();
+        
+        // Check if this looks like metadata (Location Detail, Shift Detail, Work Location Type, etc.)
+        const isMetadata = /^(Location Detail|Shift Detail|Work Location Type|Facility|Hospital|Department|Schedule Type|Job Type|Employment Type)/i.test(label);
+        
+        if (isMetadata) {
+          // Metadata line: bold label, regular value
+          elements.push(
+            <p key={key++} className="leading-relaxed mb-3">
+              <strong className="font-bold">{label}:</strong> {value}
+            </p>
+          );
+          continue;
+        }
+      }
+      
       // Check for section headers (text ending with colon, like "Pay Range:" or "Physical Requirements:")
-      // These should be short (< 60 chars) and NOT be metadata lines (req#, Location, etc.)
-      const isMetadataPattern = /^(req#|Location|Facilities|Professional Area|Department|Job Code|Schedule|Shift|Posted Date|Experience Level):/i;
-      if (line.endsWith(':') && line.length < 60 && !isMetadataPattern.test(line)) {
+      // These should be short (< 60 chars) and are section dividers
+      if (line.endsWith(':') && line.length < 60) {
         elements.push(
           <h3 key={key++} className="font-bold text-gray-900 text-lg mb-3 mt-6">
             {line}
@@ -201,9 +222,14 @@ export default function JobDetailPage({
         continue;
       }
       
-      // Check for bullet point
-      if (line.startsWith('•')) {
-        const bulletText = line.substring(1).trim();
+      // Check for bullet point (markdown style "- " or unicode bullet "•")
+      if (line.startsWith('- ') || line.startsWith('•')) {
+        let bulletText = line.startsWith('- ') ? line.substring(2).trim() : line.substring(1).trim();
+        
+        // Strip any leading bullet character (• or -) that might remain
+        // (LLM sometimes outputs "- • text" causing double bullets)
+        bulletText = bulletText.replace(/^[•\-]\s*/, '').trim();
+        
         // Check if it contains bold markdown
         const parts = bulletText.split(/(\*\*[^*]+\*\*)/g);
         const bulletContent = parts.map((part, idx) => {
