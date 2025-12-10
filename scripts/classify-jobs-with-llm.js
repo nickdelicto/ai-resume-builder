@@ -152,9 +152,9 @@ If the scraped location is missing (null) or seems invalid:
 - Return ONLY valid 2-letter US state codes (AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY, DC)
 - If location truly cannot be determined, return city: null, state: null
 
-**CRITICAL: Keep all JSON values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
+**CRITICAL: Keep CLASSIFICATION values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
 
-GOOD examples (concise):
+GOOD examples for classification (concise):
 {
   "specialty": "ICU",
   "jobType": "Full Time",
@@ -162,13 +162,64 @@ GOOD examples (concise):
   "experienceLevel": "Experienced"
 }
 
-BAD examples (too verbose - DO NOT do this):
+BAD examples for classification (too verbose - DO NOT do this):
 {
   "specialty": "ICU - Intensive Care with trauma focus",
   "jobType": "Full Time - 40 hours per week with benefits",
   "shiftType": "nights - primarily 7pm-7am shifts",
   "experienceLevel": "Experienced - requires 2-3 years"
 }
+
+**Task 7: Format the COMPLETE job description for readability**
+
+⚠️ **CRITICAL RULES FOR DESCRIPTION FORMATTING:**
+1. **DO NOT SUMMARIZE, CONDENSE, OR SHORTEN THE DESCRIPTION IN ANY WAY**
+2. **PRESERVE EVERY SINGLE WORD, SENTENCE, BULLET POINT, AND DETAIL FROM THE ORIGINAL**
+3. **YOUR ONLY JOB IS TO ADD MARKDOWN FORMATTING - NOT TO REWRITE OR EDIT CONTENT**
+4. **IF THE ORIGINAL HAS 50 BULLET POINTS, YOUR OUTPUT MUST HAVE ALL 50 BULLET POINTS**
+5. **DO NOT SKIP ANY SECTIONS - include everything from intro to closing paragraph**
+6. **DO NOT CREATE NEW TEXT - only reorganize and format what exists**
+
+Formatting Instructions:
+- Use ## for major sections (e.g., "## Job Summary", "## Responsibilities", "## Qualifications")
+- Use ### for subsections (e.g., "### Required", "### Preferred", "### Education", "### Experience")
+- Use - for bullet points (convert • or · to -)
+- Use **bold** for important terms (certifications, requirements, key skills, license types)
+- Use blank lines to separate sections
+- Maintain logical hierarchy (## > ###)
+- Remove ONLY "Save job" or "Apply now" buttons/text at the very end
+
+Example showing COMPLETE preservation:
+Original: "We offer tuition reimbursement up to $5,250.00 after six months and 40% discounts."
+Formatted: "- **Tuition Reimbursement:** up to $5,250.00 after six months and 40% discounts."
+(Notice: EXACT same text, just reformatted)
+
+Structure example:
+## Job Summary
+Full intro paragraph here with all original text preserved...
+
+## Responsibilities
+- First responsibility with complete original wording
+- Second responsibility with complete original wording
+- Third responsibility with complete original wording
+[...all remaining bullets...]
+
+## Qualifications
+
+### Required
+- **License:** Full original requirement text
+- **Certification:** Full original requirement text
+[...all requirements...]
+
+### Preferred
+- Full preferred qualification 1
+- Full preferred qualification 2
+[...all preferred items...]
+
+### Experience
+- Full experience requirement with all details
+
+[...continue ALL remaining sections from original...]
 
 **Return your answer ONLY as valid JSON in this exact format:**
 {
@@ -184,30 +235,378 @@ BAD examples (too verbose - DO NOT do this):
 }
 
 /**
- * Classify a single job using OpenAI API
+ * Classify job attributes ONLY (split from formatting for better results)
  */
-async function classifyJob(job) {
+async function classifyJobAttributes(job) {
+  const prompt = `Analyze this nursing job and extract key attributes:
+
+Job Title: ${job.title}
+Location: ${job.city}, ${job.state}
+Employer: ${job.employer?.name || 'Unknown'}
+
+Description:
+${job.description}
+
+Extract the following:
+1. Is this a direct-care Staff RN position? (not leadership/management/non-RN)
+2. Specialty (ICU, ER, Med-Surg, OR, etc.)
+3. Job Type (Full Time, Part Time, Per Diem, etc.)
+4. Shift Type (days, nights, evenings, variable, rotating)
+5. Experience Level (Entry Level, New Grad, Experienced, Senior, Leadership)
+6. City and State (2-letter code)
+
+**Specialty Options:** ICU, ER, OR, Med-Surg, Telemetry, Oncology, Pediatrics, NICU, L&D, Psychiatric, Home Health, Travel, School, Cardiac, Step Down, Dialysis, Case Management, Informatics, Hospice, Rehab, General Nursing
+
+Return ONLY valid JSON:
+{
+  "isStaffRN": true or false,
+  "specialty": "from list above",
+  "jobType": "Full Time" | "Part Time" | "Per Diem" | "Contract" | "Travel" | null,
+  "shiftType": "days" | "nights" | "evenings" | "variable" | "rotating" | null,
+  "experienceLevel": "Entry Level" | "New Grad" | "Experienced" | "Senior" | "Leadership" | null,
+  "city": "city name",
+  "state": "2-letter code",
+  "confidence": 0.95
+}`;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-5-mini',
+    messages: [
+      { role: 'system', content: 'You are an expert nursing job classifier. Respond with valid JSON only.' },
+      { role: 'user', content: prompt }
+    ],
+    max_completion_tokens: 5000, // Increased to handle longer job descriptions
+    response_format: { type: 'json_object' }
+  });
+
+  console.log('\n🔍 DEBUG: Classification Call:');
+  console.log('   Finish Reason:', response.choices[0].finish_reason);
+  console.log('   Tokens:', response.usage.completion_tokens, '/', response.usage.total_tokens);
+  
+  return {
+    classification: JSON.parse(response.choices[0].message.content),
+    usage: response.usage
+  };
+}
+
+/**
+ * Format job description ONLY (split from classification for better results)
+ * NOTE: DISABLED - formatting removed for cost efficiency
+ */
+/*
+async function formatJobDescription(job) {
+  const prompt = `Format this job description into clean, professional Markdown following resume/job posting best practices.
+
+**CRITICAL RULES - CONTENT PRESERVATION:**
+1. PRESERVE EVERY SINGLE WORD from the original (all ${job.description.length} characters)
+2. Do NOT skip ANY content or sections
+3. Do NOT summarize or condense
+4. If original has 50 bullets, your output MUST have 50 bullets
+5. Your response will be LONGER than ${job.description.length} characters (because you're adding paragraph breaks, bullets, and markdown formatting - this is GOOD)
+
+**IMPORTANT CLARIFICATION:**
+Adding paragraph breaks (\n\n), bullets (- ), and markdown headers (##) is NOT "changing content" - it's formatting. Your job is to take the raw text and make it readable by adding proper spacing and structure. The word count stays the same, but character count will INCREASE due to formatting.
+
+**FORMATTING IMPROVEMENTS:**
+
+**CRITICAL EXCEPTION TO "PRESERVE EVERYTHING" RULE:**
+Section headers like "Responsibilities:", "Job Summary:", "Qualifications:" are the ONLY text you should NOT preserve word-for-word. These get REPLACED with markdown headers. Everything else (job descriptions, requirements, benefits text) must be preserved 100%.
+
+**CRITICAL: FOR LONG JOB DESCRIPTIONS (over 3000 characters):**
+You MUST be extra careful to add paragraph breaks. Long descriptions require MORE breaks, not fewer. Every 2-3 sentences = new paragraph. Do NOT output walls of text just because the job is long.
+
+**Here are CONCRETE EXAMPLES of the transformation:**
+
+❌ WRONG (duplicated headers):
+Job Summary
+Job Summary:
+• Provides direct nursing care...
+
+✅ CORRECT (replaced header):
+## Job Summary
+• Provides direct nursing care...
+
+❌ WRONG (duplicated headers):
+Key Responsibilities
+Responsibilities:
+• Implements and monitors...
+
+✅ CORRECT (replaced header):
+## Key Responsibilities
+• Implements and monitors...
+
+❌ WRONG (tripled header):
+Qualifications
+Qualifications Qualifications
+• Graduate of an accredited...
+
+✅ CORRECT (replaced header):
+## Qualifications
+• Graduate of an accredited...
+
+❌ WRONG (wall of text in Qualifications):
+## Qualifications
+Qualifications BSN preferred Current RN license Must have experience...
+
+✅ CORRECT (formatted with bullets):
+## Qualifications
+- **BSN** preferred
+- Current **RN** license
+- Must have experience...
+
+**REPLACEMENT RULES:**
+1. Metadata lines (Location Detail:, Shift Detail:) → Keep as plain text
+2. "Job Summary:" → becomes "## Job Summary" (delete "Job Summary:")
+3. "Responsibilities:" or "Responsibilities include..." → becomes "## Key Responsibilities" (delete the original text)
+4. "Qualifications:" or "Qualifications Minimum Requirements:" → becomes "## Qualifications" (delete the original text)
+5. "Benefits:" → becomes "## Benefits" (delete "Benefits:")
+6. "Minimum Requirements:" (under Qualifications) → becomes "### Minimum Requirements" (delete "Minimum Requirements:")
+7. "Education:" (under Qualifications) → becomes "### Education" (delete "Education:")
+8. "Experience:" (under Qualifications) → becomes "### Experience" (delete "Experience:")
+
+**OTHER FORMATTING IMPROVEMENTS:**
+1. Convert qualification/requirement lists into bullets:
+   - If Qualifications section is a wall of text (e.g., "BSN preferred Current RN license Must have experience..."), break it into individual bullet points
+   - Each requirement gets its own bullet line
+   - Example: "BSN preferred Current RN license Must have..." → "- **BSN** preferred\n- Current **RN** license\n- Must have..."
+   - Apply this to ANY section that lists requirements, skills, or qualifications
+
+2. Bold subsection dividers within major sections:
+   - If the original JD has plain text subsection organizers (e.g., "Direct Patient Care", "Care Coordination", "Education" under Responsibilities), wrap them in **bold** markdown
+   - Example: "Direct Patient Care" → "**Direct Patient Care**"
+   - These are NOT markdown headers (##), just bolded text to make them visible as organizers
+   - Do NOT bold metadata lines (Location Detail:, Shift Detail:, etc.)
+
+3. Fix grammar and spacing:
+   - Ensure responsibility bullets use present tense third-person verbs
+   - "Collaborate with" → "Collaborates with"
+   - "Triage of patients" → "Triages patients"
+   - "Manage a caseload" → "Manages a caseload"
+   - **CRITICAL SPACING RULE:** ALWAYS add a space after periods when combining sentences or lines. "matters. Every day" is correct, "matters.Every day" is WRONG. Check EVERY period in your output.
+
+4. **MANDATORY: Break long paragraphs into digestible chunks:**
+   - **CRITICAL: NEVER output a wall of text longer than 3-4 sentences without a paragraph break**
+   - ALWAYS use double line breaks (\n\n) between EVERY paragraph
+   - If you see a block of text longer than 300 characters, break it into multiple paragraphs
+   - This applies to ALL text: intro, program descriptions, benefits, employer info
+   - Every section header (like "Program Description:", "The Role of the OR Nurse:") should be followed by \n\n and then the content in digestible 2-3 sentence chunks
+   - **CHECK YOUR OUTPUT: If any paragraph is longer than 500 characters, you MUST break it up**
+
+5. Use markdown bullets (- ) for all bullet points:
+   - **CRITICAL:** When converting bullets to markdown format, REMOVE the original bullet character (•, ·, -, *) from the text
+   - Example: "• Provides direct care..." → "- Provides direct care..." (NOT "- • Provides direct care...")
+   - The frontend will add its own bullet styling, so strip the original bullet to avoid double bullets
+
+6. Bold important terms: certifications (BLS, OCN), licenses (RN License), degree requirements (BSN, MSN)
+
+Original Description (${job.description.length} characters):
+${job.description}
+
+---
+
+**RETURN FORMAT:**
+Return ONLY the formatted markdown text. 
+- Do NOT include "Original:" comparison notes
+- Do NOT include the source text at the end
+- Do NOT show before/after examples
+- Just return the clean, formatted job description and nothing else`;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-5-mini',
+    messages: [
+      { role: 'system', content: 'You are an expert at formatting job descriptions with Markdown while applying professional writing best practices. You NEVER summarize - you preserve every word while improving clarity, grammar, and structure.' },
+      { role: 'user', content: prompt }
+    ],
+    max_completion_tokens: 12000
+  });
+
+  console.log('\n🔍 DEBUG: Formatting Call:');
+  console.log('   Finish Reason:', response.choices[0].finish_reason);
+  console.log('   Tokens:', response.usage.completion_tokens, '/', response.usage.total_tokens);
+  console.log('   Output Length:', response.choices[0].message.content.length, 'characters');
+  console.log('   Original Length:', job.description.length, 'characters');
+  console.log('   Ratio:', ((response.choices[0].message.content.length / job.description.length) * 100).toFixed(1) + '%');
+  
+  return {
+    formattedDescription: response.choices[0].message.content.trim(),
+    usage: response.usage
+  };
+}
+*/
+
+/**
+ * Format Hartford HealthCare job description using LLM
+ * @param {Object} job - Job object with title, description, etc.
+ * @returns {Object} Formatting results with formattedDescription
+ */
+async function formatHartfordDescription(job) {
+  const prompt = `You are a professional job description formatter. Format this nursing job description into clean, well-structured Markdown.
+
+**CRITICAL RULES:**
+1. DO NOT include the job title in your output (we already have it)
+2. Preserve 100% of the original content - NO summarization
+3. Return ONLY the formatted Markdown - no JSON, no commentary
+4. Start directly with the first piece of content (usually metadata or intro paragraph)
+
+**STANDARD JOB DESCRIPTION STRUCTURE:**
+
+**Metadata** (if present):
+- **Location Detail:** [info]
+- **Shift Detail:** [info]
+- **Work Location Type:** [info]
+
+**Introduction Paragraph** (1-3 sentences about the role/facility)
+
+**Job Summary:** (if present, use **bold**)
+
+**Responsibilities:** (use **bold** header)
+- Use bullet points with proper spacing
+- Each bullet should have a blank line after it
+
+## Qualifications (use ## heading)
+
+**Minimum Requirements:** (if present)
+- Bullet point format
+- Blank line between each
+
+**Education:**
+- Bullet format
+
+**Experience:**
+- Bullet format
+
+**Skills/Certifications:** (if present)
+- Bullet format
+
+**Benefits** (if present - use **bold** or ## depending on prominence)
+
+**Closing Paragraph** (about the employer/opportunity)
+
+**FORMATTING RULES:**
+- Metadata labels: **bold labels** with colon
+- Major sections (Qualifications, Benefits): ## Heading
+- Sub-sections (Responsibilities, Job Summary, Minimum Requirements): **Bold:**
+- ALL lists under Qualifications, Responsibilities, Education, Skills: MUST use • bullets (NOT dashes)
+- CRITICAL: Every bullet must have a blank line before and after it
+- Bullet format: [blank line] • Item text here. [blank line]
+- Fix missing spaces after periods
+- Break paragraphs longer than 3 sentences into smaller chunks
+- Remove any repeated job titles from the description
+
+**EXAMPLE TRANSFORMATION:**
+
+BEFORE:
+"Location Detail: Hartford Hospital. Shift Detail: Days. We are seeking an RN. Qualifications Graduate of nursing school. BSN required. 2 years experience required. Responsibilities Provide patient care. Administer medications."
+
+AFTER:
+**Location Detail:** Hartford Hospital
+
+**Shift Detail:** Days
+
+We are seeking an RN.
+
+**Responsibilities:**
+
+• Provide patient care.
+
+• Administer medications.
+
+## Qualifications
+
+• Graduate of nursing school.
+
+• BSN required.
+
+• 2 years experience required.
+
+**CRITICAL: Always use • bullets (not - dashes) with blank lines between each bullet!**
+
+**JOB TITLE:** ${job.title}
+
+**RAW DESCRIPTION:**
+${job.description}
+
+**YOUR FORMATTED OUTPUT (start with first content, NOT the title):**`;
+
   try {
-    const prompt = buildClassificationPrompt(job);
-    
     const response = await openai.chat.completions.create({
-      model: 'gpt-5-mini',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are an expert nursing job classifier. Always respond with valid JSON only.'
+          content: 'You are a job description formatter. Return ONLY the formatted Markdown text with no additional commentary.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      // Note: GPT-5 only supports default temperature (1), no custom values
-      max_completion_tokens: 1500, // Generous headroom to prevent truncation (AI typically uses 150-250 tokens)
-      response_format: { type: 'json_object' } // Force JSON response
+      temperature: 0.1,
+      max_completion_tokens: 12000
     });
+
+    const formatted = response.choices[0].message.content.trim();
+    const usage = response.usage;
+
+    return {
+      formattedDescription: formatted,
+      finishReason: response.choices[0].finish_reason,
+      usage: {
+        prompt: usage.prompt_tokens,
+        completion: usage.completion_tokens,
+        total: usage.total_tokens
+      }
+    };
+  } catch (error) {
+    console.error('   ❌ LLM formatting error:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Classify a single job using TWO parallel OpenAI calls (like resume builder pattern)
+ */
+async function classifyJob(job) {
+  try {
+    // Check if this is a Hartford HealthCare job
+    const isHartford = job.employer.slug === 'hartford-healthcare';
     
-    const result = JSON.parse(response.choices[0].message.content);
+    // For Hartford jobs: run classification AND formatting in parallel
+    // For other jobs: only run classification
+    let classificationResult, formattingResult;
+    
+    if (isHartford) {
+      console.log('   🔄 Running classification + formatting (Hartford job)...');
+      [classificationResult, formattingResult] = await Promise.all([
+        classifyJobAttributes(job),
+        formatHartfordDescription(job)
+      ]);
+    } else {
+      classificationResult = await classifyJobAttributes(job);
+      formattingResult = null;
+    }
+    
+    // Get results
+    const result = classificationResult.classification;
+    let combinedUsage = classificationResult.usage;
+    
+    // If Hartford job was formatted, add formatting tokens to usage
+    if (formattingResult) {
+      combinedUsage = {
+        prompt_tokens: combinedUsage.prompt_tokens + formattingResult.usage.prompt,
+        completion_tokens: combinedUsage.completion_tokens + formattingResult.usage.completion,
+        total_tokens: combinedUsage.total_tokens + formattingResult.usage.total
+      };
+      
+      console.log('\n📝 Formatting Results:');
+      console.log('   Finish Reason:', formattingResult.finishReason);
+      console.log('   Tokens:', formattingResult.usage.prompt, '/', formattingResult.usage.completion);
+      console.log('   Formatted length:', formattingResult.formattedDescription.length, 'chars');
+    }
+    
+    console.log('\n✅ Classification Results:');
+    console.log('   Confidence:', result.confidence);
+    console.log('   Total tokens:', combinedUsage.total_tokens);
     
     // Normalize experience level to proper Title Case format
     // Handles LLM variations like "new-grad", "senior", "experienced"
@@ -215,12 +614,19 @@ async function classifyJob(job) {
       result.experienceLevel = normalizeExperienceLevel(result.experienceLevel);
     }
     
-    return {
+    const returnObj = {
       success: true,
       classification: result,
-      tokensUsed: response.usage.total_tokens,
-      cost: calculateCost(response.usage)
+      tokensUsed: combinedUsage.total_tokens,
+      cost: calculateCost(combinedUsage)
     };
+    
+    // Add formatted description if Hartford job
+    if (formattingResult) {
+      returnObj.formattedDescription = formattingResult.formattedDescription;
+    }
+    
+    return returnObj;
     
   } catch (error) {
     console.error(`❌ Error classifying job ${job.id}:`, error.message);
@@ -238,7 +644,9 @@ async function classifyJob(job) {
  * - Cached Input: $0.025 per 1M tokens  
  * - Output: $2.00 per 1M tokens
  * 
- * Note: We use Standard API (not Batch) for real-time classification
+ * Note: We use Standard API (not Batch) for real-time classification + formatting
+ * Typical usage per job: ~2700 input tokens, ~2500 output tokens (~$0.0057 per job)
+ * With 12k token limit and debugging to understand truncation issue
  */
 function calculateCost(usage) {
   const inputCost = (usage.prompt_tokens / 1_000_000) * 0.25;
@@ -287,7 +695,7 @@ async function main() {
       where: whereClause,
       include: {
         employer: {
-          select: { name: true }
+          select: { name: true, slug: true }
         }
       },
       take: limit || undefined,
@@ -351,33 +759,48 @@ async function main() {
         // Update database if not in test mode
         if (!isTestMode && c.isStaffRN && c.city && c.state) {
           // Staff RN with valid location → Activate job
+          const updateData = {
+            city: c.city,           // Update with LLM-extracted location
+            state: c.state,         // Update with LLM-validated state
+            specialty: c.specialty,
+            jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
+            shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
+            experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
+            isActive: true,       // ✅ Activate job - validated as Staff RN with location
+            classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
+          };
+          
+          // If Hartford job was formatted, save the formatted description
+          if (result.formattedDescription) {
+            updateData.description = result.formattedDescription;
+            console.log(`   📝 Saving formatted description (${result.formattedDescription.length} chars)`);
+          }
+          
           await prisma.nursingJob.update({
             where: { id: job.id },
-            data: {
-              city: c.city,           // Update with LLM-extracted location
-              state: c.state,         // Update with LLM-validated state
-              specialty: c.specialty,
-              jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
-              shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
-              experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
-              isActive: true,       // ✅ Activate job - validated as Staff RN with location
-              classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
-            }
+            data: updateData
           });
           console.log(`   💾 Updated in database with location: ${c.city}, ${c.state}`);
           console.log(`   ✅ Job activated and live on site`);
         } else if (!isTestMode && c.isStaffRN && (!c.city || !c.state)) {
           // Staff RN but no valid location → Keep inactive but mark as classified
+          const updateData = {
+            specialty: c.specialty,
+            jobType: c.jobType || job.jobType,
+            shiftType: c.shiftType || job.shiftType,
+            experienceLevel: c.experienceLevel || job.experienceLevel,
+            isActive: false,      // ❌ Keep inactive - no valid location
+            classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
+          };
+          
+          // If Hartford job was formatted, save the formatted description
+          if (result.formattedDescription) {
+            updateData.description = result.formattedDescription;
+          }
+          
           await prisma.nursingJob.update({
             where: { id: job.id },
-            data: {
-              specialty: c.specialty,
-              jobType: c.jobType || job.jobType,
-              shiftType: c.shiftType || job.shiftType,
-              experienceLevel: c.experienceLevel || job.experienceLevel,
-              isActive: false,      // ❌ Keep inactive - no valid location
-              classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
-            }
+            data: updateData
           });
           console.log(`   🚫 Staff RN but location unknown (${c.city || 'null'}, ${c.state || 'null'}) - kept inactive`);
         } else if (!isTestMode && !c.isStaffRN) {
@@ -385,6 +808,7 @@ async function main() {
           await prisma.nursingJob.update({
             where: { id: job.id },
             data: {
+              // description: keep original as-is (no LLM formatting)
               classifiedAt: new Date()  // ✅ Mark as classified even if rejected (prevents reprocessing)
             }
           });
