@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --save puppeteer && next build",
+    "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
@@ -57,7 +57,7 @@
     "openai": "^4.95.0",
     "pdf-parse": "^1.1.1",
     "prisma": "^6.8.2",
-    "puppeteer": "^24.31.0",
+    "puppeteer": "^24.32.1",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-dnd": "^16.0.1",
