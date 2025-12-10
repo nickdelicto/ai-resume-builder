@@ -18,12 +18,14 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
     specialty: specialty,
     state: state,
     city: city,
-    employer: '' // Optional employer filter
+    employer: '', // Optional employer filter
+    website: '' // HONEYPOT FIELD - hidden from users, bots will fill it
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [manageToken, setManageToken] = useState(null);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
   
   // Dropdown options
   const [states, setStates] = useState([]);
@@ -110,6 +112,38 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
     fetchEmployers();
   }, [formData.state, formData.city]);
 
+  // Load and execute reCAPTCHA v3 for spam protection
+  useEffect(() => {
+    // Load reCAPTCHA script if not already loaded
+    if (typeof window !== 'undefined' && !window.grecaptcha) {
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+
+      script.onload = () => {
+        executeRecaptcha();
+      };
+    } else if (window.grecaptcha) {
+      executeRecaptcha();
+    }
+
+    function executeRecaptcha() {
+      if (window.grecaptcha && window.grecaptcha.ready) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'job_alert_signup' })
+            .then(token => {
+              setRecaptchaToken(token);
+            })
+            .catch(err => {
+              console.error('reCAPTCHA execution error:', err);
+            });
+        });
+      }
+    }
+  }, []);
+
   // Get full state name for display
   const getStateName = (stateCode) => {
     const stateObj = states.find(s => s.code === stateCode);
@@ -128,6 +162,28 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
     setError('');
 
     try {
+      // Generate FRESH reCAPTCHA token right before submission (tokens expire after 2 minutes)
+      let freshToken = recaptchaToken;
+      if (window.grecaptcha && window.grecaptcha.ready) {
+        try {
+          freshToken = await window.grecaptcha.execute(
+            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, 
+            { action: 'job_alert_submit' }
+          );
+          console.log('Fresh reCAPTCHA token generated for submission');
+        } catch (err) {
+          console.error('Failed to generate fresh reCAPTCHA token:', err);
+          setError('Security verification failed. Please refresh the page.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        console.error('reCAPTCHA not loaded');
+        setError('Security verification not ready. Please refresh the page.');
+        setLoading(false);
+        return;
+      }
+
       // Build location string for display
       let locationStr = formData.city 
         ? `${formData.city}, ${formData.state}` 
@@ -149,7 +205,9 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
           location: locationStr,
           state: formData.state,
           city: formData.city || null,
-          employerId: formData.employer || null
+          employerId: formData.employer || null,
+          recaptchaToken: freshToken, // Fresh token generated right before submission
+          website: formData.website // Honeypot field (should be empty)
         })
       });
 
@@ -157,7 +215,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
 
       if (response.ok) {
         setSuccess(true);
-        setFormData({ name: '', email: '', specialty: specialty, state: state, city: city, employer: '' });
+        setFormData({ name: '', email: '', specialty: specialty, state: state, city: city, employer: '', website: '' });
       } else {
         setError(data.message || data.error || 'Failed to subscribe');
         if (data.manageToken) {
@@ -251,6 +309,18 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
+            {/* HONEYPOT FIELD - Hidden from humans, bots will fill it */}
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              tabIndex="-1"
+              autoComplete="off"
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+              aria-hidden="true"
+            />
+
             {/* Row 1: Name, Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input
@@ -397,6 +467,18 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
         {/* Form Card */}
         <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 max-w-3xl">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* HONEYPOT FIELD - Hidden from humans, bots will fill it */}
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              tabIndex="-1"
+              autoComplete="off"
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+              aria-hidden="true"
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
               <div>
