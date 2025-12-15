@@ -12,7 +12,8 @@
 # Examples:
 #   ./scrape-and-classify.sh cleveland-clinic
 #   ./scrape-and-classify.sh uhs
-#   ./scrape-and-classify.sh adventist
+#   ./scrape-and-classify.sh adventist-healthcare
+#   ./scrape-and-classify.sh hartford-healthcare
 #
 # Features:
 # - Runs scraper first, then classifier (only if scraper succeeds)
@@ -90,6 +91,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - uhs"
   echo "  - adventist-healthcare"
   echo "  - northwell-health"
+  echo "  - hartford-healthcare"
   exit 1
 fi
 
@@ -156,6 +158,12 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
   
+  hartford-healthcare)
+    # Hartford HealthCare uses custom Phenom People scraper (no max-pages support)
+    /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/hartford-healthcare-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    SCRAPER_EXIT_CODE=$?
+    ;;
+  
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -164,12 +172,13 @@ case $EMPLOYER_SLUG in
     log_message "  - uhs"
     log_message "  - adventist-healthcare"
     log_message "  - northwell-health"
+    log_message "  - hartford-healthcare"
     
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"
