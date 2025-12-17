@@ -807,6 +807,41 @@ class ClevelandClinicRNScraper {
     }
     
     try {
+      // Check if page is still valid (not detached or closed)
+      let pageIsValid = false;
+      try {
+        // Check if page is closed
+        if (page.isClosed()) {
+          throw new Error('Page is closed');
+        }
+        // Quick check if page frame is accessible
+        await page.evaluate(() => document.title);
+        pageIsValid = true;
+      } catch (frameError) {
+        // Page frame is detached or closed
+        if (frameError.message.includes('closed') || frameError.message.includes('Target closed')) {
+          throw new Error('Page is closed - cannot process job details');
+        }
+        // For detached frames, try to recover
+        pageIsValid = false;
+      }
+      
+      // If page is not valid, try to re-establish connection
+      if (!pageIsValid) {
+        console.log(`   ⚠️  Page frame was detached, attempting to recover...`);
+        try {
+          // Navigate to base URL first to re-establish frame
+          await page.goto(this.baseUrl, { 
+            waitUntil: 'networkidle2',
+            timeout: 15000 
+          });
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          pageIsValid = true;
+        } catch (reconnectError) {
+          throw new Error(`Page frame detached and cannot recover: ${reconnectError.message}`);
+        }
+      }
+      
       // Navigate to the job details page
       await page.goto(job.link, { 
         waitUntil: 'networkidle2',
