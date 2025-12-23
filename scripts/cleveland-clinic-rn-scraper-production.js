@@ -809,9 +809,12 @@ class ClevelandClinicRNScraper {
     try {
       // Check if page is still valid (not detached or closed)
       let pageIsValid = false;
+      let needsNewPage = false;
+      
       try {
         // Check if page is closed
         if (page.isClosed()) {
+          needsNewPage = true;
           throw new Error('Page is closed');
         }
         // Quick check if page frame is accessible
@@ -820,25 +823,39 @@ class ClevelandClinicRNScraper {
       } catch (frameError) {
         // Page frame is detached or closed
         if (frameError.message.includes('closed') || frameError.message.includes('Target closed')) {
+          needsNewPage = true;
           throw new Error('Page is closed - cannot process job details');
         }
-        // For detached frames, try to recover
+        // For detached frames, mark for recreation
+        needsNewPage = true;
         pageIsValid = false;
       }
       
-      // If page is not valid, try to re-establish connection
-      if (!pageIsValid) {
-        console.log(`   ⚠️  Page frame was detached, attempting to recover...`);
+      // If page is detached, close it and create a new one
+      if (!pageIsValid && needsNewPage) {
+        console.log(`   ⚠️  Page frame detached, creating new page...`);
         try {
-          // Navigate to base URL first to re-establish frame
+          // Close the dead page (ignore errors if already closed)
+          await page.close().catch(() => {});
+          
+          // Create a fresh page from browser
+          page = await this.browser.newPage();
+          
+          // Set viewport for new page
+          await page.setViewport({ width: 1920, height: 1080 });
+          
+          // Navigate to base URL with fresh page to establish connection
           await page.goto(this.baseUrl, { 
             waitUntil: 'networkidle2',
             timeout: 15000 
           });
+          
           await new Promise(resolve => setTimeout(resolve, 1000));
           pageIsValid = true;
+          
+          console.log(`   ✅ Successfully created new page`);
         } catch (reconnectError) {
-          throw new Error(`Page frame detached and cannot recover: ${reconnectError.message}`);
+          throw new Error(`Could not create new page: ${reconnectError.message}`);
         }
       }
       
