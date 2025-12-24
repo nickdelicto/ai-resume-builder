@@ -12,6 +12,9 @@
  *   node workday-scraper-runner.js --max-pages 5      # Limit to 5 pages (for testing)
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const WorkdayRNScraper = require('./workday-rn-scraper-base');
 const WorkdayAdventistScraper = require('./workday-adventist-scraper');
 const { getConfig, getAllConfigs, getEmployerSlugs } = require('./workday-employer-configs');
