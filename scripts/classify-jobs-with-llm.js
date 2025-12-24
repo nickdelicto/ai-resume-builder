@@ -18,6 +18,9 @@
  *   --employer=slug: Only process jobs from specific employer
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { PrismaClient } = require('@prisma/client');
 const OpenAI = require('openai');
 const { normalizeExperienceLevel } = require('../lib/utils/experienceLevelUtils');
