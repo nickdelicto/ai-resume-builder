@@ -251,7 +251,7 @@ Description:
 ${job.description}
 
 Extract the following:
-1. Is this a direct-care Staff RN position? (not leadership/management/non-RN)
+1. Is this a Staff RN position requiring ONLY an RN license? (Include bedside RNs, charge nurses, nurse managers, coordinators. Exclude only: NP, CRNA, CNS, CNM, non-RN roles)
 2. Specialty (ICU, ER, Med-Surg, OR, etc.)
 3. Job Type (Full Time, Part Time, Per Diem, etc.)
 4. Shift Type (days, nights, evenings, variable, rotating)
