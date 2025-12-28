@@ -1,52 +1,10 @@
 import { useRouter } from 'next/router';
-import Image from 'next/image';
-import { toast } from 'react-hot-toast';
-import { useState, useEffect } from 'react';
 
 const StickyHeader = () => {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState(false);
-  
-  // Check screen size on mount and when window resizes
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    // Initial check
-    checkScreenSize();
-    
-    // Add event listener for window resize
-    window.addEventListener('resize', checkScreenSize);
-    
-    // Clean up event listener
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
-  const handleBuildNewClick = async () => {
-    // Show loading toast if available
-    let toastId;
-    if (typeof toast !== 'undefined') {
-      toastId = toast.loading('Creating new resume...');
-    }
-    
-    try {
-      // For unauthenticated users or if API call fails, use the original behavior
-      router.push('/builder/new');
-      
-      if (toastId) {
-        toast.success('Starting new resume!', { id: toastId });
-      }
-    } catch (error) {
-      console.error('Error creating new resume:', error);
-      
-      // Fallback to original behavior
-      router.push('/builder/new');
-      
-      if (toastId) {
-        toast.error('Something went wrong. Starting with a blank resume.', { id: toastId });
-      }
-    }
+  const handleFindJobsClick = () => {
+    router.push('/jobs/nursing');
   };
 
   return (
@@ -71,16 +29,11 @@ const StickyHeader = () => {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
+        background: 'linear-gradient(135deg, #1a73e8 15%, #4f46e5 70%, #6366f1 95%)',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
       }}>
-        {/* Logo - using the exact same SVG as in Navigation.jsx */}
-        <Image 
-          src="/logo.svg" 
-          alt="IntelliResume Logo" 
-          width={28} 
-          height={28} 
-          style={{ position: 'relative', top: '-2px' }}
-          priority
-        />
         IntelliResume
       </div>
       <div style={{
@@ -88,38 +41,25 @@ const StickyHeader = () => {
         gap: '15px',
         alignItems: 'center',
       }}>
-        <span style={{
-          fontSize: '15px',
-          color: '#333',
-          fontWeight: '500',
-          display: 'none',
-          '@media (min-width: 768px)': {
-            display: 'block',
-          }
-        }}
-        className="hide-on-mobile">
-          Ready to build your resume?
-        </span>
         <button
-          onClick={handleBuildNewClick}
+          onClick={handleFindJobsClick}
           className="animated-button"
           style={{
-            padding: '14px 28px',
+            padding: '12px 24px',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            fontWeight: '700',
-            fontSize: '17px',
+            fontWeight: '600',
+            fontSize: '15px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '8px',
             background: 'linear-gradient(-45deg, #12b886, #1a73e8, #f59f00, #12b886)',
             backgroundSize: '300% 300%',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             transform: 'translateY(0)',
-            minWidth: isMobile ? 'auto' : '220px',
             justifyContent: 'center',
           }}
           onMouseOver={(e) => {
@@ -131,8 +71,8 @@ const StickyHeader = () => {
             e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
           }}
         >
-          {isMobile ? 'Build Resume Now' : 'Start Building Resume Now'}
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          🔥 Find RN Jobs
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
@@ -165,16 +105,9 @@ const StickyHeader = () => {
         }
         
         @media (max-width: 768px) {
-          .hide-on-mobile {
-            display: none !important;
-          }
-          
           .animated-button {
-            padding: 12px 20px !important;
-            font-size: 15px !important;
-            width: auto !important;
-            max-width: none !important;
-            min-width: 0 !important;
+            padding: 10px 16px !important;
+            font-size: 14px !important;
           }
         }
       `}</style>
