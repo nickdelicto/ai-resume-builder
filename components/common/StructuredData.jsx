@@ -1,16 +1,22 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 
+/**
+ * StructuredData - JSON-LD schema markup for RN job board
+ * Provides machine-readable data for search engines (Google, Bing)
+ * Focused on RN job board functionality - no resume builder references
+ */
+
 // Server-side safe version that doesn't use router
 const StructuredDataSSR = () => {
-  // Organization schema - Enhanced with more details
+  // Organization schema - Describes IntelliResume Health as an RN job board
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "IntelliResume",
+    "name": "IntelliResume Health",
     "url": "https://intelliresume.net",
     "logo": "https://intelliresume.net/logo.svg",
-    "description": "Intelligent AI-powered resume builder that creates professional, ATS-optimized resumes tailored for specific job applications.",
+    "description": "Free RN-only job board featuring direct nursing positions from top hospitals like Cleveland Clinic, Northwell Health, and Adventist Health.",
     "sameAs": [
       "https://x.com/intelliresume",
       "https://linkedin.com/company/intelliresume",
@@ -32,121 +38,66 @@ const StructuredDataSSR = () => {
     }
   };
 
-  // Software application schema - Enhanced with more specific details
-  const softwareApplicationSchema = {
+  // WebSite schema with SearchAction - Tells Google the site has job search functionality
+  const webSiteSchema = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "IntelliResume",
-    "applicationCategory": "BusinessApplication",
-    "applicationSubCategory": "Resume Builder",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD",
-      "description": "Free to create, subscription required to download",
-      "url": "https://intelliresume.net/subscription"
-    },
-    "description": "Intelligent AI-powered resume builder that creates ATS-optimized resumes",
-    "operatingSystem": "Web browser",
-    "featureList": "ATS-optimized templates, AI resume tailoring, Multiple resume versions",
-    "screenshot": "https://intelliresume.net/resume-screenshot.svg"
+    "@type": "WebSite",
+    "name": "IntelliResume Health",
+    "url": "https://intelliresume.net",
+    "description": "Free RN-only job board with direct nursing positions from top hospitals nationwide.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://intelliresume.net/jobs/nursing?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
   };
 
-  // Product schema - More specific for resume builder service
-  const productSchema = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "IntelliResume AI Resume Builder",
-    "description": "Professional resume builder with AI-powered features to create ATS-optimized resumes tailored for specific job applications.",
-    "image": "https://intelliresume.net/resume-builder-preview.svg",
-    "brand": {
-      "@type": "Brand",
-      "name": "IntelliResume"
-    },
-    "offers": {
-      "@type": "AggregateOffer",
-      "lowPrice": "4.99",
-      "highPrice": "13.99",
-      "priceCurrency": "USD",
-      "offerCount": "3",
-      "offers": [
-        {
-          "@type": "Offer",
-          "name": "One-Time Download",
-          "price": "6.99",
-          "priceCurrency": "USD",
-          "description": "Single resume download",
-          "url": "https://intelliresume.net/subscription"
-        },
-        {
-          "@type": "Offer",
-          "name": "Short-Term Job Hunt",
-          "price": "4.99",
-          "priceCurrency": "USD",
-          "description": "Weekly subscription with unlimited downloads",
-          "url": "https://intelliresume.net/subscription"
-        },
-        {
-          "@type": "Offer",
-          "name": "Long-Term Job Hunt",
-          "price": "13.99",
-          "priceCurrency": "USD",
-          "description": "Monthly subscription with unlimited downloads",
-          "url": "https://intelliresume.net/subscription"
-        }
-      ]
-    },
-    "hasFeature": [
-      "AI-powered resume optimization",
-      "ATS-friendly templates",
-      "Job-specific tailoring",
-      "Resume versioning"
-    ]
-  };
-
-  // FAQ schema - Kept the same with additional questions
+  // FAQ schema - Questions nurses ask about finding RN jobs
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "How does IntelliResume work?",
+        "name": "Is IntelliResume Health free to use?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "IntelliResume uses AI to help you create professional, ATS-optimized resumes in minutes. Simply enter your information, and our AI will format it perfectly."
+          "text": "Yes! Our RN job board is 100% free. Browse and apply to nursing jobs at no cost. There's no signup required to search jobs."
         }
       },
       {
         "@type": "Question",
-        "name": "Is IntelliResume free to use?",
+        "name": "Where do the RN jobs come from?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You can create resumes for free, but downloading requires a subscription plan starting at $4.99/week."
+          "text": "All jobs are sourced directly from hospital career pages - Cleveland Clinic, Northwell Health, Adventist Health, Hartford Healthcare, and more top healthcare employers. No agencies, no job boards, no middlemen!"
         }
       },
       {
         "@type": "Question",
-        "name": "How do I tailor my resume for a specific job?",
+        "name": "How often are jobs updated?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Upload your existing resume and paste the job description. Our AI will analyze both and suggest targeted changes to match the job requirements."
+          "text": "We refresh job listings regularly to ensure you see the latest nursing opportunities. Jobs that are no longer available are marked unavailable."
         }
       },
       {
         "@type": "Question",
-        "name": "What makes IntelliResume different from other resume builders?",
+        "name": "Can I apply directly to hospitals?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "IntelliResume uses advanced AI to not just format your resume, but to actually optimize the content for applicant tracking systems (ATS). Our templates are specifically designed to pass through ATS filters while remaining visually appealing to hiring managers."
+          "text": "Absolutely. Every job links directly to the employer's application page. We don't collect applications - you apply straight to the hospital's career portal."
         }
       },
       {
         "@type": "Question",
-        "name": "Can I create multiple versions of my resume?",
+        "name": "What types of nursing jobs are available?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes! With IntelliResume, you can create multiple versions of your resume tailored for different job applications. This allows you to highlight the most relevant skills and experiences for each position."
+          "text": "We list RN positions across all specialties including ICU, ER, Med-Surg, OR, NICU, Mental Health, and more. Filter by specialty, location, job type, and experience level to find your perfect match."
         }
       }
     ]
@@ -160,11 +111,7 @@ const StructuredDataSSR = () => {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
       />
       <script
         type="application/ld+json"
@@ -252,4 +199,4 @@ const StructuredData = () => {
   );
 };
 
-export default StructuredData; 
+export default StructuredData;
