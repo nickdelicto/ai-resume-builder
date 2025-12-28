@@ -12,36 +12,17 @@ const Footer = () => {
         <div className="footer-brand-full">
           <Link href="/" className="footer-logo">
             <div className="logo-container">
-              <Image 
-                src="/logo.svg" 
-                alt="IntelliResume Logo" 
-                width={28} 
-                height={28} 
-                style={{ marginRight: '8px' }}
-                priority
-              />
-              <span className="footer-logo-text">IntelliResume</span>
+              <span className="footer-logo-text">IntelliResume Health</span>
             </div>
           </Link>
           <p className="footer-tagline">
-            Building careers, one resume at a time
+            Your RN Career Starts Here
           </p>
         </div>
 
         {/* Navigation Columns */}
         <div className="footer-nav-columns">
-          {/* Column 1: Resume Builder */}
-          <div className="footer-nav-column">
-            <h3 className="footer-column-title">Build Your Resume</h3>
-            <ul className="footer-nav-links">
-              <li><Link href="/builder/new">Build New Resume</Link></li>
-              <li><Link href="/builder/import">Improve Existing Resume</Link></li>
-              <li><Link href="/builder/target">Tailor to Job Description</Link></li>
-              <li><Link href="/blog">Blog</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 2: RN Jobs by State */}
+          {/* Column 1: RN Jobs by State */}
           <div className="footer-nav-column">
             <h3 className="footer-column-title">
               RN Jobs by State
@@ -51,17 +32,36 @@ const Footer = () => {
               <li><Link href="/jobs/nursing/oh">Ohio</Link></li>
               <li><Link href="/jobs/nursing/ny">New York</Link></li>
               <li><Link href="/jobs/nursing/fl">Florida</Link></li>
-              <li><Link href="/jobs/nursing/ca">California</Link></li>
-              <li><Link href="/jobs/nursing/tx">Texas</Link></li>
+              <li><Link href="/jobs/nursing/md">Maryland</Link></li>
+              <li><Link href="/jobs/nursing/ct">Connecticut</Link></li>
+              <li><Link href="/jobs/nursing" className="footer-more-link">More +</Link></li>
             </ul>
           </div>
 
-          {/* Column 3: Salary Info */}
+          {/* Column 2: RN Jobs by Specialty */}
           <div className="footer-nav-column">
-            <h3 className="footer-column-title">Salary Data</h3>
+            <h3 className="footer-column-title">
+              RN Jobs by Specialty
+              <span className="footer-hiring-badge">(Hiring!)</span>
+            </h3>
             <ul className="footer-nav-links">
-              <li><Link href="/jobs/nursing/rn-salary-calculator">RN Salary Calculator</Link></li>
-              <li><Link href="#">Average RN Salary</Link></li>
+              <li><Link href="/jobs/nursing?specialty=icu">ICU / Critical Care</Link></li>
+              <li><Link href="/jobs/nursing?specialty=er">Emergency Room</Link></li>
+              <li><Link href="/jobs/nursing?specialty=med-surg">Med-Surg</Link></li>
+              <li><Link href="/jobs/nursing?specialty=telemetry">Telemetry</Link></li>
+              <li><Link href="/jobs/nursing?specialty=or">OR / Surgical</Link></li>
+              <li><Link href="/jobs/nursing" className="footer-more-link">More +</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 3: Resume Builder */}
+          <div className="footer-nav-column">
+            <h3 className="footer-column-title">Build Your Resume</h3>
+            <ul className="footer-nav-links">
+              <li><Link href="/builder/new">Build New Resume</Link></li>
+              <li><Link href="/builder/import">Improve Existing Resume</Link></li>
+              <li><Link href="/builder/target">Tailor to Job Description</Link></li>
+              <li><Link href="/blog">Blog</Link></li>
             </ul>
           </div>
 
@@ -102,7 +102,7 @@ const Footer = () => {
       
       <div className="footer-bottom">
         <p className="footer-copyright">
-          © {currentYear} IntelliResume. All rights reserved.
+          © {currentYear} IntelliResume Health. All rights reserved.
         </p>
       </div>
       
@@ -139,7 +139,7 @@ const Footer = () => {
         .footer-logo-text {
           font-size: 1.5rem;
           font-weight: 800;
-          background: linear-gradient(135deg, #1a73e8 15%, #4f46e5 70%, #6366f1 95%);
+          background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #14b8a6 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -212,6 +212,15 @@ const Footer = () => {
         
         .footer-nav-links a:hover {
           color: #1a73e8;
+        }
+        
+        .footer-nav-links :global(.footer-more-link) {
+          color: #1a73e8;
+          font-weight: 600;
+        }
+        
+        .footer-nav-links :global(.footer-more-link):hover {
+          color: #1557b0;
         }
         
         .footer-social-section {
