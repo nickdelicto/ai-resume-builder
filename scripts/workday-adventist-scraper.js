@@ -1135,7 +1135,7 @@ class WorkdayAdventistScraper {
       throw new Error(`Job "${title}" mentions RN but in supporting role context`);
     }
     
-    // Check for RN requirement
+    // Check for RN requirementthe
     const titleHasRN = this.hasRNMention(title);
     const descriptionHasRN = this.hasRNMention(fullDescription);
     

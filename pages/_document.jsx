@@ -46,15 +46,15 @@ export default function Document() {
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://intelliresume.net/" />
-        <meta property="og:title" content="IntelliResume - Intelligent AI Resume Builder" />
-        <meta property="og:description" content="Create professional, ATS-optimized resumes with our intelligent AI-powered resume builder. Tailored for specific job applications." />
+        <meta property="og:title" content="IntelliResume Health - Free RN-Only Job Board" />
+        <meta property="og:description" content="Find your next RN job here. Free RN-only Job Board! Direct nursing positions from top hospitals nationwide." />
         <meta property="og:image" content="https://intelliresume.net/og-image.png" />
         
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://intelliresume.net/" />
-        <meta property="twitter:title" content="IntelliResume - Intelligent AI Resume Builder" />
-        <meta property="twitter:description" content="Create professional, ATS-optimized resumes with our intelligent AI-powered resume builder. Tailored for specific job applications." />
+        <meta property="twitter:title" content="IntelliResume Health - Free RN-Only Job Board" />
+        <meta property="twitter:description" content="Find your next RN job here. Free RN-only Job Board! Direct nursing positions from top hospitals nationwide." />
         <meta property="twitter:image" content="https://intelliresume.net/og-image.png" />
         
         {/* Note: Canonical URLs are handled per-page via Meta.jsx component */}
