@@ -55,7 +55,7 @@ export default function StickyJobAlertCTA({ specialty, location, jobTitle }) {
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-2xl border-t-4 border-blue-500">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-2xl border-t-4 border-teal-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-start justify-between gap-4">
             {/* Icon & Message */}
@@ -76,7 +76,7 @@ export default function StickyJobAlertCTA({ specialty, location, jobTitle }) {
             {/* CTA Button */}
             <button
               onClick={handleClick}
-              className="bg-white text-blue-700 hover:bg-blue-50 font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg hover:shadow-xl flex-shrink-0 text-sm sm:text-base mt-0.5"
+              className="bg-white text-teal-700 hover:bg-teal-50 font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg hover:shadow-xl flex-shrink-0 text-sm sm:text-base mt-0.5"
             >
               Get Alerts
             </button>
@@ -84,7 +84,7 @@ export default function StickyJobAlertCTA({ specialty, location, jobTitle }) {
             {/* Dismiss Button */}
             <button
               onClick={handleDismiss}
-              className="text-white hover:text-blue-200 transition-colors p-1 flex-shrink-0 ml-2 mt-1"
+              className="text-white hover:text-teal-200 transition-colors p-1 flex-shrink-0 ml-2 mt-1"
               aria-label="Dismiss"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

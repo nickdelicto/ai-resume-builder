@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 /**
  * Reusable Job Alert Signup Component
@@ -12,6 +13,7 @@ import { useState, useEffect } from 'react';
  * @param {boolean} compact - If true, shows compact horizontal layout for mid-page placement
  */
 export default function JobAlertSignup({ specialty = '', state = '', city = '', compact = false }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,6 +36,13 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
   const [specialties, setSpecialties] = useState([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingEmployers, setLoadingEmployers] = useState(false);
+
+  // Pre-fill email from URL query params (for redirects from homepage)
+  useEffect(() => {
+    if (router.isReady && router.query.email) {
+      setFormData(prev => ({ ...prev, email: router.query.email }));
+    }
+  }, [router.isReady, router.query.email]);
 
   // Fetch available states and specialties on mount
   useEffect(() => {
@@ -289,21 +298,21 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
     );
   }
 
-  // COMPACT VERSION - Professional blue/white for mid-page placement
+  // COMPACT VERSION - Professional teal/white for mid-page placement
   if (compact) {
     return (
-      <div className="bg-blue-50 border-2 border-blue-600 rounded-xl shadow-xl p-5">
+      <div className="bg-teal-50 border-2 border-teal-600 rounded-xl shadow-xl p-5">
         <div className="flex flex-col gap-4">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full flex-shrink-0 shadow-md">
+            <div className="flex items-center justify-center w-10 h-10 bg-teal-600 rounded-full flex-shrink-0 shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-blue-900 font-bold text-base">Get Weekly Job Alerts</h3>
-              <p className="text-blue-700 text-sm">New jobs delivered every Tuesday</p>
+              <h3 className="text-teal-900 font-bold text-base">Get Weekly Job Alerts</h3>
+              <p className="text-teal-700 text-sm">New jobs delivered every Tuesday</p>
             </div>
           </div>
 
@@ -328,7 +337,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Your name"
-                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+                className="px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm"
               />
               <input
                 type="email"
@@ -336,7 +345,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Your email *"
-                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+                className="px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm"
               />
             </div>
 
@@ -345,7 +354,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
               required
               value={formData.specialty}
               onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+              className="w-full px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm"
             >
               <option value="">Select specialty *</option>
               {specialties.map(spec => (
@@ -359,7 +368,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                 required
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
-                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"
+                className="px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm"
               >
                 <option value="">Select state *</option>
                 {states.map(s => (
@@ -371,7 +380,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
                 disabled={!formData.state || loadingCities}
-                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                className="px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
               >
                 <option value="">{formData.state ? `All of ${getStateName(formData.state)}` : 'Select state first'}</option>
                 {cities.map(c => (
@@ -386,7 +395,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                 value={formData.employer}
                 onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
                 disabled={!formData.state || loadingEmployers}
-                className="px-4 py-2.5 rounded-lg border-2 border-blue-200 bg-white text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                className="px-4 py-2.5 rounded-lg border-2 border-teal-200 bg-white text-gray-900 focus:border-teal-600 focus:ring-2 focus:ring-teal-200 outline-none transition-all text-sm disabled:bg-gray-100 disabled:text-gray-400"
               >
                 <option value="">
                   {!formData.state 
@@ -404,7 +413,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm"
+                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm"
               >
                 {loading ? 'Subscribing...' : '📬 Subscribe'}
               </button>
@@ -419,7 +428,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                     href={`/job-alerts/manage?token=${manageToken}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 font-semibold underline inline-flex items-center gap-1"
+                    className="text-teal-600 hover:text-teal-800 font-semibold underline inline-flex items-center gap-1"
                   >
                     Manage your alerts
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,7 +440,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
             )}
 
             {/* Benefits */}
-            <p className="text-center text-blue-700 text-xs font-medium">
+            <p className="text-center text-teal-700 text-xs font-medium">
               ✓ Weekly updates &nbsp; ✓ Highest paying first &nbsp; ✓ Unsubscribe anytime
             </p>
           </form>
@@ -442,14 +451,14 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
 
   // FULL VERSION - Large banner for bottom of pages
   return (
-    <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-600 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-gradient-to-br from-teal-700 via-teal-600 to-emerald-600 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></div>
       
       <div className="relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold mb-6 shadow-lg">
+        <div className="inline-flex items-center gap-2 bg-white text-teal-700 px-4 py-1.5 rounded-full text-sm font-bold mb-6 shadow-lg">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
@@ -459,7 +468,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
           Never Miss Your Perfect RN Job
         </h2>
-        <p className="text-blue-100 text-lg mb-8 max-w-2xl">
+        <p className="text-teal-100 text-lg mb-8 max-w-2xl">
           Get the highest-paying nursing jobs delivered to your inbox every Tuesday morning. 
           Personalized to your specialty and location preferences.
         </p>
@@ -491,7 +500,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Your name"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
                 />
               </div>
 
@@ -507,7 +516,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="your.email@example.com"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
                 />
               </div>
 
@@ -521,7 +530,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   required
                   value={formData.specialty}
                   onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
                 >
                   <option value="">Select specialty</option>
                   {specialties.map(spec => (
@@ -540,7 +549,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   required
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
                 >
                   <option value="">Select state</option>
                   {states.map(s => (
@@ -559,7 +568,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
                   disabled={!formData.state || loadingCities}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
                 >
                   <option value="">
                     {!formData.state 
@@ -585,7 +594,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                   value={formData.employer}
                   onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
                   disabled={!formData.state || loadingEmployers}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
                 >
                   <option value="">
                     {!formData.state 
@@ -614,7 +623,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
                     href={`/job-alerts/manage?token=${manageToken}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 font-semibold underline inline-flex items-center gap-1"
+                    className="text-teal-600 hover:text-teal-800 font-semibold underline inline-flex items-center gap-1"
                   >
                     Manage your alerts
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -629,7 +638,7 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 text-lg"
+              className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 text-lg"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
