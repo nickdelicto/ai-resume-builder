@@ -166,7 +166,7 @@ export default function NursingJobsPage() {
         <meta property="og:title" content={seoMeta.title} />
         <meta property="og:description" content={seoMeta.description} />
         <meta property="og:image" content={seoMeta.ogImage} />
-        <meta property="og:site_name" content="IntelliResume" />
+        <meta property="og:site_name" content="IntelliResume Health" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -747,7 +747,7 @@ export default function NursingJobsPage() {
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

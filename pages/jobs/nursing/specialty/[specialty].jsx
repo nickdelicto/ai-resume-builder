@@ -69,7 +69,7 @@ export default function SpecialtyJobPage({
         }
       )
     : {
-        title: `${specialtyDisplayName} RN Jobs | IntelliResume`,
+        title: `${specialtyDisplayName} RN Jobs | IntelliResume Health`,
         description: `Find Registered Nurse (RN) jobs for ${specialtyDisplayName}`,
         keywords: 'rn jobs, nursing jobs, registered nurse',
         canonicalUrl: `https://intelliresume.net/jobs/nursing/specialty/${specialty?.toLowerCase() || ''}`,
@@ -81,7 +81,7 @@ export default function SpecialtyJobPage({
     return (
       <>
         <Head>
-          <title>Error | IntelliResume</title>
+          <title>Error | IntelliResume Health</title>
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
           <div className="text-center">
@@ -119,7 +119,7 @@ export default function SpecialtyJobPage({
         <meta property="og:title" content={seoMeta.title} />
         <meta property="og:description" content={seoMeta.description} />
         <meta property="og:image" content={seoMeta.ogImage} />
-        <meta property="og:site_name" content="IntelliResume" />
+        <meta property="og:site_name" content="IntelliResume Health" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />

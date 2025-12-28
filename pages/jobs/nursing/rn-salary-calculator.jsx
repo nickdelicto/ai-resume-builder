@@ -199,7 +199,7 @@ export default function RNSalaryCalculator() {
   return (
     <>
       <Head>
-        <title>RN Salary Calculator - Free Nursing Salary Estimator {currentYear} | IntelliResume</title>
+        <title>RN Salary Calculator - Free Nursing Salary Estimator {currentYear} | IntelliResume Health</title>
         <meta name="description" content={`Calculate your RN salary based on specialty, location, and experience. Get instant estimates with our free nursing salary calculator. Compare average RN pay by state and city for ${currentYear}.`} />
         <meta name="keywords" content="rn salary calculator, nursing salary calculator, registered nurse salary, nurse pay calculator, nursing salary estimator" />
         <link rel="canonical" href="https://intelliresume.net/jobs/nursing/rn-salary-calculator" />

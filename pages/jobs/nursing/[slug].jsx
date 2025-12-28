@@ -276,7 +276,7 @@ export default function JobDetailPage({
     return (
       <>
         <Head>
-          <title>Job No Longer Available | IntelliResume</title>
+          <title>Job No Longer Available | IntelliResume Health</title>
           <meta name="robots" content="noindex, follow" />
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
@@ -324,7 +324,7 @@ export default function JobDetailPage({
     return (
       <>
         <Head>
-          <title>Error | IntelliResume</title>
+          <title>Error | IntelliResume Health</title>
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
           <div className="text-center">
@@ -376,7 +376,7 @@ export default function JobDetailPage({
           <meta property="og:title" content={seoMeta.title} />
           <meta property="og:description" content={seoMeta.description} />
           <meta property="og:image" content={seoMeta.ogImage} />
-          <meta property="og:site_name" content="IntelliResume" />
+          <meta property="og:site_name" content="IntelliResume Health" />
           
           {/* Twitter */}
           <meta name="twitter:card" content="summary_large_image" />
@@ -767,7 +767,7 @@ export default function JobDetailPage({
     return (
       <>
         <Head>
-          <title>Job Not Found | IntelliResume</title>
+          <title>Job Not Found | IntelliResume Health</title>
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
           <div className="text-center">
@@ -789,7 +789,7 @@ export default function JobDetailPage({
   const seoMeta = seoUtils.generateJobMetaTags && job
     ? seoUtils.generateJobMetaTags(job)
     : {
-        title: `${job?.title || 'RN Job'} | IntelliResume`,
+        title: `${job?.title || 'RN Job'} | IntelliResume Health`,
         description: job?.metaDescription || `${job?.title || 'RN Job'} in ${job?.city || ''}, ${job?.state || ''}`,
         keywords: 'registered nurse, rn jobs, nursing jobs',
         canonicalUrl: `https://intelliresume.net/jobs/nursing/${job?.slug || ''}`,
@@ -820,7 +820,7 @@ export default function JobDetailPage({
         <meta property="og:title" content={seoMeta.title} />
         <meta property="og:description" content={seoMeta.description} />
         <meta property="og:image" content={seoMeta.ogImage} />
-        <meta property="og:site_name" content="IntelliResume" />
+        <meta property="og:site_name" content="IntelliResume Health" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
