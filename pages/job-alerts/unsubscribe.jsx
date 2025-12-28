@@ -90,7 +90,7 @@ export default function UnsubscribePage() {
   return (
     <>
       <Head>
-        <title>Unsubscribe from Job Alerts | IntelliResume</title>
+        <title>Unsubscribe from Job Alerts | IntelliResume Health</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 

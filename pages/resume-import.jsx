@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import Meta from '../components/common/Meta';
+import ResumeStructuredData from '../components/common/ResumeStructuredData';
 
 // Dynamically import ImportFlow with SSR disabled
 const ImportFlow = dynamic(
@@ -360,6 +361,10 @@ const ResumeImportPage = () => {
         canonicalUrl="https://intelliresume.net/resume-import"
         keywords="resume import, upload resume, improve resume, enhance resume, AI resume analysis"
       />
+      
+      {/* Resume-specific structured data for SEO */}
+      <ResumeStructuredData />
+      
       <ImportFlow onComplete={handleImportComplete} />
     </>
   );

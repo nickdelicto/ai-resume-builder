@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Meta from '../components/common/Meta';
+import ResumeStructuredData from '../components/common/ResumeStructuredData';
 
 const JobTargetingPage = () => {
   const [jobDescription, setJobDescription] = useState('');
@@ -181,6 +182,9 @@ const JobTargetingPage = () => {
         canonicalUrl="https://intelliresume.net/job-targeting"
         keywords="resume tailoring, job application, ATS optimization, job targeting, resume matching"
         />
+      
+      {/* Resume-specific structured data for SEO */}
+      <ResumeStructuredData />
       
       <div style={{
         maxWidth: '800px',

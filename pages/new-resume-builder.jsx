@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useResumeService } from '../lib/contexts/ResumeServiceContext';
+import ResumeStructuredData from '../components/common/ResumeStructuredData';
 
 // Dynamically import ModernResumeBuilder with SSR disabled
 const ModernResumeBuilder = dynamic(
@@ -203,6 +204,9 @@ const NewResumeBuilderPage = () => {
         <meta name="description" content="Build professional resumes with our AI-powered resume builder. Tailor your resume for job applications and get more interviews." />
         <link rel="canonical" href="https://intelliresume.net/new-resume-builder" />
       </Head>
+      
+      {/* Resume-specific structured data for SEO */}
+      <ResumeStructuredData />
       
       {/* Show loading state while initializing */}
       {!isInitialized ? (

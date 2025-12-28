@@ -216,7 +216,7 @@ export default function ManageAlertsPage() {
   return (
     <>
       <Head>
-        <title>Manage Job Alerts | IntelliResume</title>
+        <title>Manage Job Alerts | IntelliResume Health</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
