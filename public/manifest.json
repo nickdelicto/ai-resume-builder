@@ -1,7 +1,7 @@
 {
-  "name": "IntelliResume",
+  "name": "IntelliResume Health",
   "short_name": "IntelliResume",
-  "description": "Create winning resumes with our AI-powered resume builder",
+  "description": "Find your next RN job here. Free RN-only Job Board!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
