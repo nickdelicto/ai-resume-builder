@@ -46,7 +46,7 @@ const HomePage = () => {
   return (
     <>
       <Meta
-        title="IntelliResume | Find Your Next RN Job Here"
+        title="IntelliResume Health | Find Your Next RN Job Here"
         description="Free RN-only Job Board! Browse thousands of nursing jobs nationwide from top healthcare employers."
         keywords="RN jobs, nursing jobs, registered nurse jobs, healthcare jobs, nurse employment, nursing career"
       />
