@@ -13,6 +13,16 @@ const { detectStateFromSlug, fetchCitySpecialtyJobs } = require('../../../../../
 const { isValidSpecialtySlug, slugToSpecialty } = require('../../../../../lib/constants/specialties');
 const { normalizeExperienceLevel } = require('../../../../../lib/utils/experienceLevelUtils');
 
+// Map old specialty slugs to new canonical slugs for 301 redirects
+const SPECIALTY_REDIRECTS = {
+  'step-down': 'stepdown',
+  'l-d': 'labor-delivery',
+  'psychiatric': 'mental-health',
+  'rehab': 'rehabilitation',
+  'cardiac-care': 'cardiac',
+  'progressive-care': 'stepdown',
+};
+
 /**
  * Server-Side Rendering: Fetch data before rendering
  * This page handles City + Specialty combinations
@@ -21,6 +31,17 @@ const { normalizeExperienceLevel } = require('../../../../../lib/utils/experienc
 export async function getServerSideProps({ params, query }) {
   const { slug, cityOrSpecialty, specialty } = params;
   const page = query.page || '1';
+
+  // Check for legacy specialty slugs that need 301 redirect
+  const redirectTo = SPECIALTY_REDIRECTS[specialty.toLowerCase()];
+  if (redirectTo) {
+    return {
+      redirect: {
+        destination: `/jobs/nursing/${slug}/${cityOrSpecialty}/${redirectTo}`,
+        permanent: true, // 301 redirect
+      },
+    };
+  }
 
   try {
     // Validate that slug is a valid state

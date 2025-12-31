@@ -11,6 +11,16 @@ const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
 const { fetchSpecialtyJobs } = require('../../../../lib/services/jobPageData');
 
+// Redirect map for old specialty slugs → new canonical slugs
+const SPECIALTY_REDIRECTS = {
+  'step-down': 'stepdown',
+  'l-d': 'labor-delivery',
+  'psychiatric': 'mental-health',
+  'rehab': 'rehabilitation',
+  'cardiac-care': 'cardiac',
+  'progressive-care': 'stepdown',
+};
+
 /**
  * Server-Side Rendering: Fetch data before rendering
  */
@@ -18,9 +28,23 @@ export async function getServerSideProps({ params, query }) {
   const { specialty } = params;
   const page = query.page || '1';
 
+  // Check for old specialty slugs that need 301 redirect
+  const redirectTo = SPECIALTY_REDIRECTS[specialty.toLowerCase()];
+  if (redirectTo) {
+    const destination = page !== '1'
+      ? `/jobs/nursing/specialty/${redirectTo}?page=${page}`
+      : `/jobs/nursing/specialty/${redirectTo}`;
+    return {
+      redirect: {
+        destination,
+        permanent: true, // 301 redirect for SEO
+      },
+    };
+  }
+
   try {
     const result = await fetchSpecialtyJobs(specialty, page);
-    
+
     if (!result) {
       return {
         notFound: true
