@@ -60,9 +60,10 @@ const JobSearchHero = () => {
     if (selectedState) params.set('state', selectedState);
     if (selectedSpecialty) params.set('specialty', selectedSpecialty);
     if (selectedJobType) params.set('jobType', selectedJobType);
-    
+
     const queryString = params.toString();
-    router.push(`/jobs/nursing${queryString ? `?${queryString}` : ''}`);
+    // Navigate to filters section for immediate refinement
+    router.push(`/jobs/nursing${queryString ? `?${queryString}` : ''}#filters`);
   };
 
   // Format number with commas

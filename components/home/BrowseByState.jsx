@@ -227,8 +227,8 @@ const BrowseByState = () => {
 
         {/* View All CTA Button - Orange gradient */}
         <div className="cta-container">
-          <Link 
-            href="/jobs/nursing" 
+          <Link
+            href="/jobs/nursing#browse-states"
             className="view-all-button"
             style={{
               display: 'inline-flex',

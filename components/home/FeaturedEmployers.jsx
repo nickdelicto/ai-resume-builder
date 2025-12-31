@@ -316,8 +316,8 @@ const FeaturedEmployers = () => {
 
         {/* View All CTA */}
         <div className="cta-container" style={{ textAlign: 'center' }}>
-          <Link 
-            href="/jobs/nursing" 
+          <Link
+            href="/jobs/nursing#browse-employers"
             className="view-all-btn"
             style={{
               display: 'inline-flex',

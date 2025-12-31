@@ -55,6 +55,25 @@ export default function NursingJobsPage() {
     fetchBrowseStats();
   }, []);
 
+  // Handle scroll to hash on page load (for links like /jobs/nursing#filters)
+  useEffect(() => {
+    if (!router.asPath.includes('#')) return;
+
+    const hash = router.asPath.split('#')[1];
+    const needsData = ['browse-states', 'browse-employers'].includes(hash);
+
+    // For sections that depend on async data, wait until loading is complete
+    if (needsData && browseStatsLoading) return;
+
+    // Small delay to ensure DOM is ready after render
+    setTimeout(() => {
+      const element = document.getElementById(hash);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  }, [router.asPath, browseStatsLoading]);
+
   const fetchBrowseStats = async () => {
     try {
       const response = await fetch('/api/jobs/browse-stats');
@@ -236,7 +255,7 @@ export default function NursingJobsPage() {
             <div className="mb-8 space-y-6">
               {/* Browse by State */}
               {browseStats.states.length > 0 && (
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-2 border-blue-200">
+                <div id="browse-states" className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border-2 border-blue-200 scroll-mt-24">
                   <div className="flex items-center gap-2 mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -269,7 +288,7 @@ export default function NursingJobsPage() {
 
               {/* Browse by Employer */}
               {browseStats.employers.length > 0 && (
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border-2 border-green-200">
+                <div id="browse-employers" className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border-2 border-green-200 scroll-mt-24">
                   <div className="flex items-center gap-2 mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-700" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" />
@@ -346,7 +365,7 @@ export default function NursingJobsPage() {
           </div>
 
           {/* Filters - Tool-style card with distinct dark appearance */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-xl p-6 mb-8 border-2 border-gray-600 relative overflow-hidden">
+          <div id="filters" className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-xl p-6 mb-8 border-2 border-gray-600 relative overflow-hidden scroll-mt-24">
             {/* More visible diagonal stripe pattern overlay */}
             <div className="absolute inset-0 opacity-15 pointer-events-none" style={{
               backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px)`
