@@ -28,7 +28,7 @@ const SalaryCalculatorCTA = () => {
       className="salary-section"
       style={{
         background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%)',
-        padding: '80px 40px 90px',
+        padding: '60px 12px 70px',
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box'
@@ -59,7 +59,7 @@ const SalaryCalculatorCTA = () => {
         style={{
           maxWidth: '1100px',
           margin: '0 auto',
-          padding: '0 24px',
+          padding: '0 4px',
           position: 'relative',
           zIndex: 2,
           boxSizing: 'border-box'
@@ -74,7 +74,7 @@ const SalaryCalculatorCTA = () => {
             textAlign: 'center',
             background: 'white',
             borderRadius: '24px',
-            padding: '48px 32px',
+            padding: '40px 16px',
             boxShadow: '0 20px 60px rgba(217, 119, 6, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
             border: '1px solid rgba(251, 191, 36, 0.3)',
             position: 'relative',
@@ -503,66 +503,105 @@ const SalaryCalculatorCTA = () => {
            RESPONSIVE: LARGER PHONES (481px+)
            ============================================ */
         @media (min-width: 481px) {
+          .salary-section {
+            padding: 70px 20px 80px !important;
+          }
+          .salary-content {
+            padding: 0 12px !important;
+          }
+          .salary-card {
+            padding: 44px 28px !important;
+          }
+
           .floating-salary {
             font-size: 2rem !important;
           }
-          
+
           .salary-2 {
             font-size: 2.5rem !important;
           }
-          
+
           .salary-preview {
             flex-direction: row;
           }
         }
-        
+
         /* ============================================
            RESPONSIVE: TABLETS (641px+)
            ============================================ */
         @media (min-width: 641px) {
+          .salary-section {
+            padding: 80px 32px 90px !important;
+          }
+          .salary-content {
+            padding: 0 24px !important;
+          }
+          .salary-card {
+            padding: 48px 40px !important;
+          }
+
           .section-title {
             font-size: 1.75rem !important;
           }
-          
+
           .floating-salary {
             font-size: 2.5rem !important;
           }
-          
+
           .salary-2 {
             font-size: 3rem !important;
           }
-          
+
           .chart-bars {
             display: flex;
           }
         }
-        
+
         /* ============================================
            RESPONSIVE: DESKTOP (901px+)
            ============================================ */
         @media (min-width: 901px) {
+          .salary-section {
+            padding: 100px 48px 110px !important;
+          }
+          .salary-content {
+            padding: 0 40px !important;
+          }
+
           .section-title {
             font-size: 2.25rem !important;
           }
-          
+
           .floating-salary {
             font-size: 2.5rem !important;
           }
-          
+
           .salary-1 {
             font-size: 2.5rem !important;
           }
-          
+
           .salary-2 {
             font-size: 3.5rem !important;
           }
-          
+
           .salary-3 {
             font-size: 2.2rem !important;
           }
-          
+
           .salary-4 {
             font-size: 2.8rem !important;
+          }
+        }
+
+        /* ============================================
+           RESPONSIVE: LARGE DESKTOP (1200px+)
+           ============================================ */
+        @media (min-width: 1200px) {
+          .salary-section {
+            padding: 110px 64px 120px !important;
+          }
+          .salary-content {
+            padding: 0 48px !important;
           }
         }
       `}</style>

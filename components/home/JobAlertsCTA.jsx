@@ -27,7 +27,7 @@ const JobAlertsCTA = () => {
       className="alerts-section"
       style={{
         background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)',
-        padding: '80px 40px 90px',
+        padding: '60px 12px 70px',
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box'
@@ -78,7 +78,7 @@ const JobAlertsCTA = () => {
           margin: '0 auto',
           position: 'relative',
           zIndex: 2,
-          padding: '0 24px',
+          padding: '0 4px',
           boxSizing: 'border-box'
         }}
       >
@@ -88,7 +88,7 @@ const JobAlertsCTA = () => {
           style={{
             background: 'white',
             borderRadius: '24px',
-            padding: '48px 40px',
+            padding: '40px 16px',
             boxShadow: '0 25px 80px rgba(0, 0, 0, 0.2)',
             position: 'relative',
             overflow: 'hidden'
@@ -193,14 +193,14 @@ const JobAlertsCTA = () => {
               background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)',
               border: '1px solid #99f6e4',
               borderRadius: '16px',
-              padding: '16px 20px',
+              padding: '16px 16px',
               marginBottom: '28px',
-              maxWidth: '420px',
+              maxWidth: '100%',
               marginLeft: 'auto',
               marginRight: 'auto',
               display: 'flex',
               alignItems: 'center',
-              gap: '16px'
+              gap: '12px'
             }}
           >
             <div 
@@ -276,7 +276,7 @@ const JobAlertsCTA = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
-                maxWidth: '440px',
+                maxWidth: '100%',
                 margin: '0 auto 24px'
               }}
             >
@@ -612,35 +612,79 @@ const JobAlertsCTA = () => {
         }
         
         /* ============================================
+           RESPONSIVE: LARGER PHONES (481px+)
+           ============================================ */
+        @media (min-width: 481px) {
+          .alerts-section {
+            padding: 70px 20px 80px !important;
+          }
+          .alerts-content {
+            padding: 0 12px !important;
+          }
+          .alerts-card {
+            padding: 44px 28px !important;
+          }
+        }
+
+        /* ============================================
            RESPONSIVE: TABLETS (641px+)
            ============================================ */
         @media (min-width: 641px) {
+          .alerts-section {
+            padding: 80px 32px 90px !important;
+          }
+          .alerts-content {
+            padding: 0 24px !important;
+          }
+          .alerts-card {
+            padding: 48px 40px !important;
+          }
+
           .form-row {
             flex-direction: row !important;
           }
-          
+
           .card-badge {
             position: absolute !important;
             top: 20px !important;
             right: 20px !important;
             margin: 0 !important;
           }
-          
+
           .notification-preview {
             padding: 20px 24px !important;
           }
         }
-        
+
         /* ============================================
            RESPONSIVE: DESKTOP (901px+)
            ============================================ */
         @media (min-width: 901px) {
+          .alerts-section {
+            padding: 100px 48px 110px !important;
+          }
+          .alerts-content {
+            padding: 0 40px !important;
+          }
+
           .floating-icon {
             display: block;
           }
-          
+
           .notification-dot {
             display: block;
+          }
+        }
+
+        /* ============================================
+           RESPONSIVE: LARGE DESKTOP (1200px+)
+           ============================================ */
+        @media (min-width: 1200px) {
+          .alerts-section {
+            padding: 110px 64px 120px !important;
+          }
+          .alerts-content {
+            padding: 0 48px !important;
           }
         }
       `}</style>
