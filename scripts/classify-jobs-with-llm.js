@@ -32,7 +32,7 @@ const openai = new OpenAI({
 
 // All supported specialties (extracted from detectSpecialty function)
 // Import specialties from centralized constants file
-const { SPECIALTIES } = require('../lib/constants/specialties');
+const { SPECIALTIES, normalizeSpecialty } = require('../lib/constants/specialties');
 // Note: "Travel" is NOT a specialty - it's a job type (employment model)
 // Travel nurses still have a specialty (ICU, ER, etc.)
 
@@ -258,7 +258,7 @@ Extract the following:
 5. Experience Level (Entry Level, New Grad, Experienced, Senior, Leadership)
 6. City and State (2-letter code)
 
-**Specialty Options:** ICU, ER, OR, Med-Surg, Telemetry, Oncology, Pediatrics, NICU, L&D, Psychiatric, Home Health, Travel, School, Cardiac, Step Down, Dialysis, Case Management, Informatics, Hospice, Rehab, General Nursing
+**Specialty Options:** ${SPECIALTIES.join(', ')}
 
 Return ONLY valid JSON:
 {
@@ -615,6 +615,12 @@ async function classifyJob(job) {
     // Handles LLM variations like "new-grad", "senior", "experienced"
     if (result.experienceLevel) {
       result.experienceLevel = normalizeExperienceLevel(result.experienceLevel);
+    }
+
+    // Normalize specialty to canonical format
+    // Handles LLM variations like "Step Down", "L&D", "Psychiatric", etc.
+    if (result.specialty) {
+      result.specialty = normalizeSpecialty(result.specialty);
     }
     
     const returnObj = {
