@@ -8,7 +8,7 @@ const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../../lib/jobScraperUtils');
 const { fetchSpecialtySalaryStats } = require('../../../../../lib/services/jobPageData');
 const { formatSalary, formatSalaryRange } = require('../../../../../lib/utils/salaryStatsUtils');
-const { isValidSpecialtySlug, getAllSpecialtiesWithSlugs } = require('../../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, getAllSpecialtiesWithSlugs, specialtyToSlug } = require('../../../../../lib/constants/specialties');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
 const SPECIALTY_REDIRECTS = {
@@ -18,6 +18,7 @@ const SPECIALTY_REDIRECTS = {
   'rehab': 'rehabilitation',
   'cardiac-care': 'cardiac',
   'progressive-care': 'stepdown',
+  'home-care': 'home-health', // Home Care is non-RN; consolidated to Home Health
 };
 
 /**
@@ -57,8 +58,7 @@ export async function getServerSideProps({ params }) {
       props: {
         specialtyName: result.specialty,
         salaryStats: result.salaryStats,
-        allStates: result.allStates,
-        topEmployers: result.topEmployers
+        allStates: result.allStates
       }
     };
   } catch (error) {
@@ -72,8 +72,7 @@ export async function getServerSideProps({ params }) {
 export default function SpecialtySalaryPage({
   specialtyName = null,
   salaryStats = null,
-  allStates = [],
-  topEmployers = []
+  allStates = []
 }) {
   const router = useRouter();
   const { specialty } = router.query || {};
@@ -83,11 +82,6 @@ export default function SpecialtySalaryPage({
   // Generate SEO meta tags - use 'specialty' locationType
   const seoMeta = seoUtils.generateSalaryPageMetaTags('Nationwide', 'specialty', salaryStats, specialtyName);
 
-  // Generate slug helper
-  const generateSpecialtySlug = (name) => {
-    if (!name) return '';
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
-  };
 
   return (
     <>
@@ -146,7 +140,7 @@ export default function SpecialtySalaryPage({
                     "@type": "ListItem",
                     "position": 3,
                     "name": `${specialtyName} RN Jobs`,
-                    "item": `https://intelliresume.net/jobs/nursing/specialty/${generateSpecialtySlug(specialtyName)}`
+                    "item": `https://intelliresume.net/jobs/nursing/specialty/${specialtyToSlug(specialtyName)}`
                   },
                   {
                     "@type": "ListItem",
@@ -167,7 +161,7 @@ export default function SpecialtySalaryPage({
           <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
             <Link href="/jobs/nursing" className="hover:text-blue-600 transition-colors">All Jobs</Link>
             <span>/</span>
-            <Link href={`/jobs/nursing/specialty/${generateSpecialtySlug(specialtyName)}`} className="hover:text-blue-600 transition-colors">{specialtyName}</Link>
+            <Link href={`/jobs/nursing/specialty/${specialtyToSlug(specialtyName)}`} className="hover:text-blue-600 transition-colors">{specialtyName}</Link>
             <span>/</span>
             <span className="text-gray-900 font-medium">Salary</span>
           </nav>
@@ -278,7 +272,7 @@ export default function SpecialtySalaryPage({
               <SalaryCalculatorBanner specialty={specialtyName} />
 
               {/* Salary by Employer */}
-              {topEmployers && topEmployers.length > 0 && (
+              {salaryStats?.byEmployer && salaryStats.byEmployer.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200 mb-8">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="p-2 bg-green-50 rounded-lg">
@@ -287,26 +281,47 @@ export default function SpecialtySalaryPage({
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      Top Employers Hiring {specialtyName} RNs
+                      Nationwide {specialtyName} RN Salary by Employer
                     </h3>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {topEmployers.map((emp, idx) => (
-                      <div key={idx} className="border-b border-gray-100 pb-3 last:border-0 sm:border-0 sm:pb-0">
-                        <div className="flex justify-between items-center">
-                          {emp.slug ? (
+                  <div className="space-y-3">
+                    {salaryStats.byEmployer.map((emp, idx) => (
+                      <div key={idx} className="border-b border-gray-100 pb-3 last:border-0">
+                        <div className="flex justify-between items-start mb-1">
+                          {emp.employerSlug ? (
                             <Link
-                              href={`/jobs/nursing/employer/${emp.slug}`}
+                              href={`/jobs/nursing/employer/${emp.employerSlug}`}
                               className="text-gray-900 font-medium hover:text-green-600 transition-colors"
                             >
-                              {emp.name}
+                              {emp.employerName}
                             </Link>
                           ) : (
-                            <span className="text-gray-900 font-medium">{emp.name}</span>
+                            <span className="text-gray-900 font-medium">{emp.employerName}</span>
                           )}
                           <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs">
-                            {emp.count} jobs
+                            {emp.jobCount} jobs
                           </span>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2">
+                          {emp.hourly && (
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xs text-gray-500">Hourly:</span>
+                              <span className="text-lg font-bold text-green-700">
+                                {formatSalary(emp.hourly.average, 'hourly')}
+                              </span>
+                            </div>
+                          )}
+                          {emp.hourly && emp.annual && (
+                            <span className="text-gray-300">|</span>
+                          )}
+                          {emp.annual && (
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xs text-gray-500">Annual:</span>
+                              <span className="text-lg font-bold text-green-700">
+                                {formatSalary(emp.annual.average, 'annual')}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -317,7 +332,7 @@ export default function SpecialtySalaryPage({
               {/* Link to Jobs */}
               <div className="mb-8 text-center">
                 <Link
-                  href={`/jobs/nursing/specialty/${generateSpecialtySlug(specialtyName)}`}
+                  href={`/jobs/nursing/specialty/${specialtyToSlug(specialtyName)}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
                   View {jobCount}+ {specialtyName} RN Jobs Nationwide
@@ -342,7 +357,7 @@ export default function SpecialtySalaryPage({
                   We continuously update our database with the latest job postings and salary information.
                 </p>
                 <Link
-                  href={`/jobs/nursing/specialty/${generateSpecialtySlug(specialtyName)}`}
+                  href={`/jobs/nursing/specialty/${specialtyToSlug(specialtyName)}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
                   Browse {specialtyName} RN Jobs
@@ -366,7 +381,7 @@ export default function SpecialtySalaryPage({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                 {allStates.map((stateData) => {
                   const stateSlug = stateData.state.toLowerCase();
-                  const linkHref = `/jobs/nursing/${stateSlug}/${generateSpecialtySlug(specialtyName)}/salary`;
+                  const linkHref = `/jobs/nursing/${stateSlug}/${specialtyToSlug(specialtyName)}/salary`;
                   return (
                     <Link
                       key={stateData.state}
