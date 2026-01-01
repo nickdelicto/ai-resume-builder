@@ -8,7 +8,7 @@ const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchCitySalaryStats, fetchStateSpecialtySalaryStats } = require('../../../../../lib/services/jobPageData');
 const { formatSalary, formatSalaryRange } = require('../../../../../lib/utils/salaryStatsUtils');
-const { isValidSpecialtySlug, slugToSpecialty } = require('../../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../../../../../lib/constants/specialties');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
 const SPECIALTY_REDIRECTS = {
@@ -18,6 +18,7 @@ const SPECIALTY_REDIRECTS = {
   'rehab': 'rehabilitation',
   'cardiac-care': 'cardiac',
   'progressive-care': 'stepdown',
+  'home-care': 'home-health',
 };
 
 /**
@@ -132,10 +133,6 @@ export default function CityOrSpecialtySalaryPage({
     return cityName.toLowerCase().replace(/\s+/g, '-');
   };
   
-  const generateSpecialtySlug = (specialtyName) => {
-    if (!specialtyName) return '';
-    return specialtyName.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
-  };
 
   return (
     <>
@@ -197,7 +194,7 @@ export default function CityOrSpecialtySalaryPage({
                     "@type": "ListItem",
                     "position": 4,
                     "name": `${specialtyName} RN Jobs in ${stateFullName || stateCode}`,
-                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}/${specialtyToSlug(specialtyName)}`
                   },
                   {
                     "@type": "ListItem",
@@ -419,54 +416,54 @@ export default function CityOrSpecialtySalaryPage({
 
                 {/* By Employer */}
                 {salaryStats?.byEmployer && salaryStats.byEmployer.length > 0 && (
-                  <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200 ${isSpecialtyPage ? 'md:col-span-2' : ''}`}>
+                  <div className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 sm:p-6 border border-gray-200 ${isSpecialtyPage ? 'md:col-span-2' : ''}`}>
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="p-2 bg-green-50 rounded-lg">
+                      <div className="p-2 bg-green-50 rounded-lg flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                         {isSpecialtyPage 
                           ? `${specialtyName} RN Salary by Employer in ${location}`
                           : `Salary by Employer in ${location}`
                         }
                       </h3>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {salaryStats.byEmployer.map((emp, idx) => (
-                        <div key={idx} className="border-b border-gray-100 pb-3 last:border-0">
-                          <div className="flex justify-between items-start mb-1">
+                        <div key={idx} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                          <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                             {emp.employerSlug ? (
                               <Link
                                 href={`/jobs/nursing/employer/${emp.employerSlug}`}
-                                className="text-gray-900 font-medium hover:text-green-600 transition-colors"
+                                className="text-gray-900 font-medium hover:text-green-600 transition-colors text-sm sm:text-base"
                               >
                                 {emp.employerName}
                               </Link>
                             ) : (
-                              <span className="text-gray-900 font-medium">{emp.employerName}</span>
+                              <span className="text-gray-900 font-medium text-sm sm:text-base">{emp.employerName}</span>
                             )}
-                            <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs">
+                            <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs whitespace-nowrap">
                               {emp.jobCount} jobs
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 mt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                             {emp.hourly && (
                               <div className="flex items-baseline gap-2">
                                 <span className="text-xs text-gray-500">Hourly:</span>
-                                <span className="text-lg font-bold text-green-700">
+                                <span className="text-base sm:text-lg font-bold text-green-700">
                                   {formatSalary(emp.hourly.average, 'hourly')}
                                 </span>
                               </div>
                             )}
                             {emp.hourly && emp.annual && (
-                              <span className="text-gray-300">|</span>
+                              <span className="text-gray-300 hidden sm:inline">|</span>
                             )}
                             {emp.annual && (
                               <div className="flex items-baseline gap-2">
                                 <span className="text-xs text-gray-500">Annual:</span>
-                                <span className="text-lg font-bold text-green-700">
+                                <span className="text-base sm:text-lg font-bold text-green-700">
                                   {formatSalary(emp.annual.average, 'annual')}
                                 </span>
                               </div>
@@ -483,7 +480,7 @@ export default function CityOrSpecialtySalaryPage({
               <div className="mb-8 text-center">
                 <Link
                   href={isSpecialtyPage 
-                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${specialtyToSlug(specialtyName)}`
                     : `/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`
                   }
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
@@ -511,7 +508,7 @@ export default function CityOrSpecialtySalaryPage({
                 </p>
                 <Link
                   href={isSpecialtyPage 
-                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${generateSpecialtySlug(specialtyName)}`
+                    ? `/jobs/nursing/${stateCode.toLowerCase()}/${specialtyToSlug(specialtyName)}`
                     : `/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}`
                   }
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
@@ -543,7 +540,7 @@ export default function CityOrSpecialtySalaryPage({
                   {cities.map((cityData) => {
                     const citySlug = generateCitySlug(cityData.city);
                     const linkHref = isSpecialtyPage
-                      ? `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${generateSpecialtySlug(specialtyName)}/salary`
+                      ? `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${specialtyToSlug(specialtyName)}/salary`
                       : `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/salary`;
                     return (
                       <Link
@@ -585,7 +582,7 @@ export default function CityOrSpecialtySalaryPage({
                     const stateDisplay = stateFullNameDisplay || stateData.state;
                     const stateSlug = stateData.state.toLowerCase();
                     const linkHref = isSpecialtyPage
-                      ? `/jobs/nursing/${stateSlug}/${generateSpecialtySlug(specialtyName)}/salary`
+                      ? `/jobs/nursing/${stateSlug}/${specialtyToSlug(specialtyName)}/salary`
                       : `/jobs/nursing/${stateSlug}/salary`;
                     return (
                       <Link
