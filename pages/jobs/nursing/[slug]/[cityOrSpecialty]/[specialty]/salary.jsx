@@ -8,7 +8,7 @@ const seoUtils = require('../../../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchCitySpecialtySalaryStats } = require('../../../../../../lib/services/jobPageData');
 const { formatSalary, formatSalaryRange } = require('../../../../../../lib/utils/salaryStatsUtils');
-const { slugToSpecialty } = require('../../../../../../lib/constants/specialties');
+const { slugToSpecialty, specialtyToSlug } = require('../../../../../../lib/constants/specialties');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
 const SPECIALTY_REDIRECTS = {
@@ -18,6 +18,7 @@ const SPECIALTY_REDIRECTS = {
   'rehab': 'rehabilitation',
   'cardiac-care': 'cardiac',
   'progressive-care': 'stepdown',
+  'home-care': 'home-health',
 };
 
 /**
@@ -97,9 +98,6 @@ export default function CitySpecialtySalaryPage({
     return cityName.toLowerCase().replace(/\s+/g, '-');
   };
   
-  const generateSpecialtySlug = (specialtyName) => {
-    return specialtyName.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
-  };
 
   return (
     <>
@@ -167,7 +165,7 @@ export default function CitySpecialtySalaryPage({
                     "@type": "ListItem",
                     "position": 5,
                     "name": `${specialtyName} RN Jobs in ${cityName}`,
-                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${generateSpecialtySlug(specialtyName)}`
+                    "item": `https://intelliresume.net/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${specialtyToSlug(specialtyName)}`
                   },
                   {
                     "@type": "ListItem",
@@ -325,7 +323,7 @@ export default function CitySpecialtySalaryPage({
               {/* View Jobs CTA - BLUE to distinguish from salary banner */}
               <div className="mb-8 text-center">
                 <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${generateSpecialtySlug(specialtyName)}`}
+                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${specialtyToSlug(specialtyName)}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
                   View {jobCount}+ {specialtyName} RN Jobs in {cityName}
@@ -350,7 +348,7 @@ export default function CitySpecialtySalaryPage({
                   We continuously update our database with the latest job postings and salary information.
                 </p>
                 <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${generateSpecialtySlug(specialtyName)}`}
+                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${generateCitySlug(cityName)}/${specialtyToSlug(specialtyName)}`}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
                   Browse {specialtyName} RN Jobs in {cityName}
@@ -377,7 +375,7 @@ export default function CitySpecialtySalaryPage({
                     return (
                       <Link
                         key={cityData.city}
-                        href={`/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${generateSpecialtySlug(specialtyName)}/salary`}
+                        href={`/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${specialtyToSlug(specialtyName)}/salary`}
                         className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-blue-300 bg-white hover:border-blue-500 hover:bg-blue-50 hover:shadow-md transition-all"
                       >
                         <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
@@ -411,7 +409,7 @@ export default function CitySpecialtySalaryPage({
                     return (
                       <Link
                         key={stateData.state}
-                        href={`/jobs/nursing/${stateSlug}/${generateSpecialtySlug(specialtyName)}/salary`}
+                        href={`/jobs/nursing/${stateSlug}/${specialtyToSlug(specialtyName)}/salary`}
                         className="group flex items-center justify-between px-3 py-2 rounded-lg border-2 border-gray-300 bg-white hover:border-gray-500 hover:bg-gray-50 hover:shadow-md transition-all"
                       >
                         <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">

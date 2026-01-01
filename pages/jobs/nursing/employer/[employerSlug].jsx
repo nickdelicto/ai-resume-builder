@@ -10,6 +10,7 @@ import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
 const { fetchEmployerJobs } = require('../../../../lib/services/jobPageData');
+const { specialtyToSlug } = require('../../../../lib/constants/specialties');
 
 /**
  * Server-Side Rendering: Fetch data before rendering
@@ -313,7 +314,7 @@ export default function EmployerJobPage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.map((spec, idx) => {
-                      const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+                      const specialtySlug = specialtyToSlug(spec.specialty);
                       return (
                         <Link
                           key={idx}

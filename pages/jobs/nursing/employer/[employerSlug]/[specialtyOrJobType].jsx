@@ -8,6 +8,7 @@ import { fetchEmployerSpecialtyJobs, fetchEmployerJobTypeJobs } from '../../../.
 import { generateEmployerSpecialtyPageMetaTags, generateEmployerJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { isJobType } from '../../../../../lib/constants/jobTypes';
+import { specialtyToSlug } from '../../../../../lib/constants/specialties';
 
 export async function getServerSideProps({ params, query }) {
   const { employerSlug, specialtyOrJobType: slug } = params;
@@ -110,10 +111,6 @@ export default function EmployerSpecialtyOrJobTypePage({
     return city.toLowerCase().replace(/\s+/g, '-');
   };
 
-  const generateSpecialtySlug = (specialty) => {
-    if (!specialty) return '';
-    return specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
-  };
 
   return (
     <>
@@ -302,7 +299,7 @@ export default function EmployerSpecialtyOrJobTypePage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.otherSpecialties.map((spec, idx) => {
-                    const specSlug = generateSpecialtySlug(spec.specialty);
+                    const specSlug = specialtyToSlug(spec.specialty);
                     
                     return (
                       <Link
@@ -390,7 +387,7 @@ export default function EmployerSpecialtyOrJobTypePage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.specialties.map((spec, idx) => {
-                    const specSlug = generateSpecialtySlug(spec.specialty);
+                    const specSlug = specialtyToSlug(spec.specialty);
                     
                     return (
                       <Link

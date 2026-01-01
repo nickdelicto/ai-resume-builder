@@ -22,6 +22,7 @@ const { PrismaClient } = require('@prisma/client');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { specialtyToSlug } = require('../lib/constants/specialties');
 
 const prisma = new PrismaClient();
 
@@ -181,7 +182,7 @@ async function generateProgrammaticUrls() {
   // 3. State+Specialty pages + salary pages
   stateSpecialties.forEach(s => {
     const stateCode = s.state.toLowerCase();
-    const specialtySlug = s.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+    const specialtySlug = specialtyToSlug(s.specialty);
     urls.push({
       url: `${SITE_URL}/jobs/nursing/${stateCode}/${specialtySlug}`,
       fingerprint: generateFingerprint('state-specialty', { state: s.state, specialty: s.specialty, jobCount: s._count.id })
@@ -196,7 +197,7 @@ async function generateProgrammaticUrls() {
   citySpecialties.forEach(c => {
     const stateCode = c.state.toLowerCase();
     const citySlug = c.city.toLowerCase().replace(/\s+/g, '-');
-    const specialtySlug = c.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+    const specialtySlug = specialtyToSlug(c.specialty);
     urls.push({
       url: `${SITE_URL}/jobs/nursing/${stateCode}/${citySlug}/${specialtySlug}`,
       fingerprint: generateFingerprint('city-specialty', { state: c.state, city: c.city, specialty: c.specialty, jobCount: c._count.id })
@@ -209,7 +210,7 @@ async function generateProgrammaticUrls() {
   
   // 5. National specialty pages
   specialties.forEach(s => {
-    const specialtySlug = s.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+    const specialtySlug = specialtyToSlug(s.specialty);
     urls.push({
       url: `${SITE_URL}/jobs/nursing/specialty/${specialtySlug}`,
       fingerprint: generateFingerprint('specialty', { specialty: s.specialty, jobCount: s._count.id })
@@ -241,7 +242,7 @@ async function generateProgrammaticUrls() {
     const employerSlug = employerIdToSlug[e.employerId];
     if (!employerSlug) return;
     
-    const specialtySlug = e.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+    const specialtySlug = specialtyToSlug(e.specialty);
     urls.push({
       url: `${SITE_URL}/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
       fingerprint: generateFingerprint('employer-specialty', { employerId: e.employerId, specialty: e.specialty, jobCount: e._count.id })

@@ -10,7 +10,7 @@ import { formatPayForCard } from '../../../../../lib/utils/jobCardUtils';
 const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName, normalizeCity } = require('../../../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchCitySpecialtyJobs } = require('../../../../../lib/services/jobPageData');
-const { isValidSpecialtySlug, slugToSpecialty } = require('../../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../../../../../lib/constants/specialties');
 const { normalizeExperienceLevel } = require('../../../../../lib/utils/experienceLevelUtils');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
@@ -21,6 +21,7 @@ const SPECIALTY_REDIRECTS = {
   'rehab': 'rehabilitation',
   'cardiac-care': 'cardiac',
   'progressive-care': 'stepdown',
+  'home-care': 'home-health',
 };
 
 /**
@@ -476,7 +477,7 @@ export default function CitySpecialtyPage({
                   {stats.otherSpecialties.map((specData, idx) => {
                     const stateSlug = stateCode.toLowerCase();
                     const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
-                    const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+                    const specialtySlug = specialtyToSlug(specData.specialty);
                     
                     return (
                       <Link

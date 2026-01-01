@@ -11,6 +11,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { getStateFullName } = require('../lib/jobScraperUtils');
 const { jobTypeToSlug } = require('../lib/constants/jobTypes');
+const { specialtyToSlug } = require('../lib/constants/specialties');
 
 const prisma = new PrismaClient();
 
@@ -233,7 +234,7 @@ export async function getServerSideProps({ res }) {
       stateSpecialties.forEach(data => {
         if (!data || !data.state || !data.specialty) return;
         const stateCode = data.state.toLowerCase();
-        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(data.specialty);
         addUrl(
           `/jobs/nursing/${stateCode}/${specialtySlug}`,
           null,
@@ -249,7 +250,7 @@ export async function getServerSideProps({ res }) {
         if (!data || !data.state || !data.city || !data.specialty) return;
         const stateCode = data.state.toLowerCase();
         const citySlug = data.city.toLowerCase().replace(/\s+/g, '-');
-        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(data.specialty);
         addUrl(
           `/jobs/nursing/${stateCode}/${citySlug}/${specialtySlug}`,
           null,
@@ -264,7 +265,7 @@ export async function getServerSideProps({ res }) {
       stateSpecialties.forEach(data => {
         if (!data || !data.state || !data.specialty) return;
         const stateCode = data.state.toLowerCase();
-        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(data.specialty);
         addUrl(
           `/jobs/nursing/${stateCode}/${specialtySlug}/salary`,
           null,
@@ -280,7 +281,7 @@ export async function getServerSideProps({ res }) {
         if (!data || !data.state || !data.city || !data.specialty) return;
         const stateCode = data.state.toLowerCase();
         const citySlug = data.city.toLowerCase().replace(/\s+/g, '-');
-        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(data.specialty);
         addUrl(
           `/jobs/nursing/${stateCode}/${citySlug}/${specialtySlug}/salary`,
           null,
@@ -294,7 +295,7 @@ export async function getServerSideProps({ res }) {
     if (specialties && Array.isArray(specialties)) {
       specialties.forEach(specData => {
         if (!specData || !specData.specialty) return;
-        const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(specData.specialty);
       addUrl(
         `/jobs/nursing/specialty/${specialtySlug}`,
         null,
@@ -336,7 +337,7 @@ export async function getServerSideProps({ res }) {
         const employerSlug = employerIdToSlug[data.employerId];
         if (!employerSlug) return;
         
-        const specialtySlug = data.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+        const specialtySlug = specialtyToSlug(data.specialty);
         addUrl(
           `/jobs/nursing/employer/${employerSlug}/${specialtySlug}`,
           null,

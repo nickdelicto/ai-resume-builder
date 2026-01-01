@@ -10,6 +10,7 @@ import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
 const seoUtils = require('../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
+const { specialtyToSlug } = require('../../../lib/constants/specialties');
 const { PrismaClient } = require('@prisma/client');
 
 /**
@@ -534,7 +535,7 @@ export default function JobDetailPage({
                         </div>
                         <div className="space-y-3">
                           {stats.specialties.slice(0, 5).map((spec, idx) => {
-                            const specialtySlug = spec.specialty.toLowerCase().replace(/\s+/g, '-').replace(/\s*&\s*/g, '-');
+                            const specialtySlug = specialtyToSlug(spec.specialty);
                             return (
                               <Link
                               key={idx}
