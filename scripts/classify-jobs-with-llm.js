@@ -1,3 +1,6 @@
+// Load environment variables (required for cron jobs)
+require('dotenv').config();
+
 /**
  * LLM-Based Job Classification Script
  * Uses OpenAI GPT-4o-mini to accurately classify nursing jobs

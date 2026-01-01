@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Load environment variables (required for cron jobs)
+require('dotenv').config();
+
 /**
  * Batched IndexNow Submission Script
  * 
