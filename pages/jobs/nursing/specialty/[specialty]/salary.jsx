@@ -8,7 +8,7 @@ const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../../lib/jobScraperUtils');
 const { fetchSpecialtySalaryStats } = require('../../../../../lib/services/jobPageData');
 const { formatSalary, formatSalaryRange } = require('../../../../../lib/utils/salaryStatsUtils');
-const { isValidSpecialtySlug } = require('../../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, getAllSpecialtiesWithSlugs } = require('../../../../../lib/constants/specialties');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
 const SPECIALTY_REDIRECTS = {
@@ -385,6 +385,37 @@ export default function SpecialtySalaryPage({
               </div>
             </div>
           )}
+
+          {/* Explore Other Specialty Salaries */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border-2 border-purple-200 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-700" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Explore Other Specialty Salaries
+              </h2>
+              <span className="text-sm text-gray-600">
+                ({getAllSpecialtiesWithSlugs().filter(s => s.name.toLowerCase() !== specialtyName?.toLowerCase()).length} specialties)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {getAllSpecialtiesWithSlugs()
+                .filter(s => s.name.toLowerCase() !== specialtyName?.toLowerCase())
+                .map((spec) => (
+                  <Link
+                    key={spec.slug}
+                    href={`/jobs/nursing/specialty/${spec.slug}/salary`}
+                    className="group flex items-center justify-center px-3 py-2 rounded-lg border-2 border-purple-300 bg-white hover:border-purple-500 hover:bg-purple-50 hover:shadow-md transition-all text-center"
+                  >
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">
+                      {spec.name}
+                    </span>
+                  </Link>
+                ))}
+            </div>
+          </div>
 
           {/* Main Job Calculator Link */}
           <div className="text-center py-8">
