@@ -45,11 +45,11 @@ const Footer = () => {
               <span className="footer-hiring-badge">(Hiring!)</span>
             </h3>
             <ul className="footer-nav-links">
-              <li><Link href="/jobs/nursing?specialty=icu">ICU / Critical Care</Link></li>
-              <li><Link href="/jobs/nursing?specialty=er">Emergency Room</Link></li>
-              <li><Link href="/jobs/nursing?specialty=med-surg">Med-Surg</Link></li>
-              <li><Link href="/jobs/nursing?specialty=telemetry">Telemetry</Link></li>
-              <li><Link href="/jobs/nursing?specialty=or">OR / Surgical</Link></li>
+              <li><Link href="/jobs/nursing/specialty/icu">ICU / Critical Care</Link></li>
+              <li><Link href="/jobs/nursing/specialty/er">Emergency Room</Link></li>
+              <li><Link href="/jobs/nursing/specialty/med-surg">Med-Surg</Link></li>
+              <li><Link href="/jobs/nursing/specialty/telemetry">Telemetry</Link></li>
+              <li><Link href="/jobs/nursing/specialty/or">OR / Surgical</Link></li>
               <li><Link href="/jobs/nursing" className="footer-more-link">More +</Link></li>
             </ul>
           </div>
