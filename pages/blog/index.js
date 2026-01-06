@@ -1,7 +1,5 @@
-import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getCategories, getFeaturedPosts } from '../../lib/blog/api';
 import PostCard from '../../components/blog/PostCard';
 import CategoryNav from '../../components/blog/CategoryNav';
@@ -14,14 +12,14 @@ import styles from '../../styles/blog/BlogIndex.module.css';
  * Main entry point for the career resources section
  * Displays featured content from different topic silos
  */
-export default function BlogIndex({ featuredPosts, categories, featuredCategories }) {
+export default function BlogIndex({ featuredPosts, categories }) {
   return (
     <div className={styles.blogContainer}>
       <Head>
-        <title>Career Resources & Insights | IntelliResume.net</title>
-        <meta 
-          name="description" 
-          content="Expert career resources, resume examples, job descriptions, and professional advice to help you land your dream job. Powered by IntelliResume.net to accelerate your career."
+        <title>Nursing Career Resources | IntelliResume Health</title>
+        <meta
+          name="description"
+          content="Expertly crafted content to get you started on your nursing career and to help you thrive. Career guides, resume examples, certifications, and job search resources."
         />
         <meta 
           name="keywords" 
@@ -29,27 +27,13 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
         />
       </Head>
 
-      {/* Hero Section with Background */}
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <div className={styles.heroContent}>
-            <h1 className={styles.heroTitle}>Career Resources & Insights</h1>
-            <p className={styles.heroDescription}>
-              Expert-crafted content to help you build a winning resume, prepare for interviews, and advance your career
-            </p>
-            <div className={styles.heroActions}>
-              <AnimatedButton 
-                href="/resume-builder" 
-                text="Create Your Resume" 
-                className={styles.heroButtonPrimary}
-              />
-              <a href="#browse-content" className={`${styles.heroButton} ${styles.heroButtonSecondary}`}>
-                Browse Resources
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Compact Header */}
+      <header className={styles.compactHeader}>
+        <h1 className={styles.compactTitle}>Nursing Career Resources</h1>
+        <p className={styles.compactDescription}>
+          Expertly crafted content to get you started & thriving in your nursing career
+        </p>
+      </header>
 
       <CategoryNav categories={categories} />
 
@@ -81,7 +65,7 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
             <div className={styles.siloCardContent}>
               <h3 className={styles.siloCardTitle}>Resume Examples</h3>
               <p className={styles.siloCardDescription}>
-                Industry-specific resume examples crafted by experts to help you create the perfect resume
+                Nursing resume examples crafted by healthcare recruiters to help you land interviews
               </p>
               <Link href="/blog/resume-examples" className={styles.siloCardLink}>
                 Browse Examples
@@ -91,7 +75,28 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
               </Link>
             </div>
           </div>
-          
+
+          <div className={styles.siloCard}>
+            <div className={styles.siloCardIcon} style={{backgroundColor: '#0d9488'}}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </div>
+            <div className={styles.siloCardContent}>
+              <h3 className={styles.siloCardTitle}>Career Guides</h3>
+              <p className={styles.siloCardDescription}>
+                Step-by-step guides on how to become a nurse in various specialties
+              </p>
+              <Link href="/blog/career-guides" className={styles.siloCardLink}>
+                Explore Guides
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+              </Link>
+            </div>
+          </div>
+
           <div className={styles.siloCard}>
             <div className={styles.siloCardIcon} style={{backgroundColor: '#48bb78'}}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,7 +110,7 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
             <div className={styles.siloCardContent}>
               <h3 className={styles.siloCardTitle}>Job Descriptions</h3>
               <p className={styles.siloCardDescription}>
-                Detailed job descriptions for various roles to help you understand employer expectations
+                What does each nursing specialty do? Responsibilities, skills, and expectations
               </p>
               <Link href="/blog/job-descriptions" className={styles.siloCardLink}>
                 View Job Descriptions
@@ -115,7 +120,28 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
               </Link>
             </div>
           </div>
-          
+
+          <div className={styles.siloCard}>
+            <div className={styles.siloCardIcon} style={{backgroundColor: '#8b5cf6'}}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="6"></circle>
+                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+              </svg>
+            </div>
+            <div className={styles.siloCardContent}>
+              <h3 className={styles.siloCardTitle}>Certifications</h3>
+              <p className={styles.siloCardDescription}>
+                CCRN, PCCN, CEN and more - eligibility, exam prep, and renewal guides
+              </p>
+              <Link href="/blog/certifications" className={styles.siloCardLink}>
+                Certification Guides
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+              </Link>
+            </div>
+          </div>
+
           <div className={styles.siloCard}>
             <div className={styles.siloCardIcon} style={{backgroundColor: '#ed8936'}}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +153,7 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
             <div className={styles.siloCardContent}>
               <h3 className={styles.siloCardTitle}>Career Advice</h3>
               <p className={styles.siloCardDescription}>
-                Professional tips and strategies for job searching, interviews, and career advancement
+                Salary negotiation, interview tips, and career advancement strategies for nurses
               </p>
               <Link href="/blog/career-advice" className={styles.siloCardLink}>
                 Read Career Advice
@@ -138,57 +164,6 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Featured Categories Section */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div className={styles.sectionIcon}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </div>
-          <h2 className={styles.sectionTitle}>Browse by Industry</h2>
-          <p className={styles.sectionDescription}>
-            Find tailored resources for your specific industry
-          </p>
-        </div>
-
-        {featuredCategories && featuredCategories.length > 0 ? (
-          <div className={styles.categoryCards}>
-            {featuredCategories.map((category) => (
-              <Link 
-                href={`/blog/${category.slug}`} 
-                key={category.id}
-                className={styles.categoryCard}
-              >
-                <div className={styles.categoryCardContent}>
-                  <div className={styles.categoryCardIcon} style={{backgroundColor: category.color || '#4299e1'}}>
-                    <span>{category.name.charAt(0)}</span>
-                  </div>
-                  <h3 className={styles.categoryCardTitle}>{category.name}</h3>
-                  <p className={styles.categoryCardCount}>
-                    {category.postCount || '5+'} resources
-                  </p>
-                </div>
-                <div className={styles.categoryCardArrow}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14"></path>
-                    <path d="m12 5 7 7-7 7"></path>
-                  </svg>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyStateIcon}>📂</div>
-            <h3 className={styles.emptyStateTitle}>No industries found</h3>
-            <p className={styles.emptyStateMessage}>
-              We're currently working on adding industry-specific resources. Check back soon!
-            </p>
-          </div>
-        )}
       </section>
 
       {/* Featured Content Section */}
@@ -223,33 +198,25 @@ export default function BlogIndex({ featuredPosts, categories, featuredCategorie
           </div>
         )}
 
-        <div className={styles.viewAllContainer}>
-          <Link href="/blog/all" className={styles.viewAllButton}>
-            View All Resources
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.buttonIcon}>
-              <path d="m9 18 6-6-6-6"></path>
-            </svg>
-          </Link>
-        </div>
       </section>
 
-      {/* Resume Builder CTA */}
-      <section className={styles.ctaSection}>
+      {/* Find RN Jobs CTA */}
+      <section className={styles.ctaSectionTeal}>
         <div className={styles.ctaContent}>
-          <div className={styles.ctaIcon}>
+          <div className={styles.ctaIconTeal}>
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
           </div>
-          <h2 className={styles.ctaTitle}>Ready to build your professional resume?</h2>
+          <h2 className={styles.ctaTitle}>Find Your Next Nursing Position</h2>
           <p className={styles.ctaDescription}>
-            Use our AI-powered resume builder to create a standout resume in minutes. 
-            Tailored to your industry, ATS-optimized, and designed to get you hired.
+            Browse thousands of RN job openings across the country. Filter by specialty,
+            location, and shift type to find the perfect opportunity for your career.
           </p>
-          <AnimatedButton 
-            href="/resume-builder" 
-            text="Build Your Resume Now"
+          <AnimatedButton
+            href="/jobs"
+            text="Browse Nursing Jobs"
           />
         </div>
       </section>
@@ -264,15 +231,11 @@ export async function getServerSideProps() {
   try {
     const categories = await getCategories();
     const featuredPosts = await getFeaturedPosts(6);
-    
-    // Get all categories that are marked as industries
-    const featuredCategories = categories.filter(cat => cat.featured === true);
 
     return {
       props: {
         featuredPosts,
         categories,
-        featuredCategories,
       },
     };
   } catch (error) {
@@ -281,7 +244,6 @@ export async function getServerSideProps() {
       props: {
         featuredPosts: [],
         categories: [],
-        featuredCategories: [],
       },
     };
   }
