@@ -32,7 +32,9 @@ export async function getServerSideProps({ res }) {
     '/resume-builder',
     '/blog',
     '/blog/resume-examples',
+    '/blog/career-guides',
     '/blog/job-descriptions',
+    '/blog/certifications',
     '/blog/career-advice',
   ];
   

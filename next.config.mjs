@@ -120,6 +120,38 @@ const nextConfig = {
         destination: '/jobs/nursing/:state/:city/stepdown',
         permanent: true,
       },
+
+      // Removed blog categories → /blog (healthcare-focused restructure)
+      {
+        source: '/blog/healthcare',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/blog/technology',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/blog/business',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/blog/education',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/blog/creative',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/blog/service-industry',
+        destination: '/blog',
+        permanent: true,
+      },
     ];
   },
 }
