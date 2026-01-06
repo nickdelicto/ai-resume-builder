@@ -6,11 +6,12 @@
 .categoryNav {
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0.5rem 0;
+  padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
 }
 
 .categoryNavInner {

@@ -14,8 +14,10 @@ const CategoryNav = ({ categories = [] }) => {
   
   // Default categories if none provided
   const defaultCategories = [
+    { slug: 'career-guides', name: 'Career Guides' },
     { slug: 'resume-examples', name: 'Resume Examples' },
     { slug: 'job-descriptions', name: 'Job Descriptions' },
+    { slug: 'certifications', name: 'Certifications' },
     { slug: 'career-advice', name: 'Career Advice' }
   ];
   

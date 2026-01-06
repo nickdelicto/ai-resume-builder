@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../../styles/blog/PostCard.module.css';
@@ -43,6 +42,10 @@ const PostCard = ({ post }) => {
         return '#48bb78'; // Green
       case 'career advice':
         return '#ed8936'; // Orange
+      case 'career guide':
+        return '#0d9488'; // Teal
+      case 'certification guide':
+        return '#8b5cf6'; // Purple
       default:
         return '#718096'; // Gray
     }
