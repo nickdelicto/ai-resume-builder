@@ -205,8 +205,9 @@ export default function BlogIndex({ featuredPosts, categories }) {
         <div className={styles.ctaContent}>
           <div className={styles.ctaIconTeal}>
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
+              <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path>
+              <circle cx="20" cy="10" r="2"></circle>
             </svg>
           </div>
           <h2 className={styles.ctaTitle}>Find Your Next Nursing Position</h2>
@@ -215,7 +216,7 @@ export default function BlogIndex({ featuredPosts, categories }) {
             location, and shift type to find the perfect opportunity for your career.
           </p>
           <AnimatedButton
-            href="/jobs"
+            href="/jobs/nursing"
             text="Browse Nursing Jobs"
           />
         </div>
