@@ -587,7 +587,7 @@ export default function CareerGuidePage({
         {/* Featured Jobs CTA */}
         {liveStats.featuredJobs && liveStats.featuredJobs.length >= 1 && (
           <section className="featured-jobs-section">
-            <h2>Featured {careerData.name} Nurse Jobs</h2>
+            <h2>{liveStats.isGeneralJobs ? 'Featured RN Jobs' : `Featured ${careerData.name} Nurse Jobs`}</h2>
             <div className="featured-jobs-grid">
               {liveStats.featuredJobs.slice(0, 5).map((job, idx) => (
                 <Link key={idx} href={`/jobs/nursing/${job.slug}`} className="featured-job-card">
@@ -612,9 +612,15 @@ export default function CareerGuidePage({
               ))}
             </div>
             <div className="view-all-jobs">
-              <Link href={`/jobs/nursing/specialty/${specialtySlug}`} className="view-all-button">
-                View All {liveStats.jobCount.toLocaleString()} {careerData.name} Jobs
-              </Link>
+              {liveStats.isGeneralJobs ? (
+                <Link href="/jobs/nursing" className="view-all-button">
+                  Browse RN Jobs
+                </Link>
+              ) : (
+                <Link href={`/jobs/nursing/specialty/${specialtySlug}`} className="view-all-button">
+                  View All {liveStats.jobCount.toLocaleString()} {careerData.name} Jobs
+                </Link>
+              )}
             </div>
           </section>
         )}
@@ -1903,7 +1909,8 @@ export async function getServerSideProps({ params }) {
     maxSalary: null,
     topStates: [],
     topEmployers: [],
-    featuredJobs: []
+    featuredJobs: [],
+    isGeneralJobs: false
   };
 
   try {
@@ -2036,7 +2043,7 @@ export async function getServerSideProps({ params }) {
     };
 
     // Format featured jobs
-    const featuredJobs = featuredJobsData.map(job => ({
+    let featuredJobs = featuredJobsData.map(job => ({
       slug: job.slug,
       title: job.title,
       employer: job.employer?.name || 'Healthcare Facility',
@@ -2047,6 +2054,48 @@ export async function getServerSideProps({ params }) {
       jobType: job.jobType,
       shiftType: job.shiftType
     }));
+
+    // Fallback: If no specialty jobs, fetch random general RN jobs
+    let isGeneralJobs = false;
+    if (featuredJobs.length === 0) {
+      const generalJobsData = await prisma.nursingJob.findMany({
+        where: {
+          isActive: true
+        },
+        select: {
+          slug: true,
+          title: true,
+          city: true,
+          state: true,
+          salaryMin: true,
+          salaryMax: true,
+          salaryType: true,
+          specialty: true,
+          jobType: true,
+          shiftType: true,
+          employer: {
+            select: { name: true }
+          }
+        },
+        orderBy: { postedDate: 'desc' },
+        take: 50 // Get more to randomize from
+      });
+
+      // Shuffle and take 5 random jobs
+      const shuffled = generalJobsData.sort(() => 0.5 - Math.random());
+      featuredJobs = shuffled.slice(0, 5).map(job => ({
+        slug: job.slug,
+        title: job.title,
+        employer: job.employer?.name || 'Healthcare Facility',
+        city: job.city,
+        state: job.state,
+        salary: formatJobSalary(job),
+        specialty: job.specialty,
+        jobType: job.jobType,
+        shiftType: job.shiftType
+      }));
+      isGeneralJobs = true;
+    }
 
     // Calculate salary stats using the same midpoint logic as salary pages
     const salaryStats = calculateSalaryStats(jobsWithSalary);
