@@ -19,7 +19,8 @@ export default function CareerGuidePage({
   careerData,
   liveStats,
   guideSlug,
-  specialtySlug
+  specialtySlug,
+  relatedGuides
 }) {
   if (!careerData) {
     return (
@@ -631,6 +632,21 @@ export default function CareerGuidePage({
             ))}
           </div>
         </section>
+
+        {/* Related Career Guides */}
+        {relatedGuides && relatedGuides.length > 0 && (
+          <section className="related-guides-section">
+            <h2>Continue Reading</h2>
+            <div className="related-guides-grid">
+              {relatedGuides.map((guide) => (
+                <Link key={guide.slug} href={`/blog/career-guides/${guide.slug}`} className="related-guide-card">
+                  <span className="guide-tag">Career Guide</span>
+                  <h3>How to Become {/^[aeiou]/i.test(guide.name) ? 'an' : 'a'} {guide.name} Nurse</h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <style jsx>{`
           .career-guide {
@@ -1606,6 +1622,68 @@ export default function CareerGuidePage({
             font-size: 0.9375rem;
           }
 
+          /* Related Career Guides */
+          .related-guides-section {
+            margin-top: 56px;
+            padding-top: 40px;
+            border-top: 1px solid #e2e8f0;
+          }
+          .related-guides-section h2 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+            padding-bottom: 0;
+            border-bottom: none;
+          }
+          .related-guides-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+          @media (min-width: 640px) {
+            .related-guides-grid {
+              flex-direction: row;
+              gap: 24px;
+            }
+          }
+          .related-guide-card {
+            display: block;
+            text-decoration: none;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.15s;
+          }
+          @media (min-width: 640px) {
+            .related-guide-card {
+              flex: 1;
+              padding: 0;
+              border-bottom: none;
+            }
+          }
+          .related-guide-card:hover h3 {
+            color: #0d9488;
+          }
+          .guide-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0d9488;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 6px;
+          }
+          .related-guide-card h3 {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.4;
+            transition: color 0.15s;
+          }
+
           /* Featured Jobs - Dark Theme Vertical List */
           .featured-jobs-section {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -1991,7 +2069,8 @@ export async function getServerSideProps({ params }) {
       maxSalary: salaryStats.annual?.max ? Math.round(salaryStats.annual.max) : null,
       topStates,
       topEmployers,
-      featuredJobs
+      featuredJobs,
+      isGeneralJobs
     };
 
   } catch (error) {
