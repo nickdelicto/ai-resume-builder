@@ -52,11 +52,18 @@ export default function CareerGuidePage({
   };
 
   // Format text with bold and markdown links for HTML rendering
+  // Internal links (starting with / or containing intelliresume.net) don't open in new tab
   const formatTextHtml = (text) => {
     if (!text) return text;
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="inline-link">$1</a>');
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, linkText, url) => {
+        const isInternal = url.startsWith('/') || url.includes('intelliresume.net');
+        if (isInternal) {
+          return `<a href="${url}" class="inline-link">${linkText}</a>`;
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-link">${linkText}</a>`;
+      });
   };
 
   // Parse markdown links [text](url) to JSX (for non-HTML contexts)
@@ -2129,12 +2136,28 @@ export async function getServerSideProps({ params }) {
     await prisma.$disconnect();
   }
 
+  // Get related guides data
+  const relatedGuides = (careerData.relatedGuides || [])
+    .map(guideSlug => {
+      const guide = getSpecialtyCareerData(guideSlug);
+      if (!guide) return null;
+      return {
+        slug: guide.slug,
+        name: guide.name,
+        fullName: guide.fullName,
+        description: guide.seo?.description?.substring(0, 120) + '...' || ''
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 3); // Show max 3 related guides
+
   return {
     props: {
       careerData,
       liveStats,
       guideSlug: slug,           // SEO-friendly slug for canonical URL
-      specialtySlug              // Specialty slug for job page links
+      specialtySlug,             // Specialty slug for job page links
+      relatedGuides              // Related career guides
     }
   };
 }
