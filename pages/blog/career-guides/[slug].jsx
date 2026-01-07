@@ -145,6 +145,51 @@ export default function CareerGuidePage({
             "dateModified": meta.lastUpdated
           })
         }} />
+
+        {/* HowTo Schema */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": `How to Become a ${careerData.name} Nurse`,
+            "description": seo.description,
+            "totalTime": `P${quickFacts.typicalTimeToSpecialize.replace(/[^0-9]/g, '')}Y`,
+            "step": steps.map((step, idx) => ({
+              "@type": "HowToStep",
+              "position": idx + 1,
+              "name": step.title,
+              "text": step.content.replace(/\*\*.*?\*\*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').substring(0, 500)
+            }))
+          })
+        }} />
+
+        {/* BreadcrumbList Schema */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Resources",
+                "item": "https://intelliresume.net/blog"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Career Guides",
+                "item": "https://intelliresume.net/blog/career-guides"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": `${careerData.name} Nurse`,
+                "item": `https://intelliresume.net/blog/career-guides/${guideSlug}`
+              }
+            ]
+          })
+        }} />
       </Head>
 
       <article className="career-guide">
