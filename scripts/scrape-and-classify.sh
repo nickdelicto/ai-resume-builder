@@ -92,7 +92,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - adventist-healthcare"
   echo "  - northwell-health"
   echo "  - hartford-healthcare"
-  echo "  - upstate-medical"
+  echo "  - upstate-medical-university"
   exit 1
 fi
 
@@ -165,7 +165,7 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
-  upstate-medical)
+  upstate-medical-university)
     # Upstate Medical University uses custom PageUp scraper
     if [ -n "$MAX_PAGES" ]; then
       /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/upstate-medical-rn-scraper.js" --max-pages "$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
@@ -184,13 +184,13 @@ case $EMPLOYER_SLUG in
     log_message "  - adventist-healthcare"
     log_message "  - northwell-health"
     log_message "  - hartford-healthcare"
-    log_message "  - upstate-medical"
+    log_message "  - upstate-medical-university"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"
