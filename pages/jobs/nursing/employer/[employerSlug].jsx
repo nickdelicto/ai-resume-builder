@@ -355,9 +355,9 @@ export default function EmployerJobPage({
                         </h3>
                         <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
                           <span>{jobItem.city}, {jobItem.state}</span>
-                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
+                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
                             <span className="text-green-700 font-medium">
-                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
+                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
                             </span>
                           )}
                         </div>

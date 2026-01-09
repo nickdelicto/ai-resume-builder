@@ -612,9 +612,9 @@ export default function JobDetailPage({
                         <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
                           <span>{jobItem.city}, {jobItem.state}</span>
                           {jobItem.employer && <span>• {jobItem.employer.name}</span>}
-                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType) && (
+                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
                             <span className="text-green-700 font-medium">
-                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType)}
+                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
                             </span>
                           )}
                         </div>
@@ -926,7 +926,7 @@ export default function JobDetailPage({
                 </div>
               )}
               
-              {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType) && (
+              {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType) && (
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-50 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
@@ -936,7 +936,7 @@ export default function JobDetailPage({
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Pay Range</div>
-                    <div className="font-semibold text-green-700">{formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType)}</div>
+                    <div className="font-semibold text-green-700">{formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType)}</div>
                   </div>
                 </div>
               )}
