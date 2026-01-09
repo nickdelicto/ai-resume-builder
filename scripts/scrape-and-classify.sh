@@ -94,6 +94,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - hartford-healthcare"
   echo "  - upstate-medical-university"
   echo "  - strong-memorial-hospital"
+  echo "  - mass-general-brigham"
   exit 1
 fi
 
@@ -186,6 +187,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  mass-general-brigham)
+    # Mass General Brigham uses Workday CXS API scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/mass-general-brigham-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/mass-general-brigham-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -197,12 +208,13 @@ case $EMPLOYER_SLUG in
     log_message "  - hartford-healthcare"
     log_message "  - upstate-medical-university"
     log_message "  - strong-memorial-hospital"
+    log_message "  - mass-general-brigham"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

@@ -575,7 +575,7 @@ ${job.description}
 async function classifyJob(job) {
   try {
     // Check if this job needs description formatting (has HTML or raw text)
-    const employersNeedingFormatting = ['hartford-healthcare', 'northwell-health'];
+    const employersNeedingFormatting = ['hartford-healthcare', 'northwell-health', 'mass-general-brigham'];
     const needsFormatting = employersNeedingFormatting.includes(job.employer.slug);
 
     // For jobs needing formatting: run classification AND formatting in parallel
