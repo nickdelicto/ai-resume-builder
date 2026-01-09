@@ -49,6 +49,41 @@ const workdayConfigs = {
     selectors: {}
   },
 
+  /**
+   * Strong Memorial Hospital (University of Rochester Medical Center)
+   * Rochester, NY
+   */
+  'strong-memorial-hospital': {
+    employerName: 'Strong Memorial Hospital',
+    baseUrl: 'https://rochester.wd5.myworkdayjobs.com/UR_Nursing',
+    searchUrl: 'https://rochester.wd5.myworkdayjobs.com/UR_Nursing?jobFamily=52d7fdb5944d100120113e96875d0000&jobFamily=2f87d4f1b872100120103d65700f0000',
+    careerPageUrl: 'https://rochester.wd5.myworkdayjobs.com/UR_Nursing',
+    filters: {
+      jobFamily: ['52d7fdb5944d100120113e96875d0000', '2f87d4f1b872100120103d65700f0000'] // Nursing categories
+    },
+    // Facility/address to location mapping (Workday returns facility names, not cities)
+    facilityLocations: {
+      // Main hospitals
+      'Strong Memorial Hospital': { city: 'Rochester', state: 'NY' },
+      'James P. Wilmot Cancer Center': { city: 'Rochester', state: 'NY' },
+      'Strong West Hospital': { city: 'Brockport', state: 'NY' },
+      'Highland Hospital': { city: 'Rochester', state: 'NY' },
+      'Rochester Internal Medicine Associates': { city: 'Rochester', state: 'NY' },
+      // Brighton locations (Sawgrass, Canal View)
+      '158 Sawgrass Drive': { city: 'Brighton', state: 'NY' },
+      '180 Sawgrass Drive': { city: 'Brighton', state: 'NY' },
+      '140 Canal View Boulevard': { city: 'Brighton', state: 'NY' },
+      '777 Canal View Boulevard': { city: 'Brighton', state: 'NY' },
+      // Henrietta
+      '2613 West Henrietta Road': { city: 'Henrietta', state: 'NY' },
+      // Already has city format
+      'Rochester - NY': { city: 'Rochester', state: 'NY' },
+      // Default for unmapped facilities
+      '_default': { city: 'Rochester', state: 'NY' }
+    },
+    selectors: {}
+  },
+
   // Add more employers here as you discover them
   // Example template:
   /*

@@ -93,6 +93,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - northwell-health"
   echo "  - hartford-healthcare"
   echo "  - upstate-medical-university"
+  echo "  - strong-memorial-hospital"
   exit 1
 fi
 
@@ -175,6 +176,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  strong-memorial-hospital)
+    # Strong Memorial Hospital uses Workday scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" strong-memorial-hospital --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/workday-scraper-runner.js" strong-memorial-hospital > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -185,12 +196,13 @@ case $EMPLOYER_SLUG in
     log_message "  - northwell-health"
     log_message "  - hartford-healthcare"
     log_message "  - upstate-medical-university"
+    log_message "  - strong-memorial-hospital"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

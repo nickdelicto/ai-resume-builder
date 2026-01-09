@@ -263,6 +263,12 @@ class WorkdayRNScraper {
           const oldPage = currentPageNumber;
           currentPageNumber = loadMoreResult.newPageNumber;
           console.log(`   ✅ Successfully advanced from page ${oldPage} to page ${currentPageNumber}`);
+
+          // Check maxPages limit
+          if (this.maxPages && currentPageNumber > this.maxPages) {
+            console.log(`\n✅ Reached page limit (${this.maxPages} pages)`);
+            break;
+          }
         } else {
           // Check if there might be more pages by looking at available page numbers
           const availablePages = await page.evaluate(() => {
@@ -911,13 +917,14 @@ class WorkdayRNScraper {
               'span[data-automation-id="locations"]', // Span with location
               'div[data-automation-id="locations"]' // Div with location
             ];
-            
+
             for (const selector of locationSelectors) {
               const locationElement = card.querySelector(selector);
               if (locationElement) {
-                const locationText = locationElement.textContent.trim();
-                // Validate it looks like a location (City, State format)
-                if (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*,\s+[A-Z]{2}$/.test(locationText)) {
+                let locationText = locationElement.textContent.trim();
+                // Remove "locations" prefix if present (Workday quirk)
+                locationText = locationText.replace(/^locations\s*/i, '').trim();
+                if (locationText) {
                   location = locationText;
                   break;
                 }
@@ -1212,8 +1219,27 @@ class WorkdayRNScraper {
     if (!locationString || typeof locationString !== 'string') {
       return { city: null, state: null, zipCode: null };
     }
-    
+
     const clean = locationString.trim();
+
+    // Check facilityLocations mapping first (for employers like Strong Memorial)
+    if (this.config && this.config.facilityLocations) {
+      const facilityMap = this.config.facilityLocations;
+      // Exact match
+      if (facilityMap[clean]) {
+        return { ...facilityMap[clean], zipCode: null };
+      }
+      // Partial match (facility name contains location string or vice versa)
+      for (const [facility, location] of Object.entries(facilityMap)) {
+        if (facility !== '_default' && (clean.includes(facility) || facility.includes(clean))) {
+          return { ...location, zipCode: null };
+        }
+      }
+      // Use default if no match found and default exists
+      if (facilityMap._default) {
+        return { ...facilityMap._default, zipCode: null };
+      }
+    }
     
     // Pattern: "City, ST" or "City, ST 12345"
     const patterns = [
@@ -1671,13 +1697,17 @@ class WorkdayRNScraper {
           'div[data-automation-id="locations"]', // Div with location
           '[data-automation-id="jobPostingHeader"] [data-automation-id="locations"]' // Nested in header
         ];
-        
+
         for (const selector of locationSelectors) {
           const locationElement = document.querySelector(selector);
           if (locationElement) {
-            const locationText = getCleanText(locationElement);
-            // Validate it looks like a location (City, State format)
-            if (locationText && /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*,\s+[A-Z]{2}$/.test(locationText)) {
+            let locationText = getCleanText(locationElement);
+            // Remove "locations" prefix if present (Workday quirk)
+            if (locationText) {
+              locationText = locationText.replace(/^locations\s*/i, '').trim();
+            }
+            // Accept any non-empty location (facility mapping will handle conversion)
+            if (locationText) {
               location = locationText;
               break;
             }
