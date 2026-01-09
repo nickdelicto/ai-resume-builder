@@ -151,11 +151,11 @@ case $EMPLOYER_SLUG in
     ;;
   
   northwell-health)
-    # Northwell Health uses custom scraper
+    # Northwell Health uses API scraper (Google Cloud Talent Solution)
     if [ -n "$MAX_PAGES" ]; then
-      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper-production.js" --max-pages "$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
     else
-      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper-production.js" > "$SCRAPER_LOG" 2>&1
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/northwell-health-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
     fi
     SCRAPER_EXIT_CODE=$?
     ;;

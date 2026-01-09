@@ -574,15 +574,16 @@ ${job.description}
  */
 async function classifyJob(job) {
   try {
-    // Check if this is a Hartford HealthCare job
-    const isHartford = job.employer.slug === 'hartford-healthcare';
-    
-    // For Hartford jobs: run classification AND formatting in parallel
+    // Check if this job needs description formatting (has HTML or raw text)
+    const employersNeedingFormatting = ['hartford-healthcare', 'northwell-health'];
+    const needsFormatting = employersNeedingFormatting.includes(job.employer.slug);
+
+    // For jobs needing formatting: run classification AND formatting in parallel
     // For other jobs: only run classification
     let classificationResult, formattingResult;
-    
-    if (isHartford) {
-      console.log('   🔄 Running classification + formatting (Hartford job)...');
+
+    if (needsFormatting) {
+      console.log(`   🔄 Running classification + formatting (${job.employer.slug})...`);
       [classificationResult, formattingResult] = await Promise.all([
         classifyJobAttributes(job),
         formatHartfordDescription(job)
@@ -596,7 +597,7 @@ async function classifyJob(job) {
     const result = classificationResult.classification;
     let combinedUsage = classificationResult.usage;
     
-    // If Hartford job was formatted, add formatting tokens to usage
+    // If job was formatted, add formatting tokens to usage
     if (formattingResult) {
       combinedUsage = {
         prompt_tokens: combinedUsage.prompt_tokens + formattingResult.usage.prompt,
@@ -633,7 +634,7 @@ async function classifyJob(job) {
       cost: calculateCost(combinedUsage)
     };
     
-    // Add formatted description if Hartford job
+    // Add formatted description if job was formatted
     if (formattingResult) {
       returnObj.formattedDescription = formattingResult.formattedDescription;
     }
@@ -782,7 +783,7 @@ async function main() {
             classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
           };
           
-          // If Hartford job was formatted, save the formatted description
+          // If job was formatted, save the formatted description
           if (result.formattedDescription) {
             updateData.description = result.formattedDescription;
             console.log(`   📝 Saving formatted description (${result.formattedDescription.length} chars)`);
@@ -805,11 +806,11 @@ async function main() {
             classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
           };
           
-          // If Hartford job was formatted, save the formatted description
+          // If job was formatted, save the formatted description
           if (result.formattedDescription) {
             updateData.description = result.formattedDescription;
           }
-          
+
           await prisma.nursingJob.update({
             where: { id: job.id },
             data: updateData
