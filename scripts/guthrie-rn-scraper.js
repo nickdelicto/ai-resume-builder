@@ -18,7 +18,7 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
-const { generateJobSlug } = require('../lib/jobScraperUtils');
+const { generateJobSlug, normalizeJobType } = require('../lib/jobScraperUtils');
 
 const prisma = new PrismaClient();
 
@@ -237,16 +237,17 @@ function extractShift(title, scheduleInfo) {
 
 /**
  * Extract job type from schedule info
+ * Uses normalizeJobType for consistent formatting across all scrapers
  */
 function extractJobType(scheduleInfo) {
   const text = (scheduleInfo || '').toLowerCase();
 
-  if (/full[\s\-]?time/i.test(text)) return 'Full-Time';
-  if (/part[\s\-]?time/i.test(text)) return 'Part-Time';
-  if (/per[\s\-]?diem|prn/i.test(text)) return 'Per-Diem';
-  if (/weekend/i.test(text)) return 'Part-Time';
+  if (/full[\s\-]?time/i.test(text)) return normalizeJobType('full-time');
+  if (/part[\s\-]?time/i.test(text)) return normalizeJobType('part-time');
+  if (/per[\s\-]?diem|prn/i.test(text)) return normalizeJobType('prn');
+  if (/weekend/i.test(text)) return normalizeJobType('part-time');
 
-  return 'Full-Time'; // Default
+  return normalizeJobType('full-time'); // Default
 }
 
 /**

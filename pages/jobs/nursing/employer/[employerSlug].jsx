@@ -423,6 +423,30 @@ export default function EmployerJobPage({
             </>
           )}
 
+          {/* Browse by Job Type Section */}
+          {stats?.jobTypes && stats.jobTypes.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Browse by Job Type at {employerDisplayName}</h2>
+                <p className="text-gray-600">Explore {stats.jobTypes.length} job {stats.jobTypes.length === 1 ? 'type' : 'types'} available at {employerDisplayName}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex flex-wrap gap-4">
+                  {stats.jobTypes.map((jt, idx) => (
+                    <Link
+                      key={idx}
+                      href={`/jobs/nursing/employer/${employerSlug}/${jt.slug}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-green-50 rounded-lg group transition-colors"
+                    >
+                      <span className="text-gray-900 group-hover:text-green-600 font-medium">{jt.displayName}</span>
+                      <span className="text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full text-xs">{jt.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Browse RN Jobs by State Section - Shows all states for navigation */}
           {stats?.allStates && stats.allStates.length > 0 && (
             <div className="mt-16 pt-8 border-t border-gray-200">
