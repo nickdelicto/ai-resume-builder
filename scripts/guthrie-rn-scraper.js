@@ -117,8 +117,10 @@ async function fetchJobDetail(requisitionId) {
         .replace(/&rdquo;/g, '"')
         .replace(/&ldquo;/g, '"')
         .replace(/&bull;/g, '•')
-        .replace(/\n{3,}/g, '\n\n')              // Collapse multiple newlines
         .replace(/[ \t]+/g, ' ')                 // Collapse multiple spaces
+        .replace(/ +\n/g, '\n')                  // Remove trailing spaces before newlines
+        .replace(/\n +/g, '\n')                  // Remove leading spaces after newlines
+        .replace(/\n{3,}/g, '\n\n')              // Collapse multiple newlines
         .trim();
 
       return {
