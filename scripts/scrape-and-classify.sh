@@ -95,6 +95,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - upstate-medical-university"
   echo "  - strong-memorial-hospital"
   echo "  - mass-general-brigham"
+  echo "  - guthrie"
   exit 1
 fi
 
@@ -197,6 +198,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  guthrie)
+    # Guthrie Health uses Oracle Recruiting Cloud API scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/guthrie-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/guthrie-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -209,12 +220,13 @@ case $EMPLOYER_SLUG in
     log_message "  - upstate-medical-university"
     log_message "  - strong-memorial-hospital"
     log_message "  - mass-general-brigham"
+    log_message "  - guthrie"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"
@@ -300,7 +312,7 @@ if [ $CLASSIFIER_EXIT_CODE -eq 0 ]; then
   log_message "STEP 3/3: Submitting URLs to IndexNow..."
   log_message "=========================================="
   
-  INDEXNOW_LOG="${LOGS_DIR}/${EMPLOYER_SLUG}_indexnow_${DATE_STAMP}.log"
+  INDEXNOW_LOG="${LOG_DIR}/${EMPLOYER_SLUG}_indexnow_${TIMESTAMP}.log"
   log_message "   📂 IndexNow log: $INDEXNOW_LOG"
   log_message ""
   
