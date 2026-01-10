@@ -552,9 +552,11 @@ async function main() {
         });
 
         if (existing) {
+          // Preserve isActive state - don't reset classified jobs
+          const { isActive, ...updateData } = jobData;
           await prisma.nursingJob.update({
             where: { id: existing.id },
-            data: jobData
+            data: updateData
           });
           updatedCount++;
         } else {
