@@ -18,9 +18,12 @@ export default async function handler(req, res) {
     }
 
     // Check if the user is an admin based on their email
-    // This is a simple implementation - you may want to use a more robust approach
-    // such as storing admin status in the database
-    const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+    // Supports multiple admin emails separated by semicolon or comma
+    const adminEmails = (process.env.ADMIN_EMAIL || '')
+      .split(/[;,]/)
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin = adminEmails.includes(session.user.email.toLowerCase());
     
     return res.status(200).json({ 
       isAdmin,

@@ -176,7 +176,8 @@ export default function RNSalaryCalculator() {
           specialty,
           location: getLocationString(),
           state: selectedState,
-          city: selectedCity || null
+          city: selectedCity || null,
+          source: '/salary-calculator'
         })
       });
 

@@ -216,7 +216,8 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
           city: formData.city || null,
           employerId: formData.employer || null,
           recaptchaToken: freshToken, // Fresh token generated right before submission
-          website: formData.website // Honeypot field (should be empty)
+          website: formData.website, // Honeypot field (should be empty)
+          source: router.asPath || window.location.pathname // Track where signup came from
         })
       });
 
