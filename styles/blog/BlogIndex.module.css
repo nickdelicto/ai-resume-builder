@@ -3,7 +3,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0;
-  font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Compact Header - Mobile First */

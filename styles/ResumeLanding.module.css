@@ -36,7 +36,7 @@
 
 /* Landing page container */
 .landingPage {
-  font-family: 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   color: #4e5968;
   line-height: 1.6;
 }
@@ -93,7 +93,7 @@
 
 /* Typography styles with Figtree */
 .heroHeading {
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-weight: 800;
   font-size: 42px;
   background: linear-gradient(135deg, #1a73e8, #6c5ce7);
@@ -106,7 +106,7 @@
 }
 
 .sectionHeading {
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-weight: 700;
   font-size: 32px;
   color: #212529;
@@ -116,7 +116,7 @@
 }
 
 .cardHeading {
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-weight: 700;
   font-size: 22px;
   color: #212529;
@@ -125,14 +125,14 @@
 }
 
 .bodyText {
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-size: 16px;
   color: #4e5968;
   line-height: 1.6;
 }
 
 .buttonText {
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.01em;
@@ -159,7 +159,7 @@
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   width: 100%;
 }
 
@@ -178,7 +178,7 @@
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
 }
 
 .secondaryButton:hover {
@@ -196,7 +196,7 @@
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   width: 100%;
 }
 
@@ -231,7 +231,7 @@
   margin: 0 5px;
   background: transparent;
   border: none;
-  font-family: 'Figtree', ui-sans-serif, system-ui;
+  font-family: var(--font-figtree), ui-sans-serif, system-ui;
   font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
