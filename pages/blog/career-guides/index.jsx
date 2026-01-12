@@ -77,7 +77,7 @@ export default function CareerGuidesIndex({ guides }) {
             max-width: 1000px;
             margin: 0 auto;
             padding: 0 20px 80px;
-            font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+            font-family: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
           }
 
           .breadcrumb {

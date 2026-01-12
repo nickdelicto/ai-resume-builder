@@ -666,7 +666,7 @@ export default function CareerGuidePage({
             max-width: 800px;
             margin: 0 auto;
             padding: 24px 16px 80px;
-            font-family: 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 1.125rem;
             color: #1a202c;
             line-height: 1.8;
