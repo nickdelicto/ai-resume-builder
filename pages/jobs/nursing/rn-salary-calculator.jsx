@@ -305,7 +305,7 @@ export default function RNSalaryCalculator() {
         />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-purple-100" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-purple-100" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           
           {/* Breadcrumbs */}

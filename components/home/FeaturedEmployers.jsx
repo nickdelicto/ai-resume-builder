@@ -121,7 +121,7 @@ const FeaturedEmployers = () => {
               display: 'inline-block',
               background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: 'white',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '12px',
               fontWeight: '600',
               textTransform: 'uppercase',
@@ -136,7 +136,7 @@ const FeaturedEmployers = () => {
           <h2 
             className="section-title"
             style={{
-              fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
               fontSize: '2rem',
               fontWeight: '700',
               color: '#1e293b',
@@ -148,7 +148,7 @@ const FeaturedEmployers = () => {
           <p 
             className="section-subtitle"
             style={{
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '1rem',
               color: '#64748b',
               margin: '0 auto',
@@ -235,7 +235,7 @@ const FeaturedEmployers = () => {
                     <h3 
                       className="employer-name"
                       style={{
-                        fontFamily: "'Figtree', 'Inter', sans-serif",
+                        fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                         fontSize: '1.05rem',
                         fontWeight: '600',
                         color: '#1e293b',
@@ -250,7 +250,7 @@ const FeaturedEmployers = () => {
                       <span 
                         className="job-count-badge"
                         style={{
-                          fontFamily: "'Figtree', 'Inter', sans-serif",
+                          fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                           fontSize: '12px',
                           fontWeight: '600',
                           color: 'white',
@@ -270,7 +270,7 @@ const FeaturedEmployers = () => {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          fontFamily: "'Figtree', 'Inter', sans-serif",
+                          fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                           fontSize: '12px',
                           fontWeight: '600',
                           color: '#059669',
@@ -326,7 +326,7 @@ const FeaturedEmployers = () => {
               padding: '16px 32px',
               background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: 'white',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '16px',
               fontWeight: '600',
               borderRadius: '50px',
@@ -411,7 +411,7 @@ const styles = `
     display: inline-block;
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -422,7 +422,7 @@ const styles = `
   }
   
   .section-title {
-    font-family: 'Figtree', 'Inter', -apple-system, sans-serif;
+    font-family: var(--font-figtree), 'Inter', -apple-system, sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
     color: #1e293b;
@@ -430,7 +430,7 @@ const styles = `
   }
   
   .section-subtitle {
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 1rem;
     color: #64748b;
     margin: 0;
@@ -489,7 +489,7 @@ const styles = `
   }
   
   .employer-name {
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 1.05rem;
     font-weight: 600;
     color: #1e293b;
@@ -505,7 +505,7 @@ const styles = `
   }
   
   .job-count-badge {
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
     color: white;
@@ -517,7 +517,7 @@ const styles = `
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
     color: #059669;
@@ -554,7 +554,7 @@ const styles = `
     padding: 16px 32px;
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 16px;
     font-weight: 600;
     border-radius: 50px;

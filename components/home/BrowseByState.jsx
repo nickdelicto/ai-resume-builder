@@ -153,7 +153,7 @@ const BrowseByState = () => {
                   <span 
                     className="state-name"
                     style={{
-                      fontFamily: "'Figtree', 'Inter', sans-serif",
+                      fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                       fontSize: '15px',
                       fontWeight: '600',
                       color: '#1e293b'
@@ -164,7 +164,7 @@ const BrowseByState = () => {
                   <span 
                     className="state-count"
                     style={{
-                      fontFamily: "'Figtree', 'Inter', sans-serif",
+                      fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                       fontSize: '13px',
                       fontWeight: '700',
                       color: 'white',
@@ -200,7 +200,7 @@ const BrowseByState = () => {
                   color: '#64748b',
                   fontSize: '14px',
                   fontWeight: '600',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
@@ -242,7 +242,7 @@ const BrowseByState = () => {
               borderRadius: '50px',
               fontSize: '16px',
               fontWeight: '600',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               textDecoration: 'none',
               cursor: 'pointer',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -390,7 +390,7 @@ const styles = `
   }
   
   .section-title {
-    font-family: 'Figtree', 'Inter', -apple-system, sans-serif;
+    font-family: var(--font-figtree), 'Inter', -apple-system, sans-serif;
     font-size: 1.6rem;
     font-weight: 700;
     color: #134e4a;
@@ -408,7 +408,7 @@ const styles = `
   }
   
   .section-subtitle {
-    font-family: 'Figtree', 'Inter', sans-serif;
+    font-family: var(--font-figtree), 'Inter', sans-serif;
     font-size: 1rem;
     color: #475569;
     margin: 0;

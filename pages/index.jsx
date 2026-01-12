@@ -1,15 +1,14 @@
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Meta from '../components/common/Meta';
 import JobSearchHero from '../components/home/JobSearchHero';
 import BrowseByState from '../components/home/BrowseByState';
 import FeaturedEmployers from '../components/home/FeaturedEmployers';
-import WaveDivider from '../components/home/WaveDivider';
 import ResumeBuilderCTA from '../components/home/ResumeBuilderCTA';
 import SalaryCalculatorCTA from '../components/home/SalaryCalculatorCTA';
 import JobAlertsCTA from '../components/home/JobAlertsCTA';
+import { fetchBrowseStats } from '../lib/services/jobPageData';
 
 /**
  * Homepage - Jobs-First Design
@@ -21,8 +20,7 @@ import JobAlertsCTA from '../components/home/JobAlertsCTA';
  * - Sections now transition smoothly with curved separators
  * - Creates professional, fluid landing page feel
  */
-const HomePage = () => {
-  const router = useRouter();
+const HomePage = ({ initialStats }) => {
   const { data: _session, status } = useSession();
   
   // Handle localStorage cleanup for resume flow
@@ -101,7 +99,7 @@ const HomePage = () => {
       <main className="homepage">
         {/* Section 1: Hero with Job Search */}
         {/* Hero has built-in wave that transitions directly to mint (#f0fdfa) */}
-        <JobSearchHero />
+        <JobSearchHero initialStats={initialStats} />
         
         {/* Section 2: Browse by State */}
         <BrowseByState />
@@ -135,7 +133,7 @@ const HomePage = () => {
           border-radius: 20px;
           font-size: 14px;
           z-index: 1000;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
         }
       `}</style>
     </>
@@ -143,3 +141,26 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+/**
+ * Server-side data fetching for homepage
+ * Pre-fetches browse stats to eliminate CLS from loading state
+ */
+export async function getServerSideProps() {
+  try {
+    const stats = await fetchBrowseStats();
+    return {
+      props: {
+        initialStats: stats
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching browse stats:', error);
+    // Return null stats on error - component will fall back to client-side fetch
+    return {
+      props: {
+        initialStats: null
+      }
+    };
+  }
+}

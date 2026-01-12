@@ -103,7 +103,7 @@ const JobAlertsCTA = () => {
               right: '20px',
               background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: 'white',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '11px',
               fontWeight: '700',
               textTransform: 'uppercase',
@@ -159,7 +159,7 @@ const JobAlertsCTA = () => {
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h2 
               style={{
-                fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                 fontSize: '2rem',
                 fontWeight: '700',
                 color: '#1e293b',
@@ -171,7 +171,7 @@ const JobAlertsCTA = () => {
             </h2>
             <p 
               style={{
-                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                 fontSize: '1.05rem',
                 color: '#64748b',
                 margin: '0',
@@ -223,7 +223,7 @@ const JobAlertsCTA = () => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div 
                 style={{
-                  fontFamily: "'Figtree', sans-serif",
+                  fontFamily: "var(--font-figtree), sans-serif",
                   fontSize: '12px',
                   color: '#0f766e',
                   fontWeight: '600',
@@ -234,7 +234,7 @@ const JobAlertsCTA = () => {
               </div>
               <div 
                 style={{
-                  fontFamily: "'Figtree', sans-serif",
+                  fontFamily: "var(--font-figtree), sans-serif",
                   fontSize: '14px',
                   color: '#1e293b',
                   fontWeight: '600'
@@ -244,7 +244,7 @@ const JobAlertsCTA = () => {
               </div>
               <div 
                 style={{
-                  fontFamily: "'Figtree', sans-serif",
+                  fontFamily: "var(--font-figtree), sans-serif",
                   fontSize: '12px',
                   color: '#64748b'
                 }}
@@ -256,7 +256,7 @@ const JobAlertsCTA = () => {
               style={{
                 background: '#f59e0b',
                 color: 'white',
-                fontFamily: "'Figtree', sans-serif",
+                fontFamily: "var(--font-figtree), sans-serif",
                 fontSize: '10px',
                 fontWeight: '700',
                 padding: '4px 8px',
@@ -316,7 +316,7 @@ const JobAlertsCTA = () => {
                     width: '100%',
                     padding: '18px 18px 18px 52px',
                     fontSize: '16px',
-                    fontFamily: "'Figtree', 'Inter', sans-serif",
+                    fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                     border: '2px solid #e2e8f0',
                     borderRadius: '14px',
                     background: 'white',
@@ -341,7 +341,7 @@ const JobAlertsCTA = () => {
                   borderRadius: '14px',
                   fontSize: '16px',
                   fontWeight: '600',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   cursor: 'pointer',
                   boxShadow: '0 6px 20px rgba(245, 158, 11, 0.4)',
                   transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -377,7 +377,7 @@ const JobAlertsCTA = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   fontSize: '13px',
                   color: '#64748b',
                   background: '#f8fafc',
@@ -573,7 +573,7 @@ const JobAlertsCTA = () => {
           align-items: center;
           justify-content: center;
           color: white;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-size: 12px;
           font-weight: 700;
           box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);

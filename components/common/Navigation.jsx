@@ -115,7 +115,7 @@ const Navigation = () => {
     textDecoration: "none",
     border: "none",
     transition: "all 0.2s ease",
-    fontFamily: "'Figtree', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily: "var(--font-figtree), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     boxShadow: isSignInHovered ? "0 2px 8px rgba(13, 148, 136, 0.4)" : "0 1px 3px rgba(13, 148, 136, 0.2)",
     whiteSpace: "nowrap",
     letterSpacing: "-0.01em",
@@ -123,7 +123,7 @@ const Navigation = () => {
   
   // Style for new resume button - Stripe-inspired clean look
   const newResumeButtonStyle = {
-    fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+    fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
     display: "flex",
     alignItems: "center",
     gap: "6px",
@@ -157,7 +157,7 @@ const Navigation = () => {
       width: "100%",
       textAlign: "left",
       cursor: "pointer",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
       borderRadius: "8px",
       letterSpacing: "-0.01em",
     }),
@@ -176,7 +176,7 @@ const Navigation = () => {
       width: "100%",
       textAlign: "left",
       cursor: "pointer",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
       borderRadius: "8px",
       letterSpacing: "-0.01em",
     }),
@@ -188,7 +188,7 @@ const Navigation = () => {
       letterSpacing: "0.05em",
       padding: "8px 14px 4px",
       margin: "0",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
     },
     icon: (id) => ({
       color: hoveredDesktopItem === id ? "#1a73e8" : "#6b7280",
@@ -224,7 +224,7 @@ const Navigation = () => {
       border: "none",
       width: "100%",
       textAlign: "left",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
       letterSpacing: "-0.01em",
     }),
     sectionContent: {
@@ -245,7 +245,7 @@ const Navigation = () => {
       background: hoveredMenuItem === id ? "#f0f7ff" : "none",
       fontSize: "14px",
       transition: "all 0.2s ease",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
       letterSpacing: "-0.01em",
     }),
     menuItem: (id) => ({
@@ -265,7 +265,7 @@ const Navigation = () => {
       border: "none",
       fontSize: "14px",
       letterSpacing: "-0.01em",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
     }),
     highlightItem: (id) => ({
       display: "flex",
@@ -285,7 +285,7 @@ const Navigation = () => {
       fontSize: "14px",
       letterSpacing: "-0.01em",
       marginBottom: "6px",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
     }),
     signOutItem: (id) => ({
       display: "flex",
@@ -305,7 +305,7 @@ const Navigation = () => {
       fontSize: "14px",
       letterSpacing: "-0.01em",
       marginTop: "4px",
-      fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
     }),
     icon: (highlight) => ({
       color: highlight ? "#1a73e8" : "#718096",
@@ -332,7 +332,7 @@ const Navigation = () => {
       padding: "16px",
       marginBottom: "16px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-      fontFamily: "'Figtree', 'Inter', sans-serif",
+      fontFamily: "var(--font-figtree), 'Inter', sans-serif",
     },
     userInfo: {
       display: "flex",
@@ -359,7 +359,7 @@ const Navigation = () => {
 
   // Desktop nav dropdown button style - matching Sign In button font
   const navDropdownStyle = (isActive) => ({
-    fontFamily: "'Figtree', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily: "var(--font-figtree), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
@@ -426,7 +426,7 @@ const Navigation = () => {
               borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                   transition: 'all 0.15s ease',
                 }}
                 className="nav-dropdown-item"
@@ -449,7 +449,7 @@ const Navigation = () => {
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                   transition: 'all 0.15s ease',
                 }}
                 className="nav-dropdown-item"
@@ -471,7 +471,7 @@ const Navigation = () => {
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                   transition: 'all 0.15s ease',
                 }}
                 className="nav-dropdown-item"
@@ -494,7 +494,7 @@ const Navigation = () => {
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                   transition: 'all 0.15s ease',
                 }}
                 className="nav-dropdown-item"
@@ -551,7 +551,7 @@ const Navigation = () => {
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                    fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                     transition: 'all 0.15s ease',
                   }}
                   className="nav-dropdown-item"
@@ -574,7 +574,7 @@ const Navigation = () => {
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                    fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                     transition: 'all 0.15s ease',
                   }}
                   className="nav-dropdown-item"
@@ -598,7 +598,7 @@ const Navigation = () => {
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                    fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                     transition: 'all 0.15s ease',
                   }}
                   className="nav-dropdown-item"
@@ -1141,7 +1141,7 @@ const Navigation = () => {
       <style jsx>{`
         /* Logo styling */
         .nav-logo {
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-weight: 800;
           font-size: 3.2rem;
           text-decoration: none;
@@ -1307,7 +1307,7 @@ const Navigation = () => {
         .user-dropdown {
           position: relative;
           margin-left: 0.5rem;
-          font-family: 'Figtree', 'Inter', -apple-system, sans-serif;
+          font-family: var(--font-figtree), 'Inter', -apple-system, sans-serif;
         }
         
         .user-profile {
@@ -1456,7 +1456,7 @@ const Navigation = () => {
           }
           
           .mobile-menu-content {
-            font-family: 'Figtree', 'Inter', sans-serif;
+            font-family: var(--font-figtree), 'Inter', sans-serif;
             max-height: 100%;
           }
                 

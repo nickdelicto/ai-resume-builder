@@ -12,20 +12,78 @@ import Image from 'next/image';
  * - Floating specialty badges with job counts
  * - Smooth wave transition to next section
  */
-const JobSearchHero = () => {
+const JobSearchHero = ({ initialStats = null }) => {
   const router = useRouter();
-  
-  // State for browse stats data
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
+
+  // State for browse stats data - use SSR data if available
+  const [stats, setStats] = useState(initialStats);
+  const [loading, setLoading] = useState(!initialStats);
+
   // State for search filters
   const [selectedState, setSelectedState] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [selectedJobType, setSelectedJobType] = useState('');
 
-  // Fetch browse stats on mount
+  // State for typewriter animation
+  const [animatedWord, setAnimatedWord] = useState('Starts');
+  const [showCursor, setShowCursor] = useState(false);
+
+  // Typewriter animation effect: "Starts" → delete → "Thrives"
   useEffect(() => {
+    const startWord = 'Starts';
+    const endWord = 'Thrives';
+    const deleteSpeed = 150;  // ms per character delete
+    const typeSpeed = 150;   // ms per character type
+    const initialDelay = 2500; // wait before starting animation
+    const finalCursorDelay = 1500; // how long cursor stays after typing
+
+    let timeoutId;
+
+    // Start animation after initial delay
+    timeoutId = setTimeout(() => {
+      setShowCursor(true);
+      let currentWord = startWord;
+      let charIndex = startWord.length;
+
+      // Delete phase
+      const deleteChar = () => {
+        if (charIndex > 0) {
+          charIndex--;
+          currentWord = startWord.slice(0, charIndex);
+          setAnimatedWord(currentWord || '\u200B'); // zero-width space to maintain height
+          timeoutId = setTimeout(deleteChar, deleteSpeed);
+        } else {
+          // Start typing phase
+          charIndex = 0;
+          timeoutId = setTimeout(typeChar, 150); // brief pause before typing
+        }
+      };
+
+      // Type phase
+      const typeChar = () => {
+        if (charIndex < endWord.length) {
+          charIndex++;
+          currentWord = endWord.slice(0, charIndex);
+          setAnimatedWord(currentWord);
+          timeoutId = setTimeout(typeChar, typeSpeed);
+        } else {
+          // Animation complete - hide cursor after a moment
+          timeoutId = setTimeout(() => {
+            setShowCursor(false);
+          }, finalCursorDelay);
+        }
+      };
+
+      deleteChar();
+    }, initialDelay);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Only fetch client-side if SSR stats not provided (fallback)
+  useEffect(() => {
+    if (initialStats) return; // Skip fetch if we have SSR data
+
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/jobs/browse-stats');
@@ -40,7 +98,7 @@ const JobSearchHero = () => {
       }
     };
     fetchStats();
-  }, []);
+  }, [initialStats]);
 
   // Calculate total jobs from states
   const totalJobs = stats?.states?.reduce((sum, s) => sum + s.count, 0) || 0;
@@ -88,7 +146,7 @@ const JobSearchHero = () => {
           <div className="headline-area">
             {/* Main Headline */}
             <h1 className="hero-headline">
-              Your RN Career <span className="highlight">Starts Here!</span>
+              Your RN Career <span className="highlight">{animatedWord}<span className={`typing-cursor ${showCursor ? 'visible' : ''}`}>|</span> Here!</span>
             </h1>
             
             {/* Subheadline with job count */}
@@ -197,7 +255,7 @@ const JobSearchHero = () => {
                     borderRadius: '12px',
                     fontSize: '15px',
                     fontWeight: '700',
-                    fontFamily: "'Figtree', 'Inter', sans-serif",
+                    fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                     cursor: 'pointer',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
@@ -242,7 +300,7 @@ const JobSearchHero = () => {
                   borderRadius: '50px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   whiteSpace: 'nowrap',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
                 }}
@@ -268,7 +326,7 @@ const JobSearchHero = () => {
                   borderRadius: '50px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   whiteSpace: 'nowrap',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
                 }}
@@ -295,7 +353,7 @@ const JobSearchHero = () => {
                   borderRadius: '50px',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   whiteSpace: 'nowrap',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
                 }}
@@ -319,7 +377,7 @@ const JobSearchHero = () => {
               {/* Main circular image */}
               <div className="nurse-image-container">
                 <Image
-                  src="/images/nurse-hero-transparent.png"
+                  src="/images/nurse-hero-transparent.webp"
                   alt="Registered nurse professional"
                   fill
                   style={{ objectFit: 'cover', objectPosition: 'top' }}
@@ -557,7 +615,7 @@ const JobSearchHero = () => {
         
         .badge-title {
           display: block;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-size: 14px;
           font-weight: 700;
           color: #1e293b;
@@ -565,7 +623,7 @@ const JobSearchHero = () => {
         
         .badge-count {
           display: block;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-size: 12px;
           font-weight: 600;
           color: #059669;
@@ -630,7 +688,7 @@ const JobSearchHero = () => {
            HEADLINE
            ============================================ */
         .hero-headline {
-          font-family: 'Figtree', 'Inter', -apple-system, sans-serif;
+          font-family: var(--font-figtree), 'Inter', -apple-system, sans-serif;
           font-size: 2.5rem;
           font-weight: 800;
           color: white;
@@ -646,12 +704,31 @@ const JobSearchHero = () => {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-        
+
+        /* Typing cursor animation */
+        .typing-cursor {
+          opacity: 0;
+          -webkit-text-fill-color: #fcd34d;
+          font-weight: 400;
+          margin-left: -2px;
+          transition: opacity 0.1s ease;
+        }
+
+        .typing-cursor.visible {
+          opacity: 1;
+          animation: blink 0.7s step-end infinite;
+        }
+
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+
         /* ============================================
            SUBHEADLINE
            ============================================ */
         .hero-subheadline {
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-size: 1.2rem;
           color: rgba(255, 255, 255, 0.9);
           margin: 0 0 24px 0;
@@ -708,7 +785,7 @@ const JobSearchHero = () => {
           padding-left: 12px;
           text-transform: uppercase;
           letter-spacing: 0.7px;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
         }
         
         .filter-select {
@@ -717,7 +794,7 @@ const JobSearchHero = () => {
           border: 2px solid #e2e8f0;
           border-radius: 10px;
           font-size: 14px;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           color: #1e293b;
           background: #f8fafc;
           cursor: pointer;
@@ -760,7 +837,7 @@ const JobSearchHero = () => {
           border-radius: 12px !important;
           font-size: 15px !important;
           font-weight: 700 !important;
-          font-family: 'Figtree', 'Inter', sans-serif !important;
+          font-family: var(--font-figtree), 'Inter', sans-serif !important;
           cursor: pointer !important;
           transition: all 0.3s ease !important;
           text-transform: uppercase !important;
@@ -801,7 +878,7 @@ const JobSearchHero = () => {
           border-radius: 50px;
           font-size: 13px;
           font-weight: 500;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           white-space: nowrap;
         }
         

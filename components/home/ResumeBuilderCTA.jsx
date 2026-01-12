@@ -125,7 +125,7 @@ const ResumeBuilderCTA = () => {
               fontSize: '13px',
               fontWeight: '600',
               marginBottom: '20px',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               boxShadow: '0 4px 12px rgba(251, 191, 36, 0.25)'
             }}
           >
@@ -134,7 +134,7 @@ const ResumeBuilderCTA = () => {
           <h2 
             className="section-title"
             style={{
-              fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
               fontSize: '2.2rem',
               fontWeight: '700',
               color: '#1e293b',
@@ -146,7 +146,7 @@ const ResumeBuilderCTA = () => {
           <p 
             className="section-subtitle"
             style={{
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '1.1rem',
               color: '#64748b',
               margin: '0 auto',
@@ -216,7 +216,7 @@ const ResumeBuilderCTA = () => {
               <h3 
                 className="card-title"
                 style={{
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   fontSize: '1.25rem',
                   fontWeight: '700',
                   color: '#1e293b',
@@ -228,7 +228,7 @@ const ResumeBuilderCTA = () => {
               <p 
                 className="card-description"
                 style={{
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   fontSize: '14px',
                   color: '#64748b',
                   margin: '0 0 20px 0',
@@ -244,7 +244,7 @@ const ResumeBuilderCTA = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  fontFamily: "'Figtree', 'Inter', sans-serif",
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                   fontSize: '14px',
                   fontWeight: '600',
                   color: card.color,
@@ -272,7 +272,7 @@ const ResumeBuilderCTA = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '12px',
-            fontFamily: "'Figtree', 'Inter', sans-serif",
+            fontFamily: "var(--font-figtree), 'Inter', sans-serif",
             fontSize: '15px',
             color: '#475569',
             textAlign: 'center',

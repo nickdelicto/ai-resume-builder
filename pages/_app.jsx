@@ -9,6 +9,16 @@ import React from 'react';
 import ResumeSelectionProvider from '../components/common/ResumeSelectionProvider';
 import StructuredData from '../components/common/StructuredData';
 import Head from 'next/head';
+import Script from 'next/script';
+import { Figtree } from 'next/font/google';
+
+// Self-hosted Figtree font (downloaded at build time, no render-blocking)
+const figtree = Figtree({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-figtree',
+});
 
 // Simple error boundary component to handle context errors gracefully
 class ErrorBoundary extends React.Component {
@@ -81,7 +91,7 @@ export default function MyApp({ Component, pageProps }) {
               {/* Structured Data for SEO */}
               <StructuredData />
             </Head>
-          <div className="app-wrapper">
+          <div className={`app-wrapper ${figtree.variable} ${figtree.className}`}>
           {!isPdfCapturePage && <Navigation />}
           <div className={`app-container ${isBuilderPage ? 'pt-14' : isPdfCapturePage ? 'pt-0' : 'pt-20'}`}>
             <Component {...pageProps} />
@@ -114,6 +124,29 @@ export default function MyApp({ Component, pageProps }) {
           `}</style>
           
           <Toaster position="bottom-center" />
+
+          {/* Deferred Analytics - loads after page is interactive */}
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');
+            `}
+          </Script>
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`
+              (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "u9wvv8gym2");
+            `}
+          </Script>
           </ResumeSelectionProvider>
         </ResumeServiceProvider>
       </ErrorBoundary>

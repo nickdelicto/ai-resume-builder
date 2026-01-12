@@ -90,7 +90,7 @@ const SalaryCalculatorCTA = () => {
               right: '20px',
               background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: 'white',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '11px',
               fontWeight: '700',
               textTransform: 'uppercase',
@@ -146,7 +146,7 @@ const SalaryCalculatorCTA = () => {
             <h2 
               className="section-title"
               style={{
-                fontFamily: "'Figtree', 'Inter', -apple-system, sans-serif",
+                fontFamily: "var(--font-figtree), 'Inter', -apple-system, sans-serif",
                 fontSize: '2rem',
                 fontWeight: '700',
                 color: '#1e293b',
@@ -159,7 +159,7 @@ const SalaryCalculatorCTA = () => {
             <p 
               className="section-description"
               style={{
-                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                 fontSize: '1.05rem',
                 color: '#64748b',
                 margin: '0 0 32px 0',
@@ -224,7 +224,7 @@ const SalaryCalculatorCTA = () => {
                   }}
                 >
                   <div style={{ 
-                    fontFamily: "'Figtree', sans-serif",
+                    fontFamily: "var(--font-figtree), sans-serif",
                     fontSize: '11px', 
                     color: scheme.label, 
                     fontWeight: '600',
@@ -235,7 +235,7 @@ const SalaryCalculatorCTA = () => {
                     {item.specialty}
                   </div>
                   <div style={{ 
-                    fontFamily: "'Figtree', sans-serif",
+                    fontFamily: "var(--font-figtree), sans-serif",
                     fontSize: '1.25rem', 
                     fontWeight: '700', 
                     color: scheme.value 
@@ -262,7 +262,7 @@ const SalaryCalculatorCTA = () => {
               borderRadius: '50px',
               fontSize: '1rem',
               fontWeight: '600',
-              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               textDecoration: 'none',
               cursor: 'pointer',
               boxShadow: '0 8px 24px rgba(245, 158, 11, 0.4)',
@@ -287,7 +287,7 @@ const SalaryCalculatorCTA = () => {
           <p 
             className="trust-text"
             style={{
-              fontFamily: "'Figtree', sans-serif",
+              fontFamily: "var(--font-figtree), sans-serif",
               fontSize: '13px',
               color: '#94a3b8',
               marginTop: '16px',
@@ -323,7 +323,7 @@ const SalaryCalculatorCTA = () => {
         /* Floating salary numbers - ALWAYS VISIBLE NOW */
         .floating-salary {
           position: absolute;
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           font-weight: 800;
           color: rgba(217, 119, 6, 0.18);
           animation: floatSalary 8s ease-in-out infinite;

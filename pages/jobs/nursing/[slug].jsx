@@ -280,7 +280,7 @@ export default function JobDetailPage({
           <title>Job No Longer Available | IntelliResume Health</title>
           <meta name="robots" content="noindex, follow" />
         </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
           <div className="max-w-2xl mx-auto px-6 py-12 text-center">
             <div className="mb-8">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-100 rounded-full mb-6">
@@ -327,7 +327,7 @@ export default function JobDetailPage({
         <Head>
           <title>Error | IntelliResume Health</title>
         </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Page</h1>
             <p className="text-gray-600 mb-6">{error}</p>
@@ -452,7 +452,7 @@ export default function JobDetailPage({
           />
         </Head>
 
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
               <Link href="/jobs/nursing" className="hover:text-blue-600 transition-colors">All Jobs</Link>
@@ -770,7 +770,7 @@ export default function JobDetailPage({
         <Head>
           <title>Job Not Found | IntelliResume Health</title>
         </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h1>
             <p className="text-gray-600 mb-6">{error || 'The job you are looking for does not exist.'}</p>
@@ -839,7 +839,7 @@ export default function JobDetailPage({
         )}
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "'Figtree', 'Inter', sans-serif" }}>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link

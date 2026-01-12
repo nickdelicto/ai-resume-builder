@@ -2615,7 +2615,7 @@ export default function ProfilePage() {
                 alignItems: 'center',
                 gap: '8px',
                 transition: 'all 0.2s ease',
-                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontFamily: "var(--font-figtree), 'Inter', sans-serif",
                 fontSize: '14px'
               }}
               onMouseOver={(e) => {

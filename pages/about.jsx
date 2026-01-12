@@ -314,7 +314,7 @@ export default function AboutPage() {
 
       <style jsx>{`
         .about-page {
-          font-family: 'Figtree', 'Inter', sans-serif;
+          font-family: var(--font-figtree), 'Inter', sans-serif;
           max-width: 1200px;
           margin: 0 auto;
           padding: 40px 20px;
