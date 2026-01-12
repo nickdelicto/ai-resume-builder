@@ -14,6 +14,7 @@
 #   ./scrape-and-classify.sh uhs
 #   ./scrape-and-classify.sh adventist-healthcare
 #   ./scrape-and-classify.sh hartford-healthcare
+#   ./scrape-and-classify.sh yale-new-haven-health
 #
 # Features:
 # - Runs scraper first, then classifier (only if scraper succeeds)
@@ -96,6 +97,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - strong-memorial-hospital"
   echo "  - mass-general-brigham"
   echo "  - guthrie"
+  echo "  - yale-new-haven-health"
   exit 1
 fi
 
@@ -208,6 +210,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  yale-new-haven-health)
+    # Yale New Haven Health System uses Jibe API scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/yale-new-haven-health-rn-scraper.js" --max-jobs="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/yale-new-haven-health-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -221,12 +233,13 @@ case $EMPLOYER_SLUG in
     log_message "  - strong-memorial-hospital"
     log_message "  - mass-general-brigham"
     log_message "  - guthrie"
+    log_message "  - yale-new-haven-health"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"
