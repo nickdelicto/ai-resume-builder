@@ -27,6 +27,7 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const OpenAI = require('openai');
 const { normalizeExperienceLevel } = require('../lib/utils/experienceLevelUtils');
+const googleIndexingService = require('../lib/services/googleIndexingService');
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({
@@ -795,6 +796,11 @@ async function main() {
           });
           console.log(`   💾 Updated in database with location: ${c.city}, ${c.state}`);
           console.log(`   ✅ Job activated and live on site`);
+
+          // Notify Google Indexing API about the new job (for Google for Jobs widget)
+          googleIndexingService.notifyJobCreatedOrUpdated({ slug: job.slug }).catch(err => {
+            console.error(`   ⚠️ Google Indexing notification failed:`, err.message);
+          });
         } else if (!isTestMode && c.isStaffRN && (!c.city || !c.state)) {
           // Staff RN but no valid location → Keep inactive but mark as classified
           const updateData = {
