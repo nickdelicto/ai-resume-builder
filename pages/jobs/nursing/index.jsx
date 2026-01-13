@@ -8,6 +8,7 @@ import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
 
 // Import SEO utilities (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
+const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
 export default function NursingJobsPage() {
   const router = useRouter();
@@ -607,60 +608,57 @@ export default function NursingJobsPage() {
                       href={`/jobs/nursing/${job.slug}`}
                       className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
                     >
-                    <div className="p-6">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="flex-1">
-                              <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                                {job.title}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                                <span className="flex items-center gap-1.5">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="font-medium">{job.city}, {job.state}</span>
-                                </span>
-                                {job.employer && (
-                                  <span className="flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 11.09a8.97 8.97 0 00.7 2.515 8.97 8.97 0 002.5-.7l-1.005-1.005a1 1 0 00-1.414-1.414l-1.005-1.005zM3.04 12.5a11.053 11.053 0 011.05.174 1 1 0 01.89.89c.03.343.07.683.116 1.02L3.04 12.5zM15.34 13.828l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a8.97 8.97 0 002.5-.7zM16.69 9.397l-2.25.961a11.115 11.115 0 01.25 3.762 1 1 0 01-.89.89c-.342.03-.683.07-1.02.116l2.25-.96a1 1 0 000-1.838l-7-3z" />
-                                    </svg>
-                                    <span>{job.employer.name}</span>
-                                  </span>
-                                )}
-                                {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType) && (
-                                  <span className="text-green-700 font-medium flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                                    </svg>
-                                    {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex-shrink-0">
-                              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                </svg>
-                                {formatDate(job.scrapedAt)}
-                              </div>
+                    <div className="p-4 sm:p-6">
+                      <div className="flex gap-4">
+                        {/* Employer logo on left */}
+                        {job.employer && getEmployerLogoPath(job.employer.slug) && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                            <img
+                              src={getEmployerLogoPath(job.employer.slug)}
+                              alt={`${job.employer.name} logo`}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* Job content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 mb-1.5">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                              {job.title}
+                            </h3>
+                            <div className="flex-shrink-0 hidden sm:flex items-center gap-2 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium whitespace-nowrap">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              </svg>
+                              {formatDate(job.scrapedAt)}
                             </div>
                           </div>
-                          
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-2">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                              </svg>
+                              {job.city}, {job.state}
+                            </span>
+                            {job.employer && (
+                              <span className="text-gray-500">• {job.employer.name}</span>
+                            )}
+                            {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType) && (
+                              <span className="text-green-700 font-medium">
+                                • {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType)}
+                              </span>
+                            )}
+                          </div>
+
                           {/* Tags */}
-                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             {job.specialty && (
-                              <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                                 {(() => {
-                                  // Map legacy "All Specialties" to "General Nursing"
                                   if (job.specialty.toLowerCase() === 'all specialties') {
                                     return 'General Nursing';
                                   }
-                                  // Keep nursing acronyms in ALL CAPS
                                   const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
                                   return job.specialty.split(' ').map(word => {
                                     const upperWord = word.toUpperCase();
@@ -670,32 +668,25 @@ export default function NursingJobsPage() {
                               </span>
                             )}
                             {job.jobType && (
-                              <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
                                 {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
                               </span>
                             )}
                             {job.shiftType && (
-                              <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
                                 {job.shiftType}
                               </span>
                             )}
                             {job.experienceLevel && (
-                              <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
                                 {job.experienceLevel.replace('-', ' ')}
                               </span>
                             )}
                           </div>
-                          
-                          {/* Description Preview */}
-                          {job.metaDescription && (
-                            <p className="text-gray-600 line-clamp-2 text-sm leading-relaxed">
-                              {job.metaDescription.replace(/Find RN nursing jobs at Cleveland Clinic\./g, '')}
-                            </p>
-                          )}
                         </div>
-                        
+
                         {/* Arrow Indicator */}
-                        <div className="flex-shrink-0 self-center">
+                        <div className="flex-shrink-0 self-center hidden sm:block">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>

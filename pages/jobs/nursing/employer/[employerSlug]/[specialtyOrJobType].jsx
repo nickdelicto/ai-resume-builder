@@ -9,6 +9,7 @@ import { generateEmployerSpecialtyPageMetaTags, generateEmployerJobTypePageMetaT
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { isJobType } from '../../../../../lib/constants/jobTypes';
 import { specialtyToSlug } from '../../../../../lib/constants/specialties';
+const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
   const { employerSlug, specialtyOrJobType: slug } = params;
@@ -160,60 +161,59 @@ export default function EmployerSpecialtyOrJobTypePage({
                   <React.Fragment key={job.id}>
                     <Link
                       href={`/jobs/nursing/${job.slug}`}
-                      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200"
+                      className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
                     >
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                      <div className="flex-1">
-                        <h2 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600">
-                          {job.title}
-                        </h2>
-                        
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                          <span className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                            </svg>
-                            {job.city}, {job.state}
-                          </span>
-                          
-                          {salary && (
-                            <span className="flex items-center gap-1 text-green-600 font-semibold">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                      <div className="p-4 sm:p-6 flex gap-4">
+                        {/* Employer logo on left */}
+                        {employer && getEmployerLogoPath(employer.slug) && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                            <img
+                              src={getEmployerLogoPath(employer.slug)}
+                              alt={`${employer.name} logo`}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* Job content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1.5 line-clamp-2">
+                            {job.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600 text-sm mb-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                               </svg>
-                              {salary}
+                              {job.city}, {job.state}
                             </span>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {job.jobType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                              {job.jobType}
-                            </span>
-                          )}
-                          {job.shiftType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
-                              {job.shiftType}
-                            </span>
-                          )}
-                          {job.experienceLevel && (
-                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                              {normalizeExperienceLevel(job.experienceLevel)}
-                            </span>
-                          )}
+                            {salary && (
+                              <span className="text-green-700 font-medium">
+                                • {salary}
+                              </span>
+                            )}
+                          </div>
+                          {/* Tags: Job Type, Shift, Experience Level */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {job.jobType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                {job.jobType === 'prn' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                              </span>
+                            )}
+                            {job.shiftType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                                {job.shiftType}
+                              </span>
+                            )}
+                            {job.experienceLevel && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                                {normalizeExperienceLevel(job.experienceLevel)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 text-blue-600 font-semibold">
-                        View Details
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                  </Link>
+                    </Link>
                   
                     {/* Job Alert Signup after every 5 listings */}
                     {(index + 1) % 5 === 0 && index < jobs.length - 1 && (

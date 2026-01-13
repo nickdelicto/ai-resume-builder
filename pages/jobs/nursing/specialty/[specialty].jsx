@@ -11,6 +11,7 @@ const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
 const { fetchSpecialtyJobs } = require('../../../../lib/services/jobPageData');
 const { specialtyToSlug } = require('../../../../lib/constants/specialties');
+const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
 
 // Redirect map for old specialty slugs → new canonical slugs
 const SPECIALTY_REDIRECTS = {
@@ -378,36 +379,57 @@ export default function SpecialtyJobPage({
                       href={`/jobs/nursing/${jobItem.slug}`}
                       className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
                     >
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                          {jobItem.title}
-                        </h3>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
-                          <span>{jobItem.city}, {jobItem.state}</span>
-                          {jobItem.employer && <span>• {jobItem.employer.name}</span>}
-                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
-                            <span className="text-green-700 font-medium">
-                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
+                      <div className="p-4 sm:p-6 flex gap-4">
+                        {/* Employer logo on left */}
+                        {jobItem.employer && getEmployerLogoPath(jobItem.employer.slug) && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                            <img
+                              src={getEmployerLogoPath(jobItem.employer.slug)}
+                              alt={`${jobItem.employer.name} logo`}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* Job content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1.5 line-clamp-2">
+                            {jobItem.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600 text-sm mb-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                              </svg>
+                              {jobItem.city}, {jobItem.state}
                             </span>
-                          )}
-                        </div>
-                        {/* Tags: Job Type, Experience Level */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          {jobItem.jobType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                              {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                            </span>
-                          )}
-                          {jobItem.shiftType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
-                              {jobItem.shiftType}
-                            </span>
-                          )}
-                          {jobItem.experienceLevel && (
-                            <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
-                              {jobItem.experienceLevel.replace('-', ' ')}
-                            </span>
-                          )}
+                            {jobItem.employer && (
+                              <span className="text-gray-500">• {jobItem.employer.name}</span>
+                            )}
+                            {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
+                              <span className="text-green-700 font-medium">
+                                • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
+                              </span>
+                            )}
+                          </div>
+                          {/* Tags: Job Type, Experience Level */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {jobItem.jobType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                {jobItem.jobType === 'prn' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                              </span>
+                            )}
+                            {jobItem.shiftType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                                {jobItem.shiftType}
+                              </span>
+                            )}
+                            {jobItem.experienceLevel && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium capitalize">
+                                {jobItem.experienceLevel.replace('-', ' ')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Link>

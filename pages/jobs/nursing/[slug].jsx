@@ -12,6 +12,7 @@ const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
 const { specialtyToSlug } = require('../../../lib/constants/specialties');
 const { PrismaClient } = require('@prisma/client');
+const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
 /**
  * Server-Side Rendering: Fetch data before rendering
@@ -605,52 +606,71 @@ export default function JobDetailPage({
                       href={`/jobs/nursing/${jobItem.slug}`}
                       className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
                     >
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                          {jobItem.title}
-                        </h3>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm mb-3 flex-wrap">
-                          <span>{jobItem.city}, {jobItem.state}</span>
-                          {jobItem.employer && <span>• {jobItem.employer.name}</span>}
-                          {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
-                            <span className="text-green-700 font-medium">
-                              • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
+                      <div className="p-4 sm:p-6 flex gap-4">
+                        {/* Employer logo on left */}
+                        {jobItem.employer && getEmployerLogoPath(jobItem.employer.slug) && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                            <img
+                              src={getEmployerLogoPath(jobItem.employer.slug)}
+                              alt={`${jobItem.employer.name} logo`}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* Job content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1.5 line-clamp-2">
+                            {jobItem.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600 text-sm mb-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                              </svg>
+                              {jobItem.city}, {jobItem.state}
                             </span>
-                          )}
-                        </div>
-                        {/* Tags: Specialty, Job Type, Experience Level */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          {jobItem.specialty && (
-                            <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                              {(() => {
-                                // Map legacy "All Specialties" to "General Nursing"
-                                if (jobItem.specialty.toLowerCase() === 'all specialties') {
-                                  return 'General Nursing';
-                                }
-                                // Keep nursing acronyms in ALL CAPS
-                                const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
-                                return jobItem.specialty.split(' ').map(word => {
-                                  const upperWord = word.toUpperCase();
-                                  return nursingAcronyms.includes(upperWord) ? upperWord : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-                                }).join(' ');
-                              })()}
-                            </span>
-                          )}
-                          {jobItem.jobType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                              {jobItem.jobType.toLowerCase() === 'prn' || jobItem.jobType.toLowerCase() === 'per diem' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                            </span>
-                          )}
-                          {jobItem.shiftType && (
-                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
-                              {jobItem.shiftType}
-                            </span>
-                          )}
-                          {jobItem.experienceLevel && (
-                              <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                            {jobItem.employer && (
+                              <span className="text-gray-500">• {jobItem.employer.name}</span>
+                            )}
+                            {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
+                              <span className="text-green-700 font-medium">
+                                • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
+                              </span>
+                            )}
+                          </div>
+                          {/* Tags: Specialty, Job Type, Experience Level */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {jobItem.specialty && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                {(() => {
+                                  if (jobItem.specialty.toLowerCase() === 'all specialties') {
+                                    return 'General Nursing';
+                                  }
+                                  const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
+                                  return jobItem.specialty.split(' ').map(word => {
+                                    const upperWord = word.toUpperCase();
+                                    return nursingAcronyms.includes(upperWord) ? upperWord : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                  }).join(' ');
+                                })()}
+                              </span>
+                            )}
+                            {jobItem.jobType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                {jobItem.jobType.toLowerCase() === 'prn' || jobItem.jobType.toLowerCase() === 'per diem' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                              </span>
+                            )}
+                            {jobItem.shiftType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                                {jobItem.shiftType}
+                              </span>
+                            )}
+                            {jobItem.experienceLevel && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
                                 {jobItem.experienceLevel}
-                            </span>
-                          )}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -870,33 +890,68 @@ export default function JobDetailPage({
           )}
 
           {/* Job Header */}
-          <div className="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-100">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              {job.specialty && (
-                <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                  {job.specialty}
-                </span>
+          <div className="bg-white rounded-xl shadow-md p-6 md:p-8 mb-6 border border-gray-100">
+            {/* Mobile: Logo centered above title | Desktop: Logo left of title */}
+            <div className="flex flex-col md:flex-row md:items-start gap-6 mb-6">
+              {/* Large employer logo - prominent and centered on mobile */}
+              {job.employer && getEmployerLogoPath(job.employer.slug) && (
+                <div className="flex justify-center md:justify-start">
+                  <div className="w-28 h-28 md:w-36 md:h-36 flex items-center justify-center bg-white rounded-2xl border-2 border-gray-100 p-3 shadow-sm">
+                    <img
+                      src={getEmployerLogoPath(job.employer.slug)}
+                      alt={`${job.employer.name} logo`}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                </div>
               )}
-              {job.jobType && (
-                <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                  {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                </span>
-              )}
-              {job.shiftType && (
-                <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
-                  {job.shiftType}
-                </span>
-              )}
-              {job.experienceLevel && (
-                <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                  {job.experienceLevel}
-                </span>
-              )}
+
+              {/* Title and tags */}
+              <div className="flex-1 min-w-0 text-center md:text-left">
+                {/* Tags row */}
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mb-3">
+                  {job.specialty && (
+                    <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      {job.specialty}
+                    </span>
+                  )}
+                  {job.jobType && (
+                    <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                      {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                    </span>
+                  )}
+                  {job.shiftType && (
+                    <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
+                      {job.shiftType}
+                    </span>
+                  )}
+                  {job.experienceLevel && (
+                    <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                      {job.experienceLevel}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight">{job.title}</h1>
+              </div>
             </div>
-            
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">{job.title}</h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            {/* Info grid - employer, location, pay */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {job.employer && (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-50 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Employer</div>
+                    <div className="font-semibold text-gray-900">{job.employer.name}</div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
@@ -911,21 +966,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
               </div>
-              
-              {job.employer && (
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 11.09a8.97 8.97 0 00.7 2.515 8.97 8.97 0 002.5-.7l-1.005-1.005a1 1 0 00-1.414-1.414l-1.005-1.005zM3.04 12.5a11.053 11.053 0 011.05.174 1 1 0 01.89.89c.03.343.07.683.116 1.02L3.04 12.5zM15.34 13.828l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a8.97 8.97 0 002.5-.7zM16.69 9.397l-2.25.961a11.115 11.115 0 01.25 3.762 1 1 0 01-.89.89c-.342.03-.683.07-1.02.116l2.25-.96a1 1 0 000-1.838l-7-3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide">Employer</div>
-                    <div className="font-semibold text-gray-900">{job.employer.name}</div>
-                  </div>
-                </div>
-              )}
-              
+
               {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType) && (
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-green-50 rounded-lg">
@@ -1185,10 +1226,18 @@ export default function JobDetailPage({
                         {relatedJob.city}, {relatedJob.state}
                       </span>
                       {relatedJob.employer && (
-                        <span className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 11.09a8.97 8.97 0 00.7 2.515 8.97 8.97 0 002.5-.7l-1.005-1.005a1 1 0 00-1.414-1.414l-1.005-1.005zM3.04 12.5a11.053 11.053 0 011.05.174 1 1 0 01.89.89c.03.343.07.683.116 1.02L3.04 12.5zM15.34 13.828l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a8.97 8.97 0 002.5-.7zM16.69 9.397l-2.25.961a11.115 11.115 0 01.25 3.762 1 1 0 01-.89.89c-.342.03-.683.07-1.02.116l2.25-.96a1 1 0 000-1.838l-7-3z" />
-                          </svg>
+                        <span className="flex items-center gap-1.5">
+                          {getEmployerLogoPath(relatedJob.employer.slug) ? (
+                            <img
+                              src={getEmployerLogoPath(relatedJob.employer.slug)}
+                              alt=""
+                              className="w-5 h-5 object-contain"
+                            />
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                            </svg>
+                          )}
                           {relatedJob.employer.name}
                         </span>
                       )}
