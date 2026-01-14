@@ -236,9 +236,10 @@ model NursingJob {
   keywords        String[] // Array of keywords for AI SEO like ["icu", "registered nurse", "ohio"]
 
   // Timestamps
-  scrapedAt DateTime @default(now()) // When we scraped this job
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  scrapedAt       DateTime  @default(now()) // When we scraped this job
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  googleIndexedAt DateTime? // When job was submitted to Google Indexing API
 
   // Indexes for fast queries
   @@index([state, city]) // For location-based pages like /jobs/nursing/ohio/chicago
