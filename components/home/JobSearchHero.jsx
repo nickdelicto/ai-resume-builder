@@ -237,17 +237,19 @@ const JobSearchHero = ({ initialStats = null }) => {
                 </div>
 
                 {/* Search Button - inline styles for guaranteed rendering */}
-                <button 
+                <button
                   className="search-button"
                   onClick={handleSearch}
                   aria-label="Search for nursing jobs"
                   style={{
-                    display: 'inline-flex',
+                    display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '10px',
+                    width: '100%',
                     padding: '14px 28px',
+                    marginTop: '4px',
                     background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                     backgroundColor: '#f59e0b',
                     color: 'white',
@@ -260,8 +262,7 @@ const JobSearchHero = ({ initialStats = null }) => {
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
-                    whiteSpace: 'nowrap',
-                    minWidth: '160px'
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -273,92 +274,25 @@ const JobSearchHero = ({ initialStats = null }) => {
               </div>
             </div>
 
-            {/* Trust Badges - improved padding and styling */}
-            <div 
-              className="trust-badges"
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'center', // Centered for mobile
-                gap: '16px',
-                alignItems: 'center'
-              }}
-            >
-              <span 
-                className="trust-pill"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: 'white',
-                  padding: '14px 24px',
-                  borderRadius: '50px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-                }}
-              >
-                <svg style={{ flexShrink: 0, opacity: 0.95 }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {/* Trust Badges */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.25)', color: 'white', padding: '10px 14px', borderRadius: '50px', fontSize: '14px', fontWeight: '500', fontFamily: "var(--font-figtree), 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
                   <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
                 </svg>
                 Updated Weekly
               </span>
-              
-              <span 
-                className="trust-pill"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: 'white',
-                  padding: '14px 24px',
-                  borderRadius: '50px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-                }}
-              >
-                <svg style={{ flexShrink: 0, opacity: 0.95 }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.25)', color: 'white', padding: '10px 14px', borderRadius: '50px', fontSize: '14px', fontWeight: '500', fontFamily: "var(--font-figtree), 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
                 Direct from Employers
               </span>
-              
-              <span 
-                className="trust-pill"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: 'white',
-                  padding: '14px 24px',
-                  borderRadius: '50px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-                }}
-              >
-                <svg style={{ flexShrink: 0, opacity: 0.95 }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.25)', color: 'white', padding: '10px 14px', borderRadius: '50px', fontSize: '14px', fontWeight: '500', fontFamily: "var(--font-figtree), 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
                 100% Free
@@ -860,31 +794,34 @@ const JobSearchHero = ({ initialStats = null }) => {
            ============================================ */
         .trust-badges {
           display: flex;
-          flex-direction: column;
+          flex-wrap: wrap;
+          justify-content: center;
           align-items: center;
-          gap: 12px; /* Matches state pills mobile spacing */
+          gap: 8px;
         }
-        
+
         .trust-pill {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           background: rgba(255, 255, 255, 0.15);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.25);
           color: white;
-          padding: 10px 18px;
+          padding: 8px 12px;
           border-radius: 50px;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 500;
           font-family: var(--font-figtree), 'Inter', sans-serif;
           white-space: nowrap;
         }
-        
+
         .trust-pill svg {
           flex-shrink: 0;
           opacity: 0.9;
+          width: 14px;
+          height: 14px;
         }
         
         /* ============================================
@@ -918,10 +855,18 @@ const JobSearchHero = ({ initialStats = null }) => {
           }
           
           .trust-badges {
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 14px; /* Matches state pills tablet spacing */
+            gap: 10px;
+          }
+
+          .trust-pill {
+            padding: 10px 16px;
+            font-size: 13px;
+            gap: 8px;
+          }
+
+          .trust-pill svg {
+            width: 16px;
+            height: 16px;
           }
         }
         
@@ -964,9 +909,17 @@ const JobSearchHero = ({ initialStats = null }) => {
           .filter-group {
             flex: 1 1 calc(50% - 5px);
           }
-          
+
           .search-button {
             flex: 1 1 100%;
+          }
+
+          .trust-badges {
+            gap: 12px;
+          }
+
+          .trust-pill {
+            padding: 10px 18px;
           }
         }
         
@@ -1051,13 +1004,14 @@ const JobSearchHero = ({ initialStats = null }) => {
           }
           
           .search-container {
-            padding: 14px;
+            padding: 20px 24px;
+            border-radius: 20px;
           }
-          
+
           .filter-group {
             flex: 1;
           }
-          
+
           .search-button {
             flex: 0 0 auto;
             margin-top: 0;
@@ -1181,6 +1135,11 @@ const JobSearchHero = ({ initialStats = null }) => {
             flex: 0 0 auto !important;
             margin-top: 0 !important;
           }
+
+          .hero-section .search-container {
+            padding: 20px 24px !important;
+            border-radius: 20px !important;
+          }
         }
         
         /* LARGE DESKTOP (1280px+) */
@@ -1189,22 +1148,26 @@ const JobSearchHero = ({ initialStats = null }) => {
             grid-template-columns: 1.4fr 1fr !important;
             gap: 32px !important;
           }
-          
+
           .hero-section .image-wrapper {
             width: 420px !important;
             height: 420px !important;
           }
-          
+
           .hero-section .ring-outer {
             inset: -70px !important;
           }
-          
+
           .hero-section .ring-middle {
             inset: -48px !important;
           }
-          
+
           .hero-section .ring-inner {
             inset: -24px !important;
+          }
+
+          .hero-section .search-container {
+            padding: 24px 28px !important;
           }
         }
       `}</style>
