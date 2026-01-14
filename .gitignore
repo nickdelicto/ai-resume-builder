@@ -47,3 +47,4 @@ next-env.d.ts
 .env.local
 CLAUDE.md
 scripts/indexnow-submitted-urls.json
+public/sitemap.xml
