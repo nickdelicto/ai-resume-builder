@@ -5,16 +5,17 @@ require('dotenv').config();
 
 /**
  * Batched IndexNow Submission Script
- * 
+ *
  * Submits job URLs to IndexNow API in batches to avoid rate limiting.
  * Based on successful implementation from mpgcalculator.net
- * 
+ *
  * Features:
  * - Batches of 50 URLs (IndexNow recommendation)
  * - 3-minute delays between batches
  * - Tracks submitted URLs to avoid duplicates
- * - Only submits NEW or UPDATED jobs
- * 
+ * - Phase 1: Submits NEW active jobs
+ * - Phase 2: Submits DELETED jobs (so Bing removes them from index)
+ *
  * Usage:
  *   node scripts/batch-indexnow.js [--dry-run] [--employer=slug]
  */
@@ -81,7 +82,7 @@ function saveSubmittedUrls(urlsSet) {
  */
 async function fetchActiveJobUrls() {
   const where = { isActive: true };
-  
+
   // Filter by employer if specified
   if (employerSlug) {
     const employer = await prisma.healthcareEmployer.findUnique({
@@ -92,13 +93,39 @@ async function fetchActiveJobUrls() {
     }
     where.employerId = employer.id;
   }
-  
+
   const jobs = await prisma.nursingJob.findMany({
     where,
     select: { slug: true },
     orderBy: { scrapedAt: 'desc' }
   });
-  
+
+  return jobs.map(job => `${SITE_URL}/jobs/nursing/${job.slug}`);
+}
+
+/**
+ * Fetch inactive job URLs from database (for deletion notification)
+ */
+async function fetchInactiveJobUrls() {
+  const where = { isActive: false };
+
+  // Filter by employer if specified
+  if (employerSlug) {
+    const employer = await prisma.healthcareEmployer.findUnique({
+      where: { slug: employerSlug }
+    });
+    if (!employer) {
+      throw new Error(`Employer not found: ${employerSlug}`);
+    }
+    where.employerId = employer.id;
+  }
+
+  const jobs = await prisma.nursingJob.findMany({
+    where,
+    select: { slug: true },
+    orderBy: { updatedAt: 'desc' }
+  });
+
   return jobs.map(job => `${SITE_URL}/jobs/nursing/${job.slug}`);
 }
 
@@ -139,89 +166,131 @@ function sleep(ms) {
 }
 
 /**
+ * Submit URLs in batches with delays
+ * Returns { submitted: number, failed: number }
+ */
+async function submitUrlsInBatches(urls, submittedUrls, phase) {
+  const batches = [];
+  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+    batches.push(urls.slice(i, i + BATCH_SIZE));
+  }
+
+  console.log(`📦 Will submit ${batches.length} batch(es) of up to ${BATCH_SIZE} URLs each\n`);
+
+  if (isDryRun) {
+    console.log(`🧪 DRY RUN - Would submit ${urls.length} URLs in ${batches.length} batches`);
+    return { submitted: urls.length, failed: 0 };
+  }
+
+  let totalSubmitted = 0;
+  let totalFailed = 0;
+
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
+    const batchNum = i + 1;
+
+    console.log(`📤 [${phase}] Submitting batch ${batchNum}/${batches.length} (${batch.length} URLs)...`);
+
+    const result = await submitBatch(batch);
+
+    if (result.success) {
+      console.log(`   ✅ Batch ${batchNum} submitted successfully (status ${result.status})`);
+      totalSubmitted += batch.length;
+
+      // For new URLs, add to tracking; for deleted, remove from tracking
+      if (phase === 'Phase 1') {
+        batch.forEach(url => submittedUrls.add(url));
+      } else {
+        batch.forEach(url => submittedUrls.delete(url));
+      }
+    } else {
+      console.error(`   ❌ Batch ${batchNum} failed:`, result.error || `Status ${result.status}`);
+      totalFailed += batch.length;
+    }
+
+    // Wait before next batch (except for last batch)
+    if (i < batches.length - 1) {
+      const delayMinutes = DELAY_BETWEEN_BATCHES_MS / 60000;
+      console.log(`   ⏳ Waiting ${delayMinutes} minutes before next batch...\n`);
+      await sleep(DELAY_BETWEEN_BATCHES_MS);
+    }
+  }
+
+  return { submitted: totalSubmitted, failed: totalFailed };
+}
+
+/**
  * Main execution
  */
 async function main() {
   try {
-    // Step 1: Fetch active job URLs from database
-    console.log('📊 Fetching active job URLs from database...');
-    const currentUrls = await fetchActiveJobUrls();
-    console.log(`   Found ${currentUrls.length} active jobs\n`);
-    
-    if (currentUrls.length === 0) {
-      console.log('✅ No active jobs to submit');
-      return;
-    }
-    
-    // Step 2: Load previously submitted URLs
+    // Load previously submitted URLs
     console.log('📂 Loading previously submitted URLs...');
     const submittedUrls = loadSubmittedUrls();
     console.log(`   Found ${submittedUrls.size} previously submitted URLs\n`);
-    
-    // Step 3: Find NEW URLs (not yet submitted)
-    const newUrls = currentUrls.filter(url => !submittedUrls.has(url));
-    console.log(`🆕 Found ${newUrls.length} NEW URLs to submit\n`);
-    
-    if (newUrls.length === 0) {
-      console.log('✅ All URLs already submitted - nothing to do!');
-      return;
+
+    let phase1Submitted = 0;
+    let phase2Submitted = 0;
+
+    // ============================================
+    // Phase 1: Submit NEW active jobs
+    // ============================================
+    console.log('=' .repeat(50));
+    console.log('📤 Phase 1: Submitting NEW active jobs...');
+    console.log('='.repeat(50) + '\n');
+
+    const activeUrls = await fetchActiveJobUrls();
+    console.log(`   Found ${activeUrls.length} active jobs in database`);
+
+    const newUrls = activeUrls.filter(url => !submittedUrls.has(url));
+    console.log(`   ${newUrls.length} are NEW (not yet submitted)\n`);
+
+    if (newUrls.length > 0) {
+      const result = await submitUrlsInBatches(newUrls, submittedUrls, 'Phase 1');
+      phase1Submitted = result.submitted;
+      console.log(`\n   📊 Phase 1 complete: ${result.submitted} submitted, ${result.failed} failed\n`);
+    } else {
+      console.log('   ✅ No new URLs to submit\n');
     }
-    
-    // Step 4: Submit in batches
-    const batches = [];
-    for (let i = 0; i < newUrls.length; i += BATCH_SIZE) {
-      batches.push(newUrls.slice(i, i + BATCH_SIZE));
+
+    // ============================================
+    // Phase 2: Submit DELETED jobs (dead links)
+    // ============================================
+    console.log('='.repeat(50));
+    console.log('🗑️  Phase 2: Notifying about DELETED jobs...');
+    console.log('='.repeat(50) + '\n');
+
+    // Find URLs we previously submitted that are now inactive
+    const inactiveUrls = await fetchInactiveJobUrls();
+    const inactiveUrlSet = new Set(inactiveUrls);
+
+    // Dead URLs = previously submitted URLs that are now inactive
+    const deadUrls = Array.from(submittedUrls).filter(url => inactiveUrlSet.has(url));
+    console.log(`   Found ${deadUrls.length} dead links to notify about\n`);
+
+    if (deadUrls.length > 0) {
+      const result = await submitUrlsInBatches(deadUrls, submittedUrls, 'Phase 2');
+      phase2Submitted = result.submitted;
+      console.log(`\n   📊 Phase 2 complete: ${result.submitted} notified, ${result.failed} failed\n`);
+    } else {
+      console.log('   ✅ No dead links to notify about\n');
     }
-    
-    console.log(`📦 Will submit ${batches.length} batch(es) of up to ${BATCH_SIZE} URLs each\n`);
-    
-    if (isDryRun) {
-      console.log('🧪 DRY RUN - Would submit these batches:');
-      batches.forEach((batch, idx) => {
-        console.log(`   Batch ${idx + 1}: ${batch.length} URLs`);
-      });
-      console.log('\n✅ Dry run complete - no actual submissions made');
-      return;
+
+    // ============================================
+    // Save and summarize
+    // ============================================
+    if (!isDryRun) {
+      console.log('💾 Saving tracking file...');
+      saveSubmittedUrls(submittedUrls);
     }
-    
-    // Submit batches with delays
-    let totalSubmitted = 0;
-    
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const batchNum = i + 1;
-      
-      console.log(`📤 Submitting batch ${batchNum}/${batches.length} (${batch.length} URLs)...`);
-      
-      const result = await submitBatch(batch);
-      
-      if (result.success) {
-        console.log(`   ✅ Batch ${batchNum} submitted successfully (status ${result.status})`);
-        totalSubmitted += batch.length;
-        
-        // Add to tracking set
-        batch.forEach(url => submittedUrls.add(url));
-      } else {
-        console.error(`   ❌ Batch ${batchNum} failed:`, result.error || `Status ${result.status}`);
-        // Continue with next batch even if one fails
-      }
-      
-      // Wait before next batch (except for last batch)
-      if (i < batches.length - 1) {
-        const delayMinutes = DELAY_BETWEEN_BATCHES_MS / 60000;
-        console.log(`   ⏳ Waiting ${delayMinutes} minutes before next batch...\n`);
-        await sleep(DELAY_BETWEEN_BATCHES_MS);
-      }
-    }
-    
-    // Step 5: Save updated tracking file
-    console.log(`\n💾 Saving tracking file...`);
-    saveSubmittedUrls(submittedUrls);
-    
-    console.log(`\n✅ IndexNow submission complete!`);
-    console.log(`   Total submitted: ${totalSubmitted} URLs`);
-    console.log(`   Total tracked: ${submittedUrls.size} URLs`);
-    
+
+    console.log('='.repeat(50));
+    console.log('✅ IndexNow submission complete!');
+    console.log('='.repeat(50));
+    console.log(`   New jobs submitted (Phase 1): ${phase1Submitted}`);
+    console.log(`   Dead links notified (Phase 2): ${phase2Submitted}`);
+    console.log(`   Total tracked URLs: ${submittedUrls.size}`);
+
   } catch (error) {
     console.error(`\n❌ Fatal error: ${error.message}`);
     throw error;
