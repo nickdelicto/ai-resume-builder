@@ -122,32 +122,41 @@ Options: days, nights, evenings, variable, rotating, null
 - Return null if not specified or unclear
 
 **Task 5: Detect experience level (REQUIRED - use context clues and make educated inferences)**
-Options: Entry Level, New Grad, Experienced, Senior, Leadership, null
+Options: New Grad, Experienced, Leadership, null
 
 CRITICAL: You MUST assign an experience level to almost every job. Return null ONLY if the posting is extremely vague with ZERO context clues.
 
-Guidelines for assignment:
-- "Entry Level" = States 0-1 year OR minimal requirements OR "will train" OR "no experience required"
-- "New Grad" = Residency/fellowship/GN program OR explicitly welcomes new graduates OR "new grad RN" in title
-- "Experienced" = DEFAULT for standard staff RN positions OR requires 1-3+ years OR "previous RN experience required/preferred" OR specialty requires competency (ICU, ER, OR)
-- "Senior" = Requires 3-5+ years OR specialty certifications required (CCRN, CEN, CCRN-K, etc.) OR "senior RN" in title OR advanced clinical expertise mentioned
-- "Leadership" = Charge nurse, lead, manager, supervisor, director, coordinator, assistant manager in title OR supervisory/management responsibilities listed
+**3-Level Taxonomy:**
 
-Context Clues to Use (IMPORTANT):
-- ICU/ER/Critical Care/OR positions typically need experience → Default to "Experienced" or "Senior"
-- Med-Surg/Telemetry with no experience stated → Default to "Experienced" 
-- Float Pool/Travel positions usually need experience → Default to "Experienced"
-- Specialty certifications required (CCRN, CEN, OCN, etc.) → "Senior"
-- Residency/Fellowship programs → "New Grad"
-- Charge/Lead/Manager/Coordinator in title → "Leadership"
-- Home Health/Hospice typically need experience → "Experienced"
+1. **"New Grad"** - For nurses with 0-12 months experience:
+   - Nurse residency or fellowship programs
+   - Explicitly welcomes new graduates ("new grad welcome", "new grad RN")
+   - "GN" or "Graduate Nurse" in title
+   - States "no experience required" or "will train"
+   - Designed for recent nursing school graduates
 
-Decision Logic:
-1. Check title for explicit indicators (Residency, New Grad, Senior, Charge, Manager)
-2. Check requirements for years of experience or certifications
-3. Consider specialty complexity (ICU is harder than Med-Surg for new grads)
-4. When uncertain between Entry/Experienced/Senior → Pick "Experienced" as safe default for staff positions
-5. Return null ONLY if posting has NO title hints, NO requirement hints, AND NO specialty context
+2. **"Experienced"** - DEFAULT for standard RN positions (1+ years):
+   - Requires 1+ years of nursing experience
+   - Standard staff RN, bedside nursing positions
+   - Specialty positions that need competency (ICU, ER, OR, PACU)
+   - Float Pool and Travel positions (usually need experience)
+   - States "previous RN experience required/preferred"
+   - Any position that isn't explicitly New Grad or Leadership
+   - NOTE: Specialty certifications (CCRN, CEN, etc.) still = Experienced, not a separate level
+
+3. **"Leadership"** - Management/supervisory roles:
+   - Charge Nurse (even if bedside, has supervisory duties)
+   - Nurse Manager, Assistant Nurse Manager
+   - Director, Supervisor, Coordinator
+   - Team Lead, Unit Lead
+   - Any role with supervisory/management responsibilities
+
+**Decision Logic:**
+1. Check title first: "Residency", "New Grad", "GN" → New Grad
+2. Check title: "Charge", "Manager", "Lead", "Director", "Coordinator" → Leadership
+3. Check requirements for years experience or "new grad welcome"
+4. DEFAULT to "Experienced" for standard staff RN positions
+5. Return null ONLY if posting has NO title hints AND NO context clues
 
 **Task 6: Extract or validate location**
 Current scraped location: City="${job.city || 'null'}", State="${job.state || 'null'}"
@@ -234,7 +243,7 @@ Full intro paragraph here with all original text preserved...
   "specialty": "one of the specialties from the list",
   "jobType": "Full Time" or "Part Time" or "PRN" or "Per Diem" or "Contract" or "Travel" or null,
   "shiftType": "days" or "nights" or "evenings" or "variable" or "rotating" or null,
-  "experienceLevel": "Entry Level" or "New Grad" or "Experienced" or "Senior" or "Leadership" or null,
+  "experienceLevel": "New Grad" or "Experienced" or "Leadership" or null,
   "city": "City Name" or "Remote" or null,
   "state": "OH" or null (2-letter code only),
   "confidence": 0.95
@@ -259,7 +268,10 @@ Extract the following:
 2. Specialty (ICU, ER, Med-Surg, OR, etc.)
 3. Job Type (Full Time, Part Time, Per Diem, etc.)
 4. Shift Type (days, nights, evenings, variable, rotating)
-5. Experience Level (Entry Level, New Grad, Experienced, Senior, Leadership)
+5. Experience Level (3-level taxonomy):
+   - "New Grad" = 0-12 months, residency programs, "new grad welcome", "GN"
+   - "Experienced" = 1+ years, standard staff RN positions (DEFAULT)
+   - "Leadership" = Charge nurse, manager, director, coordinator, supervisory roles
 6. City and State (2-letter code)
 
 **Specialty Options:** ${SPECIALTIES.join(', ')}
@@ -270,7 +282,7 @@ Return ONLY valid JSON:
   "specialty": "from list above",
   "jobType": "Full Time" | "Part Time" | "Per Diem" | "Contract" | "Travel" | null,
   "shiftType": "days" | "nights" | "evenings" | "variable" | "rotating" | null,
-  "experienceLevel": "Entry Level" | "New Grad" | "Experienced" | "Senior" | "Leadership" | null,
+  "experienceLevel": "New Grad" | "Experienced" | "Leadership" | null,
   "city": "city name",
   "state": "2-letter code",
   "confidence": 0.95

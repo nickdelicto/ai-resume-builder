@@ -25,6 +25,16 @@ export default function NursingJobsPage() {
   });
   const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
 
+  // Unfiltered stats for Browse RN Jobs section (SEO links at bottom)
+  const [unfilteredBrowseStats, setUnfilteredBrowseStats] = useState({
+    states: [],
+    employers: [],
+    specialties: [],
+    jobTypes: [],
+    experienceLevels: []
+  });
+  const [unfilteredStatsLoading, setUnfilteredStatsLoading] = useState(true);
+
   // Sidebar state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -52,6 +62,7 @@ export default function NursingJobsPage() {
     specialty: router.query.specialty || '',
     jobType: router.query.jobType || '',
     experienceLevel: router.query.experienceLevel || '',
+    employer: router.query.employer || '',
     search: router.query.search || ''
   });
 
@@ -63,19 +74,20 @@ export default function NursingJobsPage() {
       specialty: router.query.specialty || '',
       jobType: router.query.jobType || '',
       experienceLevel: router.query.experienceLevel || '',
+      employer: router.query.employer || '',
       search: router.query.search || ''
     });
-  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.search]);
+  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.employer, router.query.search]);
 
   // Fetch jobs when filters or page changes
   useEffect(() => {
     fetchJobs();
-  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.search]);
+  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.employer, router.query.search]);
 
   // Fetch browse statistics on mount and when filters change
   useEffect(() => {
     fetchBrowseStats();
-  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel]);
+  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.employer]);
 
   // Handle scroll to hash on page load (for links like /jobs/nursing#filters)
   useEffect(() => {
@@ -104,6 +116,7 @@ export default function NursingJobsPage() {
       if (filters.specialty) params.set('specialty', filters.specialty);
       if (filters.jobType) params.set('jobType', filters.jobType);
       if (filters.experienceLevel) params.set('experienceLevel', filters.experienceLevel);
+      if (filters.employer) params.set('employerSlug', filters.employer);
 
       const url = `/api/jobs/browse-stats${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url);
@@ -119,6 +132,26 @@ export default function NursingJobsPage() {
     }
   };
 
+  // Fetch unfiltered stats once on mount for the Browse RN Jobs section
+  const fetchUnfilteredStats = async () => {
+    try {
+      const response = await fetch('/api/jobs/browse-stats');
+      const data = await response.json();
+      if (data.success) {
+        setUnfilteredBrowseStats(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching unfiltered browse stats:', err);
+    } finally {
+      setUnfilteredStatsLoading(false);
+    }
+  };
+
+  // Fetch unfiltered stats on mount
+  useEffect(() => {
+    fetchUnfilteredStats();
+  }, []);
+
   const fetchJobs = async () => {
     setLoading(true);
     setError(null);
@@ -131,6 +164,7 @@ export default function NursingJobsPage() {
         specialty: router.query.specialty || '',
         jobType: router.query.jobType || '',
         experienceLevel: router.query.experienceLevel || '',
+        employerSlug: router.query.employer || '',
         search: router.query.search || ''
       };
 
@@ -578,16 +612,16 @@ export default function NursingJobsPage() {
                       </SidebarSection>
                     )}
 
-                    {/* Top Employers - Link to employer pages for SEO value */}
+                    {/* By Employer */}
                     {browseStats.employers.length > 0 && (
                       <SidebarSection title="By Employer" color="bg-green-500" expanded={expandedSections.employer} onToggle={() => toggleSection('employer')}>
                         <div className="space-y-1 max-h-80 overflow-y-auto scrollbar-thin pr-1">
                           {(showMoreEmployers ? browseStats.employers : browseStats.employers.slice(0, 15)).map((employer) => (
-                            <Link key={employer.slug} href={`/jobs/nursing/employer/${employer.slug}`}
-                              className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-green-50 text-sm">
-                              <span className="text-gray-700 truncate flex-1">{employer.name}</span>
+                            <button key={employer.slug} onClick={() => handleFilterChange('employer', filters.employer === employer.slug ? '' : employer.slug)}
+                              className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left ${filters.employer === employer.slug ? 'bg-green-100 text-green-800' : 'hover:bg-green-50 text-gray-700'}`}>
+                              <span className="truncate flex-1">{employer.name}</span>
                               <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full ml-2">{employer.count}</span>
-                            </Link>
+                            </button>
                           ))}
                           {browseStats.employers.length > 15 && (
                             <button onClick={() => setShowMoreEmployers(!showMoreEmployers)} className="text-sm text-green-600 hover:underline mt-2">
@@ -601,10 +635,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear Filters */}
-                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
+                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="w-full mt-4 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm font-medium"
@@ -619,7 +653,7 @@ export default function NursingJobsPage() {
             <main className="flex-1 min-w-0">
 
           {/* Active Filters Bar */}
-          {(filters.state || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
+          {(filters.state || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 font-medium">Active filters:</span>
@@ -672,6 +706,18 @@ export default function NursingJobsPage() {
                   </button>
                 )}
 
+                {filters.employer && (
+                  <button
+                    onClick={() => handleFilterChange('employer', '')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-medium hover:bg-green-200 transition-colors"
+                  >
+                    <span>{browseStats.employers.find(e => e.slug === filters.employer)?.name || filters.employer}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+
                 {filters.search && (
                   <button
                     onClick={() => handleFilterChange('search', '')}
@@ -685,10 +731,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear all - shown when multiple filters active */}
-                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.search].filter(Boolean).length > 1 && (
+                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.employer, filters.search].filter(Boolean).length > 1 && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="text-sm text-red-600 hover:text-red-700 font-medium ml-2"
@@ -894,12 +940,12 @@ export default function NursingJobsPage() {
             </main>
           </div>
 
-          {/* Browse RN Jobs Section - SEO Links to Dedicated Pages */}
-          {!browseStatsLoading && (
+          {/* Browse RN Jobs Section - SEO Links to Dedicated Pages (always shows unfiltered data) */}
+          {!unfilteredStatsLoading && (
             <div className="mt-16 bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Browse RN Jobs</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8">
                 {/* By State */}
                 <div>
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
@@ -907,7 +953,7 @@ export default function NursingJobsPage() {
                     By State
                   </h3>
                   <ul className="space-y-1.5">
-                    {(browseExpanded.states ? browseStats.states : browseStats.states.slice(0, 8)).map((state) => (
+                    {(browseExpanded.states ? unfilteredBrowseStats.states : unfilteredBrowseStats.states.slice(0, 8)).map((state) => (
                       <li key={state.code}>
                         <Link
                           href={`/jobs/nursing/${state.slug}`}
@@ -918,13 +964,13 @@ export default function NursingJobsPage() {
                         </Link>
                       </li>
                     ))}
-                    {browseStats.states.length > 8 && (
+                    {unfilteredBrowseStats.states.length > 8 && (
                       <li>
                         <button
                           onClick={() => setBrowseExpanded(prev => ({ ...prev, states: !prev.states }))}
                           className="flex items-center gap-1 text-sm text-blue-600 hover:underline px-2 py-1 font-medium"
                         >
-                          {browseExpanded.states ? 'Show less' : `View all ${browseStats.states.length} states`}
+                          {browseExpanded.states ? 'Show less' : `View all ${unfilteredBrowseStats.states.length} states`}
                           <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.states ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                           </svg>
@@ -941,7 +987,7 @@ export default function NursingJobsPage() {
                     By Specialty
                   </h3>
                   <ul className="space-y-1.5">
-                    {(browseExpanded.specialties ? browseStats.specialties : browseStats.specialties.slice(0, 8)).map((specialty) => (
+                    {(browseExpanded.specialties ? unfilteredBrowseStats.specialties : unfilteredBrowseStats.specialties.slice(0, 8)).map((specialty) => (
                       <li key={specialty.slug}>
                         <Link
                           href={`/jobs/nursing/specialty/${specialty.slug}`}
@@ -952,13 +998,13 @@ export default function NursingJobsPage() {
                         </Link>
                       </li>
                     ))}
-                    {browseStats.specialties.length > 8 && (
+                    {unfilteredBrowseStats.specialties.length > 8 && (
                       <li>
                         <button
                           onClick={() => setBrowseExpanded(prev => ({ ...prev, specialties: !prev.specialties }))}
                           className="flex items-center gap-1 text-sm text-purple-600 hover:underline px-2 py-1 font-medium"
                         >
-                          {browseExpanded.specialties ? 'Show less' : `View all ${browseStats.specialties.length} specialties`}
+                          {browseExpanded.specialties ? 'Show less' : `View all ${unfilteredBrowseStats.specialties.length} specialties`}
                           <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.specialties ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                           </svg>
@@ -975,7 +1021,7 @@ export default function NursingJobsPage() {
                     By Job Type
                   </h3>
                   <ul className="space-y-1.5">
-                    {browseStats.jobTypes.map((jobType) => (
+                    {unfilteredBrowseStats.jobTypes.map((jobType) => (
                       <li key={jobType.slug}>
                         <Link
                           href={`/jobs/nursing/job-type/${jobType.slug}`}
@@ -989,6 +1035,27 @@ export default function NursingJobsPage() {
                   </ul>
                 </div>
 
+                {/* By Experience */}
+                <div>
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    By Experience
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {unfilteredBrowseStats.experienceLevels.map((level) => (
+                      <li key={level.slug}>
+                        <Link
+                          href={`/jobs/nursing/experience/${level.slug}`}
+                          className="flex items-center justify-between text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 py-1 rounded transition-colors"
+                        >
+                          <span>{level.name}</span>
+                          <span className="text-xs text-gray-400">({level.count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
                 {/* By Employer */}
                 <div>
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
@@ -996,7 +1063,7 @@ export default function NursingJobsPage() {
                     By Employer
                   </h3>
                   <ul className="space-y-1.5">
-                    {(browseExpanded.employers ? browseStats.employers : browseStats.employers.slice(0, 8)).map((employer) => (
+                    {(browseExpanded.employers ? unfilteredBrowseStats.employers : unfilteredBrowseStats.employers.slice(0, 8)).map((employer) => (
                       <li key={employer.slug}>
                         <Link
                           href={`/jobs/nursing/employer/${employer.slug}`}
@@ -1007,13 +1074,13 @@ export default function NursingJobsPage() {
                         </Link>
                       </li>
                     ))}
-                    {browseStats.employers.length > 8 && (
+                    {unfilteredBrowseStats.employers.length > 8 && (
                       <li>
                         <button
                           onClick={() => setBrowseExpanded(prev => ({ ...prev, employers: !prev.employers }))}
                           className="flex items-center gap-1 text-sm text-green-600 hover:underline px-2 py-1 font-medium"
                         >
-                          {browseExpanded.employers ? 'Show less' : `View all ${browseStats.employers.length} employers`}
+                          {browseExpanded.employers ? 'Show less' : `View all ${unfilteredBrowseStats.employers.length} employers`}
                           <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.employers ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                           </svg>

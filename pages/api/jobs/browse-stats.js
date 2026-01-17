@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   try {
     // Extract filter params from query
-    const { state, specialty, jobType, experienceLevel, search } = req.query;
+    const { state, specialty, jobType, experienceLevel, employerSlug, search } = req.query;
 
     // Build base where clause with active filters
     const baseWhere = { isActive: true };
@@ -38,6 +38,9 @@ export default async function handler(req, res) {
       }
       if (experienceLevel && excludeKey !== 'experienceLevel') {
         where.experienceLevel = { equals: experienceLevel, mode: 'insensitive' };
+      }
+      if (employerSlug && excludeKey !== 'employer') {
+        where.employer = { slug: employerSlug };
       }
       if (search && excludeKey !== 'search') {
         where.OR = [
