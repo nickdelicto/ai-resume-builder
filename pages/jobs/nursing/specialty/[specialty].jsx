@@ -11,7 +11,9 @@ const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
 const { fetchSpecialtyJobs } = require('../../../../lib/services/jobPageData');
 const { specialtyToSlug } = require('../../../../lib/constants/specialties');
+const { jobTypeToSlug, jobTypeToDisplay } = require('../../../../lib/constants/jobTypes');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
+const { getSalaryText } = require('../../../../lib/utils/seoTextUtils');
 
 // Redirect map for old specialty slugs → new canonical slugs
 const SPECIALTY_REDIRECTS = {
@@ -59,6 +61,7 @@ export async function getServerSideProps({ params, query }) {
         specialtyName: result.specialty,
         jobs: result.jobs,
         pagination: result.pagination,
+        maxHourlyRate: result.maxHourlyRate,
         stats: result.statistics
       }
     };
@@ -74,6 +77,7 @@ export default function SpecialtyJobPage({
   specialtyName,
   jobs = [],
   pagination = null,
+  maxHourlyRate,
   stats = null
 }) {
   const router = useRouter();
@@ -87,21 +91,15 @@ export default function SpecialtyJobPage({
   const specialtyDisplayName = specialtyName || specialty?.replace(/-/g, ' ') || '';
 
   // Generate SEO meta tags
-  const seoMeta = specialtyDisplayName
-    ? seoUtils.generateSpecialtyPageMetaTags(
-        specialtyDisplayName,
-        {
-          total: pagination?.total || 0,
-          specialties: []
-        }
-      )
-    : {
-        title: `${specialtyDisplayName} RN Jobs | IntelliResume Health`,
-        description: `Find Registered Nurse (RN) jobs for ${specialtyDisplayName}`,
-        keywords: 'rn jobs, nursing jobs, registered nurse',
-        canonicalUrl: `https://intelliresume.net/jobs/nursing/specialty/${specialty?.toLowerCase() || ''}`,
-        ogImage: 'https://intelliresume.net/og-image-jobs.png'
-      };
+  const salaryText = getSalaryText(maxHourlyRate, specialtyDisplayName);
+  const jobCountText = pagination?.total ? `${pagination.total} ` : '';
+  const seoMeta = {
+    title: `${jobCountText}${specialtyDisplayName} RN Jobs${salaryText}`,
+    description: `Find ${pagination?.total || 0} ${specialtyDisplayName} Registered Nurse jobs nationwide. Browse positions at top healthcare employers and apply today!`,
+    keywords: `${specialtyDisplayName.toLowerCase()} rn jobs, ${specialtyDisplayName.toLowerCase()} nursing jobs, registered nurse ${specialtyDisplayName.toLowerCase()}`,
+    canonicalUrl: `https://intelliresume.net/jobs/nursing/specialty/${specialty?.toLowerCase() || ''}`,
+    ogImage: 'https://intelliresume.net/og-image-jobs.png'
+  };
 
   // Error state (no jobs found)
   if (jobs.length === 0 && !pagination) {
@@ -238,12 +236,9 @@ export default function SpecialtyJobPage({
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {pagination?.total > 0 ? (
                 <>
-                  Find <strong>{pagination.total}</strong> {specialtyDisplayName} Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                  Find <strong>{pagination.total}</strong> {specialtyDisplayName} Registered Nurse job{pagination.total === 1 ? '' : 's'} available
                   {stats?.states && stats.states.length > 0 ? (
                     <> across <strong>{stats.states.length}</strong> {stats.states.length === 1 ? 'state' : 'states'}</>
-                  ) : null}
-                  {stats?.cities && stats.cities.length > 0 ? (
-                    <> in <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
                   ) : null}
                   . Browse {specialtyDisplayName.toLowerCase()} nursing positions at top healthcare employers
                   {stats?.employers && stats.employers.length > 0 ? (
@@ -252,7 +247,7 @@ export default function SpecialtyJobPage({
                   . Apply today!
                 </>
               ) : (
-                <>Find {specialtyDisplayName} Registered Nurse (RN) positions nationwide. Browse {specialtyDisplayName.toLowerCase()} nursing jobs at top healthcare employers. Apply today!</>
+                <>Find {specialtyDisplayName} Registered Nurse positions nationwide. Browse {specialtyDisplayName.toLowerCase()} nursing jobs at top healthcare employers. Apply today!</>
               )}
             </p>
             {pagination && pagination.total > 0 && (
@@ -267,7 +262,8 @@ export default function SpecialtyJobPage({
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {/* Top States - links to specialty for that state */}
               {stats.states && stats.states.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
                   <div className="flex items-center gap-2 mb-4">
@@ -285,7 +281,7 @@ export default function SpecialtyJobPage({
                       return (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/${stateData.state.toLowerCase()}`}
+                          href={`/jobs/nursing/${stateData.state.toLowerCase()}/${specialty}`}
                           className="flex justify-between items-center group hover:text-blue-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-blue-600 font-medium">{stateDisplay}</span>
@@ -296,40 +292,13 @@ export default function SpecialtyJobPage({
                   </div>
                 </div>
               )}
-              {stats.cities && stats.cities.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Top Cities</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {stats.cities.slice(0, 5).map((cityData, idx) => {
-                      const stateSlug = cityData.state.toLowerCase();
-                      const citySlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
-                      return (
-                        <Link
-                          key={idx}
-                          href={`/jobs/nursing/${stateSlug}/${citySlug}`}
-                          className="flex justify-between items-center group hover:text-green-600 transition-colors py-1"
-                        >
-                          <span className="text-gray-900 group-hover:text-green-600 font-medium">{cityData.city}, {cityData.state}</span>
-                          <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs">{cityData.count}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Top Employers - links to employer+specialty */}
               {stats.employers && stats.employers.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="p-2 bg-purple-50 rounded-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 11.09a8.97 8.97 0 00.7 2.515 8.97 8.97 0 002.5-.7l-1.005-1.005a1 1 0 00-1.414-1.414l-1.005-1.005zM3.04 12.5a11.053 11.053 0 011.05.174 1 1 0 01.89.89c.03.343.07.683.116 1.02L3.04 12.5zM15.34 13.828l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a8.97 8.97 0 002.5-.7zM16.69 9.397l-2.25.961a11.115 11.115 0 01.25 3.762 1 1 0 01-.89.89c-.342.03-.683.07-1.02.116l2.25-.96a1 1 0 000-1.838l-7-3z" />
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1 1h-2a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Top Employers</h3>
@@ -340,11 +309,11 @@ export default function SpecialtyJobPage({
                       return employerSlug ? (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/employer/${employerSlug}`}
-                          className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
+                          href={`/jobs/nursing/employer/${employerSlug}/${specialty}`}
+                          className="flex justify-between items-center group hover:text-orange-600 transition-colors py-1"
                         >
-                          <span className="text-gray-900 group-hover:text-purple-600 font-medium">{emp.employer?.name || 'Unknown'}</span>
-                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
+                          <span className="text-gray-900 group-hover:text-orange-600 font-medium">{emp.employer?.name || 'Unknown'}</span>
+                          <span className="text-orange-600 font-semibold bg-orange-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
                         </Link>
                       ) : (
                         <div
@@ -352,7 +321,45 @@ export default function SpecialtyJobPage({
                           className="flex justify-between items-center py-1"
                         >
                           <span className="text-gray-900 font-medium">{emp.employer?.name || 'Unknown'}</span>
-                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
+                          <span className="text-orange-600 font-semibold bg-orange-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Job Types - links to specialty+jobtype */}
+              {stats.jobTypes && stats.jobTypes.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                        <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Job Types</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {stats.jobTypes.slice(0, 5).map((jt, idx) => {
+                      const jtSlug = jobTypeToSlug(jt.jobType);
+                      const jtDisplay = jobTypeToDisplay(jt.jobType) || jt.jobType;
+                      return jtSlug ? (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/specialty/${specialty}/${jtSlug}`}
+                          className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
+                        >
+                          <span className="text-gray-900 group-hover:text-purple-600 font-medium">{jtDisplay}</span>
+                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{jt.count}</span>
+                        </Link>
+                      ) : (
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center py-1"
+                        >
+                          <span className="text-gray-900 font-medium">{jt.jobType}</span>
+                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{jt.count}</span>
                         </div>
                       );
                     })}
@@ -512,16 +519,64 @@ export default function SpecialtyJobPage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.allSpecialties.map((specData, idx) => {
-                    const specialtySlug = specData.specialty.toLowerCase().replace(/\s+/g, '-');
-                    
+                    const specSlug = specData.specialty.toLowerCase().replace(/\s+/g, '-');
+
                     return (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/specialty/${specialtySlug}`}
+                        href={`/jobs/nursing/specialty/${specSlug}`}
                         className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-purple-600 transition-colors"
                       >
                         <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{specData.specialty}</span>
                         <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{specData.count}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Browse by Job Type Section */}
+          {stats?.jobTypes && stats.jobTypes.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Browse {specialtyDisplayName} RN Jobs by Job Type
+                </h2>
+                <p className="text-gray-600">
+                  Find {specialtyDisplayName.toLowerCase()} RN positions by employment type
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex flex-wrap gap-4">
+                  {stats.jobTypes.map((jt, idx) => {
+                    // Normalize job type for display and URL
+                    const jobTypeValue = jt.jobType;
+                    let displayName = jobTypeValue;
+                    let jobTypeUrlSlug = jobTypeValue.toLowerCase().replace(/\s+/g, '-');
+
+                    // PRN/Per Diem normalization
+                    if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem') {
+                      displayName = 'PRN';
+                      jobTypeUrlSlug = 'per-diem';
+                    } else {
+                      // Title case
+                      displayName = jobTypeValue.replace(/-/g, ' ').split(' ').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                      ).join(' ');
+                    }
+
+                    const specSlug = specialtyToSlug(specialtyDisplayName);
+
+                    return (
+                      <Link
+                        key={idx}
+                        href={`/jobs/nursing/specialty/${specSlug}/${jobTypeUrlSlug}`}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-orange-50 rounded-lg group transition-colors"
+                      >
+                        <span className="text-gray-900 group-hover:text-orange-600 font-medium">{displayName}</span>
+                        <span className="text-orange-600 font-semibold bg-orange-100 px-2 py-0.5 rounded-full text-xs">{jt.count.toLocaleString()}</span>
                       </Link>
                     );
                   })}

@@ -13,6 +13,7 @@ const { detectStateFromSlug, fetchCityJobs, fetchStateSpecialtyJobs } = require(
 const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../../../../lib/constants/specialties');
 const { normalizeExperienceLevel } = require('../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
+const { getSalaryText } = require('../../../../lib/utils/seoTextUtils');
 
 // Redirect map for old specialty slugs → new canonical slugs
 const SPECIALTY_REDIRECTS = {
@@ -80,6 +81,7 @@ export async function getServerSideProps({ params, query }) {
           specialtyName: result.specialty,
           jobs: result.jobs,
           pagination: result.pagination,
+          maxHourlyRate: result.maxHourlyRate,
           stats: result.statistics
         }
       };
@@ -96,14 +98,15 @@ export async function getServerSideProps({ params, query }) {
       return {
         props: {
           pageType: 'city',
-        stateCode: stateInfo.stateCode,
-        stateFullName: stateInfo.stateFullName,
-        cityName: result.city,
-        jobs: result.jobs,
-        pagination: result.pagination,
-        stats: result.statistics
-      }
-    };
+          stateCode: stateInfo.stateCode,
+          stateFullName: stateInfo.stateFullName,
+          cityName: result.city,
+          jobs: result.jobs,
+          pagination: result.pagination,
+          maxHourlyRate: result.maxHourlyRate,
+          stats: result.statistics
+        }
+      };
     }
   } catch (error) {
     console.error('Error in getServerSideProps:', error);
@@ -121,6 +124,7 @@ export default function CityOrSpecialtyPage({
   specialtyName = null,
   jobs = [],
   pagination = null,
+  maxHourlyRate = null,
   stats = null
 }) {
   const router = useRouter();
@@ -143,34 +147,27 @@ export default function CityOrSpecialtyPage({
   // Generate SEO meta tags
   let seoMeta;
   if (isSpecialtyPage) {
-    // State + Specialty page SEO
-    seoMeta = seoUtils.generateStateSpecialtyPageMetaTags
-      ? seoUtils.generateStateSpecialtyPageMetaTags(
-          stateCode,
-          stateDisplayName,
-          specialtyDisplayName,
-          {
-            total: pagination?.total || 0,
-            cities: stats?.cities || []
-          }
-        )
-      : {
-          title: `${specialtyDisplayName} RN Jobs in ${stateDisplayName} | IntelliResume Health`,
-          description: `Find ${specialtyDisplayName} Registered Nurse (RN) jobs in ${stateDisplayName}. ${pagination?.total || 0} positions available.`,
-          keywords: `${specialtyDisplayName.toLowerCase()} rn jobs, ${specialtyDisplayName.toLowerCase()} nursing jobs, ${stateDisplayName.toLowerCase()} ${specialtyDisplayName.toLowerCase()} nurse`,
-          canonicalUrl: `https://intelliresume.net/jobs/nursing/${slug?.toLowerCase() || ''}/${cityOrSpecialty?.toLowerCase() || ''}`,
-          ogImage: 'https://intelliresume.net/og-image-jobs.png'
-        };
+    // State + Specialty page SEO with job count and salary
+    const salaryText = getSalaryText(maxHourlyRate, `${specialtyDisplayName}-${stateDisplayName}`);
+    const jobCountText = pagination?.total ? `${pagination.total} ` : '';
+    seoMeta = {
+      title: `${jobCountText}${specialtyDisplayName} RN Jobs in ${stateDisplayName}${salaryText}`,
+      description: `Find ${pagination?.total || 0} ${specialtyDisplayName} Registered Nurse jobs in ${stateDisplayName}. Browse positions at top healthcare employers and apply today!`,
+      keywords: `${specialtyDisplayName.toLowerCase()} rn jobs, ${specialtyDisplayName.toLowerCase()} nursing jobs, ${stateDisplayName.toLowerCase()} ${specialtyDisplayName.toLowerCase()} nurse`,
+      canonicalUrl: `https://intelliresume.net/jobs/nursing/${slug?.toLowerCase() || ''}/${cityOrSpecialty?.toLowerCase() || ''}`,
+      ogImage: 'https://intelliresume.net/og-image-jobs.png'
+    };
   } else {
     // City page SEO
     seoMeta = seoUtils.generateCityPageMetaTags(
-        stateCode,
+      stateCode,
       stateDisplayName,
-        cityDisplayName,
-        {
-          total: pagination?.total || 0,
-          specialties: stats?.specialties || []
-        }
+      cityDisplayName,
+      {
+        total: pagination?.total || 0,
+        specialties: stats?.specialties || []
+      },
+      maxHourlyRate
     );
   }
 
@@ -317,9 +314,9 @@ export default function CityOrSpecialtyPage({
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {pagination?.total > 0 ? (
                 <>
-                  Find <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} 
+                  Find <strong>{pagination.total}</strong> {isSpecialtyPage ? `${specialtyDisplayName} ` : ''}Registered Nurse job{pagination.total === 1 ? '' : 's'}
                   {isSpecialtyPage
-                    ? <> for <strong>{specialtyDisplayName}</strong> in <strong>{stateDisplayName}</strong></>
+                    ? <> in <strong>{stateDisplayName}</strong></>
                     : <> in <strong>{cityDisplayName}, {stateDisplayName}</strong></>}
                   {stats?.cities && stats.cities.length > 0 && isSpecialtyPage ? (
                     <> across <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
@@ -334,7 +331,7 @@ export default function CityOrSpecialtyPage({
                   . Apply today!
                 </>
               ) : (
-                <>Find Registered Nurse (RN) positions {isSpecialtyPage ? `for ${specialtyDisplayName} in ${stateDisplayName}` : `in ${cityDisplayName}, ${stateDisplayName}`}. Browse nursing jobs at top healthcare employers. Apply today!</>
+                <>Find {isSpecialtyPage ? `${specialtyDisplayName} ` : ''}Registered Nurse positions {isSpecialtyPage ? `in ${stateDisplayName}` : `in ${cityDisplayName}, ${stateDisplayName}`}. Browse nursing jobs at top healthcare employers. Apply today!</>
               )}
             </p>
             {pagination && pagination.total > 0 && (
@@ -422,10 +419,15 @@ export default function CityOrSpecialtyPage({
                   <div className="space-y-3">
                     {stats.employers.slice(0, 5).map((emp, idx) => {
                       const employerSlug = emp.employer?.slug;
+                      // For specialty pages, link to employer + specialty; for city pages, just employer
+                      const specialtySlug = isSpecialtyPage ? specialtyToSlug(specialtyDisplayName) : null;
+                      const employerHref = specialtySlug
+                        ? `/jobs/nursing/employer/${employerSlug}/${specialtySlug}`
+                        : `/jobs/nursing/employer/${employerSlug}`;
                       return employerSlug ? (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/employer/${employerSlug}`}
+                          href={employerHref}
                           className="flex justify-between items-center group hover:text-orange-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-orange-600 font-medium">{emp.employer?.name || 'Unknown'}</span>
@@ -679,7 +681,7 @@ export default function CityOrSpecialtyPage({
                     const stateSlug = stateCode.toLowerCase();
                     const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
                     const specialtySlug = specialtyToSlug(specData.specialty);
-                    
+
                     return (
                       <Link
                         key={idx}
@@ -688,6 +690,64 @@ export default function CityOrSpecialtyPage({
                       >
                         <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{specData.specialty}</span>
                         <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{specData.count}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: Browse by Job Type (for both City and State+Specialty pages) */}
+          {stats?.jobTypes && stats.jobTypes.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Browse by Job Type in {isCityPage ? `${cityDisplayName}, ${stateCode}` : `${stateDisplayName}`}
+                </h2>
+                <p className="text-gray-600">
+                  Find {isSpecialtyPage ? specialtyDisplayName.toLowerCase() : ''} RN positions by employment type
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex flex-wrap gap-4">
+                  {stats.jobTypes.map((jt, idx) => {
+                    // Normalize job type for display and URL
+                    const jobTypeValue = jt.jobType;
+                    let displayName = jobTypeValue;
+                    let jobTypeUrlSlug = jobTypeValue.toLowerCase().replace(/\s+/g, '-');
+
+                    // PRN/Per Diem normalization
+                    if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem') {
+                      displayName = 'PRN';
+                      jobTypeUrlSlug = 'per-diem';
+                    } else {
+                      // Title case
+                      displayName = jobTypeValue.replace(/-/g, ' ').split(' ').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                      ).join(' ');
+                    }
+
+                    // Build the URL based on page type
+                    const stateSlug = stateCode.toLowerCase();
+                    let jobTypeUrl;
+                    if (isCityPage) {
+                      const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
+                      jobTypeUrl = `/jobs/nursing/${stateSlug}/${citySlug}/job-type/${jobTypeUrlSlug}`;
+                    } else {
+                      // State + Specialty page - link to specialty job type page
+                      const specSlug = specialtyToSlug(specialtyDisplayName);
+                      jobTypeUrl = `/jobs/nursing/specialty/${specSlug}/${jobTypeUrlSlug}`;
+                    }
+
+                    return (
+                      <Link
+                        key={idx}
+                        href={jobTypeUrl}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-orange-50 rounded-lg group transition-colors"
+                      >
+                        <span className="text-gray-900 group-hover:text-orange-600 font-medium">{displayName}</span>
+                        <span className="text-orange-600 font-semibold bg-orange-100 px-2 py-0.5 rounded-full text-xs">{jt.count.toLocaleString()}</span>
                       </Link>
                     );
                   })}

@@ -160,7 +160,7 @@ export default function NursingJobsPage() {
     ? seoUtils.generateListingPageMetaTags(filters || {}, pagination || null)
     : {
         title: '10,000+ RN Jobs Nationwide - Hiring Now!',
-        description: 'Browse 10,000+ Registered Nurse (RN) jobs with salary info. Apply directly to top hospitals and healthcare facilities nationwide. Start your search today!',
+        description: 'Browse 10,000+ Registered Nurse jobs with salary info. Apply directly to top hospitals and healthcare facilities nationwide. Start your search today!',
         keywords: 'registered nurse, rn jobs, nursing jobs',
         canonicalUrl: 'https://intelliresume.net/jobs/nursing',
         ogImage: 'https://intelliresume.net/og-image-jobs.png'
@@ -235,7 +235,7 @@ export default function NursingJobsPage() {
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              Registered Nurse (RN) Jobs in USA
+              Registered Nurse Jobs in USA
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
               Find nursing opportunities at top healthcare employers across the United States. Search by location, specialty, and more.{' '}

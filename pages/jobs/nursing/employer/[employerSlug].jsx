@@ -34,6 +34,7 @@ export async function getServerSideProps({ params, query }) {
         employer: result.employer,
         jobs: result.jobs,
         pagination: result.pagination,
+        maxHourlyRate: result.maxHourlyRate,
         stats: result.statistics
       }
     };
@@ -49,6 +50,7 @@ export default function EmployerJobPage({
   employer,
   jobs = [],
   pagination = null,
+  maxHourlyRate = null,
   stats = null
 }) {
   const router = useRouter();
@@ -65,14 +67,16 @@ export default function EmployerJobPage({
   const seoMeta = employerDisplayName
     ? seoUtils.generateEmployerPageMetaTags(
         employerDisplayName,
+        employer?.slug || employerSlug,
         {
           total: pagination?.total || 0,
           specialties: stats?.specialties || []
-        }
+        },
+        maxHourlyRate
       )
     : {
         title: `${employerDisplayName} RN Jobs | IntelliResume Health`,
-        description: `Find Registered Nurse (RN) jobs at ${employerDisplayName}`,
+        description: `Find Registered Nurse jobs at ${employerDisplayName}`,
         keywords: 'rn jobs, nursing jobs, registered nurse',
         canonicalUrl: `https://intelliresume.net/jobs/nursing/employer/${employerSlug || ''}`,
         ogImage: 'https://intelliresume.net/og-image-jobs.png'
@@ -213,7 +217,7 @@ export default function EmployerJobPage({
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {pagination?.total > 0 ? (
                 <>
-                  {employerDisplayName} has <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                  {employerDisplayName} has <strong>{pagination.total}</strong> Registered Nurse job{pagination.total === 1 ? '' : 's'} available
                   {stats?.states && stats.states.length > 0 ? (
                     <> across <strong>{stats.states.length}</strong> {stats.states.length === 1 ? 'state' : 'states'}</>
                   ) : null}
@@ -230,7 +234,7 @@ export default function EmployerJobPage({
                   )}. Apply today!
                 </>
               ) : (
-                <>Find Registered Nurse (RN) positions at {employerDisplayName}. Browse ICU, ER, Travel, and other nursing specialties. Apply today!</>
+                <>Find Registered Nurse positions at {employerDisplayName}. Browse ICU, ER, Travel, and other nursing specialties. Apply today!</>
               )}
             </p>
             {pagination && pagination.total > 0 && (

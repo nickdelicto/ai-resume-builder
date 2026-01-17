@@ -27,8 +27,8 @@ export async function getServerSideProps({ params, query, res }) {
 
     if (stateInfo) {
       // This is a state page
-      const { jobs, pagination, statistics } = await fetchStateJobs(stateInfo.stateCode, page);
-      
+      const { jobs, pagination, statistics, maxHourlyRate } = await fetchStateJobs(stateInfo.stateCode, page);
+
       return {
         props: {
           isStatePage: true,
@@ -36,6 +36,7 @@ export async function getServerSideProps({ params, query, res }) {
           stateFullName: stateInfo.stateFullName,
           jobs,
           pagination,
+          maxHourlyRate,
           stats: statistics
         }
       };
@@ -94,12 +95,13 @@ export async function getServerSideProps({ params, query, res }) {
   }
 }
 
-export default function JobDetailPage({ 
+export default function JobDetailPage({
   isStatePage = false,
   stateCode = null,
   stateFullName = null,
   jobs = [],
   pagination = null,
+  maxHourlyRate = null,
   stats = null,
   job = null,
   relatedJobs = [],
@@ -350,12 +352,13 @@ export default function JobDetailPage({
     
     // Generate SEO meta tags
     const seoMeta = seoUtils.generateStatePageMetaTags(
-      stateCode, 
-      stateFullName, 
-      { 
-        total: pagination?.total || 0, 
-        specialties: stats?.specialties || [] 
-      }
+      stateCode,
+      stateFullName,
+      {
+        total: pagination?.total || 0,
+        specialties: stats?.specialties || []
+      },
+      maxHourlyRate
     );
 
     return (
@@ -469,7 +472,7 @@ export default function JobDetailPage({
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
                 {pagination?.total > 0 ? (
                   <>
-                    {stateDisplayName} has <strong>{pagination.total}</strong> Registered Nurse (RN) job{pagination.total === 1 ? '' : 's'} available
+                    {stateDisplayName} has <strong>{pagination.total}</strong> Registered Nurse job{pagination.total === 1 ? '' : 's'} available
                     {stats?.cities && stats.cities.length > 0 ? (
                       <> across <strong>{stats.cities.length}</strong> {stats.cities.length === 1 ? 'city' : 'cities'}</>
                     ) : null}
@@ -483,7 +486,7 @@ export default function JobDetailPage({
                     )} at top healthcare employers. Apply today!
                   </>
                 ) : (
-                  <>Find Registered Nurse (RN) positions across {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers. Apply today!</>
+                  <>Find Registered Nurse positions across {stateDisplayName}. Browse ICU, ER, Travel, and other nursing specialties at top healthcare employers. Apply today!</>
                 )}
               </p>
               {pagination && pagination.total > 0 && (
@@ -760,6 +763,48 @@ export default function JobDetailPage({
                       <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-xs ml-2">{cityData.count}</span>
                     </Link>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Browse by Job Type Section */}
+            {stats?.jobTypes && stats.jobTypes.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-gray-200">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Browse by Job Type in {stateDisplayName}</h2>
+                  <p className="text-gray-600">Find RN positions by employment type</p>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex flex-wrap gap-4">
+                    {stats.jobTypes.map((jt, idx) => {
+                      // Normalize job type for display and URL
+                      const jobTypeValue = jt.jobType;
+                      let displayName = jobTypeValue;
+                      let slug = jobTypeValue.toLowerCase().replace(/\s+/g, '-');
+
+                      // Per Diem normalization
+                      if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem' || jobTypeValue.toLowerCase() === 'per-diem') {
+                        displayName = 'Per Diem';
+                        slug = 'per-diem';
+                      } else {
+                        // Title case
+                        displayName = jobTypeValue.replace(/-/g, ' ').split(' ').map(word =>
+                          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                        ).join(' ');
+                      }
+
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/${stateCode.toLowerCase()}/job-type/${slug}`}
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-orange-50 rounded-lg group transition-colors"
+                        >
+                          <span className="text-gray-900 group-hover:text-orange-600 font-medium">{displayName}</span>
+                          <span className="text-orange-600 font-semibold bg-orange-100 px-2 py-0.5 rounded-full text-xs">{jt.count.toLocaleString()}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
