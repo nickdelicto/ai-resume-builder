@@ -51,6 +51,12 @@ const nextConfig = {
         destination: '/blog/:category/:slug',
         permanent: true,
       },
+      // Job URL redirects (replaced source job IDs)
+      {
+        source: '/jobs/nursing/ambulatory-vascular-clinic-rn-2-brighton-ny-597698',
+        destination: '/jobs/nursing/ambulatory-vascular-clinic-rn-2-brighton-ny-828875',
+        permanent: true,
+      },
     ]
   },
 }
