@@ -450,239 +450,133 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
     );
   }
 
-  // FULL VERSION - Large banner for bottom of pages
+  // FULL VERSION - Compact banner for bottom of pages
   return (
-    <div className="max-w-4xl mx-auto bg-gradient-to-br from-teal-700 via-teal-600 to-emerald-600 rounded-2xl shadow-2xl p-8 md:p-10 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></div>
-      
-      <div className="relative z-10">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-white text-teal-700 px-4 py-1.5 rounded-full text-sm font-bold mb-6 shadow-lg">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    <div className="max-w-3xl mx-auto bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl shadow-lg p-5 md:p-6">
+      {/* Header Row */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-full flex-shrink-0">
+          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          FREE JOB ALERTS
         </div>
-
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-          Never Miss Your Perfect RN Job
-        </h2>
-        <p className="text-teal-100 text-lg mb-8 max-w-2xl">
-          Get the highest-paying nursing jobs delivered to your inbox every Tuesday morning. 
-          Personalized to your specialty and location preferences.
-        </p>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 max-w-3xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* HONEYPOT FIELD - Hidden from humans, bots will fill it */}
-            <input
-              type="text"
-              name="website"
-              value={formData.website}
-              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              tabIndex="-1"
-              autoComplete="off"
-              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
-              aria-hidden="true"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Name */}
-              <div>
-                <label htmlFor="alert-name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  id="alert-name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Your name"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="alert-email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  id="alert-email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="your.email@example.com"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
-                />
-              </div>
-
-              {/* Specialty */}
-              <div>
-                <label htmlFor="alert-specialty" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Specialty *
-                </label>
-                <select
-                  id="alert-specialty"
-                  required
-                  value={formData.specialty}
-                  onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
-                >
-                  <option value="">Select specialty</option>
-                  {specialties.map(spec => (
-                    <option key={spec} value={spec}>{spec}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* State */}
-              <div>
-                <label htmlFor="alert-state" className="block text-sm font-semibold text-gray-700 mb-2">
-                  State *
-                </label>
-                <select
-                  id="alert-state"
-                  required
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all"
-                >
-                  <option value="">Select state</option>
-                  {states.map(s => (
-                    <option key={s.code} value={s.code}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* City */}
-              <div>
-                <label htmlFor="alert-city" className="block text-sm font-semibold text-gray-700 mb-2">
-                  City (Optional)
-                </label>
-                <select
-                  id="alert-city"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
-                  disabled={!formData.state || loadingCities}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">
-                    {!formData.state 
-                      ? 'Select state first' 
-                      : loadingCities 
-                        ? 'Loading...' 
-                        : `All of ${getStateName(formData.state)}`
-                    }
-                  </option>
-                  {cities.map(c => (
-                    <option key={c.name} value={c.name}>{c.name} ({c.jobCount} jobs)</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Employer (Optional) */}
-              <div className="md:col-span-2">
-                <label htmlFor="alert-employer" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Specific Employer (Optional)
-                </label>
-                <select
-                  id="alert-employer"
-                  value={formData.employer}
-                  onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
-                  disabled={!formData.state || loadingEmployers}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
-                >
-                  <option value="">
-                    {!formData.state 
-                      ? 'Select a state first' 
-                      : loadingEmployers 
-                        ? 'Loading employers...' 
-                        : 'All Employers'
-                    }
-                  </option>
-                  {employers.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.jobCount} jobs)</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Leave blank to get alerts from all employers in your selected location
-                </p>
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border-2 border-red-300 text-red-700 rounded-lg p-4 text-sm">
-                <p className="mb-2">{error}</p>
-                {manageToken && (
-                  <a
-                    href={`/job-alerts/manage?token=${manageToken}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-teal-600 hover:text-teal-800 font-semibold underline inline-flex items-center gap-1"
-                  >
-                    Manage your alerts
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 text-lg"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating Alert...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Subscribe to Job Alerts
-                </span>
-              )}
-            </button>
-
-            {/* Benefits */}
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 pt-2">
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Weekly Updates
-              </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Highest Paying First
-              </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Unsubscribe Anytime
-              </span>
-            </div>
-          </form>
+        <div>
+          <h2 className="text-xl font-bold text-white">Get Job Alerts</h2>
+          <p className="text-teal-100 text-sm">Top-paying jobs sent weekly. Free.</p>
         </div>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg p-4 space-y-3">
+        {/* HONEYPOT */}
+        <input
+          type="text"
+          name="website"
+          value={formData.website}
+          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+          tabIndex="-1"
+          autoComplete="off"
+          style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+          aria-hidden="true"
+        />
+
+        {/* Row 1: Name, Email */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Your name"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm"
+          />
+          <input
+            type="email"
+            required
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="Email *"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm"
+          />
+        </div>
+
+        {/* Row 2: Specialty, State */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <select
+            required
+            value={formData.specialty}
+            onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm"
+          >
+            <option value="">Specialty *</option>
+            {specialties.map(spec => (
+              <option key={spec} value={spec}>{spec}</option>
+            ))}
+          </select>
+          <select
+            required
+            value={formData.state}
+            onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '', employer: '' })}
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm"
+          >
+            <option value="">State *</option>
+            {states.map(s => (
+              <option key={s.code} value={s.code}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Row 3: City, Employer */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <select
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value, employer: '' })}
+            disabled={!formData.state || loadingCities}
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            <option value="">{formData.state ? `All of ${getStateName(formData.state)}` : 'City (optional)'}</option>
+            {cities.map(c => (
+              <option key={c.name} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+          <select
+            value={formData.employer}
+            onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
+            disabled={!formData.state || loadingEmployers}
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-200 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            <option value="">{formData.state ? 'All employers' : 'Employer (optional)'}</option>
+            {employers.map(emp => (
+              <option key={emp.id} value={emp.id}>{emp.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+            <p>{error}</p>
+            {manageToken && (
+              <a href={`/job-alerts/manage?token=${manageToken}`} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline font-medium">
+                Manage alerts →
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Submit + Benefits Row */}
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-md disabled:opacity-50 text-sm whitespace-nowrap"
+          >
+            {loading ? 'Subscribing...' : 'Subscribe Free'}
+          </button>
+          <p className="text-xs text-gray-500 text-center md:text-left">
+            Weekly emails · Highest paying first · Unsubscribe anytime
+          </p>
+        </div>
+      </form>
     </div>
   );
 }

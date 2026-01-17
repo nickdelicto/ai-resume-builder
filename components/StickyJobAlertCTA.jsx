@@ -55,42 +55,47 @@ export default function StickyJobAlertCTA({ specialty, location, jobTitle }) {
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-2xl border-t-4 border-teal-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-start justify-between gap-4">
-            {/* Icon & Message */}
-            <div className="flex items-start gap-3 flex-1 min-w-0">
-              <div className="hidden sm:flex items-center justify-center w-10 h-10 bg-white/20 rounded-full flex-shrink-0 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm sm:text-base leading-snug">
-                  {specialty ? `${specialty} RN` : 'RN'} jobs {location ? `in ${location}` : ''}
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Message */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-200 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              <div className="min-w-0">
+                {/* Mobile: simple message */}
+                <p className="text-white text-sm font-medium sm:hidden">
+                  Get job alerts <span className="text-teal-200">· Free</span>
+                </p>
+                {/* Tablet+: full message with specialty */}
+                <p className="text-white text-base font-medium hidden sm:block truncate">
+                  Get <span className="font-semibold">{specialty || 'RN'}</span> job alerts
+                  {location && <span className="hidden lg:inline text-teal-200"> in {location}</span>}
+                  <span className="text-teal-200"> · Weekly · Free</span>
                 </p>
               </div>
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={handleClick}
-              className="bg-white text-teal-700 hover:bg-teal-50 font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg hover:shadow-xl flex-shrink-0 text-sm sm:text-base mt-0.5"
-            >
-              Get Alerts
-            </button>
-
-            {/* Dismiss Button */}
-            <button
-              onClick={handleDismiss}
-              className="text-white hover:text-teal-200 transition-colors p-1 flex-shrink-0 ml-2 mt-1"
-              aria-label="Dismiss"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
+            {/* CTA Button + Dismiss */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={handleClick}
+                className="bg-white text-teal-700 hover:bg-teal-50 font-semibold px-4 py-2 rounded-lg transition-all shadow-md text-sm whitespace-nowrap"
+              >
+                Subscribe Free
+              </button>
+              <button
+                onClick={handleDismiss}
+                className="text-teal-200 hover:text-white transition-colors p-1.5"
+                aria-label="Dismiss"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
