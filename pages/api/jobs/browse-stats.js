@@ -143,8 +143,8 @@ export default async function handler(req, res) {
       const jobTypeValue = jt.jobType; // Raw DB value
       // Normalize and capitalize properly for display
       let displayName = jobTypeValue;
-      if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem') {
-        displayName = 'PRN';
+      if (jobTypeValue.toLowerCase() === 'prn' || jobTypeValue.toLowerCase() === 'per diem' || jobTypeValue.toLowerCase() === 'per-diem') {
+        displayName = 'Per Diem';
       } else {
         // Replace hyphens with spaces BEFORE processing (Full-time → Full Time)
         // Then title case for consistent display
