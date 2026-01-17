@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 /**
  * API Route: GET /api/jobs/browse-stats
  * Fetch statistics for browse sections (states, employers, specialties)
+ * Supports filter params to get dynamic counts based on current selection
  */
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -13,18 +14,53 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get all states with job counts
+    // Extract filter params from query
+    const { state, specialty, jobType, experienceLevel, search } = req.query;
+
+    // Build base where clause with active filters
+    const baseWhere = { isActive: true };
+
+    // Helper to build where clause excluding one filter type
+    // This lets us show counts for a category without filtering by that category
+    const buildWhereExcluding = (excludeKey) => {
+      const where = { ...baseWhere };
+
+      if (state && excludeKey !== 'state') {
+        where.state = state.toUpperCase();
+      }
+      if (specialty && excludeKey !== 'specialty') {
+        // Handle case-insensitive specialty matching
+        where.specialty = { equals: specialty, mode: 'insensitive' };
+      }
+      if (jobType && excludeKey !== 'jobType') {
+        // Handle multiple possible DB values for job types (PRN, per-diem, Per Diem)
+        where.jobType = { equals: jobType, mode: 'insensitive' };
+      }
+      if (experienceLevel && excludeKey !== 'experienceLevel') {
+        where.experienceLevel = { equals: experienceLevel, mode: 'insensitive' };
+      }
+      if (search && excludeKey !== 'search') {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { specialty: { contains: search, mode: 'insensitive' } }
+        ];
+      }
+
+      return where;
+    };
+
+    // Get states with job counts (filtered by specialty, jobType, experienceLevel but NOT state)
     const states = await prisma.nursingJob.groupBy({
       by: ['state'],
-      where: { isActive: true },
+      where: buildWhereExcluding('state'),
       _count: { id: true },
       orderBy: { state: 'asc' }
     });
 
-    // Get top 20 employers with job counts
+    // Get top 20 employers with job counts (filtered by all active filters)
     const topEmployers = await prisma.nursingJob.groupBy({
       by: ['employerId'],
-      where: { isActive: true },
+      where: buildWhereExcluding(null), // Apply all filters for employers
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
       take: 20
@@ -38,26 +74,26 @@ export default async function handler(req, res) {
     });
     const employerMap = new Map(employerDetails.map(e => [e.id, e]));
 
-    // Get all specialties with job counts
+    // Get specialties with job counts (filtered by state, jobType, experienceLevel but NOT specialty)
     const specialties = await prisma.nursingJob.groupBy({
       by: ['specialty'],
-      where: { isActive: true, specialty: { not: null } },
+      where: { ...buildWhereExcluding('specialty'), specialty: { not: null } },
       _count: { id: true },
       orderBy: { specialty: 'asc' }
     });
 
-    // Get all job types with counts
+    // Get job types with counts (filtered by state, specialty, experienceLevel but NOT jobType)
     const jobTypes = await prisma.nursingJob.groupBy({
       by: ['jobType'],
-      where: { isActive: true, jobType: { not: null } },
+      where: { ...buildWhereExcluding('jobType'), jobType: { not: null } },
       _count: { id: true },
       orderBy: { jobType: 'asc' }
     });
 
-    // Get all experience levels with counts
+    // Get experience levels with counts (filtered by state, specialty, jobType but NOT experienceLevel)
     const experienceLevels = await prisma.nursingJob.groupBy({
       by: ['experienceLevel'],
-      where: { isActive: true, experienceLevel: { not: null } },
+      where: { ...buildWhereExcluding('experienceLevel'), experienceLevel: { not: null } },
       _count: { id: true },
       orderBy: { experienceLevel: 'asc' }
     });
