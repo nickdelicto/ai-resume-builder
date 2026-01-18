@@ -80,6 +80,13 @@ async function main() {
       isActive: true
     };
 
+    // If skipFormatted, filter at database level (much faster than checking each job)
+    if (skipFormatted && !forceReformat) {
+      whereClause.NOT = {
+        description: { contains: '## About This Role' }
+      };
+    }
+
     // Filter by employer if specified
     if (employerSlug) {
       const employer = await prisma.healthcareEmployer.findFirst({
