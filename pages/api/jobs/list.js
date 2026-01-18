@@ -3,6 +3,50 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
+ * Multiplier for fetching extra jobs for interleaving
+ * We fetch 3x the page size to have enough jobs from different employers to interleave
+ */
+const INTERLEAVE_MULTIPLIER = 3;
+
+/**
+ * Interleave jobs by employer for variety on listing pages
+ * Takes jobs (typically 3x the page size) and round-robin selects from each employer
+ * This prevents pages from being dominated by a single employer when jobs are scraped in batches
+ * @param {Array} jobs - Jobs fetched from database (should be 3x desired count)
+ * @param {number} desiredCount - Number of jobs to return (page size)
+ * @returns {Array} - Interleaved jobs with employer variety
+ */
+function interleaveJobsByEmployer(jobs, desiredCount) {
+  if (!jobs || jobs.length === 0) return [];
+  if (jobs.length <= 1) return jobs.slice(0, desiredCount);
+
+  // Group jobs by employer (preserve order within each employer)
+  const byEmployer = new Map();
+  for (const job of jobs) {
+    const employerId = job.employerId || job.employer?.id || 'unknown';
+    if (!byEmployer.has(employerId)) {
+      byEmployer.set(employerId, []);
+    }
+    byEmployer.get(employerId).push(job);
+  }
+
+  // Round-robin pick from each employer
+  const result = [];
+  const employerQueues = Array.from(byEmployer.values());
+
+  // Keep picking until we have enough or run out
+  while (result.length < desiredCount && employerQueues.some(q => q.length > 0)) {
+    for (const queue of employerQueues) {
+      if (queue.length > 0 && result.length < desiredCount) {
+        result.push(queue.shift());
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * API Route: GET /api/jobs/list
  * Fetch paginated list of nursing jobs with filters
  */
@@ -133,7 +177,11 @@ export default async function handler(req, res) {
     }
 
     // Fetch jobs with employer info
-    const [jobs, total] = await Promise.all([
+    // Skip interleaving when filtering by employer (all jobs from same employer)
+    const shouldInterleave = !employerSlug;
+    const fetchMultiplier = shouldInterleave ? INTERLEAVE_MULTIPLIER : 1;
+
+    const [rawJobs, total] = await Promise.all([
       prisma.nursingJob.findMany({
         where,
         include: {
@@ -149,10 +197,13 @@ export default async function handler(req, res) {
           scrapedAt: 'desc'
         },
         skip,
-        take: limitNum
+        take: limitNum * fetchMultiplier
       }),
       prisma.nursingJob.count({ where })
     ]);
+
+    // Interleave jobs for employer variety (unless filtering by employer)
+    const jobs = shouldInterleave ? interleaveJobsByEmployer(rawJobs, limitNum) : rawJobs;
 
     // Calculate pagination
     const totalPages = Math.ceil(total / limitNum);
