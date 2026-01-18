@@ -3,16 +3,17 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Multiplier for fetching extra jobs for interleaving
- * We fetch 3x the page size to have enough jobs from different employers to interleave
+ * Maximum jobs to fetch for interleaving
+ * We fetch up to this many jobs to ensure variety across employers
+ * (some employers may have 200+ recent jobs, so 3x page size isn't enough)
  */
-const INTERLEAVE_MULTIPLIER = 3;
+const MAX_INTERLEAVE_FETCH = 600;
 
 /**
  * Interleave jobs by employer for variety on listing pages
- * Takes jobs (typically 3x the page size) and round-robin selects from each employer
- * This prevents pages from being dominated by a single employer when jobs are scraped in batches
- * @param {Array} jobs - Jobs fetched from database (should be 3x desired count)
+ * Round-robin selects from each employer to prevent pages being dominated by one employer
+ * (scrapers run one employer at a time, so recent jobs cluster by employer)
+ * @param {Array} jobs - Jobs fetched from database (up to MAX_INTERLEAVE_FETCH)
  * @param {number} desiredCount - Number of jobs to return (page size)
  * @returns {Array} - Interleaved jobs with employer variety
  */
@@ -179,28 +180,33 @@ export default async function handler(req, res) {
     // Fetch jobs with employer info
     // Skip interleaving when filtering by employer (all jobs from same employer)
     const shouldInterleave = !employerSlug;
-    const fetchMultiplier = shouldInterleave ? INTERLEAVE_MULTIPLIER : 1;
 
-    const [rawJobs, total] = await Promise.all([
-      prisma.nursingJob.findMany({
-        where,
-        include: {
-          employer: {
-            select: {
-              id: true,
-              name: true,
-              slug: true
-            }
+    // First get total count to determine fetch size
+    const total = await prisma.nursingJob.count({ where });
+
+    // Dynamic fetch: get enough jobs for good interleaving without over-fetching
+    // When interleaving, fetch up to MAX_INTERLEAVE_FETCH to ensure employer variety
+    const fetchCount = shouldInterleave
+      ? Math.min(Math.max(total, limitNum), MAX_INTERLEAVE_FETCH)
+      : limitNum;
+
+    const rawJobs = await prisma.nursingJob.findMany({
+      where,
+      include: {
+        employer: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
           }
-        },
-        orderBy: {
-          scrapedAt: 'desc'
-        },
-        skip,
-        take: limitNum * fetchMultiplier
-      }),
-      prisma.nursingJob.count({ where })
-    ]);
+        }
+      },
+      orderBy: {
+        scrapedAt: 'desc'
+      },
+      skip,
+      take: fetchCount
+    });
 
     // Interleave jobs for employer variety (unless filtering by employer)
     const jobs = shouldInterleave ? interleaveJobsByEmployer(rawJobs, limitNum) : rawJobs;
