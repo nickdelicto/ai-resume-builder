@@ -480,7 +480,7 @@ export default function AboutPage() {
                 </svg>
               </div>
               <h3 className="feature-title">100% Free for Nurses</h3>
-              <p className="feature-text">No subscriptions, no hidden fees. We also offer a <Link href="/scholarship" className="resume-link">scholarship for nursing students</Link> preparing to enter the workforce.</p>
+              <p className="feature-text">No subscriptions, no hidden fees. We also offer a <Link href="/nursing-scholarship" className="resume-link">scholarship for nursing students</Link> preparing to enter the workforce.</p>
             </div>
           </div>
         </section>
