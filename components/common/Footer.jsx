@@ -70,6 +70,7 @@ const Footer = () => {
             <h3 className="footer-column-title">Resources & Support</h3>
             <ul className="footer-nav-links">
               <li><Link href="/about">About Us</Link></li>
+              <li><Link href="/scholarship">Nursing Scholarship</Link></li>
               <li><Link href="/contact">Contact Us</Link></li>
               <li><Link href="/privacy">Privacy Policy</Link></li>
               <li><Link href="/terms">Terms of Service</Link></li>

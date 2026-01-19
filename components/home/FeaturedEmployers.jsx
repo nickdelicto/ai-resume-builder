@@ -102,7 +102,7 @@ const FeaturedEmployers = () => {
             </span>
           </div>
           <h2 className="section-title">
-            Leading Healthcare Employers
+            Top Nurse Employers in the US
           </h2>
           <p className="section-subtitle">
              Find nursing opportunities at leading hospitals & health systems actively hiring
