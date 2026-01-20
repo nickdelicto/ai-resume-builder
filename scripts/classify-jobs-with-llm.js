@@ -28,6 +28,7 @@ const { PrismaClient } = require('@prisma/client');
 const OpenAI = require('openai');
 const { normalizeExperienceLevel } = require('../lib/utils/experienceLevelUtils');
 const googleIndexingService = require('../lib/services/googleIndexingService');
+const { formatJobDescription } = require('../lib/services/jobDescriptionFormatter');
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({
@@ -454,154 +455,28 @@ Return ONLY the formatted markdown text.
 */
 
 /**
- * Format Hartford HealthCare job description using LLM
- * @param {Object} job - Job object with title, description, etc.
- * @returns {Object} Formatting results with formattedDescription
- */
-async function formatHartfordDescription(job) {
-  const prompt = `You are a professional job description formatter. Format this nursing job description into clean, well-structured Markdown.
-
-**CRITICAL RULES:**
-1. DO NOT include the job title in your output (we already have it)
-2. Preserve 100% of the original content - NO summarization
-3. Return ONLY the formatted Markdown - no JSON, no commentary
-4. Start directly with the first piece of content (usually metadata or intro paragraph)
-
-**STANDARD JOB DESCRIPTION STRUCTURE:**
-
-**Metadata** (if present):
-- **Location Detail:** [info]
-- **Shift Detail:** [info]
-- **Work Location Type:** [info]
-
-**Introduction Paragraph** (1-3 sentences about the role/facility)
-
-**Job Summary:** (if present, use **bold**)
-
-**Responsibilities:** (use **bold** header)
-- Use bullet points with proper spacing
-- Each bullet should have a blank line after it
-
-## Qualifications (use ## heading)
-
-**Minimum Requirements:** (if present)
-- Bullet point format
-- Blank line between each
-
-**Education:**
-- Bullet format
-
-**Experience:**
-- Bullet format
-
-**Skills/Certifications:** (if present)
-- Bullet format
-
-**Benefits** (if present - use **bold** or ## depending on prominence)
-
-**Closing Paragraph** (about the employer/opportunity)
-
-**FORMATTING RULES:**
-- Metadata labels: **bold labels** with colon
-- Major sections (Qualifications, Benefits): ## Heading
-- Sub-sections (Responsibilities, Job Summary, Minimum Requirements): **Bold:**
-- ALL lists under Qualifications, Responsibilities, Education, Skills: MUST use • bullets (NOT dashes)
-- CRITICAL: Every bullet must have a blank line before and after it
-- Bullet format: [blank line] • Item text here. [blank line]
-- Fix missing spaces after periods
-- Break paragraphs longer than 3 sentences into smaller chunks
-- Remove any repeated job titles from the description
-
-**EXAMPLE TRANSFORMATION:**
-
-BEFORE:
-"Location Detail: Hartford Hospital. Shift Detail: Days. We are seeking an RN. Qualifications Graduate of nursing school. BSN required. 2 years experience required. Responsibilities Provide patient care. Administer medications."
-
-AFTER:
-**Location Detail:** Hartford Hospital
-
-**Shift Detail:** Days
-
-We are seeking an RN.
-
-**Responsibilities:**
-
-• Provide patient care.
-
-• Administer medications.
-
-## Qualifications
-
-• Graduate of nursing school.
-
-• BSN required.
-
-• 2 years experience required.
-
-**CRITICAL: Always use • bullets (not - dashes) with blank lines between each bullet!**
-
-**JOB TITLE:** ${job.title}
-
-**RAW DESCRIPTION:**
-${job.description}
-
-**YOUR FORMATTED OUTPUT (start with first content, NOT the title):**`;
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a job description formatter. Return ONLY the formatted Markdown text with no additional commentary.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.1,
-      max_completion_tokens: 12000
-    });
-
-    const formatted = response.choices[0].message.content.trim();
-    const usage = response.usage;
-
-    return {
-      formattedDescription: formatted,
-      finishReason: response.choices[0].finish_reason,
-      usage: {
-        prompt: usage.prompt_tokens,
-        completion: usage.completion_tokens,
-        total: usage.total_tokens
-      }
-    };
-  } catch (error) {
-    console.error('   ❌ LLM formatting error:', error.message);
-    return null;
-  }
-}
-
-/**
  * Classify a single job using TWO parallel OpenAI calls (like resume builder pattern)
  */
 async function classifyJob(job) {
   try {
-    // Check if this job needs description formatting (has HTML or raw text)
-    const employersNeedingFormatting = ['hartford-healthcare', 'northwell-health', 'mass-general-brigham'];
-    const needsFormatting = employersNeedingFormatting.includes(job.employer.slug);
+    // Check if this job needs description formatting
+    // Format ALL jobs, but skip ones already in our template format
+    const FORMATTED_MARKERS = ['## About This Role', '## 📋 Highlights', '## What You\'ll Do'];
+    const isAlreadyFormatted = job.description && FORMATTED_MARKERS.some(marker => job.description.includes(marker));
+    const needsFormatting = !isAlreadyFormatted;
 
     // For jobs needing formatting: run classification AND formatting in parallel
     // For other jobs: only run classification
     let classificationResult, formattingResult;
 
     if (needsFormatting) {
-      console.log(`   🔄 Running classification + formatting (${job.employer.slug})...`);
+      console.log(`   🔄 Running classification + formatting...`);
       [classificationResult, formattingResult] = await Promise.all([
         classifyJobAttributes(job),
-        formatHartfordDescription(job)
+        formatJobDescription(job)  // Use standardized formatter from /lib/services/
       ]);
     } else {
+      console.log(`   ⏭️  Skipping formatting (already formatted)`);
       classificationResult = await classifyJobAttributes(job);
       formattingResult = null;
     }
@@ -611,16 +486,16 @@ async function classifyJob(job) {
     let combinedUsage = classificationResult.usage;
     
     // If job was formatted, add formatting tokens to usage
-    if (formattingResult) {
+    if (formattingResult && formattingResult.success) {
       combinedUsage = {
-        prompt_tokens: combinedUsage.prompt_tokens + formattingResult.usage.prompt,
-        completion_tokens: combinedUsage.completion_tokens + formattingResult.usage.completion,
-        total_tokens: combinedUsage.total_tokens + formattingResult.usage.total
+        prompt_tokens: combinedUsage.prompt_tokens + (formattingResult.inputTokens || 0),
+        completion_tokens: combinedUsage.completion_tokens + (formattingResult.outputTokens || 0),
+        total_tokens: combinedUsage.total_tokens + (formattingResult.tokensUsed || 0)
       };
       
       console.log('\n📝 Formatting Results:');
       console.log('   Finish Reason:', formattingResult.finishReason);
-      console.log('   Tokens:', formattingResult.usage.prompt, '/', formattingResult.usage.completion);
+      console.log('   Tokens:', formattingResult.inputTokens, '/', formattingResult.outputTokens);
       console.log('   Formatted length:', formattingResult.formattedDescription.length, 'chars');
     }
     
@@ -647,8 +522,8 @@ async function classifyJob(job) {
       cost: calculateCost(combinedUsage)
     };
     
-    // Add formatted description if job was formatted
-    if (formattingResult) {
+    // Add formatted description if job was formatted successfully
+    if (formattingResult && formattingResult.success) {
       returnObj.formattedDescription = formattingResult.formattedDescription;
     }
     

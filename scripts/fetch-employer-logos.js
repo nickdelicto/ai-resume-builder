@@ -72,6 +72,11 @@ const employers = {
     name: 'United Health Services',
     domain: 'nyuhs.org',
     website: 'https://www.nyuhs.org'
+  },
+  'nyu-langone-health': {
+    name: 'NYU Langone Health',
+    domain: 'nyulangone.org',
+    website: 'https://nyulangone.org'
   }
 };
 
