@@ -537,6 +537,38 @@ export default function SpecialtyJobPage({
             </div>
           )}
 
+          {/* Browse by State Section */}
+          {stats?.allStates && stats.allStates.length > 0 && (
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Browse {specialtyDisplayName} RN Jobs by State
+                </h2>
+                <p className="text-gray-600">
+                  Find {specialtyDisplayName.toLowerCase()} nursing positions in {stats.allStates.length} {stats.allStates.length === 1 ? 'state' : 'states'}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
+                  {stats.allStates.map((stateData, idx) => {
+                    const stateFullName = getStateFullName(stateData.state);
+                    const stateDisplay = stateFullName || stateData.state;
+                    return (
+                      <Link
+                        key={idx}
+                        href={`/jobs/nursing/${stateData.state.toLowerCase()}/${specialty}`}
+                        className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-blue-600 transition-colors"
+                      >
+                        <span className="text-gray-900 group-hover:text-blue-600 font-medium text-sm">{stateDisplay}</span>
+                        <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{stateData.count}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Browse by Job Type Section */}
           {stats?.jobTypes && stats.jobTypes.length > 0 && (
             <div className="mt-16 pt-8 border-t border-gray-200">
