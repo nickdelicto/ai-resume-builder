@@ -192,7 +192,7 @@ export default function EmployerSpecialtyJobTypePage({
                     {stats.states.slice(0, 5).map((s, idx) => (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/${s.state.toLowerCase()}/${specialtySlug}/${jobTypeSlug}`}
+                        href={`/jobs/nursing/${s.state.toLowerCase()}/specialty/${specialtySlug}/${jobTypeSlug}`}
                         className="flex justify-between items-center group hover:text-blue-600 transition-colors py-1"
                       >
                         <span className="text-gray-900 group-hover:text-blue-600 font-medium">{s.stateFullName || s.state}</span>

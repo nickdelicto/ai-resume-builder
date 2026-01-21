@@ -186,7 +186,7 @@ export default function StateExperienceLevelPage({
                       return (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/specialty/${specSlug}/experience/${levelSlug}`}
+                          href={`/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specSlug}/experience/${levelSlug}`}
                           className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
@@ -428,7 +428,7 @@ export default function StateExperienceLevelPage({
                     return (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/specialty/${specSlug}/experience/${levelSlug}`}
+                        href={`/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specSlug}/experience/${levelSlug}`}
                         className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-purple-600 transition-colors"
                       >
                         <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{spec.specialty}</span>

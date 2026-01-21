@@ -267,7 +267,7 @@ export default function EmployerSpecialtyOrJobTypePage({
                       return (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/employer/${employer.slug}/${specSlug}`}
+                          href={`/jobs/nursing/employer/${employer.slug}/${specSlug}/${jobTypeSlug}`}
                           className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
@@ -294,7 +294,7 @@ export default function EmployerSpecialtyOrJobTypePage({
                     {stats.jobTypes.slice(0, 5).map((jt, idx) => (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/employer/${employer.slug}/${jt.slug}`}
+                        href={`/jobs/nursing/employer/${employer.slug}/${specialtySlug}/${jt.slug}`}
                         className="flex justify-between items-center group hover:text-orange-600 transition-colors py-1"
                       >
                         <span className="text-gray-900 group-hover:text-orange-600 font-medium">{jt.displayName}</span>
@@ -480,10 +480,10 @@ export default function EmployerSpecialtyOrJobTypePage({
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Browse by Job Type at {employer.name}
+                  Browse {specialty} RN Jobs by Type at {employer.name}
                 </h2>
                 <p className="text-gray-600">
-                  Explore {stats.jobTypes.length} job {stats.jobTypes.length === 1 ? 'type' : 'types'} available at {employer.name}
+                  Explore {stats.jobTypes.length} {specialty.toLowerCase()} job {stats.jobTypes.length === 1 ? 'type' : 'types'} available at {employer.name}
                 </p>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -491,7 +491,7 @@ export default function EmployerSpecialtyOrJobTypePage({
                   {stats.jobTypes.map((jt, idx) => (
                     <Link
                       key={idx}
-                      href={`/jobs/nursing/employer/${employer.slug}/${jt.slug}`}
+                      href={`/jobs/nursing/employer/${employer.slug}/${specialtySlug}/${jt.slug}`}
                       className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-green-600 transition-colors"
                     >
                       <span className="text-gray-900 group-hover:text-green-600 font-medium text-sm">{jt.displayName}</span>
