@@ -15,6 +15,7 @@ const { isJobType, jobTypeToDisplay, jobTypeToSlug } = require('../../../../../l
 const { normalizeExperienceLevel } = require('../../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 const { getSalaryText } = require('../../../../../lib/utils/seoTextUtils');
+const { getCityDisplayName } = require('../../../../../lib/utils/cityDisplayUtils');
 
 // Map old specialty slugs to new canonical slugs for 301 redirects
 const SPECIALTY_REDIRECTS = {
@@ -213,6 +214,8 @@ export default function CitySpecialtyOrStateSpecialtyJobTypePage({
   // CITY + SPECIALTY page (original behavior)
   const cityDisplayName = cityName || normalizeCity(cityOrSpecialty?.replace(/-/g, ' ') || '') || cityOrSpecialty || '';
   const specialtyDisplayName = specialtyName || '';
+  // SEO-optimized city name for H1 (drops state, handles NYC)
+  const cityDisplay = getCityDisplayName(cityDisplayName, stateCode);
 
   // Generate SEO meta tags
   const seoMeta = seoUtils.generateCitySpecialtyPageMetaTags
@@ -375,7 +378,7 @@ export default function CitySpecialtyOrStateSpecialtyJobTypePage({
           {/* Header Section */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {specialtyDisplayName} RN Jobs in {cityDisplayName}, {stateDisplayName}
+              {specialtyDisplayName} RN Jobs in {cityDisplay}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {pagination?.total > 0 ? (

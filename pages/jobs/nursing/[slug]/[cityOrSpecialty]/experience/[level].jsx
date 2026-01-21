@@ -8,6 +8,7 @@ import { generateCityExperienceLevelPageMetaTags } from '../../../../../../lib/s
 import { specialtyToSlug } from '../../../../../../lib/constants/specialties';
 import { isExperienceLevel, getExperienceLevelDescription } from '../../../../../../lib/constants/experienceLevels';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
+const { getCityDisplayName } = require('../../../../../../lib/utils/cityDisplayUtils');
 
 export async function getServerSideProps({ params, query }) {
   const { slug: stateSlug, cityOrSpecialty: citySlug, level: levelSlug } = params;
@@ -88,6 +89,9 @@ export default function CityExperienceLevelPage({
 
   const levelDescription = getExperienceLevelDescription(levelSlug);
 
+  // SEO-optimized city name for H1 (drops state, handles NYC)
+  const cityDisplay = getCityDisplayName(city, stateCode);
+
   return (
     <>
       <Meta {...seoMeta} />
@@ -109,7 +113,7 @@ export default function CityExperienceLevelPage({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {experienceLevel} RN Jobs in {city}, {stateCode}
+              {experienceLevel} RN Jobs in {cityDisplay}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {totalJobs > 0 ? (

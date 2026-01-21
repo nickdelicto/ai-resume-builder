@@ -8,6 +8,7 @@ import { generateCityJobTypePageMetaTags } from '../../../../../../lib/seo/jobSE
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug } from '../../../../../../lib/constants/specialties';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
+const { getCityDisplayName } = require('../../../../../../lib/utils/cityDisplayUtils');
 
 export async function getServerSideProps({ params, query }) {
   const { slug: stateSlug, cityOrSpecialty: citySlug, jobType: jobTypeSlug } = params;
@@ -97,6 +98,9 @@ export default function CityJobTypePage({
     return cityName.toLowerCase().replace(/\s+/g, '-');
   };
 
+  // SEO-optimized city name for H1 (drops state, handles NYC)
+  const cityDisplay = getCityDisplayName(city, stateCode);
+
   return (
     <>
       <Meta {...seoMeta} />
@@ -118,7 +122,7 @@ export default function CityJobTypePage({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {jobType} RN Jobs in {city}, {stateCode}
+              {jobType} RN Jobs in {cityDisplay}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {totalJobs > 0 ? (
@@ -165,7 +169,7 @@ export default function CityJobTypePage({
                       return (
                         <Link
                           key={idx}
-                          href={`/jobs/nursing/specialty/${specSlug}/${jobTypeSlug}`}
+                          href={`/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${specSlug}/${jobTypeSlug}`}
                           className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
                         >
                           <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
@@ -376,7 +380,7 @@ export default function CityJobTypePage({
                     return (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/specialty/${specSlug}/${jobTypeSlug}`}
+                        href={`/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/${specSlug}/${jobTypeSlug}`}
                         className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-purple-600 transition-colors"
                       >
                         <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{spec.specialty}</span>

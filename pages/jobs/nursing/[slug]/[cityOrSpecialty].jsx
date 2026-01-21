@@ -14,6 +14,7 @@ const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../.
 const { normalizeExperienceLevel } = require('../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
 const { getSalaryText } = require('../../../../lib/utils/seoTextUtils');
+const { getCityDisplayName } = require('../../../../lib/utils/cityDisplayUtils');
 
 // Redirect map for old specialty slugs → new canonical slugs
 const SPECIALTY_REDIRECTS = {
@@ -143,6 +144,8 @@ export default function CityOrSpecialtyPage({
   const stateDisplayName = stateFullName || getStateFullName(stateCode) || stateCode || '';
   const cityDisplayName = cityName || normalizeCity(cityOrSpecialty?.replace(/-/g, ' ') || '') || cityOrSpecialty || '';
   const specialtyDisplayName = specialtyName || '';
+  // SEO-optimized city name for H1 (drops state, handles NYC)
+  const cityDisplay = getCityDisplayName(cityDisplayName, stateCode);
 
   // Generate SEO meta tags
   let seoMeta;
@@ -309,7 +312,7 @@ export default function CityOrSpecialtyPage({
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               {isSpecialtyPage
                 ? `${specialtyDisplayName} RN Jobs in ${stateDisplayName}`
-                : `RN Jobs in ${cityDisplayName}, ${stateDisplayName}`}
+                : `RN Jobs in ${cityDisplay}`}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {pagination?.total > 0 ? (

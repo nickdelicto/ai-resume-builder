@@ -11,6 +11,7 @@ const { isJobType, jobTypeToDisplay, jobTypeToSlug } = require('../../../../../.
 const { normalizeExperienceLevel } = require('../../../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 const { getSalaryText } = require('../../../../../../lib/utils/seoTextUtils');
+const { getCityDisplayName } = require('../../../../../../lib/utils/cityDisplayUtils');
 
 /**
  * City + Specialty + Job Type Page
@@ -107,8 +108,11 @@ export default function CitySpecialtyJobTypePage({
 
   const salaryText = getSalaryText(maxHourlyRate, `${jobType}-${specialty}-${city}-${stateCode}`);
   const jobCountText = totalJobs ? `${totalJobs} ` : '';
+  // SEO-optimized city name for H1 (drops state, handles NYC)
+  const cityDisplay = getCityDisplayName(city, stateCode);
+
   const seoMeta = {
-    title: `${jobCountText}${jobType} ${specialty} RN Jobs in ${city}, ${stateCode}${salaryText}`,
+    title: `${jobCountText}${jobType} ${specialty} RN Jobs in ${cityDisplay}${salaryText}`,
     description: `Find ${totalJobs || 0} ${jobType.toLowerCase()} ${specialty} Registered Nurse jobs in ${city}, ${stateFullName}. Browse positions and apply today!`,
     keywords: `${jobType.toLowerCase()} ${specialty.toLowerCase()} rn jobs ${city.toLowerCase()}, ${specialty.toLowerCase()} nursing jobs ${stateFullName.toLowerCase()}`,
     canonicalUrl: `https://intelliresume.net/jobs/nursing/${slug}/${citySlug}/${specialtySlug}/${jobTypeSlug}`,
@@ -149,7 +153,7 @@ export default function CitySpecialtyJobTypePage({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {jobType} {specialty} RN Jobs in {city}, {stateFullName}
+              {jobType} {specialty} RN Jobs in {cityDisplay}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
               {totalJobs > 0 ? (
