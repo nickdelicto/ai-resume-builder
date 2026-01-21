@@ -11,6 +11,9 @@ const seoUtils = require('../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
 const { specialtyToSlug } = require('../../../lib/constants/specialties');
+const { jobTypeToSlug } = require('../../../lib/constants/jobTypes');
+const { shiftTypeToSlug } = require('../../../lib/constants/shiftTypes');
+const { experienceLevelToSlug } = require('../../../lib/constants/experienceLevels');
 const { PrismaClient } = require('@prisma/client');
 const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
@@ -953,27 +956,39 @@ export default function JobDetailPage({
 
               {/* Title and tags */}
               <div className="flex-1 min-w-0 text-center md:text-left">
-                {/* Tags row */}
+                {/* Tags row - clickable for SEO interlinking */}
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mb-3">
                   {job.specialty && (
-                    <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    <Link
+                      href={`/jobs/nursing/specialty/${specialtyToSlug(job.specialty)}`}
+                      className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                    >
                       {job.specialty}
-                    </span>
+                    </Link>
                   )}
                   {job.jobType && (
-                    <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                    <Link
+                      href={`/jobs/nursing/job-type/${jobTypeToSlug(job.jobType)}`}
+                      className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium hover:bg-orange-200 transition-colors"
+                    >
                       {job.jobType.toLowerCase() === 'prn' || job.jobType.toLowerCase() === 'per diem' ? 'PRN' : job.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
-                    </span>
+                    </Link>
                   )}
                   {job.shiftType && (
-                    <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize">
+                    <Link
+                      href={`/jobs/nursing/shift/${shiftTypeToSlug(job.shiftType)}`}
+                      className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium capitalize hover:bg-indigo-200 transition-colors"
+                    >
                       {job.shiftType}
-                    </span>
+                    </Link>
                   )}
                   {job.experienceLevel && (
-                    <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                    <Link
+                      href={`/jobs/nursing/experience/${experienceLevelToSlug(job.experienceLevel)}`}
+                      className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition-colors"
+                    >
                       {job.experienceLevel}
-                    </span>
+                    </Link>
                   )}
                 </div>
 
@@ -984,33 +999,53 @@ export default function JobDetailPage({
             {/* Info grid - employer, location, pay */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {job.employer && (
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-50 rounded-lg">
+                <Link href={`/jobs/nursing/employer/${job.employer.slug}`} className="flex items-center gap-3 group hover:bg-teal-50 rounded-lg p-1 -m-1 transition-colors">
+                  <div className="p-2 bg-teal-50 rounded-lg group-hover:bg-teal-100 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Employer</div>
-                    <div className="font-semibold text-gray-900">{job.employer.name}</div>
+                    <div className="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">{job.employer.name}</div>
+                  </div>
+                </Link>
+              )}
+
+              {job.city && job.state ? (
+                <Link
+                  href={`/jobs/nursing/${job.state.toLowerCase()}/${job.city.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="flex items-center gap-3 group hover:bg-blue-50 rounded-lg p-1 -m-1 transition-colors"
+                >
+                  <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
+                    <div className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                      {job.city}, {job.state}
+                      {job.zipCode && ` ${job.zipCode}`}
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
+                    <div className="font-semibold text-gray-900">
+                      {job.city || 'Location not specified'}, {job.state || ''}
+                      {job.zipCode && ` ${job.zipCode}`}
+                    </div>
                   </div>
                 </div>
               )}
-
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
-                  <div className="font-semibold text-gray-900">
-                    {job.city || 'Location not specified'}, {job.state || ''}
-                    {job.zipCode && ` ${job.zipCode}`}
-                  </div>
-                </div>
-              </div>
 
               {formatPayForCard(job.salaryMin, job.salaryMax, job.salaryType, job.jobType) && (
                 <div className="flex items-center gap-3">
