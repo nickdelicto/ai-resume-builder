@@ -16,7 +16,7 @@ const MetaBase = ({
   title = "IntelliResume Health | Free RN-Only Job Board", 
   description = "Find your next RN job here. Free RN-only Job Board! Direct nursing positions from Cleveland Clinic, Northwell Health, Adventist & more top hospitals.",
   canonicalUrl,
-  ogImage = "/og-image.png",
+  ogImage = "/og-image-jobs.png",
   ogType = "website",
   keywords = "RN jobs, nursing jobs, registered nurse jobs, free nursing job board, hospital jobs, nursing careers, direct employer jobs"
 }) => {

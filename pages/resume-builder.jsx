@@ -202,11 +202,12 @@ const ResumeBuilderPage = () => {
   return (
     <>
       {/* Resume-specific SEO meta tags */}
-      <Meta 
+      <Meta
         title="AI Resume Builder | Create ATS-Optimized Resumes | IntelliResume Health"
         description="Build a professional resume from scratch, improve your existing resume, or tailor your resume to a specific job with our intelligent AI. Free to start - no signup required."
         keywords="AI resume builder, professional resume, ATS resume, job application, resume tailoring, resume builder free, create resume online"
         canonicalUrl="https://intelliresume.net/resume-builder"
+        ogImage="/og-image.png"
       />
       
       {/* Resume-specific structured data (SoftwareApplication, Product, FAQ schemas) */}

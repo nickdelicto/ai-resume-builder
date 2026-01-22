@@ -21,14 +21,14 @@ export default function Document() {
         <meta property="og:url" content="https://intelliresume.net/" />
         <meta property="og:title" content="IntelliResume Health - Free RN-Only Job Board" />
         <meta property="og:description" content="Find your next RN job here. Free RN-only Job Board! Direct nursing positions from top hospitals nationwide." />
-        <meta property="og:image" content="https://intelliresume.net/og-image.png" />
-        
+        <meta property="og:image" content="https://intelliresume.net/og-image-jobs.png" />
+
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://intelliresume.net/" />
         <meta property="twitter:title" content="IntelliResume Health - Free RN-Only Job Board" />
         <meta property="twitter:description" content="Find your next RN job here. Free RN-only Job Board! Direct nursing positions from top hospitals nationwide." />
-        <meta property="twitter:image" content="https://intelliresume.net/og-image.png" />
+        <meta property="twitter:image" content="https://intelliresume.net/og-image-jobs.png" />
         
         {/* Note: Canonical URLs are handled per-page via Meta.jsx component */}
         
