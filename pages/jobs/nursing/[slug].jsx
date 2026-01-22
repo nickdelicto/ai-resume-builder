@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
 import JobAlertSignup from '../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
+import ShareButtons from '../../../components/ShareButtons';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
@@ -908,6 +909,13 @@ export default function JobDetailPage({
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
+        {/* Floating Share Buttons - Left side */}
+        <ShareButtons
+          url={`https://intelliresume.net/jobs/nursing/${job.slug}`}
+          title={`${job.title} at ${job.employer?.name || 'Healthcare Employer'} - ${job.city}, ${job.state}`}
+          description={`Check out this RN position: ${job.title} in ${job.city}, ${job.state}`}
+        />
+
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
           <Link
