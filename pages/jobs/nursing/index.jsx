@@ -47,6 +47,11 @@ export default function NursingJobsPage() {
   const [showMoreStates, setShowMoreStates] = useState(false);
   const [showMoreSpecialties, setShowMoreSpecialties] = useState(false);
   const [showMoreEmployers, setShowMoreEmployers] = useState(false);
+  const [showMoreCities, setShowMoreCities] = useState(false);
+
+  // Cities for cascading filter (loaded when state is selected)
+  const [cities, setCities] = useState([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
 
   // Browse section expansion (for SEO links at bottom)
   const [browseExpanded, setBrowseExpanded] = useState({
@@ -132,6 +137,38 @@ export default function NursingJobsPage() {
     }
   };
 
+  // Fetch cities for a selected state
+  const fetchCities = async (stateCode) => {
+    if (!stateCode) {
+      setCities([]);
+      return;
+    }
+    setCitiesLoading(true);
+    try {
+      const response = await fetch(`/api/job-alerts/cities?state=${stateCode}`);
+      const data = await response.json();
+      if (data.success && data.cities) {
+        setCities(data.cities);
+      } else {
+        setCities([]);
+      }
+    } catch (err) {
+      console.error('Error fetching cities:', err);
+      setCities([]);
+    } finally {
+      setCitiesLoading(false);
+    }
+  };
+
+  // Fetch cities when state filter changes
+  useEffect(() => {
+    if (filters.state) {
+      fetchCities(filters.state);
+    } else {
+      setCities([]);
+    }
+  }, [filters.state]);
+
   // Fetch unfiltered stats once on mount for the Browse RN Jobs section
   const fetchUnfilteredStats = async () => {
     try {
@@ -193,12 +230,21 @@ export default function NursingJobsPage() {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    // Reset to page 1 when filters change
-    router.push({
-      pathname: '/jobs/nursing',
-      query: { ...filters, [key]: value, page: 1 }
-    }, undefined, { shallow: true });
+    // If state changes, clear city filter and reset cities list
+    if (key === 'state') {
+      setFilters(prev => ({ ...prev, state: value, city: '' }));
+      setShowMoreCities(false);
+      router.push({
+        pathname: '/jobs/nursing',
+        query: { ...filters, state: value, city: '', page: 1 }
+      }, undefined, { shallow: true });
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+      router.push({
+        pathname: '/jobs/nursing',
+        query: { ...filters, [key]: value, page: 1 }
+      }, undefined, { shallow: true });
+    }
   };
 
   const handlePageChange = (newPage) => {
@@ -400,6 +446,32 @@ export default function NursingJobsPage() {
                 </div>
               </SidebarSection>
 
+              {/* By City (shown when state is selected) */}
+              {filters.state && cities.length > 0 && (
+                <SidebarSection title="By City" color="bg-cyan-500" expanded={true} onToggle={() => {}}>
+                  <div className="space-y-1 max-h-72 overflow-y-auto scrollbar-thin pr-1">
+                    {citiesLoading ? (
+                      <div className="text-sm text-gray-500 py-2">Loading cities...</div>
+                    ) : (
+                      <>
+                        {(showMoreCities ? cities : cities.slice(0, 15)).map((city) => (
+                          <button key={city.name} onClick={() => handleFilterChange('city', filters.city === city.name ? '' : city.name)}
+                            className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left ${filters.city === city.name ? 'bg-cyan-100 text-cyan-800' : 'hover:bg-cyan-50 text-gray-700'}`}>
+                            <span>{city.name}</span>
+                            <span className="text-xs text-cyan-600 bg-cyan-100 px-2 py-0.5 rounded-full">{city.jobCount}</span>
+                          </button>
+                        ))}
+                        {cities.length > 15 && (
+                          <button onClick={() => setShowMoreCities(!showMoreCities)} className="text-sm text-cyan-600 hover:underline mt-2">
+                            {showMoreCities ? 'Show less' : `Show all ${cities.length}`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </SidebarSection>
+              )}
+
               {/* By Specialty */}
               <SidebarSection title="By Specialty" color="bg-purple-500" expanded={expandedSections.specialty} onToggle={() => toggleSection('specialty')}>
                 <div className="space-y-1 max-h-72 overflow-y-auto scrollbar-thin pr-1">
@@ -466,7 +538,9 @@ export default function NursingJobsPage() {
               {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
                 <button
                   onClick={() => {
-                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
+                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                    setCities([]);
+                    setShowMoreCities(false);
                     router.push('/jobs/nursing', undefined, { shallow: true });
                   }}
                   className="w-full mt-4 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm font-medium"
@@ -512,15 +586,18 @@ export default function NursingJobsPage() {
           <div className="lg:hidden mb-4">
             <button
               onClick={() => setMobileFiltersOpen(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-gray-300 rounded-xl shadow-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-blue-50 border-2 border-blue-300 rounded-xl shadow-sm font-semibold text-blue-700 hover:bg-blue-100 hover:border-blue-400 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
               </svg>
-              Filters & Browse
-              {(filters.state || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
-                <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">Active</span>
-              )}
+              <span className="text-base">Filter Jobs</span>
+              {(() => {
+                const activeCount = [filters.state, filters.city, filters.specialty, filters.jobType, filters.experienceLevel, filters.search].filter(Boolean).length;
+                return activeCount > 0 ? (
+                  <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeCount} active</span>
+                ) : null;
+              })()}
             </button>
           </div>
 
@@ -557,6 +634,32 @@ export default function NursingJobsPage() {
                             <button onClick={() => setShowMoreStates(!showMoreStates)} className="text-sm text-blue-600 hover:underline mt-2">
                               {showMoreStates ? 'Show less' : `Show all ${browseStats.states.length}`}
                             </button>
+                          )}
+                        </div>
+                      </SidebarSection>
+                    )}
+
+                    {/* By City (shown when state is selected) */}
+                    {filters.state && cities.length > 0 && (
+                      <SidebarSection title="By City" color="bg-cyan-500" expanded={true} onToggle={() => {}}>
+                        <div className="space-y-1 max-h-80 overflow-y-auto scrollbar-thin pr-1">
+                          {citiesLoading ? (
+                            <div className="text-sm text-gray-500 py-2">Loading cities...</div>
+                          ) : (
+                            <>
+                              {(showMoreCities ? cities : cities.slice(0, 15)).map((city) => (
+                                <button key={city.name} onClick={() => handleFilterChange('city', filters.city === city.name ? '' : city.name)}
+                                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left ${filters.city === city.name ? 'bg-cyan-100 text-cyan-800' : 'hover:bg-cyan-50 text-gray-700'}`}>
+                                  <span>{city.name}</span>
+                                  <span className="text-xs text-cyan-600 bg-cyan-100 px-2 py-0.5 rounded-full">{city.jobCount}</span>
+                                </button>
+                              ))}
+                              {cities.length > 15 && (
+                                <button onClick={() => setShowMoreCities(!showMoreCities)} className="text-sm text-cyan-600 hover:underline mt-2">
+                                  {showMoreCities ? 'Show less' : `Show all ${cities.length}`}
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </SidebarSection>
@@ -639,6 +742,8 @@ export default function NursingJobsPage() {
                   <button
                     onClick={() => {
                       setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                      setCities([]);
+                      setShowMoreCities(false);
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="w-full mt-4 px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm font-medium"
@@ -653,7 +758,7 @@ export default function NursingJobsPage() {
             <main className="flex-1 min-w-0">
 
           {/* Active Filters Bar */}
-          {(filters.state || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
+          {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 font-medium">Active filters:</span>
@@ -664,6 +769,18 @@ export default function NursingJobsPage() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
                   >
                     <span>{browseStats.states.find(s => s.code === filters.state)?.fullName || filters.state}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+
+                {filters.city && (
+                  <button
+                    onClick={() => handleFilterChange('city', '')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-100 text-cyan-800 rounded-full text-sm font-medium hover:bg-cyan-200 transition-colors"
+                  >
+                    <span>{filters.city}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
@@ -773,7 +890,9 @@ export default function NursingJobsPage() {
               <p className="text-gray-600 mb-6">Try adjusting your filters or search terms.</p>
               <button
                 onClick={() => {
-                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', search: '' });
+                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                  setCities([]);
+                  setShowMoreCities(false);
                   router.push('/jobs/nursing', undefined, { shallow: true });
                 }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
