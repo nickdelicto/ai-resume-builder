@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
+const { shiftTypeToDisplay, shiftTypeToSlug, SHIFT_TYPES } = require('../../../lib/constants/shiftTypes');
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
 
   try {
     // Extract filter params from query
-    const { state, specialty, jobType, experienceLevel, employerSlug, search } = req.query;
+    const { state, specialty, jobType, experienceLevel, shiftType, employerSlug, search } = req.query;
 
     // Build base where clause with active filters
     const baseWhere = { isActive: true };
@@ -38,6 +39,15 @@ export default async function handler(req, res) {
       }
       if (experienceLevel && excludeKey !== 'experienceLevel') {
         where.experienceLevel = { equals: experienceLevel, mode: 'insensitive' };
+      }
+      if (shiftType && excludeKey !== 'shiftType') {
+        // Use the shift type constants to get all DB values for this shift type
+        const shiftData = SHIFT_TYPES.find(st => st.slug === shiftType || st.display.toLowerCase() === shiftType.toLowerCase());
+        if (shiftData) {
+          where.shiftType = { in: shiftData.dbValues };
+        } else {
+          where.shiftType = { equals: shiftType, mode: 'insensitive' };
+        }
       }
       if (employerSlug && excludeKey !== 'employer') {
         where.employer = { slug: employerSlug };
@@ -99,6 +109,14 @@ export default async function handler(req, res) {
       where: { ...buildWhereExcluding('experienceLevel'), experienceLevel: { not: null } },
       _count: { id: true },
       orderBy: { experienceLevel: 'asc' }
+    });
+
+    // Get shift types with counts (filtered by state, specialty, jobType, experienceLevel but NOT shiftType)
+    const shiftTypes = await prisma.nursingJob.groupBy({
+      by: ['shiftType'],
+      where: { ...buildWhereExcluding('shiftType'), shiftType: { not: null } },
+      _count: { id: true },
+      orderBy: { shiftType: 'asc' }
     });
 
     // Format states with full names
@@ -237,6 +255,30 @@ export default async function handler(req, res) {
     });
     const experienceLevelsFormatted = Array.from(experienceLevelsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
+    // Format shift types and merge case-insensitive duplicates using shiftTypes constants
+    const shiftTypesMap = new Map();
+    shiftTypes.forEach(st => {
+      const shiftTypeValue = st.shiftType; // Raw DB value (e.g., "days", "nights", "Day", "Night")
+      // Use the shiftTypeToSlug to get consistent slug, then shiftTypeToDisplay for display name
+      const slug = shiftTypeToSlug(shiftTypeValue);
+      if (!slug) return; // Skip unknown shift types
+
+      const displayName = shiftTypeToDisplay(slug);
+      if (!displayName) return;
+
+      // Merge duplicates by slug (e.g., "days" and "Day" both map to "day-shift")
+      if (shiftTypesMap.has(slug)) {
+        shiftTypesMap.get(slug).count += st._count.id;
+      } else {
+        shiftTypesMap.set(slug, {
+          name: displayName,
+          count: st._count.id,
+          slug: slug
+        });
+      }
+    });
+    const shiftTypesFormatted = Array.from(shiftTypesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
     return res.status(200).json({
       success: true,
       data: {
@@ -244,7 +286,8 @@ export default async function handler(req, res) {
         employers: employersFormatted,
         specialties: specialtiesFormatted,
         jobTypes: jobTypesFormatted,
-        experienceLevels: experienceLevelsFormatted
+        experienceLevels: experienceLevelsFormatted,
+        shiftTypes: shiftTypesFormatted
       }
     });
 

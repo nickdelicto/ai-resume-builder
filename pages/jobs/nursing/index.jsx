@@ -21,7 +21,8 @@ export default function NursingJobsPage() {
     employers: [],
     specialties: [],
     jobTypes: [],
-    experienceLevels: []
+    experienceLevels: [],
+    shiftTypes: []
   });
   const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
 
@@ -31,7 +32,8 @@ export default function NursingJobsPage() {
     employers: [],
     specialties: [],
     jobTypes: [],
-    experienceLevels: []
+    experienceLevels: [],
+    shiftTypes: []
   });
   const [unfilteredStatsLoading, setUnfilteredStatsLoading] = useState(true);
 
@@ -42,6 +44,7 @@ export default function NursingJobsPage() {
     specialty: true,
     jobType: true,
     experienceLevel: true,
+    shiftType: true,
     employer: true
   });
   const [showMoreStates, setShowMoreStates] = useState(false);
@@ -67,6 +70,7 @@ export default function NursingJobsPage() {
     specialty: router.query.specialty || '',
     jobType: router.query.jobType || '',
     experienceLevel: router.query.experienceLevel || '',
+    shiftType: router.query.shiftType || '',
     employer: router.query.employer || '',
     search: router.query.search || ''
   });
@@ -79,20 +83,21 @@ export default function NursingJobsPage() {
       specialty: router.query.specialty || '',
       jobType: router.query.jobType || '',
       experienceLevel: router.query.experienceLevel || '',
+      shiftType: router.query.shiftType || '',
       employer: router.query.employer || '',
       search: router.query.search || ''
     });
-  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.employer, router.query.search]);
+  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.employer, router.query.search]);
 
   // Fetch jobs when filters or page changes
   useEffect(() => {
     fetchJobs();
-  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.employer, router.query.search]);
+  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.employer, router.query.search]);
 
   // Fetch browse statistics on mount and when filters change
   useEffect(() => {
     fetchBrowseStats();
-  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.employer]);
+  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.employer]);
 
   // Handle scroll to hash on page load (for links like /jobs/nursing#filters)
   useEffect(() => {
@@ -121,6 +126,7 @@ export default function NursingJobsPage() {
       if (filters.specialty) params.set('specialty', filters.specialty);
       if (filters.jobType) params.set('jobType', filters.jobType);
       if (filters.experienceLevel) params.set('experienceLevel', filters.experienceLevel);
+      if (filters.shiftType) params.set('shiftType', filters.shiftType);
       if (filters.employer) params.set('employerSlug', filters.employer);
 
       const url = `/api/jobs/browse-stats${params.toString() ? '?' + params.toString() : ''}`;
@@ -201,6 +207,7 @@ export default function NursingJobsPage() {
         specialty: router.query.specialty || '',
         jobType: router.query.jobType || '',
         experienceLevel: router.query.experienceLevel || '',
+        shiftType: router.query.shiftType || '',
         employerSlug: router.query.employer || '',
         search: router.query.search || ''
       };
@@ -516,6 +523,19 @@ export default function NursingJobsPage() {
                 </div>
               </SidebarSection>
 
+              {/* By Shift Type */}
+              <SidebarSection title="By Shift" color="bg-indigo-500" expanded={expandedSections.shiftType} onToggle={() => toggleSection('shiftType')}>
+                <div className="space-y-1">
+                  {browseStats.shiftTypes.map((shift) => (
+                    <button key={shift.slug} onClick={() => handleFilterChange('shiftType', filters.shiftType === shift.slug ? '' : shift.slug)}
+                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left ${filters.shiftType === shift.slug ? 'bg-indigo-100 text-indigo-800' : 'hover:bg-indigo-50 text-gray-700'}`}>
+                      <span>{shift.name}</span>
+                      <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">{shift.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </SidebarSection>
+
               {/* Top Employers - Link to employer pages for SEO value */}
               <SidebarSection title="Top Employers" color="bg-green-500" expanded={expandedSections.employer} onToggle={() => toggleSection('employer')}>
                 <div className="space-y-1 max-h-72 overflow-y-auto scrollbar-thin pr-1">
@@ -535,10 +555,10 @@ export default function NursingJobsPage() {
               </SidebarSection>
 
               {/* Clear Filters */}
-              {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.search) && (
+              {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.search) && (
                 <button
                   onClick={() => {
-                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
                     setCities([]);
                     setShowMoreCities(false);
                     router.push('/jobs/nursing', undefined, { shallow: true });
@@ -593,7 +613,7 @@ export default function NursingJobsPage() {
               </svg>
               <span className="text-base">Filter Jobs</span>
               {(() => {
-                const activeCount = [filters.state, filters.city, filters.specialty, filters.jobType, filters.experienceLevel, filters.search].filter(Boolean).length;
+                const activeCount = [filters.state, filters.city, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.search].filter(Boolean).length;
                 return activeCount > 0 ? (
                   <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeCount} active</span>
                 ) : null;
@@ -715,6 +735,21 @@ export default function NursingJobsPage() {
                       </SidebarSection>
                     )}
 
+                    {/* By Shift Type */}
+                    {browseStats.shiftTypes.length > 0 && (
+                      <SidebarSection title="By Shift" color="bg-indigo-500" expanded={expandedSections.shiftType} onToggle={() => toggleSection('shiftType')}>
+                        <div className="space-y-1">
+                          {browseStats.shiftTypes.map((shift) => (
+                            <button key={shift.slug} onClick={() => handleFilterChange('shiftType', filters.shiftType === shift.slug ? '' : shift.slug)}
+                              className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm text-left ${filters.shiftType === shift.slug ? 'bg-indigo-100 text-indigo-800' : 'hover:bg-indigo-50 text-gray-700'}`}>
+                              <span>{shift.name}</span>
+                              <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">{shift.count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </SidebarSection>
+                    )}
+
                     {/* By Employer */}
                     {browseStats.employers.length > 0 && (
                       <SidebarSection title="By Employer" color="bg-green-500" expanded={expandedSections.employer} onToggle={() => toggleSection('employer')}>
@@ -738,10 +773,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear Filters */}
-                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
+                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.employer || filters.search) && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
                       setCities([]);
                       setShowMoreCities(false);
                       router.push('/jobs/nursing', undefined, { shallow: true });
@@ -758,7 +793,7 @@ export default function NursingJobsPage() {
             <main className="flex-1 min-w-0">
 
           {/* Active Filters Bar */}
-          {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.employer || filters.search) && (
+          {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.employer || filters.search) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 font-medium">Active filters:</span>
@@ -823,6 +858,18 @@ export default function NursingJobsPage() {
                   </button>
                 )}
 
+                {filters.shiftType && (
+                  <button
+                    onClick={() => handleFilterChange('shiftType', '')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium hover:bg-indigo-200 transition-colors"
+                  >
+                    <span>{browseStats.shiftTypes.find(s => s.slug === filters.shiftType)?.name || filters.shiftType}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+
                 {filters.employer && (
                   <button
                     onClick={() => handleFilterChange('employer', '')}
@@ -848,10 +895,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear all - shown when multiple filters active */}
-                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.employer, filters.search].filter(Boolean).length > 1 && (
+                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.employer, filters.search].filter(Boolean).length > 1 && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="text-sm text-red-600 hover:text-red-700 font-medium ml-2"
@@ -890,7 +937,7 @@ export default function NursingJobsPage() {
               <p className="text-gray-600 mb-6">Try adjusting your filters or search terms.</p>
               <button
                 onClick={() => {
-                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', employer: '', search: '' });
+                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
                   setCities([]);
                   setShowMoreCities(false);
                   router.push('/jobs/nursing', undefined, { shallow: true });
@@ -1064,7 +1111,7 @@ export default function NursingJobsPage() {
             <div className="mt-16 bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Browse RN Jobs</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-8">
                 {/* By State */}
                 <div>
                   <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
@@ -1169,6 +1216,27 @@ export default function NursingJobsPage() {
                         >
                           <span>{level.name}</span>
                           <span className="text-xs text-gray-400">({level.count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* By Shift */}
+                <div>
+                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    By Shift
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {unfilteredBrowseStats.shiftTypes.map((shift) => (
+                      <li key={shift.slug}>
+                        <Link
+                          href={`/jobs/nursing/shift/${shift.slug}`}
+                          className="flex items-center justify-between text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
+                        >
+                          <span>{shift.name}</span>
+                          <span className="text-xs text-gray-400">({shift.count})</span>
                         </Link>
                       </li>
                     ))}

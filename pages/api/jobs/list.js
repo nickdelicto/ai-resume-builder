@@ -66,6 +66,7 @@ export default async function handler(req, res) {
       employerSlug,
       jobType,
       experienceLevel,
+      shiftType,
       search,
       isActive = true
     } = req.query;
@@ -166,6 +167,26 @@ export default async function handler(req, res) {
           mode: 'insensitive',
           equals: experienceLevel
         };
+      }
+    }
+
+    // Filter by shift type (handle slug format and DB value variations)
+    if (shiftType) {
+      // Map slug to possible DB values
+      const shiftMapping = {
+        'day-shift': ['days', 'Day'],
+        'night-shift': ['nights', 'Night'],
+        'rotating-shift': ['rotating'],
+        'evening-shift': ['evenings'],
+        'variable-shift': ['variable']
+      };
+
+      const dbValues = shiftMapping[shiftType.toLowerCase()];
+      if (dbValues) {
+        where.shiftType = { in: dbValues };
+      } else {
+        // Fallback: case-insensitive match
+        where.shiftType = { mode: 'insensitive', equals: shiftType };
       }
     }
 
