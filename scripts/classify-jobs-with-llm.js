@@ -169,6 +169,18 @@ If the scraped location is missing (null) or seems invalid:
 - Return ONLY valid 2-letter US state codes (AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD, MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI, WY, DC)
 - If location truly cannot be determined, return city: null, state: null
 
+**Task 7: Detect sign-on bonus**
+Look for sign-on bonus, signing bonus, or similar incentives in the job posting.
+
+- hasSignOnBonus: true if job mentions any sign-on bonus, signing bonus, welcome bonus, or similar hiring incentive
+- signOnBonusAmount: Extract the dollar amount if specified (as integer, e.g., 10000 for "$10,000"), or null if not specified
+
+Examples:
+- "$5,000 sign-on bonus" → hasSignOnBonus: true, signOnBonusAmount: 5000
+- "Sign-on bonus available" → hasSignOnBonus: true, signOnBonusAmount: null
+- "Up to $15K signing bonus" → hasSignOnBonus: true, signOnBonusAmount: 15000
+- No mention → hasSignOnBonus: false, signOnBonusAmount: null
+
 **CRITICAL: Keep CLASSIFICATION values SHORT and CONCISE. Use ONLY the exact values from the lists above.**
 
 GOOD examples for classification (concise):
@@ -247,6 +259,8 @@ Full intro paragraph here with all original text preserved...
   "experienceLevel": "New Grad" or "Experienced" or "Leadership" or null,
   "city": "City Name" or "Remote" or null,
   "state": "OH" or null (2-letter code only),
+  "hasSignOnBonus": true or false,
+  "signOnBonusAmount": 10000 or null (integer, no dollar sign or commas),
   "confidence": 0.95
 }`;
 }
@@ -274,6 +288,7 @@ Extract the following:
    - "Experienced" = 1+ years, standard staff RN positions (DEFAULT)
    - "Leadership" = Charge nurse, manager, director, coordinator, supervisory roles
 6. City and State (2-letter code)
+7. Sign-on Bonus: Does the job mention a sign-on bonus, signing bonus, or welcome bonus? If yes, extract the amount if specified.
 
 **Specialty Options:** ${SPECIALTIES.join(', ')}
 
@@ -286,6 +301,8 @@ Return ONLY valid JSON:
   "experienceLevel": "New Grad" | "Experienced" | "Leadership" | null,
   "city": "city name",
   "state": "2-letter code",
+  "hasSignOnBonus": true or false,
+  "signOnBonusAmount": 10000 or null (integer only),
   "confidence": 0.95
 }`;
 
@@ -640,6 +657,7 @@ async function main() {
         console.log(`      Shift Type: ${c.shiftType || 'not specified'}`);
         console.log(`      Experience: ${c.experienceLevel || 'not specified'}`);
         console.log(`      Location: ${c.city || 'unknown'}, ${c.state || 'unknown'}`);
+        console.log(`      Sign-on Bonus: ${c.hasSignOnBonus ? (c.signOnBonusAmount ? `$${c.signOnBonusAmount.toLocaleString()}` : 'Yes (amount not specified)') : 'No'}`);
         console.log(`      Confidence: ${(c.confidence * 100).toFixed(0)}%`);
         console.log(`   💰 Cost: $${result.cost.toFixed(6)} | Tokens: ${result.tokensUsed}`);
         
@@ -654,6 +672,8 @@ async function main() {
           experienceLevel: c.experienceLevel,
           city: c.city,
           state: c.state,
+          hasSignOnBonus: c.hasSignOnBonus || false,
+          signOnBonusAmount: c.signOnBonusAmount || null,
           confidence: c.confidence
         });
         
@@ -667,6 +687,8 @@ async function main() {
             jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
             shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
             experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
+            hasSignOnBonus: c.hasSignOnBonus || false,
+            signOnBonusAmount: c.signOnBonusAmount || null,
             isActive: true,       // ✅ Activate job - validated as Staff RN with location
             classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
           };
@@ -695,6 +717,8 @@ async function main() {
             jobType: c.jobType || job.jobType,
             shiftType: c.shiftType || job.shiftType,
             experienceLevel: c.experienceLevel || job.experienceLevel,
+            hasSignOnBonus: c.hasSignOnBonus || false,
+            signOnBonusAmount: c.signOnBonusAmount || null,
             isActive: false,      // ❌ Keep inactive - no valid location
             classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
           };

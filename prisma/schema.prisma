@@ -219,6 +219,10 @@ model NursingJob {
   salaryMinAnnual Int? // Normalized annual equivalent (hourly*2080 if hourly, same if annual)
   salaryMaxAnnual Int? // Normalized annual equivalent
 
+  // Sign-on Bonus (LLM-extracted from job description)
+  hasSignOnBonus    Boolean @default(false) // Whether job mentions a sign-on bonus
+  signOnBonusAmount Int?    // Sign-on bonus amount in USD if specified (e.g., 10000 for $10,000)
+
   // Source Tracking
   sourceUrl   String  @unique // Original job posting URL where users can apply
   sourceJobId String? // Job ID from employer's system (for deduplication)
