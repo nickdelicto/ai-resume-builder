@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { getEmployerLogoPath, hasEmployerLogo } from '../../lib/utils/employerLogos';
+import { useBrowseStats } from '../../lib/hooks/useBrowseStats';
 
 /**
  * FeaturedEmployers - Shows top healthcare employers hiring RNs
@@ -11,32 +12,22 @@ import { getEmployerLogoPath, hasEmployerLogo } from '../../lib/utils/employerLo
  * - Professional gradient background
  * - Elegant hover interactions
  * - Premium CTA button
+ *
+ * Uses SWR for data fetching with optional SSR fallback
  */
-const FeaturedEmployers = () => {
-  const [employers, setEmployers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const FeaturedEmployers = ({ initialStats }) => {
+  // Use SWR hook with optional SSR fallback
+  const { stats, isLoading: loading } = useBrowseStats({ fallbackData: initialStats });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/jobs/browse-stats');
-        const data = await response.json();
-        if (data.success && data.data.employers) {
-          // Get employers that have logos first, then others
-          const employersWithLogos = data.data.employers.filter(emp => hasEmployerLogo(emp.slug));
-          const topWithoutLogos = data.data.employers
-            .filter(emp => !hasEmployerLogo(emp.slug))
-            .slice(0, 3);
-          setEmployers([...employersWithLogos, ...topWithoutLogos]);
-        }
-      } catch (error) {
-        console.error('Error fetching employers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  // Process employers - prioritize those with logos
+  const employers = useMemo(() => {
+    if (!stats?.employers) return [];
+    const employersWithLogos = stats.employers.filter(emp => hasEmployerLogo(emp.slug));
+    const topWithoutLogos = stats.employers
+      .filter(emp => !hasEmployerLogo(emp.slug))
+      .slice(0, 3);
+    return [...employersWithLogos, ...topWithoutLogos];
+  }, [stats]);
 
   const formatNumber = (num) => num.toLocaleString();
 

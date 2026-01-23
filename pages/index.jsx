@@ -103,14 +103,14 @@ const HomePage = ({ initialStats }) => {
         <JobSearchHero initialStats={initialStats} />
         
         {/* Section 2: Browse by State */}
-        <BrowseByState />
+        <BrowseByState initialStats={initialStats} />
 
         {/* Section 3: Browse by Category - Specialty, Job Type, Experience, Shift */}
-        <BrowseByCategory />
+        <BrowseByCategory initialStats={initialStats} />
 
         {/* Section 4: Featured Employers - flows directly from Browse by Category */}
         {/* Removed WaveDivider - sections have contrasting gradients that create natural visual separation */}
-        <FeaturedEmployers />
+        <FeaturedEmployers initialStats={initialStats} />
         
         {/* Section 5: Resume Builder CTA */}
         <ResumeBuilderCTA />

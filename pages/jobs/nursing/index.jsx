@@ -26,16 +26,6 @@ export default function NursingJobsPage() {
   });
   const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
 
-  // Unfiltered stats for Browse RN Jobs section (SEO links at bottom)
-  const [unfilteredBrowseStats, setUnfilteredBrowseStats] = useState({
-    states: [],
-    employers: [],
-    specialties: [],
-    jobTypes: [],
-    experienceLevels: [],
-    shiftTypes: []
-  });
-  const [unfilteredStatsLoading, setUnfilteredStatsLoading] = useState(true);
 
   // Sidebar state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -56,12 +46,6 @@ export default function NursingJobsPage() {
   const [cities, setCities] = useState([]);
   const [citiesLoading, setCitiesLoading] = useState(false);
 
-  // Browse section expansion (for SEO links at bottom)
-  const [browseExpanded, setBrowseExpanded] = useState({
-    states: false,
-    specialties: false,
-    employers: false
-  });
 
   // Initialize filters from URL query params
   const [filters, setFilters] = useState({
@@ -177,26 +161,6 @@ export default function NursingJobsPage() {
       setCities([]);
     }
   }, [filters.state]);
-
-  // Fetch unfiltered stats once on mount for the Browse RN Jobs section
-  const fetchUnfilteredStats = async () => {
-    try {
-      const response = await fetch('/api/jobs/browse-stats');
-      const data = await response.json();
-      if (data.success) {
-        setUnfilteredBrowseStats(data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching unfiltered browse stats:', err);
-    } finally {
-      setUnfilteredStatsLoading(false);
-    }
-  };
-
-  // Fetch unfiltered stats on mount
-  useEffect(() => {
-    fetchUnfilteredStats();
-  }, []);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -1167,202 +1131,6 @@ export default function NursingJobsPage() {
           )}
             </main>
           </div>
-
-          {/* Browse RN Jobs Section - SEO Links to Dedicated Pages (always shows unfiltered data) */}
-          {!unfilteredStatsLoading && (
-            <div className="mt-16 bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Browse RN Jobs</h2>
-
-              {/* Featured Links */}
-              <div className="mb-8 pb-6 border-b border-gray-200">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  Featured
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/jobs/nursing/sign-on-bonus"
-                    className="group inline-flex items-center gap-3 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-base font-semibold transition-all shadow-md hover:shadow-lg"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                    </svg>
-                    RN Jobs with Sign-On Bonus
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-8">
-                {/* By State */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    By State
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {(browseExpanded.states ? unfilteredBrowseStats.states : unfilteredBrowseStats.states.slice(0, 8)).map((state) => (
-                      <li key={state.code}>
-                        <Link
-                          href={`/jobs/nursing/${state.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span>{state.fullName}</span>
-                          <span className="text-xs text-gray-400">({state.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                    {unfilteredBrowseStats.states.length > 8 && (
-                      <li>
-                        <button
-                          onClick={() => setBrowseExpanded(prev => ({ ...prev, states: !prev.states }))}
-                          className="flex items-center gap-1 text-sm text-blue-600 hover:underline px-2 py-1 font-medium"
-                        >
-                          {browseExpanded.states ? 'Show less' : `View all ${unfilteredBrowseStats.states.length} states`}
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.states ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                {/* By Specialty */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                    By Specialty
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {(browseExpanded.specialties ? unfilteredBrowseStats.specialties : unfilteredBrowseStats.specialties.slice(0, 8)).map((specialty) => (
-                      <li key={specialty.slug}>
-                        <Link
-                          href={`/jobs/nursing/specialty/${specialty.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span>{specialty.name}</span>
-                          <span className="text-xs text-gray-400">({specialty.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                    {unfilteredBrowseStats.specialties.length > 8 && (
-                      <li>
-                        <button
-                          onClick={() => setBrowseExpanded(prev => ({ ...prev, specialties: !prev.specialties }))}
-                          className="flex items-center gap-1 text-sm text-purple-600 hover:underline px-2 py-1 font-medium"
-                        >
-                          {browseExpanded.specialties ? 'Show less' : `View all ${unfilteredBrowseStats.specialties.length} specialties`}
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.specialties ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                {/* By Job Type */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                    By Job Type
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {unfilteredBrowseStats.jobTypes.map((jobType) => (
-                      <li key={jobType.slug}>
-                        <Link
-                          href={`/jobs/nursing/job-type/${jobType.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span>{jobType.name}</span>
-                          <span className="text-xs text-gray-400">({jobType.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* By Experience */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                    By Experience
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {unfilteredBrowseStats.experienceLevels.map((level) => (
-                      <li key={level.slug}>
-                        <Link
-                          href={`/jobs/nursing/experience/${level.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span>{level.name}</span>
-                          <span className="text-xs text-gray-400">({level.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* By Shift */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                    By Shift
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {unfilteredBrowseStats.shiftTypes.map((shift) => (
-                      <li key={shift.slug}>
-                        <Link
-                          href={`/jobs/nursing/shift/${shift.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span>{shift.name}</span>
-                          <span className="text-xs text-gray-400">({shift.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* By Employer */}
-                <div>
-                  <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    By Employer
-                  </h3>
-                  <ul className="space-y-1.5">
-                    {(browseExpanded.employers ? unfilteredBrowseStats.employers : unfilteredBrowseStats.employers.slice(0, 8)).map((employer) => (
-                      <li key={employer.slug}>
-                        <Link
-                          href={`/jobs/nursing/employer/${employer.slug}`}
-                          className="flex items-center justify-between text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
-                        >
-                          <span className="truncate">{employer.name}</span>
-                          <span className="text-xs text-gray-400 ml-1">({employer.count})</span>
-                        </Link>
-                      </li>
-                    ))}
-                    {unfilteredBrowseStats.employers.length > 8 && (
-                      <li>
-                        <button
-                          onClick={() => setBrowseExpanded(prev => ({ ...prev, employers: !prev.employers }))}
-                          className="flex items-center gap-1 text-sm text-green-600 hover:underline px-2 py-1 font-medium"
-                        >
-                          {browseExpanded.employers ? 'Show less' : `View all ${unfilteredBrowseStats.employers.length} employers`}
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${browseExpanded.employers ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Job Alert Signup - Before Footer */}
           <div className="mt-16" id="job-alert-form" data-job-alert-form>

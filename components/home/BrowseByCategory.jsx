@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useBrowseStats } from '../../lib/hooks/useBrowseStats';
 
 /**
  * BrowseByCategory - Quick browse links for SEO pages
@@ -12,29 +13,13 @@ import Link from 'next/link';
  * - Shift Types (Day, Night, Rotating)
  *
  * Each link goes to dedicated SEO-optimized pages
+ * Uses SWR for data fetching with optional SSR fallback
  */
-const BrowseByCategory = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+const BrowseByCategory = ({ initialStats }) => {
   const [showMoreSpecialties, setShowMoreSpecialties] = useState(false);
 
-  // Fetch browse stats on mount
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/jobs/browse-stats');
-        const data = await response.json();
-        if (data.success) {
-          setStats(data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching browse stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  // Use SWR hook with optional SSR fallback
+  const { stats, isLoading: loading } = useBrowseStats({ fallbackData: initialStats });
 
   // Format number with commas
   const formatNumber = (num) => {

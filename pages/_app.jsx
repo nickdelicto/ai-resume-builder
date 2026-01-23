@@ -2,6 +2,7 @@ import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react';
 import Navigation from '../components/common/Navigation';
 import Footer from '../components/common/Footer';
+import BrowseJobsFooter from '../components/common/BrowseJobsFooter';
 import { useRouter } from 'next/router';
 import { ResumeServiceProvider } from '../lib/contexts/ResumeServiceContext';
 import { Toaster } from 'react-hot-toast';
@@ -73,11 +74,24 @@ export default function MyApp({ Component, pageProps }) {
   
   // Check if the current page is the builder page
   // We'll use this to adjust padding for pages with the navigation
-  const isBuilderPage = router.pathname === '/new-resume-builder' || 
+  const isBuilderPage = router.pathname === '/new-resume-builder' ||
                        router.pathname.startsWith('/resume/edit/');
-  
+
   // Check if this is the PDF template capture page - don't render Navigation for it
   const isPdfCapturePage = router.pathname === '/resume-template-capture';
+
+  // Show BrowseJobsFooter on all pages EXCEPT:
+  // - Homepage (/)
+  // - Builder pages (/builder/*, /new-resume-builder, /resume/edit/*)
+  // - Auth pages (/auth/*)
+  // - PDF capture page (/resume-template-capture)
+  const showBrowseFooter =
+    router.pathname !== '/' &&
+    !router.pathname.startsWith('/builder') &&
+    !router.pathname.startsWith('/new-resume-builder') &&
+    !router.pathname.startsWith('/resume/edit') &&
+    !router.pathname.startsWith('/auth') &&
+    !isPdfCapturePage;
   
   return (
     <SessionProvider session={pageProps.session}>
@@ -96,6 +110,7 @@ export default function MyApp({ Component, pageProps }) {
           <div className={`app-container ${isBuilderPage ? 'pt-14' : isPdfCapturePage ? 'pt-0' : 'pt-20'}`}>
             <Component {...pageProps} />
             </div>
+            {showBrowseFooter && <BrowseJobsFooter />}
             {!isPdfCapturePage && <Footer />}
           </div>
           

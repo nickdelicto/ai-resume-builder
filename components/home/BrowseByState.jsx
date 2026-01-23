@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useBrowseStats } from '../../lib/hooks/useBrowseStats';
 
 /**
  * BrowseByState - Quick access pills for browsing RN jobs by state
- * 
+ *
  * REDESIGN v3.0 - Professional Landing Page Design:
  * - Soft mint gradient background for warmth
  * - Decorative SVG elements (stethoscope, cross, heartbeat) for visual interest
@@ -11,31 +12,20 @@ import Link from 'next/link';
  * - Enhanced pills with better shadows and interactions
  * - Hot market indicators for high-volume states
  * - Smooth animations with stagger effect
+ *
+ * Uses SWR for data fetching with optional SSR fallback
  */
-const BrowseByState = () => {
-  const [states, setStates] = useState([]);
-  const [loading, setLoading] = useState(true);
+const BrowseByState = ({ initialStats }) => {
   const [showAll, setShowAll] = useState(false);
 
-  // Fetch states on mount
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/jobs/browse-stats');
-        const data = await response.json();
-        if (data.success && data.data.states) {
-          // Sort by job count (highest first)
-          const sortedStates = data.data.states.sort((a, b) => b.count - a.count);
-          setStates(sortedStates);
-        }
-      } catch (error) {
-        console.error('Error fetching states:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  // Use SWR hook with optional SSR fallback
+  const { stats, isLoading: loading } = useBrowseStats({ fallbackData: initialStats });
+
+  // Sort states by job count (highest first)
+  const states = useMemo(() => {
+    if (!stats?.states) return [];
+    return [...stats.states].sort((a, b) => b.count - a.count);
+  }, [stats]);
 
   // Format number with commas
   const formatNumber = (num) => {
