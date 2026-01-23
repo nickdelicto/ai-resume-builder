@@ -67,6 +67,7 @@ export default async function handler(req, res) {
       jobType,
       experienceLevel,
       shiftType,
+      signOnBonus,
       search,
       isActive = true
     } = req.query;
@@ -188,6 +189,11 @@ export default async function handler(req, res) {
         // Fallback: case-insensitive match
         where.shiftType = { mode: 'insensitive', equals: shiftType };
       }
+    }
+
+    // Filter by sign-on bonus
+    if (signOnBonus === 'true') {
+      where.hasSignOnBonus = true;
     }
 
     // Search in title and description

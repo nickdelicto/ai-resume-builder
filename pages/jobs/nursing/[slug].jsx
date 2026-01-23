@@ -677,6 +677,12 @@ export default function JobDetailPage({
                                 {jobItem.experienceLevel}
                               </span>
                             )}
+                            {jobItem.hasSignOnBonus && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                                <span>💰</span>
+                                Sign-On Bonus
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -996,6 +1002,15 @@ export default function JobDetailPage({
                       className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition-colors"
                     >
                       {job.experienceLevel}
+                    </Link>
+                  )}
+                  {job.hasSignOnBonus && (
+                    <Link
+                      href="/jobs/nursing/sign-on-bonus"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium hover:bg-emerald-200 transition-colors"
+                    >
+                      <span>💰</span>
+                      Sign-On Bonus
                     </Link>
                   )}
                 </div>

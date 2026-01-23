@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
-import Meta from '../../../../components/common/Meta';
-import JobAlertSignup from '../../../../components/JobAlertSignup';
-import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
-import { fetchSignOnBonusJobs } from '../../../../lib/services/jobPageData';
-import { generateSignOnBonusPageMetaTags } from '../../../../lib/seo/jobSEO';
-import { normalizeExperienceLevel } from '../../../../lib/utils/experienceLevelUtils';
-const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
+import Meta from '../../../components/common/Meta';
+import JobAlertSignup from '../../../components/JobAlertSignup';
+import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
+import { fetchSignOnBonusJobs } from '../../../lib/services/jobPageData';
+import { generateSignOnBonusPageMetaTags } from '../../../lib/seo/jobSEO';
+import { normalizeExperienceLevel } from '../../../lib/utils/experienceLevelUtils';
+const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ query }) {
   const page = parseInt(query.page) || 1;
@@ -67,7 +67,7 @@ export default function SignOnBonusPage({
           <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
             <Link href="/jobs/nursing" className="hover:text-blue-600 transition-colors">All Jobs</Link>
             <span>/</span>
-            <span className="text-gray-900 font-medium">Sign-On Bonus Jobs</span>
+            <span className="text-gray-900 font-medium">Sign-On Bonus</span>
           </nav>
 
           {/* Header */}
@@ -128,7 +128,7 @@ export default function SignOnBonusPage({
                         href={`/jobs/nursing/${s.state.toLowerCase()}/sign-on-bonus`}
                         className="flex justify-between items-center group hover:text-blue-600 transition-colors py-1"
                       >
-                        <span className="text-gray-900 group-hover:text-blue-600 font-medium">{s.stateFullName || s.state}</span>
+                        <span className="text-gray-900 group-hover:text-blue-600 font-medium">{s.stateFullName}</span>
                         <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded-full text-xs">{s.count}</span>
                       </Link>
                     ))}
@@ -257,16 +257,16 @@ export default function SignOnBonusPage({
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No Sign-On Bonus Jobs Currently Available
+                No Sign-On Bonus Jobs Found
               </h2>
               <p className="text-gray-600 mb-6">
-                New positions with sign-on bonuses are added regularly. Check back soon or browse all RN jobs.
+                New positions with sign-on bonuses are added regularly. Check back soon!
               </p>
               <Link
                 href="/jobs/nursing"
                 className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
               >
-                Browse All RN Jobs
+                Browse All Jobs
               </Link>
             </div>
           )}
@@ -317,7 +317,7 @@ export default function SignOnBonusPage({
                       href={`/jobs/nursing/${s.state.toLowerCase()}/sign-on-bonus`}
                       className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-blue-600 transition-colors"
                     >
-                      <span className="text-gray-900 group-hover:text-blue-600 font-medium text-sm">{s.stateFullName || s.state}</span>
+                      <span className="text-gray-900 group-hover:text-blue-600 font-medium text-sm">{s.stateFullName}</span>
                       <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{s.count}</span>
                     </Link>
                   ))}
@@ -347,34 +347,6 @@ export default function SignOnBonusPage({
                     >
                       <span className="text-gray-900 group-hover:text-purple-600 font-medium text-sm">{spec.specialty}</span>
                       <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-full text-xs flex-shrink-0">{spec.count}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Footer: Browse by Experience Level */}
-          {stats?.experienceLevels && stats.experienceLevels.length > 0 && (
-            <div className="mt-16 pt-8 border-t border-gray-200">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Sign-On Bonus RN Jobs by Experience Level
-                </h2>
-                <p className="text-gray-600">
-                  Explore sign-on bonus positions for all experience levels
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex flex-wrap gap-4">
-                  {stats.experienceLevels.map((level, idx) => (
-                    <Link
-                      key={idx}
-                      href={`/jobs/nursing/experience/${level.slug}/sign-on-bonus`}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-teal-50 rounded-lg group transition-colors"
-                    >
-                      <span className="text-gray-900 group-hover:text-teal-600 font-medium">{level.displayName}</span>
-                      <span className="text-teal-600 font-semibold bg-teal-100 px-2 py-0.5 rounded-full text-xs">{level.count.toLocaleString()}</span>
                     </Link>
                   ))}
                 </div>

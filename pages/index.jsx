@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Meta from '../components/common/Meta';
 import JobSearchHero from '../components/home/JobSearchHero';
 import BrowseByState from '../components/home/BrowseByState';
+import BrowseByCategory from '../components/home/BrowseByCategory';
 import FeaturedEmployers from '../components/home/FeaturedEmployers';
 import ResumeBuilderCTA from '../components/home/ResumeBuilderCTA';
 import SalaryCalculatorCTA from '../components/home/SalaryCalculatorCTA';
@@ -103,8 +104,11 @@ const HomePage = ({ initialStats }) => {
         
         {/* Section 2: Browse by State */}
         <BrowseByState />
-        
-        {/* Section 3: Featured Employers - flows directly from Browse by State */}
+
+        {/* Section 3: Browse by Category - Specialty, Job Type, Experience, Shift */}
+        <BrowseByCategory />
+
+        {/* Section 4: Featured Employers - flows directly from Browse by Category */}
         {/* Removed WaveDivider - sections have contrasting gradients that create natural visual separation */}
         <FeaturedEmployers />
         

@@ -71,6 +71,7 @@ export default function NursingJobsPage() {
     jobType: router.query.jobType || '',
     experienceLevel: router.query.experienceLevel || '',
     shiftType: router.query.shiftType || '',
+    signOnBonus: router.query.signOnBonus || '',
     employer: router.query.employer || '',
     search: router.query.search || ''
   });
@@ -84,20 +85,21 @@ export default function NursingJobsPage() {
       jobType: router.query.jobType || '',
       experienceLevel: router.query.experienceLevel || '',
       shiftType: router.query.shiftType || '',
+      signOnBonus: router.query.signOnBonus || '',
       employer: router.query.employer || '',
       search: router.query.search || ''
     });
-  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.employer, router.query.search]);
+  }, [router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.signOnBonus, router.query.employer, router.query.search]);
 
   // Fetch jobs when filters or page changes
   useEffect(() => {
     fetchJobs();
-  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.employer, router.query.search]);
+  }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.signOnBonus, router.query.employer, router.query.search]);
 
   // Fetch browse statistics on mount and when filters change
   useEffect(() => {
     fetchBrowseStats();
-  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.employer]);
+  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.signOnBonus, filters.employer]);
 
   // Handle scroll to hash on page load (for links like /jobs/nursing#filters)
   useEffect(() => {
@@ -127,6 +129,7 @@ export default function NursingJobsPage() {
       if (filters.jobType) params.set('jobType', filters.jobType);
       if (filters.experienceLevel) params.set('experienceLevel', filters.experienceLevel);
       if (filters.shiftType) params.set('shiftType', filters.shiftType);
+      if (filters.signOnBonus) params.set('signOnBonus', filters.signOnBonus);
       if (filters.employer) params.set('employerSlug', filters.employer);
 
       const url = `/api/jobs/browse-stats${params.toString() ? '?' + params.toString() : ''}`;
@@ -208,6 +211,7 @@ export default function NursingJobsPage() {
         jobType: router.query.jobType || '',
         experienceLevel: router.query.experienceLevel || '',
         shiftType: router.query.shiftType || '',
+        signOnBonus: router.query.signOnBonus || '',
         employerSlug: router.query.employer || '',
         search: router.query.search || ''
       };
@@ -536,6 +540,26 @@ export default function NursingJobsPage() {
                 </div>
               </SidebarSection>
 
+              {/* Sign-On Bonus Filter */}
+              <div className="border-b border-gray-200 py-3">
+                <button
+                  onClick={() => handleFilterChange('signOnBonus', filters.signOnBonus === 'true' ? '' : 'true')}
+                  className={`w-full flex items-center justify-between px-2 py-2 rounded-lg text-sm text-left transition-colors ${filters.signOnBonus === 'true' ? 'bg-emerald-100 text-emerald-800' : 'hover:bg-emerald-50 text-gray-700'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="font-semibold">With Sign-On Bonus</span>
+                  </div>
+                  <div className={`w-5 h-5 rounded flex items-center justify-center ${filters.signOnBonus === 'true' ? 'bg-emerald-600' : 'border-2 border-gray-300'}`}>
+                    {filters.signOnBonus === 'true' && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              </div>
+
               {/* Top Employers - Link to employer pages for SEO value */}
               <SidebarSection title="Top Employers" color="bg-green-500" expanded={expandedSections.employer} onToggle={() => toggleSection('employer')}>
                 <div className="space-y-1 max-h-72 overflow-y-auto scrollbar-thin pr-1">
@@ -555,10 +579,10 @@ export default function NursingJobsPage() {
               </SidebarSection>
 
               {/* Clear Filters */}
-              {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.search) && (
+              {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.signOnBonus || filters.search) && (
                 <button
                   onClick={() => {
-                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
+                    setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', signOnBonus: '', employer: '', search: '' });
                     setCities([]);
                     setShowMoreCities(false);
                     router.push('/jobs/nursing', undefined, { shallow: true });
@@ -613,7 +637,7 @@ export default function NursingJobsPage() {
               </svg>
               <span className="text-base">Filter Jobs</span>
               {(() => {
-                const activeCount = [filters.state, filters.city, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.search].filter(Boolean).length;
+                const activeCount = [filters.state, filters.city, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.signOnBonus, filters.search].filter(Boolean).length;
                 return activeCount > 0 ? (
                   <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{activeCount} active</span>
                 ) : null;
@@ -750,6 +774,26 @@ export default function NursingJobsPage() {
                       </SidebarSection>
                     )}
 
+                    {/* Sign-On Bonus Filter */}
+                    <div className="border-b border-gray-200 py-3">
+                      <button
+                        onClick={() => handleFilterChange('signOnBonus', filters.signOnBonus === 'true' ? '' : 'true')}
+                        className={`w-full flex items-center justify-between px-2 py-2 rounded-lg text-sm text-left transition-colors ${filters.signOnBonus === 'true' ? 'bg-emerald-100 text-emerald-800' : 'hover:bg-emerald-50 text-gray-700'}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="font-semibold">With Sign-On Bonus</span>
+                        </div>
+                        <div className={`w-5 h-5 rounded flex items-center justify-center ${filters.signOnBonus === 'true' ? 'bg-emerald-600' : 'border-2 border-gray-300'}`}>
+                          {filters.signOnBonus === 'true' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+
                     {/* By Employer */}
                     {browseStats.employers.length > 0 && (
                       <SidebarSection title="By Employer" color="bg-green-500" expanded={expandedSections.employer} onToggle={() => toggleSection('employer')}>
@@ -773,10 +817,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear Filters */}
-                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.employer || filters.search) && (
+                {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.signOnBonus || filters.employer || filters.search) && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', signOnBonus: '', employer: '', search: '' });
                       setCities([]);
                       setShowMoreCities(false);
                       router.push('/jobs/nursing', undefined, { shallow: true });
@@ -793,7 +837,7 @@ export default function NursingJobsPage() {
             <main className="flex-1 min-w-0">
 
           {/* Active Filters Bar */}
-          {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.employer || filters.search) && (
+          {(filters.state || filters.city || filters.specialty || filters.jobType || filters.experienceLevel || filters.shiftType || filters.signOnBonus || filters.employer || filters.search) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 font-medium">Active filters:</span>
@@ -870,6 +914,18 @@ export default function NursingJobsPage() {
                   </button>
                 )}
 
+                {filters.signOnBonus && (
+                  <button
+                    onClick={() => handleFilterChange('signOnBonus', '')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium hover:bg-emerald-200 transition-colors"
+                  >
+                    <span>Sign-On Bonus</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
+
                 {filters.employer && (
                   <button
                     onClick={() => handleFilterChange('employer', '')}
@@ -895,10 +951,10 @@ export default function NursingJobsPage() {
                 )}
 
                 {/* Clear all - shown when multiple filters active */}
-                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.employer, filters.search].filter(Boolean).length > 1 && (
+                {[filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.signOnBonus, filters.employer, filters.search].filter(Boolean).length > 1 && (
                   <button
                     onClick={() => {
-                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
+                      setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', signOnBonus: '', employer: '', search: '' });
                       router.push('/jobs/nursing', undefined, { shallow: true });
                     }}
                     className="text-sm text-red-600 hover:text-red-700 font-medium ml-2"
@@ -937,7 +993,7 @@ export default function NursingJobsPage() {
               <p className="text-gray-600 mb-6">Try adjusting your filters or search terms.</p>
               <button
                 onClick={() => {
-                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', employer: '', search: '' });
+                  setFilters({ state: '', city: '', specialty: '', jobType: '', experienceLevel: '', shiftType: '', signOnBonus: '', employer: '', search: '' });
                   setCities([]);
                   setShowMoreCities(false);
                   router.push('/jobs/nursing', undefined, { shallow: true });
@@ -1030,6 +1086,12 @@ export default function NursingJobsPage() {
                                 {job.experienceLevel.replace('-', ' ')}
                               </span>
                             )}
+                            {job.hasSignOnBonus && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                                <span>💰</span>
+                                Sign-On Bonus
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1110,6 +1172,28 @@ export default function NursingJobsPage() {
           {!unfilteredStatsLoading && (
             <div className="mt-16 bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Browse RN Jobs</h2>
+
+              {/* Featured Links */}
+              <div className="mb-8 pb-6 border-b border-gray-200">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  Featured
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/jobs/nursing/sign-on-bonus"
+                    className="group inline-flex items-center gap-3 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-base font-semibold transition-all shadow-md hover:shadow-lg"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    RN Jobs with Sign-On Bonus
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-8">
                 {/* By State */}
