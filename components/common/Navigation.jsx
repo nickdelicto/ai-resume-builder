@@ -381,15 +381,16 @@ const Navigation = () => {
       <div className="nav-content">
         {/* Logo and Tagline */}
         <Link href="/" className={`nav-logo ${status === 'authenticated' ? 'authenticated-logo' : ''}`}>
-          <div className="logo-with-text">
-            <div className="logo-container">
-              <span className="logo-text">IntelliResume</span>
-            </div>
-            {/* Hide tagline for authenticated users to save space */}
+          <div className="logo-with-tagline">
+            <img
+              src="/images/intelliResume-logo2.webp"
+              alt="IntelliResume"
+              className="nav-logo-image"
+            />
             {status !== 'authenticated' && (
-            <div className="tagline-container">
-                <span className="nav-tagline">Your RN Career Starts Here</span>
-            </div>
+              <div className="tagline-container">
+                <span className="nav-tagline">Your RN Career Thrives Here</span>
+              </div>
             )}
           </div>
         </Link>
@@ -1155,52 +1156,36 @@ const Navigation = () => {
           padding: 0.3rem 0;
         }
         
-        .logo-with-text {
+        .nav-logo-image {
+          height: 200px;
+          width: auto;
+          object-fit: contain;
+          margin-left: -3rem;
+        }
+
+        .logo-with-tagline {
           display: flex;
           align-items: center;
         }
-        
-        .logo-container {
-          display: flex;
-          align-items: center;
-        }
-        
-        .logo-text {
-          background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #14b8a6 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: 700;
-          font-size: 18px;
-        }
-        
+
         .tagline-container {
           display: flex;
           align-items: center;
-          margin-left: 16px;
-          position: relative;
+          margin-left: -2rem;
+          padding-left: 16px;
+          border-left: 1px solid rgba(100, 116, 139, 0.3);
         }
-        
-        .tagline-container::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          height: 16px;
-          width: 1px;
-          background-color: rgba(100, 116, 139, 0.3);
-          margin-right: 16px;
-        }
-        
+
         .nav-tagline {
           font-size: 0.75rem;
           color: #64748b;
           font-weight: 400;
           letter-spacing: 0.02em;
-          opacity: 0.8;
+          white-space: nowrap;
           font-style: italic;
-          padding-left: 16px;
+          opacity: 0.8;
         }
-        
+
         .nav-logo:hover {
           transform: translateY(-2px);
           filter: brightness(1.1);
@@ -1534,22 +1519,34 @@ const Navigation = () => {
           .tagline-container {
             display: none;
           }
-          
+
+          .nav-logo-image {
+            height: 150px;
+            margin-left: -1.5rem;
+          }
+
           /* Compact authenticated header on mobile - match sticky header */
           .authenticated-logo .logo-text {
             font-size: 18px;
             white-space: nowrap;
           }
-          
+
           .authenticated-logo .logo-container {
             flex-shrink: 0;
         }
-        
+
           /* Compact auth controls on mobile */
           .auth-controls.mobile-auth {
             display: flex;
             align-items: center;
             gap: 8px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .nav-logo-image {
+            height: 150px;
+            margin-left: -1rem;
           }
         }
         

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid teal background circle -->
+  <circle cx="200" cy="200" r="200" fill="#0f766e"/>
+
+  <!-- White "i" person silhouette -->
+  <!-- Head (dot of the i) -->
+  <circle cx="200" cy="95" r="38" fill="white"/>
+
+  <!-- Body stem (simple rounded rectangle) -->
+  <rect x="162" y="155" width="76" height="160" rx="38" fill="white"/>
+</svg>

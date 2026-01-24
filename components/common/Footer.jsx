@@ -10,11 +10,13 @@ const Footer = () => {
         {/* Brand Section - Spans top */}
         <div className="footer-brand-full">
           <Link href="/" className="footer-logo">
-            <div className="logo-container">
-              <span className="footer-logo-text">IntelliResume Health</span>
-            </div>
+            <img
+              src="/images/intelliresume-health-logo.webp"
+              alt="IntelliResume Health"
+              className="footer-logo-image"
+            />
           </Link>
-          <p className="footer-tagline">Your RN Career Starts Here</p>
+          <p className="footer-tagline">Your RN Career Thrives Here</p>
         </div>
 
         {/* Navigation Columns - 3 columns */}
@@ -146,34 +148,24 @@ const Footer = () => {
 
         .footer-logo {
           text-decoration: none;
-          display: inline-block;
-          margin-bottom: 0.5rem;
+          display: block;
+          text-align: center;
         }
 
-        .logo-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .footer-logo-text {
-          font-size: 1.5rem;
-          font-weight: 800;
-          background: linear-gradient(
-            135deg,
-            #064e3b 0%,
-            #0f766e 50%,
-            #14b8a6 100%
-          );
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+        .footer-logo-image {
+          height: 200px;
+          width: auto;
+          object-fit: contain;
+          display: block;
+          margin: 0 auto;
         }
 
         .footer-tagline {
           color: #64748b;
           font-size: 0.95rem;
-          margin: 0;
+          margin: -5.5rem 0 0 0;
+          text-align: center;
+          padding-left: 0.8rem;
         }
 
         .footer-nav-columns {
@@ -270,6 +262,15 @@ const Footer = () => {
             grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
           }
+
+          .footer-logo-image {
+            height: 170px;
+          }
+
+          .footer-tagline {
+            margin-top: -4.7rem;
+            padding-left: 2.3rem;
+          }
         }
 
         @media (max-width: 480px) {
@@ -280,6 +281,15 @@ const Footer = () => {
 
           .footer-brand-full {
             margin-bottom: 2rem;
+          }
+
+          .footer-logo-image {
+            height: 170px;
+          }
+
+          .footer-tagline {
+            margin-top: -4.7rem;
+            padding-left: 2.3rem;
           }
         }
       `}</style>
