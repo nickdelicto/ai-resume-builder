@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import useSWR from 'swr';
 import { SPECIALTIES } from '../../../lib/constants/specialties';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function RNSalaryCalculator() {
   const [specialty, setSpecialty] = useState('');
@@ -15,10 +18,18 @@ export default function RNSalaryCalculator() {
   const [salaryData, setSalaryData] = useState(null);
   const [error, setError] = useState(null);
   
-  // Location dropdowns
-  const [states, setStates] = useState([]);
+  // Location dropdowns - use SWR for states caching
+  const { data: statesData, isLoading: loadingStates } = useSWR(
+    '/api/job-alerts/states',
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 300000, // 5 minutes
+    }
+  );
+  const states = statesData?.states || [];
   const [cities, setCities] = useState([]);
-  const [loadingStates, setLoadingStates] = useState(true);
   const [loadingCities, setLoadingCities] = useState(false);
   
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -32,26 +43,6 @@ export default function RNSalaryCalculator() {
   
   // Get current year for dynamic content
   const currentYear = new Date().getFullYear();
-
-  // Fetch available states on component mount
-  useEffect(() => {
-    async function fetchStates() {
-      try {
-        const response = await fetch('/api/job-alerts/states');
-        const data = await response.json();
-        
-        if (data.success) {
-          setStates(data.states);
-        }
-      } catch (err) {
-        console.error('Failed to load states:', err);
-      } finally {
-        setLoadingStates(false);
-      }
-    }
-    
-    fetchStates();
-  }, []);
 
   // Fetch cities when state changes
   useEffect(() => {
