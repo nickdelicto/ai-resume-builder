@@ -4,6 +4,22 @@ const { shiftTypeToDisplay, shiftTypeToSlug, SHIFT_TYPES } = require('../../../l
 
 const prisma = new PrismaClient();
 
+// In-memory cache for browse stats
+// Key: stringified query params, Value: { data, timestamp }
+const statsCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes for unfiltered
+const CACHE_TTL_FILTERED_MS = 2 * 60 * 1000; // 2 minutes for filtered
+
+function getCacheKey(query) {
+  const { state, specialty, jobType, experienceLevel, shiftType, employerSlug, search } = query;
+  return JSON.stringify({ state, specialty, jobType, experienceLevel, shiftType, employerSlug, search });
+}
+
+function isFiltered(query) {
+  const { state, specialty, jobType, experienceLevel, shiftType, employerSlug, search } = query;
+  return !!(state || specialty || jobType || experienceLevel || shiftType || employerSlug || search);
+}
+
 /**
  * API Route: GET /api/jobs/browse-stats
  * Fetch statistics for browse sections (states, employers, specialties)
@@ -17,6 +33,17 @@ export default async function handler(req, res) {
   try {
     // Extract filter params from query
     const { state, specialty, jobType, experienceLevel, shiftType, employerSlug, search } = req.query;
+
+    // Check cache first
+    const cacheKey = getCacheKey(req.query);
+    const cached = statsCache.get(cacheKey);
+    const ttl = isFiltered(req.query) ? CACHE_TTL_FILTERED_MS : CACHE_TTL_MS;
+
+    if (cached && (Date.now() - cached.timestamp) < ttl) {
+      // Set cache header for CDN/browser
+      res.setHeader('Cache-Control', `public, s-maxage=${Math.floor(ttl / 1000)}, stale-while-revalidate`);
+      return res.status(200).json(cached.data);
+    }
 
     // Build base where clause with active filters
     const baseWhere = { isActive: true };
@@ -279,7 +306,7 @@ export default async function handler(req, res) {
     });
     const shiftTypesFormatted = Array.from(shiftTypesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-    return res.status(200).json({
+    const responseData = {
       success: true,
       data: {
         states: statesFormatted,
@@ -289,7 +316,24 @@ export default async function handler(req, res) {
         experienceLevels: experienceLevelsFormatted,
         shiftTypes: shiftTypesFormatted
       }
-    });
+    };
+
+    // Cache the result
+    statsCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    // Clean up old cache entries (keep cache size manageable)
+    if (statsCache.size > 100) {
+      const now = Date.now();
+      for (const [key, value] of statsCache) {
+        if (now - value.timestamp > CACHE_TTL_MS) {
+          statsCache.delete(key);
+        }
+      }
+    }
+
+    // Set cache header for CDN/browser
+    res.setHeader('Cache-Control', `public, s-maxage=${Math.floor(ttl / 1000)}, stale-while-revalidate`);
+    return res.status(200).json(responseData);
 
   } catch (error) {
     console.error('Error fetching browse stats:', error);

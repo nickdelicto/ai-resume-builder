@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import useSWR from 'swr';
 import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
 import JobAlertSignup from '../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
@@ -10,22 +11,15 @@ import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
 const seoUtils = require('../../../lib/seo/jobSEO');
 const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
+// SWR fetcher
+const fetcher = (url) => fetch(url).then((res) => res.json());
+
 export default function NursingJobsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
-  const [browseStats, setBrowseStats] = useState({
-    states: [],
-    employers: [],
-    specialties: [],
-    jobTypes: [],
-    experienceLevels: [],
-    shiftTypes: []
-  });
-  const [browseStatsLoading, setBrowseStatsLoading] = useState(true);
-
 
   // Sidebar state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -46,7 +40,6 @@ export default function NursingJobsPage() {
   const [cities, setCities] = useState([]);
   const [citiesLoading, setCitiesLoading] = useState(false);
 
-
   // Initialize filters from URL query params
   const [filters, setFilters] = useState({
     state: router.query.state || '',
@@ -59,6 +52,38 @@ export default function NursingJobsPage() {
     employer: router.query.employer || '',
     search: router.query.search || ''
   });
+
+  // Build browse stats URL based on current filters (SWR caching)
+  const browseStatsUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (filters.state) params.set('state', filters.state);
+    if (filters.specialty) params.set('specialty', filters.specialty);
+    if (filters.jobType) params.set('jobType', filters.jobType);
+    if (filters.experienceLevel) params.set('experienceLevel', filters.experienceLevel);
+    if (filters.shiftType) params.set('shiftType', filters.shiftType);
+    if (filters.signOnBonus) params.set('signOnBonus', filters.signOnBonus);
+    if (filters.employer) params.set('employerSlug', filters.employer);
+    return `/api/jobs/browse-stats${params.toString() ? '?' + params.toString() : ''}`;
+  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.signOnBonus, filters.employer]);
+
+  // Use SWR for browse stats with caching
+  const { data: browseStatsData, isLoading: browseStatsLoading } = useSWR(
+    browseStatsUrl,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 300000, // 5 minutes - matches server cache
+    }
+  );
+  const browseStats = browseStatsData?.success ? browseStatsData.data : {
+    states: [],
+    employers: [],
+    specialties: [],
+    jobTypes: [],
+    experienceLevels: [],
+    shiftTypes: []
+  };
 
   // Update filters when router query changes
   useEffect(() => {
@@ -80,10 +105,6 @@ export default function NursingJobsPage() {
     fetchJobs();
   }, [router.query.page, router.query.state, router.query.city, router.query.specialty, router.query.jobType, router.query.experienceLevel, router.query.shiftType, router.query.signOnBonus, router.query.employer, router.query.search]);
 
-  // Fetch browse statistics on mount and when filters change
-  useEffect(() => {
-    fetchBrowseStats();
-  }, [filters.state, filters.specialty, filters.jobType, filters.experienceLevel, filters.shiftType, filters.signOnBonus, filters.employer]);
 
   // Handle scroll to hash on page load (for links like /jobs/nursing#filters)
   useEffect(() => {
@@ -104,31 +125,6 @@ export default function NursingJobsPage() {
     }, 50);
   }, [router.asPath, browseStatsLoading]);
 
-  const fetchBrowseStats = async () => {
-    try {
-      // Build query params from current filters
-      const params = new URLSearchParams();
-      if (filters.state) params.set('state', filters.state);
-      if (filters.specialty) params.set('specialty', filters.specialty);
-      if (filters.jobType) params.set('jobType', filters.jobType);
-      if (filters.experienceLevel) params.set('experienceLevel', filters.experienceLevel);
-      if (filters.shiftType) params.set('shiftType', filters.shiftType);
-      if (filters.signOnBonus) params.set('signOnBonus', filters.signOnBonus);
-      if (filters.employer) params.set('employerSlug', filters.employer);
-
-      const url = `/api/jobs/browse-stats${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.success) {
-        setBrowseStats(data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching browse stats:', err);
-    } finally {
-      setBrowseStatsLoading(false);
-    }
-  };
 
   // Fetch cities for a selected state
   const fetchCities = async (stateCode) => {

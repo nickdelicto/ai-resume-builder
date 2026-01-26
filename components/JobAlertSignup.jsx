@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
+
+// SWR fetcher
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 /**
  * Reusable Job Alert Signup Component
@@ -29,11 +33,23 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
   const [manageToken, setManageToken] = useState(null);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   
-  // Dropdown options
-  const [states, setStates] = useState([]);
+  // Dropdown options - use SWR for caching across all instances
+  const { data: statesData } = useSWR('/api/job-alerts/states', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 300000, // 5 minutes
+  });
+  const states = statesData?.states || [];
+
+  const { data: browseStatsData } = useSWR('/api/jobs/browse-stats', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 300000, // 5 minutes
+  });
+  const specialties = browseStatsData?.data?.specialties?.map(s => s.name) || [];
+
   const [cities, setCities] = useState([]);
   const [employers, setEmployers] = useState([]);
-  const [specialties, setSpecialties] = useState([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingEmployers, setLoadingEmployers] = useState(false);
 
@@ -43,30 +59,6 @@ export default function JobAlertSignup({ specialty = '', state = '', city = '', 
       setFormData(prev => ({ ...prev, email: router.query.email }));
     }
   }, [router.isReady, router.query.email]);
-
-  // Fetch available states and specialties on mount
-  useEffect(() => {
-    async function fetchOptions() {
-      try {
-        // Fetch states
-        const statesRes = await fetch('/api/job-alerts/states');
-        const statesData = await statesRes.json();
-        if (statesData.states) {
-          setStates(statesData.states);
-        }
-
-        // Fetch specialties
-        const specRes = await fetch('/api/jobs/browse-stats');
-        const specData = await specRes.json();
-        if (specData.data && specData.data.specialties) {
-          setSpecialties(specData.data.specialties.map(s => s.name));
-        }
-      } catch (err) {
-        console.error('Error fetching options:', err);
-      }
-    }
-    fetchOptions();
-  }, []);
 
   // Fetch cities when state changes
   useEffect(() => {
