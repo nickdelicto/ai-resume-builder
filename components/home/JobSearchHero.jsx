@@ -28,13 +28,16 @@ const JobSearchHero = ({ initialStats = null }) => {
   const [animatedWord, setAnimatedWord] = useState('Starts');
   const [showCursor, setShowCursor] = useState(false);
 
+  // State for smile crossfade animation
+  const [showSmile, setShowSmile] = useState(false);
+
   // Typewriter animation effect: "Starts" → delete → "Thrives"
   useEffect(() => {
     const startWord = 'Starts';
     const endWord = 'Thrives';
     const deleteSpeed = 150;  // ms per character delete
     const typeSpeed = 150;   // ms per character type
-    const initialDelay = 2500; // wait before starting animation
+    const initialDelay = 2000; // wait before starting animation
     const finalCursorDelay = 1500; // how long cursor stays after typing
 
     let timeoutId;
@@ -78,6 +81,16 @@ const JobSearchHero = ({ initialStats = null }) => {
     }, initialDelay);
 
     return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Smile crossfade animation - synced with typewriter finishing "Thrives"
+  // Timing: 2000ms delay + 900ms delete + 150ms pause + 1050ms type = 4100ms
+  useEffect(() => {
+    const smileTimeout = setTimeout(() => {
+      setShowSmile(true);
+    }, 4100);
+
+    return () => clearTimeout(smileTimeout);
   }, []);
 
   // Only fetch client-side if SSR stats not provided (fallback)
@@ -308,8 +321,9 @@ const JobSearchHero = ({ initialStats = null }) => {
               <div className="ring ring-middle" aria-hidden="true"></div>
               <div className="ring ring-inner pulse-ring" aria-hidden="true"></div>
               
-              {/* Main circular image */}
+              {/* Main circular image with smile crossfade */}
               <div className="nurse-image-container">
+                {/* Base image (neutral expression) */}
                 <Image
                   src="/images/nurse-hero-transparent.webp"
                   alt="Registered nurse professional"
@@ -317,6 +331,16 @@ const JobSearchHero = ({ initialStats = null }) => {
                   style={{ objectFit: 'cover', objectPosition: 'top' }}
                   priority
                   sizes="(max-width: 640px) 240px, (max-width: 1024px) 280px, 360px"
+                />
+                {/* Smiling image - fades in on top */}
+                <Image
+                  src="/images/nurse-hero-smiling.webp"
+                  alt=""
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'top' }}
+                  priority
+                  sizes="(max-width: 640px) 240px, (max-width: 1024px) 280px, 360px"
+                  className={`smile-overlay ${showSmile ? 'visible' : ''}`}
                 />
                 {/* Gradient overlay for depth */}
                 <div className="image-overlay" aria-hidden="true"></div>
@@ -522,11 +546,22 @@ const JobSearchHero = ({ initialStats = null }) => {
           border-radius: 50%;
           overflow: hidden;
           border: 4px solid rgba(255, 255, 255, 0.25);
-          box-shadow: 
+          box-shadow:
             0 25px 50px rgba(0, 0, 0, 0.3),
             0 0 0 1px rgba(255, 255, 255, 0.1);
         }
-        
+
+        /* Smile crossfade - GPU accelerated opacity transition */
+        .nurse-image-container :global(.smile-overlay) {
+          opacity: 0;
+          transition: opacity 0.5s ease-in-out;
+          will-change: opacity;
+        }
+
+        .nurse-image-container :global(.smile-overlay.visible) {
+          opacity: 1;
+        }
+
         .image-overlay {
           position: absolute;
           inset: 0;
