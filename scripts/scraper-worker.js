@@ -14,6 +14,7 @@ const SCRAPER_MAP = {
   'guthrie': 'scrape-and-classify.sh guthrie',
   'hartford-healthcare': 'scrape-and-classify.sh hartford-healthcare',
   'mass-general-brigham': 'scrape-and-classify.sh mass-general-brigham',
+  'mount-sinai': 'scrape-and-classify.sh mount-sinai',
   'northwell-health': 'scrape-and-classify.sh northwell-health',
   'nyu-langone-health': 'scrape-and-classify.sh nyu-langone-health',
   'strong-memorial-hospital': 'scrape-and-classify.sh strong-memorial-hospital',

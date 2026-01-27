@@ -99,6 +99,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - guthrie"
   echo "  - yale-new-haven-health"
   echo "  - nyu-langone-health"
+  echo "  - mount-sinai"
   exit 1
 fi
 
@@ -231,6 +232,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  mount-sinai)
+    # Mount Sinai uses Jibe (Oracle Cloud HCM) API scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/mount-sinai-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/mount-sinai-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -246,12 +257,13 @@ case $EMPLOYER_SLUG in
     log_message "  - guthrie"
     log_message "  - yale-new-haven-health"
     log_message "  - nyu-langone-health"
+    log_message "  - mount-sinai"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

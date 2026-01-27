@@ -14,6 +14,7 @@ const ALL_EMPLOYERS = [
   'guthrie',
   'hartford-healthcare',
   'mass-general-brigham',
+  'mount-sinai',
   'northwell-health',
   'nyu-langone-health',
   'strong-memorial-hospital',
