@@ -20,6 +20,7 @@ const ALL_EMPLOYERS = [
   'strong-memorial-hospital',
   'upstate-medical-university',
   'yale-new-haven-health',
+  'newyork-presbyterian',
 ];
 
 async function scheduleAllScrapers() {

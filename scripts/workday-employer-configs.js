@@ -84,6 +84,9 @@ const workdayConfigs = {
     selectors: {}
   },
 
+  // NewYork-Presbyterian uses dedicated API scraper (newyork-presbyterian-rn-scraper.js)
+  // Not included here - has its own scraper file
+
   // Add more employers here as you discover them
   // Example template:
   /*

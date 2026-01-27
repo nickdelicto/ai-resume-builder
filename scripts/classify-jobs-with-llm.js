@@ -48,6 +48,95 @@ const limitArg = args.find(arg => arg.startsWith('--limit='));
 const employerArg = args.find(arg => arg.startsWith('--employer='));
 
 const limit = limitArg ? parseInt(limitArg.split('=')[1]) : (isTestMode ? 20 : null);
+
+/**
+ * Extract salary information from formatted description
+ * Parses patterns like "💰 **Pay:** $78.75/hour" or "$45-$55/hr" from the description
+ * @param {string} description - The formatted job description
+ * @returns {Object} - { salaryMin, salaryMax, salaryType, salaryMinHourly, salaryMaxHourly, salaryMinAnnual, salaryMaxAnnual }
+ */
+function extractSalaryFromDescription(description) {
+  if (!description) return {};
+
+  // Pattern 1: "💰 **Pay:** $XX.XX/hour" or "$XX-$YY/hour" or "$XX.XX - $YY.YY/hr"
+  const hourlyPatterns = [
+    /\*\*Pay:\*\*\s*\$?([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
+    /Pay:\s*\$?([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
+    /\$?([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i,
+    /\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i
+  ];
+
+  // Pattern 2: Annual salary patterns "$XX,XXX - $YY,YYY" or "$XX,XXX/year"
+  const annualPatterns = [
+    /\*\*Pay:\*\*\s*\$?([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /Pay:\s*\$?([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /\$?([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /salary.*?\$?([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)/i
+  ];
+
+  let salaryMin = null;
+  let salaryMax = null;
+  let salaryType = null;
+
+  // Try hourly patterns first
+  for (const pattern of hourlyPatterns) {
+    const match = description.match(pattern);
+    if (match) {
+      salaryMin = parseFloat(match[1].replace(/,/g, ''));
+      salaryMax = match[2] ? parseFloat(match[2].replace(/,/g, '')) : salaryMin;
+      salaryType = 'hourly';
+      break;
+    }
+  }
+
+  // If no hourly match, try annual patterns
+  if (!salaryMin) {
+    for (const pattern of annualPatterns) {
+      const match = description.match(pattern);
+      if (match) {
+        salaryMin = parseFloat(match[1].replace(/,/g, ''));
+        salaryMax = match[2] ? parseFloat(match[2].replace(/,/g, '')) : salaryMin;
+        salaryType = 'annual';
+        break;
+      }
+    }
+  }
+
+  // If still no match, try a general dollar amount in Highlights section
+  if (!salaryMin) {
+    const highlightsMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$?([\d,.]+)/i);
+    if (highlightsMatch) {
+      const value = parseFloat(highlightsMatch[1].replace(/,/g, ''));
+      salaryMin = value;
+      salaryMax = value;
+      // Determine type by value magnitude
+      salaryType = value > 500 ? 'annual' : 'hourly';
+    }
+  }
+
+  if (!salaryMin) return {};
+
+  // Calculate hourly/annual equivalents
+  const result = {
+    salaryMin: salaryMin,
+    salaryMax: salaryMax,
+    salaryType: salaryType
+  };
+
+  if (salaryType === 'hourly') {
+    result.salaryMinHourly = Math.round(salaryMin);
+    result.salaryMaxHourly = Math.round(salaryMax);
+    result.salaryMinAnnual = Math.round(salaryMin * 2080);
+    result.salaryMaxAnnual = Math.round(salaryMax * 2080);
+  } else if (salaryType === 'annual') {
+    result.salaryMinAnnual = Math.round(salaryMin);
+    result.salaryMaxAnnual = Math.round(salaryMax);
+    result.salaryMinHourly = Math.round(salaryMin / 2080);
+    result.salaryMaxHourly = Math.round(salaryMax / 2080);
+  }
+
+  return result;
+}
 const employerSlug = employerArg ? employerArg.split('=')[1] : null;
 
 console.log('🤖 LLM Job Classifier Starting...\n');
@@ -697,8 +786,24 @@ async function main() {
           if (result.formattedDescription) {
             updateData.description = result.formattedDescription;
             console.log(`   📝 Saving formatted description (${result.formattedDescription.length} chars)`);
+
+            // Extract salary from formatted description and update salary fields
+            // (only if job doesn't already have salary from scraper)
+            if (!job.salaryMin && !job.salaryMax) {
+              const salaryData = extractSalaryFromDescription(result.formattedDescription);
+              if (salaryData.salaryMin) {
+                updateData.salaryMin = salaryData.salaryMin;
+                updateData.salaryMax = salaryData.salaryMax;
+                updateData.salaryType = salaryData.salaryType;
+                updateData.salaryMinHourly = salaryData.salaryMinHourly;
+                updateData.salaryMaxHourly = salaryData.salaryMaxHourly;
+                updateData.salaryMinAnnual = salaryData.salaryMinAnnual;
+                updateData.salaryMaxAnnual = salaryData.salaryMaxAnnual;
+                console.log(`   💰 Extracted salary: $${salaryData.salaryMin}${salaryData.salaryMax !== salaryData.salaryMin ? '-$' + salaryData.salaryMax : ''}/${salaryData.salaryType}`);
+              }
+            }
           }
-          
+
           await prisma.nursingJob.update({
             where: { id: job.id },
             data: updateData
@@ -726,6 +831,20 @@ async function main() {
           // If job was formatted, save the formatted description
           if (result.formattedDescription) {
             updateData.description = result.formattedDescription;
+
+            // Extract salary from formatted description (even for inactive jobs)
+            if (!job.salaryMin && !job.salaryMax) {
+              const salaryData = extractSalaryFromDescription(result.formattedDescription);
+              if (salaryData.salaryMin) {
+                updateData.salaryMin = salaryData.salaryMin;
+                updateData.salaryMax = salaryData.salaryMax;
+                updateData.salaryType = salaryData.salaryType;
+                updateData.salaryMinHourly = salaryData.salaryMinHourly;
+                updateData.salaryMaxHourly = salaryData.salaryMaxHourly;
+                updateData.salaryMinAnnual = salaryData.salaryMinAnnual;
+                updateData.salaryMaxAnnual = salaryData.salaryMaxAnnual;
+              }
+            }
           }
 
           await prisma.nursingJob.update({
