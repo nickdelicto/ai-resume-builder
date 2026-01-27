@@ -545,6 +545,8 @@ const JobSearchHero = ({ initialStats = null }) => {
           height: 100%;
           border-radius: 50%;
           overflow: hidden;
+          /* Fix for older iOS Safari not clipping absolutely positioned children */
+          -webkit-mask-image: -webkit-radial-gradient(white, black);
           border: 4px solid rgba(255, 255, 255, 0.25);
           box-shadow:
             0 25px 50px rgba(0, 0, 0, 0.3),
