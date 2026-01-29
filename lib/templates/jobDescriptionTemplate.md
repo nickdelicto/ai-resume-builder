@@ -17,6 +17,8 @@ This template is used by GPT-4o-mini to reformat scraped job descriptions into a
 |---|---|
 | 💰 **Pay** | $X - $Y per hour (or annual salary) |
 | 📍 **Location** | City, State |
+| 🏥 **Facility** | Specific hospital/facility name (if part of health system) |
+| 🏢 **Department/Unit** | Department or unit name (e.g., Emergency Department, ICU) |
 | ⏰ **Schedule** | Full-time / Part-time / Per Diem, Day/Night/Rotating shifts |
 | 🎁 **Sign-On Bonus** | Up to $X,XXX (if applicable) |
 
@@ -66,14 +68,16 @@ You are a job description formatter for a nursing job board. Rewrite the followi
 RULES:
 1. Use the exact template structure provided below
 2. Extract and organize information into the correct sections
-3. If information for a section is not available in the original, SKIP that section entirely - do not make up information
+3. If information for a Highlights row is not available in the original, SKIP that row - do not make up information
 4. Keep bullet points concise (1 line each when possible)
-5. For "What You'll Do", include 4-6 key responsibilities
-6. For "Requirements", separate into Education, Experience, and Licenses & Certifications
+5. For "What You'll Do", include up to 10 key responsibilities
+6. For "Requirements", separate into Education, Experience, and Licenses & Certifications - be thorough in extracting ALL education levels (ADN, BSN, MSN, etc.), years of experience, and certifications mentioned
 7. For "Benefits", only include if mentioned in original (skip if not present)
-8. For "About {Employer Name}", only include if employer info is present (skip if not present)
+8. For "About {Employer Name}", ALWAYS include this section - write 1-2 sentences about the employer based on their name (e.g., if employer is "Cleveland Clinic", mention it's a leading academic medical center)
 9. Preserve all specific numbers (pay ranges, sign-on bonuses, years of experience)
-10. Do not add information not present in the original
+10. Do not add information not present in the original (except for About section where a brief employer intro is always needed)
+11. IMPORTANT: If the source contains a line like "Facility: Kings County Hospital Center" or similar, you MUST add a row "🏥 **Facility** | Kings County Hospital Center" to the Highlights table. This applies to all health systems with multiple hospitals.
+12. For "Department/Unit", include if a specific department or unit is mentioned (e.g., "Emergency Department", "ICU", "Cardiac Care Unit")
 
 TEMPLATE:
 ## About This Role
@@ -84,6 +88,8 @@ TEMPLATE:
 |---|---|
 | 💰 **Pay** | [Pay range if available] |
 | 📍 **Location** | [City, State] |
+| 🏥 **Facility** | [Specific hospital/facility if part of health system] |
+| 🏢 **Department/Unit** | [Department or unit name] |
 | ⏰ **Schedule** | [Shift/schedule info] |
 | 🎁 **Sign-On Bonus** | [Amount if mentioned] |
 
@@ -133,28 +139,36 @@ OUTPUT (formatted job description):
 - Only include rows where data is available
 - Pay: Use exact ranges from original (e.g., "$40.70 - $61.05/hour")
 - Location: City, State format
+- Facility: Specific hospital/facility within a health system (e.g., "Bellevue Hospital" for NYC Health + Hospitals, "Hillcrest Hospital" for Cleveland Clinic). If source has "Facility: [Name]", always include this row. Skip only if employer IS the facility (single-location employer).
+- Department/Unit: The department, unit, or service area (e.g., "Emergency Department", "ICU - Cardiac", "Ambulatory Surgery"). Skip if not mentioned.
 - Schedule: Include shift type (Day/Night/Rotating) and FT/PT/Per Diem
 - Sign-On Bonus: Only if mentioned, include exact amount
 
 ### What You'll Do
-- 4-6 bullet points maximum
+- Upto 10 bullet points maximum
 - Start each with an action verb
 - Focus on primary responsibilities, not administrative tasks
 - Keep each bullet to 1 line when possible
 
 ### Requirements
-- Separate into three clear subsections
+- Separate into three clear subsections: Education, Experience, Licenses & Certifications
+- Be thorough - extract ALL mentioned requirements:
+  - **Education**: List all degree levels (ADN, BSN, MSN, DNP, etc.), mark which are required vs preferred
+  - **Experience**: Extract specific years (e.g., "2+ years"), specialties (e.g., "Med/Surg", "ICU"), and any preferred experience
+  - **Licenses & Certifications**: List all certifications (BLS, ACLS, PALS, NRP, specialty certs), state licensure requirements
 - Include both required and preferred if mentioned
-- Preserve specific requirements (e.g., "2 years Med/Surg experience")
+- Preserve exact numbers and requirements from the original
 
 ### Benefits (Optional)
 - Skip entirely if not mentioned in original
-- List 3-6 key benefits
+- List upto 6 key benefits
 - Don't include generic benefits unless specifically mentioned
 
-### About {Employer Name} (Optional)
-- Skip if no employer context in original
-- 1-2 sentences maximum
+### About {Employer Name} (Required)
+- ALWAYS include this section - never skip it
+- If employer info is in the original, use that
+- If not, write 1-2 generic sentences based on employer name (e.g., "{Employer Name} is a leading healthcare provider committed to delivering exceptional patient care.")
+- 2-3 sentences maximum
 - Focus on what makes the employer unique
 
 ---
@@ -164,8 +178,13 @@ OUTPUT (formatted job description):
 If original job has no pay info:
 - Remove the 💰 **Pay** row from Highlights table
 
+If original job has no facility info (or employer IS the facility):
+- Remove the 🏥 **Facility** row from Highlights table
+
+If original job has no department/unit info:
+- Remove the 🏢 **Department/Unit** row from Highlights table
+
 If original job has no benefits section:
 - Remove the entire "## Benefits" section
 
-If original job has no employer description:
-- Remove the entire "## About {Employer Name}" section
+**Note:** The "## About {Employer Name}" section is ALWAYS required - never omit it
