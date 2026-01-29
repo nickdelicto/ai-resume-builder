@@ -139,7 +139,7 @@ OUTPUT (formatted job description):
 - Only include rows where data is available
 - Pay: Use exact ranges from original (e.g., "$40.70 - $61.05/hour")
 - Location: City, State format
-- Facility: Specific hospital/facility within a health system (e.g., "Bellevue Hospital" for NYC Health + Hospitals, "Hillcrest Hospital" for Cleveland Clinic). If source has "Facility: [Name]", always include this row. Skip only if employer IS the facility (single-location employer).
+- Facility: Specific hospital/facility within a health system (e.g., "Bellevue Hospital" for NYC Health and Hospitals, "Hillcrest Hospital" for Cleveland Clinic). If source has "Facility: [Name]", always include this row. Skip only if employer IS the facility (single-location employer).
 - Department/Unit: The department, unit, or service area (e.g., "Emergency Department", "ICU - Cardiac", "Ambulatory Surgery"). Skip if not mentioned.
 - Schedule: Include shift type (Day/Night/Rotating) and FT/PT/Per Diem
 - Sign-On Bonus: Only if mentioned, include exact amount

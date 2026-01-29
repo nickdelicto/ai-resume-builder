@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * NYC Health + Hospitals RN Job Scraper
+ * NYC Health and Hospitals RN Job Scraper
  *
  * Platform: Oracle PeopleSoft HCM
  * URL: https://careers.nychhc.org
  *
- * NYC Health + Hospitals (formerly HHC - Health and Hospitals Corporation)
+ * NYC Health and Hospitals (formerly HHC - Health and Hospitals Corporation)
  * is the largest municipal health system in the United States.
  * All jobs are in New York City (Manhattan, Brooklyn, Queens, Bronx, Staten Island).
  *
@@ -38,7 +38,7 @@ const JobBoardService = require('../lib/services/JobBoardService');
 
 // Configuration
 const CONFIG = {
-  employerName: 'NYC Health + Hospitals',
+  employerName: 'NYC Health and Hospitals',
   employerSlug: 'nyc-health-hospitals',
   careerPageUrl: 'https://careers.nychhc.org/psc/hrtam/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_APP_SCHJOB_FL&Action=U',
   atsPlatform: 'peoplesoft',
@@ -82,7 +82,7 @@ const maxJobsArg = args.find(a => a.startsWith('--max-jobs='));
 const MAX_JOBS = maxJobsArg ? parseInt(maxJobsArg.split('=')[1], 10) : null;
 
 /**
- * NYC Health + Hospitals RN Scraper Class
+ * NYC Health and Hospitals RN Scraper Class
  */
 class NYCHealthHospitalsRNScraper {
   constructor(options = {}) {
@@ -1171,9 +1171,9 @@ class NYCHealthHospitalsRNScraper {
 
           // Extract facility name from About section (first sentence usually has facility name)
           // Examples: "Lincoln Medical and Mental Health Center is one of...", "Queens Hospital Center is making...",
-          //           "NYC Health + Hospitals/Jacobi is a 457-bed..."
+          //           "NYC Health and Hospitals/Jacobi is a 457-bed..."
           const facilityPatterns = [
-            // Pattern: "NYC Health + Hospitals/FacilityName is..."
+            // Pattern: "NYC Health and Hospitals/FacilityName is..."
             /NYC\s*Health\s*\+?\s*Hospitals\s*\/\s*([A-Za-z\s]+)\s+is\b/i,
             // Pattern: "Facility Name Medical Center is..."
             /^([A-Z][A-Za-z\s]+(?:Medical|Hospital|Health)\s*(?:Center|and\s*Mental\s*Health\s*Center)?)\s+is\b/i,
@@ -1575,7 +1575,7 @@ class NYCHealthHospitalsRNScraper {
 // Main execution
 async function main() {
   console.log('\n');
-  console.log('🏥 NYC Health + Hospitals RN Job Scraper');
+  console.log('🏥 NYC Health and Hospitals RN Job Scraper');
   console.log('   Platform: Oracle PeopleSoft HCM');
   console.log('   Method: Puppeteer DOM Scraping');
   console.log('\n');
