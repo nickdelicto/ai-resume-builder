@@ -16,6 +16,7 @@ const ALL_EMPLOYERS = [
   'mass-general-brigham',
   'mount-sinai',
   'northwell-health',
+  'nyc-health-hospitals',
   'nyu-langone-health',
   'strong-memorial-hospital',
   'upstate-medical-university',

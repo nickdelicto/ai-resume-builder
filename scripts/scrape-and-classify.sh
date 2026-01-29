@@ -253,6 +253,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  nyc-health-hospitals)
+    # NYC Health + Hospitals uses PeopleSoft DOM scraper (Puppeteer)
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/nyc-health-hospitals-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/nyc-health-hospitals-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -270,12 +280,13 @@ case $EMPLOYER_SLUG in
     log_message "  - nyu-langone-health"
     log_message "  - mount-sinai"
     log_message "  - newyork-presbyterian"
+    log_message "  - nyc-health-hospitals"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

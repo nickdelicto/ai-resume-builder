@@ -16,6 +16,7 @@ const SCRAPER_MAP = {
   'mass-general-brigham': 'scrape-and-classify.sh mass-general-brigham',
   'mount-sinai': 'scrape-and-classify.sh mount-sinai',
   'northwell-health': 'scrape-and-classify.sh northwell-health',
+  'nyc-health-hospitals': 'scrape-and-classify.sh nyc-health-hospitals',
   'nyu-langone-health': 'scrape-and-classify.sh nyu-langone-health',
   'strong-memorial-hospital': 'scrape-and-classify.sh strong-memorial-hospital',
   'upstate-medical-university': 'scrape-and-classify.sh upstate-medical-university',
