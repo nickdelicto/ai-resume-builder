@@ -37,7 +37,7 @@ const JobSearchHero = ({ initialStats = null }) => {
     const endWord = 'Thrives';
     const deleteSpeed = 150;  // ms per character delete
     const typeSpeed = 150;   // ms per character type
-    const initialDelay = 2000; // wait before starting animation
+    const initialDelay = 1500; // wait before starting animation
     const finalCursorDelay = 1500; // how long cursor stays after typing
 
     let timeoutId;
@@ -84,7 +84,7 @@ const JobSearchHero = ({ initialStats = null }) => {
   }, []);
 
   // Smile crossfade animation - synced with typewriter finishing "Thrives"
-  // Timing: 2000ms delay + 900ms delete + 150ms pause + 1050ms type = 4100ms
+  // Timing: 1500ms delay + 900ms delete + 150ms pause + 1050ms type = 3600ms
   useEffect(() => {
     const smileTimeout = setTimeout(() => {
       setShowSmile(true);
