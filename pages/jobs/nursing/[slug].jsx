@@ -1281,7 +1281,8 @@ export default function JobDetailPage({
               </div>
             )}
 
-            {job.benefits && (
+            {/* Only show separate benefits card if benefits field exists AND description doesn't already have a Benefits section */}
+            {job.benefits && !job.description?.includes('## Benefits') && (
               <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="p-1.5 bg-yellow-100 rounded-lg">
