@@ -234,7 +234,8 @@ export default function JobDetailPage({
   };
 
   // Open employer application in new tab
-  const openEmployerApplication = () => {
+  // Pass email when called from subscribe flow to ensure proper tracking attribution
+  const openEmployerApplication = (emailForTracking = null) => {
     if (job?.sourceUrl) {
       // Track that user actually proceeded to employer site
       trackEmployerRedirect({
@@ -243,7 +244,8 @@ export default function JobDetailPage({
         employer: job?.employer?.name,
         specialty: job?.specialty,
         state: job?.state,
-        city: job?.city
+        city: job?.city,
+        email: emailForTracking // Include email if known (from subscribe flow)
       });
       window.open(job.sourceUrl, '_blank', 'noopener,noreferrer');
     }
@@ -315,14 +317,14 @@ export default function JobDetailPage({
           state: job?.state,
           city: job?.city
         });
-        // Open the application and close modal
-        openEmployerApplication();
+        // Open the application and close modal (pass email for tracking attribution)
+        openEmployerApplication(applyEmail);
       } else {
         // Silently proceed in these cases:
         // 1. Already subscribed to this exact alert
         // 2. Already at max alerts (5) - don't punish engaged users
         if (data.message?.includes('already subscribed') || data.maxReached) {
-          openEmployerApplication();
+          openEmployerApplication(applyEmail);
         } else {
           setApplyError(data.message || 'Failed to subscribe. You can still apply.');
         }

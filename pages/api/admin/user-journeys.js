@@ -22,14 +22,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get all events for users who have email (known users)
-    // Group by email and order by time
-    const events = await prisma.analyticsEvent.findMany({
+    // Step 1: Find all sessionIds that have at least one event with an email (known users)
+    // This identifies sessions where the user provided their email at some point
+    const knownSessions = await prisma.analyticsEvent.findMany({
       where: {
         email: { not: null }
       },
+      select: {
+        sessionId: true,
+        email: true
+      },
+      distinct: ['sessionId']
+    });
+
+    // Create a map of sessionId -> email
+    const sessionToEmail = new Map();
+    for (const session of knownSessions) {
+      sessionToEmail.set(session.sessionId, session.email);
+    }
+
+    if (sessionToEmail.size === 0) {
+      await prisma.$disconnect();
+      return res.status(200).json({
+        success: true,
+        journeys: [],
+        totalKnownUsers: 0
+      });
+    }
+
+    // Step 2: Get ALL events for those sessions (including events without email)
+    // This captures the full journey, not just events where email was included
+    const events = await prisma.analyticsEvent.findMany({
+      where: {
+        sessionId: { in: Array.from(sessionToEmail.keys()) }
+      },
       orderBy: [
-        { email: 'asc' },
+        { sessionId: 'asc' },
         { createdAt: 'asc' }
       ],
       select: {
@@ -46,14 +74,17 @@ export default async function handler(req, res) {
       }
     });
 
-    // Group events by email
+    // Group events by sessionId, using the known email for the session
     const journeyMap = new Map();
 
     for (const event of events) {
-      const email = event.email;
+      const sessionId = event.sessionId;
+      const email = sessionToEmail.get(sessionId);
+
       if (!journeyMap.has(email)) {
         journeyMap.set(email, {
           email,
+          sessionId,
           events: [],
           firstSeen: event.createdAt,
           lastSeen: event.createdAt
