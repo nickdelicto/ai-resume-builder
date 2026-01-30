@@ -8,7 +8,7 @@ export default function AdminDashboard() {
   const { data: _session, status } = useSession();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState('alerts');
+  const [activeTab, setActiveTab] = useState('analytics');
 
   // Job Alerts state
   const [alerts, setAlerts] = useState([]);
@@ -23,6 +23,15 @@ export default function AdminDashboard() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState(null);
   const [userFilter, setUserFilter] = useState({ plan: 'all', hasResumes: 'all' });
+
+  // Analytics state
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState(null);
+
+  // User journeys state
+  const [userJourneys, setUserJourneys] = useState(null);
+  const [journeysLoading, setJourneysLoading] = useState(true);
 
   // Check admin auth
   useEffect(() => {
@@ -42,6 +51,8 @@ export default function AdminDashboard() {
           } else {
             fetchAlerts();
             fetchUsers();
+            fetchAnalytics();
+            fetchUserJourneys();
           }
         } else {
           router.push('/profile');
@@ -85,6 +96,37 @@ export default function AdminDashboard() {
       setUsersError(error.message);
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  // Fetch analytics
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      const response = await fetch('/api/admin/analytics');
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      setAnalyticsError(error.message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  // Fetch user journeys
+  const fetchUserJourneys = async () => {
+    setJourneysLoading(true);
+    try {
+      const response = await fetch('/api/admin/user-journeys');
+      if (!response.ok) throw new Error('Failed to fetch journeys');
+      const data = await response.json();
+      setUserJourneys(data);
+    } catch (error) {
+      console.error('Error fetching journeys:', error);
+    } finally {
+      setJourneysLoading(false);
     }
   };
 
@@ -139,6 +181,7 @@ export default function AdminDashboard() {
   }
 
   const tabs = [
+    { id: 'analytics', label: 'Analytics', count: null },
     { id: 'alerts', label: 'Job Alerts', count: alertsStats?.total || 0 },
     { id: 'users', label: 'Users', count: usersStats?.total || 0 },
     { id: 'tools', label: 'Tools', count: null },
@@ -192,6 +235,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Tab Content */}
+          {activeTab === 'analytics' && (
+            <AnalyticsTab
+              analytics={analytics}
+              loading={analyticsLoading}
+              error={analyticsError}
+              onRefresh={() => { fetchAnalytics(); fetchUserJourneys(); }}
+              userJourneys={userJourneys}
+              journeysLoading={journeysLoading}
+            />
+          )}
+
           {activeTab === 'alerts' && (
             <AlertsTab
               alerts={filteredAlerts}
@@ -475,8 +529,442 @@ function ToolsTab() {
   );
 }
 
+// Analytics Tab Component
+function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, journeysLoading }) {
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-24 bg-white rounded-xl animate-pulse"></div>)}
+        </div>
+        <div className="h-64 bg-white rounded-xl animate-pulse"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorBox message={error} />;
+  }
+
+  if (!analytics) {
+    return <EmptyState message="No analytics data available" />;
+  }
+
+  const { funnel, engagement, breakdowns, recentKnownUsers } = analytics;
+
+  return (
+    <div className="space-y-6">
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button onClick={onRefresh} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+          Refresh
+        </button>
+      </div>
+
+      {/* Funnel Overview - Applied is the ultimate goal */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Funnel (All Time)</h3>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
+          {/* Page Views */}
+          <div className="flex-1 text-center p-3 bg-blue-50 rounded-xl relative group">
+            <InfoTooltip text="Each job counted once per visitor session. Refreshes and revisits don't inflate the number." />
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{funnel.total.pageViews.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-blue-700 mt-1">Job Views</div>
+          </div>
+          {/* Arrow */}
+          <div className="flex flex-col items-center text-gray-400">
+            <svg className="w-6 h-6 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span className="text-xs font-medium text-emerald-600">{funnel.rates.applyRate}%</span>
+          </div>
+          {/* Apply Clicks (modal opened) */}
+          <div className="flex-1 text-center p-3 bg-amber-50 rounded-xl relative group">
+            <InfoTooltip text="User clicked Apply and the modal opened. They haven't left your site yet." />
+            <div className="text-2xl sm:text-3xl font-bold text-amber-600">{funnel.total.applyClicks.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-amber-700 mt-1">Opened Modal</div>
+          </div>
+          {/* Arrow */}
+          <div className="flex flex-col items-center text-gray-400">
+            <svg className="w-6 h-6 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span className="text-xs font-medium text-emerald-600">{funnel.rates.redirectRate}%</span>
+          </div>
+          {/* Employer Redirects (actually applied) - THE GOAL */}
+          <div className="flex-1 text-center p-3 bg-emerald-50 rounded-xl relative group border-2 border-emerald-200">
+            <InfoTooltip text="User left your site to apply on the employer's career page. This is the goal!" />
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{funnel.total.employerRedirects?.toLocaleString() || 0}</div>
+            <div className="text-xs sm:text-sm text-emerald-700 mt-1 font-semibold">Applied</div>
+          </div>
+          {/* Email capture inline */}
+          <div className="hidden sm:flex flex-col items-center text-gray-300 px-1">
+            <span className="text-lg">+</span>
+          </div>
+          <div className="flex-1 text-center p-3 bg-purple-50 rounded-xl relative group">
+            <InfoTooltip text="Users who gave email before applying. Your lead capture rate." />
+            <div className="text-2xl sm:text-3xl font-bold text-purple-600">{funnel.total.modalSubscribes.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-purple-700 mt-1">Emails</div>
+            <div className="text-xs text-purple-500">({funnel.keyMetrics?.emailCaptureRate || 0}% of applied)</div>
+          </div>
+        </div>
+
+        {/* Key Business Metrics - fixed positioning */}
+        <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap justify-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full">
+            <span className="text-sm text-emerald-700">Apply-Through:</span>
+            <span className="text-sm font-bold text-emerald-800">{funnel.keyMetrics?.applyThroughRate || 0}%</span>
+            <div className="relative group/tip">
+              <svg className="w-4 h-4 text-emerald-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-50">
+                % of job views that led to applications
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 rounded-full">
+            <span className="text-sm text-purple-700">Visitor → Lead:</span>
+            <span className="text-sm font-bold text-purple-800">{funnel.keyMetrics?.sessionConversion || 0}%</span>
+            <div className="relative group/tip">
+              <svg className="w-4 h-4 text-purple-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover/tip:opacity-100 group-hover/tip:visible transition-all z-50">
+                % of unique visitors who gave email
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Time Period Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <TimeCard title="Today" data={funnel.today} />
+        <TimeCard title="Last 7 Days" data={funnel.week} />
+        <TimeCard title="Last 30 Days" data={funnel.month} />
+      </div>
+
+      {/* All-Time Summary */}
+      <div>
+        <h4 className="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
+          All-Time Summary
+          <span className="text-xs font-normal text-gray-400">(unique counts)</span>
+        </h4>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Unique Visitors" value={engagement.uniqueSessions} icon="users" color="blue" subtitle="sessions" />
+          <StatCard label="Job Views" value={funnel.total.pageViews} icon="document" color="blue" subtitle="deduplicated" />
+          <StatCard label="Applications" value={funnel.total.employerRedirects || 0} icon="check" color="emerald" subtitle="to employer sites" />
+          <StatCard label="Leads Captured" value={engagement.uniqueEmails} icon="users" color="purple" subtitle="unique emails" />
+        </div>
+      </div>
+
+      {/* Breakdowns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Top Employers */}
+        <BreakdownCard
+          title="Top Employers"
+          data={breakdowns.employers}
+        />
+
+        {/* Top Specialties */}
+        <BreakdownCard
+          title="Top Specialties"
+          data={breakdowns.specialties}
+        />
+
+        {/* Top States */}
+        <BreakdownCard
+          title="Top States"
+          data={breakdowns.states}
+        />
+
+        {/* Top Cities */}
+        <BreakdownCard
+          title="Top Cities"
+          data={breakdowns.cities || []}
+          showState
+        />
+      </div>
+
+      {/* User Journeys */}
+      <UserJourneysSection
+        journeys={userJourneys?.journeys || []}
+        loading={journeysLoading}
+        formatDate={formatDate}
+      />
+    </div>
+  );
+}
+
+// Time period card for analytics
+function TimeCard({ title, data }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <h4 className="font-semibold text-gray-900 mb-3">{title}</h4>
+      <div className="grid grid-cols-4 gap-2 text-center">
+        <div>
+          <div className="text-lg font-bold text-blue-600">{data.pageViews}</div>
+          <div className="text-xs text-gray-500">Views</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-amber-600">{data.applyClicks}</div>
+          <div className="text-xs text-gray-500">Modals</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-orange-600">{data.employerRedirects || 0}</div>
+          <div className="text-xs text-gray-500">Applied</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-emerald-600">{data.modalSubscribes}</div>
+          <div className="text-xs text-gray-500">Subs</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Breakdown card with both clicks and applications
+function BreakdownCard({ title, data, showState = false }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-900">{title}</h4>
+        <div className="flex gap-3 text-xs text-gray-500">
+          <span className="text-amber-600">Modals</span>
+          <span className="text-emerald-600">Applied</span>
+        </div>
+      </div>
+      {data && data.length > 0 ? (
+        <div className="space-y-2">
+          {data.map((item, idx) => (
+            <div key={idx} className="flex justify-between items-center">
+              <span className="text-sm text-gray-700 truncate pr-2 flex-1">
+                {item.name}{showState && item.state ? `, ${item.state}` : ''}
+              </span>
+              <div className="flex gap-3 text-sm font-medium">
+                <span className="w-8 text-right text-amber-600">{item.clicks || 0}</span>
+                <span className="w-8 text-right text-emerald-600">{item.applied || 0}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500">No data yet</p>
+      )}
+    </div>
+  );
+}
+
+// Info tooltip with hover
+function InfoTooltip({ text, position = 'bottom' }) {
+  const positionClasses = position === 'top'
+    ? 'bottom-full mb-2'
+    : 'top-full mt-2';
+
+  return (
+    <div className="absolute top-1 right-1 group/tooltip">
+      <svg className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div className={`absolute right-0 ${positionClasses} w-48 p-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 shadow-lg`}>
+        {text}
+        <div className={`absolute ${position === 'top' ? 'top-full' : 'bottom-full'} right-2 border-4 border-transparent ${position === 'top' ? 'border-t-gray-900' : 'border-b-gray-900'}`}></div>
+      </div>
+    </div>
+  );
+}
+
+// Event type badge
+function EventTypeBadge({ type }) {
+  const styles = {
+    page_view: 'bg-blue-50 text-blue-700',
+    apply_click: 'bg-amber-50 text-amber-700',
+    employer_redirect: 'bg-orange-50 text-orange-700',
+    modal_subscribe: 'bg-emerald-50 text-emerald-700',
+    resume_click: 'bg-purple-50 text-purple-700'
+  };
+  const labels = {
+    page_view: 'View',
+    apply_click: 'Modal',
+    employer_redirect: 'Applied',
+    modal_subscribe: 'Subscribe',
+    resume_click: 'Resume'
+  };
+  return (
+    <span className={`text-xs px-1.5 py-0.5 rounded ${styles[type] || 'bg-gray-100 text-gray-600'}`}>
+      {labels[type] || type}
+    </span>
+  );
+}
+
+// User Journeys Section with expandable timelines
+function UserJourneysSection({ journeys, loading, formatDate }) {
+  const [expandedEmail, setExpandedEmail] = useState(null);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="animate-pulse space-y-3">
+          {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-lg"></div>)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!journeys || journeys.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <p className="text-gray-500 text-center">No user journeys yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+        <h4 className="font-semibold text-gray-900">User Journeys</h4>
+        <span className="text-xs text-gray-500">{journeys.length} known users</span>
+      </div>
+      <div className="divide-y max-h-[600px] overflow-y-auto">
+        {journeys.map((journey, idx) => (
+          <div key={journey.email} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+            {/* Email row - clickable to expand */}
+            <button
+              onClick={() => setExpandedEmail(expandedEmail === journey.email ? null : journey.email)}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50/80 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
+                  journey.eventCounts.employer_redirect > 0 ? 'bg-emerald-500' :
+                  journey.eventCounts.apply_click > 0 ? 'bg-amber-500' : 'bg-blue-500'
+                }`}>
+                  {journey.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-left">
+                  <span className="text-sm font-medium text-gray-900">{journey.email}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-blue-600">{journey.eventCounts.page_view} views</span>
+                    <span className="text-xs text-amber-600">{journey.eventCounts.apply_click} modals</span>
+                    <span className="text-xs text-emerald-600">{journey.eventCounts.employer_redirect} applied</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 hidden sm:block">{formatDate(journey.lastSeen)}</span>
+                <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedEmail === journey.email ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            {/* Expanded journey timeline */}
+            {expandedEmail === journey.email && (
+              <div className="px-4 pb-4 pt-2 bg-gray-50/50">
+                {/* Journey direction indicator */}
+                <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                  <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">START</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  <span className="text-gray-400">{journey.events.length} steps</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-medium">LATEST</span>
+                </div>
+                <div className="relative pl-8 space-y-0">
+                  {journey.events.map((event, eventIdx) => {
+                    const isFirst = eventIdx === 0;
+                    const isLast = eventIdx === journey.events.length - 1;
+                    const eventColors = {
+                      page_view: { dot: 'bg-blue-500', line: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-700' },
+                      apply_click: { dot: 'bg-amber-500', line: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700' },
+                      employer_redirect: { dot: 'bg-emerald-500', line: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+                      modal_subscribe: { dot: 'bg-teal-500', line: 'border-teal-200', bg: 'bg-teal-50', text: 'text-teal-700' }
+                    };
+                    const color = eventColors[event.eventType] || eventColors.page_view;
+                    const eventLabels = {
+                      page_view: 'Viewed Job',
+                      apply_click: 'Opened Modal',
+                      employer_redirect: 'Applied',
+                      modal_subscribe: 'Subscribed'
+                    };
+
+                    return (
+                      <div key={event.id} className="relative pb-4">
+                        {/* Vertical line */}
+                        {!isLast && (
+                          <div className="absolute left-[-18px] top-6 bottom-0 w-0.5 bg-gray-300"></div>
+                        )}
+                        {/* Step number */}
+                        <div className={`absolute left-[-26px] top-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                          isFirst ? 'bg-green-500' : isLast ? 'bg-purple-500' : color.dot
+                        }`}>
+                          {eventIdx + 1}
+                        </div>
+                        {/* Down arrow between events */}
+                        {!isLast && (
+                          <div className="absolute left-[-21px] bottom-1 text-gray-400">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M6 9L2 5h8L6 9z" />
+                            </svg>
+                          </div>
+                        )}
+                        {/* Event content */}
+                        <div className={`${color.bg} rounded-lg p-3 ${isFirst ? 'ring-2 ring-green-300' : ''} ${isLast ? 'ring-2 ring-purple-300' : ''}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {isFirst && <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded font-medium">START</span>}
+                              {isLast && <span className="text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded font-medium">LATEST</span>}
+                              <span className={`text-sm font-medium ${color.text}`}>
+                                {eventLabels[event.eventType] || event.eventType}
+                              </span>
+                              {event.employer && (
+                                <span className="text-xs text-gray-600">at {event.employer}</span>
+                              )}
+                              {event.specialty && (
+                                <span className="text-xs bg-white/60 text-gray-600 px-1.5 py-0.5 rounded">{event.specialty}</span>
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-500 whitespace-nowrap">{formatDate(event.createdAt)}</span>
+                          </div>
+                          {event.jobSlug && (
+                            <a
+                              href={`/jobs/nursing/${event.jobSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 block truncate"
+                            >
+                              {event.jobSlug.replace(/-/g, ' ').slice(0, 60)}...
+                              <svg className="inline-block w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Reusable Components
-function StatCard({ label, value, icon, color }) {
+function StatCard({ label, value, icon, color, subtitle }) {
   const icons = {
     users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />,
     check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
@@ -500,6 +988,7 @@ function StatCard({ label, value, icon, color }) {
         <div>
           <p className="text-xs sm:text-sm font-medium text-gray-500 mb-1">{label}</p>
           <p className={`text-2xl sm:text-3xl font-bold ${c.value}`}>{value}</p>
+          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
         </div>
         <div className={`w-10 h-10 sm:w-12 sm:h-12 ${c.bg} rounded-xl flex items-center justify-center`}>
           <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${c.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">{icons[icon]}</svg>
