@@ -202,7 +202,8 @@ model NursingJob {
   experienceLevel String? // Experience required: "new-grad", "experienced", "senior"
 
   // Job Details
-  description      String  @db.Text // Full job description
+  description      String  @db.Text // Full job description (formatted by LLM)
+  rawDescription   String? @db.Text // Original description from scraper (for skip logic - checks markers like "Duties & Responsibilities:")
   requirements     String? @db.Text // Qualifications and requirements
   responsibilities String? @db.Text // Job responsibilities
   benefits         String? @db.Text // Benefits information if available

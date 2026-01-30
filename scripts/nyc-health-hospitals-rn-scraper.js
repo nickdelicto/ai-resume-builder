@@ -101,21 +101,43 @@ class NYCHealthHospitalsRNScraper {
   }
 
   /**
-   * Check if a job already has a full description in the database
+   * Check if a job already has complete data in the database
    * Used to skip detail page fetches for jobs we already have data for
+   *
+   * Checks rawDescription (not description) because:
+   * - LLM formatter overwrites description with formatted version
+   * - Formatted descriptions can be long even with minimal source data (fabricated content)
+   * - rawDescription preserves the original scraper output with markers
+   *
+   * Markers indicate successful detail page fetch:
+   * - "Duties & Responsibilities:" - only added when duties extracted from detail page
+   * - "Minimum Qualifications:" - only added when qualifications extracted from detail page
+   *
    * @param {string} sourceJobId - The employer's job ID
-   * @returns {Promise<object|null>} - Existing job with full description, or null
+   * @returns {Promise<object|null>} - Existing job with complete data, or null
    */
-  async checkExistingFullDescription(sourceJobId) {
+  async checkExistingCompleteData(sourceJobId) {
     if (!sourceJobId || !this.saveToDatabase) return null;
 
     try {
       const existingJob = await this.jobService.findExistingJob(null, sourceJobId);
 
-      // Check if job has a substantial description (> 500 chars indicates full scrape)
-      if (existingJob && existingJob.description && existingJob.description.length > 500) {
+      if (!existingJob || !existingJob.rawDescription) {
+        return null;
+      }
+
+      const raw = existingJob.rawDescription;
+
+      // Belt-and-suspenders: check BOTH markers AND length
+      // Markers prove detail page was fetched, length ensures content was extracted
+      const hasMarkers = raw.includes('Duties & Responsibilities:') ||
+                        raw.includes('Minimum Qualifications:');
+      const hasSubstantialContent = raw.length > 500;
+
+      if (hasMarkers && hasSubstantialContent) {
         return existingJob;
       }
+
       return null;
     } catch (error) {
       // Don't fail on DB check errors - just proceed with normal fetch
@@ -239,7 +261,7 @@ class NYCHealthHospitalsRNScraper {
       console.log(`   Nursing jobs: ${nursingJobs.length}`);
       console.log(`   Successfully processed: ${processedJobs.length}`);
       console.log(`   Detail pages fetched: ${this.fetchedCount}`);
-      console.log(`   Skipped (existing data): ${this.skippedCount}`);
+      console.log(`   Skipped (has rawDescription): ${this.skippedCount}`);
       console.log(`   Errors: ${errorCount}`);
 
       // Save to database
@@ -1471,11 +1493,12 @@ class NYCHealthHospitalsRNScraper {
     // Found via "Email this Job" feature - contains JobOpeningId parameter
     const jobUrl = `https://careers.nychhc.org/psp/hrtam/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_APP_JBPST_FL&Action=U&FOCUS=Applicant&SiteId=1&JobOpeningId=${job.jobId}&PostingSeq=1`;
 
-    // Check if job already has a full description in DB (skip rate-limited detail fetch)
-    const existingJob = await this.checkExistingFullDescription(job.jobId);
+    // Check if job already has complete data in DB (skip rate-limited detail fetch)
+    // Uses rawDescription with markers check - see checkExistingCompleteData for details
+    const existingJob = await this.checkExistingCompleteData(job.jobId);
     if (existingJob) {
       this.skippedCount++;
-      console.log(`      ⏭️ Already has full description (${existingJob.description.length} chars), skipping detail fetch`);
+      console.log(`      ⏭️ Already has complete data (rawDescription: ${existingJob.rawDescription?.length || 0} chars), skipping detail fetch`);
 
       // Return existing job data merged with current search results info
       // This ensures the job is still counted in the save list for deactivation logic
@@ -1625,6 +1648,7 @@ class NYCHealthHospitalsRNScraper {
       specialty: specialty || 'general',
       experienceLevel: experienceLevel || 'experienced',
       description,
+      rawDescription: description, // Store raw scraper output for skip logic (markers check)
       requirements,
       benefits,
       salaryMin,
