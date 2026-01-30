@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { formatPayForCard } from '../../../lib/utils/jobCardUtils';
 import JobAlertSignup from '../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
+import StickyApplyButton from '../../../components/StickyApplyButton';
 import ShareButtons from '../../../components/ShareButtons';
+import { trackPageView, trackApplyClick, trackModalSubscribe, trackEmployerRedirect } from '../../../lib/utils/analytics';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
@@ -115,6 +117,53 @@ export default function JobDetailPage({
 }) {
   const router = useRouter();
 
+  // Apply interstitial modal state
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyEmail, setApplyEmail] = useState('');
+  const [applySubmitting, setApplySubmitting] = useState(false);
+  const [applyError, setApplyError] = useState('');
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
+
+  // Load reCAPTCHA v3 script when modal opens
+  useEffect(() => {
+    if (!showApplyModal) return;
+
+    // Check if already loaded
+    if (window.grecaptcha) {
+      setRecaptchaReady(true);
+      return;
+    }
+
+    // Load the script
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`;
+    script.async = true;
+    script.onload = () => {
+      window.grecaptcha.ready(() => {
+        setRecaptchaReady(true);
+      });
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Don't remove script on cleanup - it can be reused
+    };
+  }, [showApplyModal]);
+
+  // Track page view on mount (job detail pages only)
+  useEffect(() => {
+    if (!isStatePage && job) {
+      trackPageView({
+        jobId: job.id,
+        jobSlug: job.slug,
+        employer: job.employer?.name,
+        specialty: job.specialty,
+        state: job.state,
+        city: job.city
+      });
+    }
+  }, [isStatePage, job?.id]);
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Recently posted';
     const date = new Date(dateString);
@@ -156,6 +205,133 @@ export default function JobDetailPage({
     }
     
     return cleaned;
+  };
+
+  // Handle Apply button click - show interstitial modal
+  const handleApplyClick = () => {
+    // Track the apply click regardless of modal outcome
+    if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+      window.gtag('event', 'apply_click', {
+        event_category: 'Job Actions',
+        event_label: 'Apply Button Clicked',
+        job_title: job?.title,
+        job_id: job?.id,
+        employer: job?.employer?.name,
+        specialty: job?.specialty,
+        location: `${job?.city}, ${job?.state}`
+      });
+    }
+    // Internal analytics tracking
+    trackApplyClick({
+      jobId: job?.id,
+      jobSlug: job?.slug,
+      employer: job?.employer?.name,
+      specialty: job?.specialty,
+      state: job?.state,
+      city: job?.city
+    });
+    setShowApplyModal(true);
+  };
+
+  // Open employer application in new tab
+  const openEmployerApplication = () => {
+    if (job?.sourceUrl) {
+      // Track that user actually proceeded to employer site
+      trackEmployerRedirect({
+        jobId: job?.id,
+        jobSlug: job?.slug,
+        employer: job?.employer?.name,
+        specialty: job?.specialty,
+        state: job?.state,
+        city: job?.city
+      });
+      window.open(job.sourceUrl, '_blank', 'noopener,noreferrer');
+    }
+    setShowApplyModal(false);
+    setApplyEmail('');
+    setApplyError('');
+  };
+
+  // Handle email subscription from modal
+  const handleModalSubscribe = async (e) => {
+    e.preventDefault();
+
+    if (!applyEmail || !applyEmail.includes('@')) {
+      setApplyError('Please enter a valid email address');
+      return;
+    }
+
+    setApplySubmitting(true);
+    setApplyError('');
+
+    try {
+      // Get reCAPTCHA token (invisible v3 - no user interaction)
+      let recaptchaToken = null;
+      if (window.grecaptcha && recaptchaReady) {
+        try {
+          recaptchaToken = await window.grecaptcha.execute(
+            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            { action: 'apply_modal_subscribe' }
+          );
+        } catch (recaptchaError) {
+          console.error('reCAPTCHA error:', recaptchaError);
+          // Don't block - let the API decide
+        }
+      }
+
+      const response = await fetch('/api/salary-calculator/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: applyEmail,
+          specialty: job?.specialty || '',
+          state: job?.state || '',
+          city: job?.city || '',
+          source: `apply-modal:${job?.slug || router.asPath}`,
+          recaptchaToken,
+          location: job?.state || ''
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Track successful subscription
+        if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+          window.gtag('event', 'apply_modal_subscribe', {
+            event_category: 'Job Alerts',
+            event_label: 'Subscribed via Apply Modal',
+            job_title: job?.title,
+            specialty: job?.specialty
+          });
+        }
+        // Internal analytics tracking (also backfills email to previous session events)
+        trackModalSubscribe({
+          email: applyEmail,
+          jobId: job?.id,
+          jobSlug: job?.slug,
+          employer: job?.employer?.name,
+          specialty: job?.specialty,
+          state: job?.state,
+          city: job?.city
+        });
+        // Open the application and close modal
+        openEmployerApplication();
+      } else {
+        // Silently proceed in these cases:
+        // 1. Already subscribed to this exact alert
+        // 2. Already at max alerts (5) - don't punish engaged users
+        if (data.message?.includes('already subscribed') || data.maxReached) {
+          openEmployerApplication();
+        } else {
+          setApplyError(data.message || 'Failed to subscribe. You can still apply.');
+        }
+      }
+    } catch (err) {
+      setApplyError('Something went wrong. You can still apply.');
+    } finally {
+      setApplySubmitting(false);
+    }
   };
 
   // Render markdown-formatted text to React elements
@@ -1199,22 +1375,20 @@ export default function JobDetailPage({
           <div className="mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Apply Now Button - Primary CTA */}
-              <a
-                href={job.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden"
+              <button
+                onClick={handleApplyClick}
+                className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] overflow-hidden cursor-pointer"
               >
                 {/* Shine effect on hover */}
                 <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
-                
+
                 <span className="relative z-10 flex items-center gap-3">
-                  Apply Job Now
+                  Apply Now
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </span>
-              </a>
+              </button>
 
               {/* Customize Resume Button - Secondary CTA (Teal/Cyan healthcare color) */}
               <a
@@ -1362,14 +1536,111 @@ export default function JobDetailPage({
             />
           </div>
 
-          {/* Sticky Bottom CTA Banner */}
-          <StickyJobAlertCTA 
-            specialty={job.specialty}
-            location={`${job.city}, ${job.state}`}
+          {/* Sticky Bottom Apply Button */}
+          <StickyApplyButton
             jobTitle={job.title}
+            employer={job.employer?.name}
+            onApplyClick={handleApplyClick}
           />
         </div>
       </div>
+
+      {/* Apply Interstitial Modal */}
+      {showApplyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowApplyModal(false);
+                setApplyEmail('');
+                setApplyError('');
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal content */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Good luck with your application!
+              </h3>
+              <p className="text-gray-600">
+                Want to get notified about similar{' '}
+                <span className="font-semibold text-blue-600">{job.specialty || 'RN'}</span> jobs
+                {job.state && <> in <span className="font-semibold text-blue-600">{job.city ? `${job.city}, ${job.state}` : job.state}</span></>}?
+              </p>
+            </div>
+
+            {/* Email form */}
+            <form onSubmit={handleModalSubscribe} className="space-y-4">
+              <div>
+                <input
+                  type="email"
+                  value={applyEmail}
+                  onChange={(e) => setApplyEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  disabled={applySubmitting}
+                />
+                {applyError && (
+                  <p className="mt-2 text-sm text-red-600">{applyError}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={applySubmitting}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {applySubmitting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Subscribing...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                      Yes, notify me
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openEmployerApplication}
+                  disabled={applySubmitting}
+                  className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  No thanks, continue to apply
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Weekly job alerts. Unsubscribe anytime.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
