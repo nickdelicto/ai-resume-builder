@@ -308,3 +308,30 @@ model JobAlert {
   @@index([unsubscribeToken]) // Fast token validation
   @@map("jobalert") // Explicitly map to lowercase table name (PostgreSQL default)
 }
+
+// Analytics events for internal job board tracking
+// Tracks: page_view, apply_click, employer_redirect, modal_subscribe, resume_click
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  sessionId String   // Links events from same visitor (localStorage-based)
+  eventType String   // "page_view", "apply_click", "modal_subscribe", "resume_click"
+  email     String?  // Filled when user subscribes, then backfills previous events
+
+  // Job context (optional - not all events have a specific job)
+  jobId     String?  // Internal job ID
+  jobSlug   String?  // Job URL slug
+  sourceUrl String   // Full URL where event occurred
+
+  // Job metadata for analytics breakdowns
+  employer  String?  // Employer name
+  specialty String?  // Job specialty
+  state     String?  // State code
+  city      String?  // City name
+
+  createdAt DateTime @default(now())
+
+  @@index([eventType, createdAt]) // For filtering by type and time range
+  @@index([sessionId])           // For linking events from same visitor
+  @@index([email])               // For finding all events from a known user
+  @@index([createdAt])           // For time-based queries
+}
