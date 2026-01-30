@@ -70,7 +70,7 @@ const CONFIG = {
   // Delays (be respectful to the server)
   pageLoadDelay: 5000,
   betweenPagesDelay: 3000,
-  betweenJobsDelay: 1000
+  betweenJobsDelay: 3000 // Increased from 1000 to avoid rate limiting
 };
 
 // Parse command line arguments
@@ -96,6 +96,32 @@ class NYCHealthHospitalsRNScraper {
     this.jobService = options.jobService || new JobBoardService();
     this.maxPages = options.maxPages || null;
     this.maxJobs = options.maxJobs || null; // Limit total jobs collected (for testing)
+    this.skippedCount = 0; // Track jobs skipped due to existing descriptions
+    this.fetchedCount = 0; // Track jobs where detail page was fetched
+  }
+
+  /**
+   * Check if a job already has a full description in the database
+   * Used to skip detail page fetches for jobs we already have data for
+   * @param {string} sourceJobId - The employer's job ID
+   * @returns {Promise<object|null>} - Existing job with full description, or null
+   */
+  async checkExistingFullDescription(sourceJobId) {
+    if (!sourceJobId || !this.saveToDatabase) return null;
+
+    try {
+      const existingJob = await this.jobService.findExistingJob(null, sourceJobId);
+
+      // Check if job has a substantial description (> 500 chars indicates full scrape)
+      if (existingJob && existingJob.description && existingJob.description.length > 500) {
+        return existingJob;
+      }
+      return null;
+    } catch (error) {
+      // Don't fail on DB check errors - just proceed with normal fetch
+      console.log(`      ⚠️ DB check error: ${error.message}`);
+      return null;
+    }
   }
 
   /**
@@ -212,6 +238,8 @@ class NYCHealthHospitalsRNScraper {
       console.log(`   Total listings: ${allJobs.length}`);
       console.log(`   Nursing jobs: ${nursingJobs.length}`);
       console.log(`   Successfully processed: ${processedJobs.length}`);
+      console.log(`   Detail pages fetched: ${this.fetchedCount}`);
+      console.log(`   Skipped (existing data): ${this.skippedCount}`);
       console.log(`   Errors: ${errorCount}`);
 
       // Save to database
@@ -1443,6 +1471,51 @@ class NYCHealthHospitalsRNScraper {
     // Found via "Email this Job" feature - contains JobOpeningId parameter
     const jobUrl = `https://careers.nychhc.org/psp/hrtam/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_APP_JBPST_FL&Action=U&FOCUS=Applicant&SiteId=1&JobOpeningId=${job.jobId}&PostingSeq=1`;
 
+    // Check if job already has a full description in DB (skip rate-limited detail fetch)
+    const existingJob = await this.checkExistingFullDescription(job.jobId);
+    if (existingJob) {
+      this.skippedCount++;
+      console.log(`      ⏭️ Already has full description (${existingJob.description.length} chars), skipping detail fetch`);
+
+      // Return existing job data merged with current search results info
+      // This ensures the job is still counted in the save list for deactivation logic
+      return {
+        title,
+        slug: existingJob.slug, // Preserve existing slug for URL stability
+        sourceJobId: job.jobId,
+        employerName: this.employerName,
+        employerSlug: this.employerSlug,
+        location: existingJob.location || `${city}, ${state}`,
+        city: existingJob.city || city,
+        state: existingJob.state || state,
+        zipCode: existingJob.zipCode,
+        country: 'US',
+        jobType: existingJob.jobType || 'full-time',
+        shift: existingJob.shift,
+        specialty: existingJob.specialty || 'general',
+        experienceLevel: existingJob.experienceLevel || 'experienced',
+        description: existingJob.description,
+        requirements: existingJob.requirements || '',
+        benefits: existingJob.benefits || '',
+        salaryMin: existingJob.salaryMin,
+        salaryMax: existingJob.salaryMax,
+        salaryType: existingJob.salaryType,
+        salaryMinHourly: existingJob.salaryMinHourly,
+        salaryMaxHourly: existingJob.salaryMaxHourly,
+        salaryMinAnnual: existingJob.salaryMinAnnual,
+        salaryMaxAnnual: existingJob.salaryMaxAnnual,
+        sourceUrl: jobUrl,
+        jobUrl,
+        careerPageUrl: this.careerPageUrl,
+        atsPlatform: this.atsPlatform,
+        postedAt: existingJob.postedAt || new Date(),
+        department: existingJob.department,
+        _skipped: true // Flag for logging purposes
+      };
+    }
+
+    this.fetchedCount++;
+
     // Fetch full details from detail page (pass jobIndex for clicking the right job)
     const details = await this.fetchJobDetails(page, job, jobIndex, maxDomIndex);
 
@@ -1566,7 +1639,6 @@ class NYCHealthHospitalsRNScraper {
       careerPageUrl: this.careerPageUrl,
       atsPlatform: this.atsPlatform,
       postedAt: job.postedDate ? new Date(job.postedDate) : new Date(),
-      isActive: true,
       department
     };
   }

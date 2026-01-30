@@ -779,6 +779,7 @@ async function main() {
             hasSignOnBonus: c.hasSignOnBonus || false,
             signOnBonusAmount: c.signOnBonusAmount || null,
             isActive: true,       // ✅ Activate job - validated as Staff RN with location
+            wasEverActive: true,  // ✅ One-way flag - enables reactivation if job is deactivated then found again
             classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
           };
           

@@ -233,6 +233,7 @@ model NursingJob {
   expiresDate         DateTime? // When job expires (if available from source)
   calculatedExpiresDate DateTime? // Calculated expiry (scrapedAt + 60 days) if no expiresDate provided
   classifiedAt        DateTime? // When job was classified by LLM (null = needs classification)
+  wasEverActive       Boolean   @default(false) // True if job was ever approved/activated (one-way flag for reactivation logic)
 
   // SEO Fields (for programmatic SEO pages)
   slug            String   @unique // URL-friendly version like "icu-rn-mayfield-heights-12345"
