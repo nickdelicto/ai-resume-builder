@@ -191,7 +191,7 @@ export default function RNSalaryCalculator() {
   return (
     <>
       <Head>
-        <title>RN Salary Calculator - Free Nursing Salary Estimator {currentYear} | IntelliResume Health</title>
+        <title>RN Salary Calculator {currentYear} - Free Nursing Salary Estimator</title>
         <meta name="description" content={`Calculate your RN salary based on specialty, location, and experience. Get instant estimates with our free nursing salary calculator. Compare average RN pay by state and city for ${currentYear}.`} />
         <meta name="keywords" content="rn salary calculator, nursing salary calculator, registered nurse salary, nurse pay calculator, nursing salary estimator" />
         <link rel="canonical" href="https://intelliresume.net/jobs/nursing/rn-salary-calculator" />
@@ -240,7 +240,7 @@ export default function RNSalaryCalculator() {
                   "name": "What is the average RN salary in the United States?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": `As of ${currentYear}, the average registered nurse salary in the United States ranges from $65,000 to $85,000 annually, depending on location, experience, and specialty. However, this can vary significantly. Some states like California and Massachusetts offer average RN salaries exceeding $100,000.`
+                    "text": `As of ${currentYear}, the average registered nurse salary in the United States is approximately $93,600 annually ($45/hour) according to BLS data. However, salaries vary significantly by location and specialty. Our job listings show an average range of $80,000 to $113,000 annually. States like California and Massachusetts offer average RN salaries exceeding $100,000.`
                   }
                 },
                 {
@@ -295,6 +295,83 @@ export default function RNSalaryCalculator() {
             })
           }}
         />
+
+        {/* BreadcrumbList Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://intelliresume.net"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "RN Jobs",
+                  "item": "https://intelliresume.net/jobs/nursing"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Salary Calculator",
+                  "item": "https://intelliresume.net/jobs/nursing/rn-salary-calculator"
+                }
+              ]
+            })
+          }}
+        />
+
+        {/* HowTo Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "HowTo",
+              "name": "How to Calculate Your RN Salary",
+              "description": "Use our free nursing salary calculator to estimate your registered nurse salary based on specialty, location, and experience.",
+              "totalTime": "PT1M",
+              "step": [
+                {
+                  "@type": "HowToStep",
+                  "position": 1,
+                  "name": "Select Your Nursing Specialty",
+                  "text": "Choose your nursing specialty from the dropdown menu (ICU, ER, Med-Surg, etc.)."
+                },
+                {
+                  "@type": "HowToStep",
+                  "position": 2,
+                  "name": "Enter Your Location",
+                  "text": "Select your state and optionally a specific city to get location-based salary estimates."
+                },
+                {
+                  "@type": "HowToStep",
+                  "position": 3,
+                  "name": "Set Your Experience Level",
+                  "text": "Use the slider to indicate your years of nursing experience (0-20+ years)."
+                },
+                {
+                  "@type": "HowToStep",
+                  "position": 4,
+                  "name": "Refine Your Search (Optional)",
+                  "text": "Expand the advanced options to filter by job type (Full-Time, Per Diem, Travel) and shift type (Days, Nights)."
+                },
+                {
+                  "@type": "HowToStep",
+                  "position": 5,
+                  "name": "Calculate Your Salary",
+                  "text": "Click 'Calculate My Salary' to see your personalized salary estimate along with state and national averages."
+                }
+              ]
+            })
+          }}
+        />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-purple-100" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
@@ -336,7 +413,7 @@ export default function RNSalaryCalculator() {
           </div>
 
           {/* Calculator Form */}
-          <form onSubmit={handleCalculate} className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-6 sm:p-8 mb-8">
+          <form id="calculator" onSubmit={handleCalculate} className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-6 sm:p-8 mb-8">
             
             {/* Specialty Selection */}
             <div className="mb-6 sm:mb-8">
@@ -871,13 +948,32 @@ export default function RNSalaryCalculator() {
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
                 Highest Paying Nursing Specialties in {currentYear}
               </h2>
+              <p className="text-gray-700 mb-6">
+                Based on salary data from our active job listings, these specialties offer the highest compensation:
+              </p>
               <div className="space-y-4">
+                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">Cath Lab</h3>
+                    <div className="text-right">
+                      <div className="text-green-600 font-semibold">$97K - $169K/year</div>
+                      <div className="text-gray-500 text-sm">$46 - $81/hour</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    Cardiac catheterization lab nurses assist with diagnostic and interventional heart procedures. Highly specialized with excellent compensation reflecting the advanced technical skills required.
+                  </p>
+                  <Link href="/jobs/nursing/specialty/cath-lab" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View Cath Lab RN Jobs →
+                  </Link>
+                </div>
+
                 <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-lg font-bold text-gray-900">Critical Care (ICU)</h3>
                     <div className="text-right">
-                      <div className="text-green-600 font-semibold">$75K - $120K/year</div>
-                      <div className="text-gray-500 text-sm">$36 - $58/hour</div>
+                      <div className="text-green-600 font-semibold">$84K - $120K/year</div>
+                      <div className="text-gray-500 text-sm">$40 - $58/hour</div>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm">
@@ -890,71 +986,142 @@ export default function RNSalaryCalculator() {
 
                 <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">Emergency Room (ER)</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Case Management</h3>
                     <div className="text-right">
-                      <div className="text-green-600 font-semibold">$72K - $115K/year</div>
-                      <div className="text-gray-500 text-sm">$35 - $55/hour</div>
+                      <div className="text-green-600 font-semibold">$90K - $120K/year</div>
+                      <div className="text-gray-500 text-sm">$43 - $58/hour</div>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm">
-                    ER nurses handle acute, life-threatening situations requiring quick decision-making and diverse clinical skills. Fast-paced environment with competitive compensation.
+                    Case management nurses coordinate patient care across the healthcare continuum, managing discharge planning and ensuring quality outcomes. Combines clinical expertise with care coordination skills.
                   </p>
-                  <Link href="/jobs/nursing/specialty/emergency-room" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                    View ER RN Jobs →
+                  <Link href="/jobs/nursing/specialty/case-management" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View Case Management RN Jobs →
                   </Link>
                 </div>
 
                 <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">Operating Room (OR)</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Ambulatory Care</h3>
                     <div className="text-right">
-                      <div className="text-green-600 font-semibold">$70K - $110K/year</div>
-                      <div className="text-gray-500 text-sm">$34 - $53/hour</div>
+                      <div className="text-green-600 font-semibold">$98K - $120K/year</div>
+                      <div className="text-gray-500 text-sm">$47 - $58/hour</div>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm">
-                    OR nurses assist surgeons during procedures, requiring specialized knowledge of surgical techniques and sterile protocols. Highly skilled specialty with excellent pay.
+                    Ambulatory care nurses work in outpatient settings including clinics, same-day surgery centers, and physician offices. Growing demand with competitive salaries and often better work-life balance.
                   </p>
-                  <Link href="/jobs/nursing/specialty/operating-room" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                    View OR RN Jobs →
+                  <Link href="/jobs/nursing/specialty/ambulatory" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View Ambulatory RN Jobs →
                   </Link>
                 </div>
 
                 <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">Travel Nursing</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Med-Surg</h3>
                     <div className="text-right">
-                      <div className="text-green-600 font-semibold">$100K - $170K+/year</div>
-                      <div className="text-gray-500 text-sm">$48 - $82+/hour</div>
+                      <div className="text-green-600 font-semibold">$77K - $113K/year</div>
+                      <div className="text-gray-500 text-sm">$37 - $54/hour</div>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm">
-                    Travel nurses work temporary assignments across different facilities and locations. Highest hourly rates plus housing stipends and travel reimbursements make this the most lucrative option.
+                    Medical-surgical nurses are the backbone of hospital nursing, caring for adult patients with a wide range of conditions. The most common nursing specialty with abundant job opportunities.
                   </p>
-                  <Link href="/jobs/nursing" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                    View Travel RN Jobs →
-                  </Link>
-                </div>
-
-                <div className="bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-300 transition">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">Neonatal ICU (NICU)</h3>
-                    <div className="text-right">
-                      <div className="text-green-600 font-semibold">$68K - $105K/year</div>
-                      <div className="text-gray-500 text-sm">$33 - $50/hour</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 text-sm">
-                    NICU nurses care for premature and critically ill newborns. Requires advanced skills in neonatal care and often specialized NRP certification.
-                  </p>
-                  <Link href="/jobs/nursing/specialty/nicu" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                    View NICU RN Jobs →
+                  <Link href="/jobs/nursing/specialty/med-surg" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                    View Med-Surg RN Jobs →
                   </Link>
                 </div>
               </div>
             </section>
 
-            {/* Section 5: FAQs */}
+            {/* Section 5: Top Paying States Table */}
+            <section>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                Highest Paying States for Registered Nurses ({currentYear})
+              </h2>
+              <p className="text-gray-700 mb-6">
+                According to the <a href="https://www.bls.gov/ooh/healthcare/registered-nurses.htm" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Bureau of Labor Statistics</a>, these states offer the highest average salaries for registered nurses. Our calculator uses real-time job posting data to provide current market estimates.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+                  <thead>
+                    <tr className="bg-blue-600 text-white">
+                      <th className="px-4 py-3 text-left font-semibold">State</th>
+                      <th className="px-4 py-3 text-right font-semibold">Average Annual Salary</th>
+                      <th className="px-4 py-3 text-right font-semibold">Hourly Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">California</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$148,330</td>
+                      <td className="px-4 py-3 text-right">$71.31/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">Hawaii</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$123,720</td>
+                      <td className="px-4 py-3 text-right">$59.48/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">Oregon</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$120,470</td>
+                      <td className="px-4 py-3 text-right">$57.92/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">Washington</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$115,740</td>
+                      <td className="px-4 py-3 text-right">$55.64/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">
+                        <Link href="/jobs/nursing/massachusetts" className="text-blue-600 hover:underline">Massachusetts</Link>
+                      </td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$112,610</td>
+                      <td className="px-4 py-3 text-right">$54.14/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">Alaska</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$112,040</td>
+                      <td className="px-4 py-3 text-right">$53.87/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">
+                        <Link href="/jobs/nursing/new-york" className="text-blue-600 hover:underline">New York</Link>
+                      </td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$110,490</td>
+                      <td className="px-4 py-3 text-right">$53.12/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">District of Columbia</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$109,240</td>
+                      <td className="px-4 py-3 text-right">$52.52/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">New Jersey</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$106,990</td>
+                      <td className="px-4 py-3 text-right">$51.44/hr</td>
+                    </tr>
+                    <tr className="hover:bg-blue-50">
+                      <td className="px-4 py-3 font-medium">
+                        <Link href="/jobs/nursing/connecticut" className="text-blue-600 hover:underline">Connecticut</Link>
+                      </td>
+                      <td className="px-4 py-3 text-right text-green-600 font-semibold">$103,670</td>
+                      <td className="px-4 py-3 text-right">$49.84/hr</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-gray-600">National Average</td>
+                      <td className="px-4 py-3 text-right font-semibold">$93,600</td>
+                      <td className="px-4 py-3 text-right">$45.00/hr</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                Source: <a href="https://data.bls.gov/oesprofile/" target="_blank" rel="noopener noreferrer" className="hover:underline">U.S. Bureau of Labor Statistics OES Survey</a>. Use our <a href="#calculator" className="text-blue-600 hover:underline">calculator above</a> for personalized estimates based on your specific specialty and experience level.
+              </p>
+            </section>
+
+            {/* Section 6: FAQs */}
             <section>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
                 Frequently Asked Questions About RN Salaries
@@ -965,7 +1132,7 @@ export default function RNSalaryCalculator() {
                     What is the average RN salary in the United States?
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    As of {currentYear}, the average registered nurse salary in the United States ranges from $65,000 to $85,000 annually, depending on location, experience, and specialty. However, this can vary greatly. Some states like California and Massachusetts offer average RN salaries exceeding $100,000, while other regions may have lower averages. Use our calculator above to get location-specific estimates.
+                    As of {currentYear}, the average registered nurse salary in the United States is approximately $93,600 annually ($45/hour) according to the Bureau of Labor Statistics. However, salaries vary significantly by location and specialty. Based on our active job listings, the average salary range is $80,000 to $113,000 annually. States like California and Massachusetts offer average RN salaries exceeding $100,000. Use our <a href="#calculator" className="text-blue-600 hover:underline">calculator above</a> to get personalized estimates.
                   </p>
                 </div>
 
@@ -1010,7 +1177,7 @@ export default function RNSalaryCalculator() {
                     How can I increase my nursing salary?
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    To increase your nursing salary: (1) Gain specialty certifications like CCRN, CEN, or CNOR, (2) Consider travel or per diem positions for higher hourly rates, (3) Work night or weekend shifts to earn differential pay, (4) Relocate to higher-paying states or metropolitan areas, (5) Pursue advanced degrees (BSN, MSN, or DNP), (6) Negotiate salary offers and raises effectively, and (7) Gain experience in high-demand specialties like ICU or ER. Even small changes like picking up extra shifts with differentials can significantly boost your annual income.
+                      To increase your nursing salary: (1) Gain specialty certifications like CCRN, CEN, or CNOR, (2) Consider <Link href="/jobs/nursing/job-type/travel" className="text-blue-600 hover:underline">travel</Link> or <Link href="/jobs/nursing/job-type/per-diem" className="text-blue-600 hover:underline">per diem</Link> positions for higher hourly rates, (3) Work night or weekend shifts to earn differential pay, (4) Relocate to higher-paying states or metropolitan areas, (5) Pursue advanced degrees (BSN, MSN, or DNP), (6) Negotiate salary offers and raises effectively, and (7) Gain experience in high-demand specialties like ICU or ER. Even small changes like picking up extra shifts with differentials can significantly boost your annual income.
                   </p>
                 </div>
 
