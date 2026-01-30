@@ -468,13 +468,14 @@ class NYCHealthHospitalsRNScraper {
     const allJobs = [];
     const seenJobIds = new Set();
     let scrollAttempts = 0;
-    const maxScrollAttempts = this.maxPages ? this.maxPages * 2 : 20; // Each scroll loads ~50 jobs
+    // Increase max attempts - 391 jobs / 50 per scroll = ~8 scrolls needed, add buffer
+    const maxScrollAttempts = this.maxPages ? this.maxPages * 2 : 15;
     let consecutiveNoNewJobs = 0;
-    const maxConsecutiveEmpty = 3;
+    const maxConsecutiveEmpty = 4; // Increased from 3 - PeopleSoft can be slow
 
     while (scrollAttempts < maxScrollAttempts) {
       scrollAttempts++;
-      console.log(`\n📜 Scroll ${scrollAttempts}...`);
+      console.log(`\n📜 Scroll ${scrollAttempts}/${maxScrollAttempts}...`);
 
       // Extract all jobs currently visible on the page
       const pageJobs = await this.extractJobsFromPage(page);
@@ -497,6 +498,9 @@ class NYCHealthHospitalsRNScraper {
           console.log('   ✅ Reached end of results (no more new jobs after scrolling)');
           break;
         }
+
+        // Extra wait on empty scroll - give PeopleSoft more time
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         consecutiveNoNewJobs = 0;
         allJobs.push(...newJobs);
@@ -512,6 +516,14 @@ class NYCHealthHospitalsRNScraper {
       // Scroll down to trigger loading more jobs
       const scrolled = await this.scrollToLoadMore(page);
       if (!scrolled) {
+        // Don't immediately give up - try one more extraction in case content loaded
+        const finalCheck = await this.extractJobsFromPage(page);
+        const finalNewJobs = finalCheck.filter(job => job.jobId && !seenJobIds.has(job.jobId));
+        if (finalNewJobs.length > 0) {
+          finalNewJobs.forEach(job => seenJobIds.add(job.jobId));
+          allJobs.push(...finalNewJobs);
+          console.log(`   📦 Final check found ${finalNewJobs.length} more jobs (Total: ${allJobs.length})`);
+        }
         console.log('   ✅ Cannot scroll further');
         break;
       }
@@ -520,12 +532,19 @@ class NYCHealthHospitalsRNScraper {
       await new Promise(resolve => setTimeout(resolve, CONFIG.betweenPagesDelay));
     }
 
+    // Final summary
+    console.log(`\n   📊 Scroll summary: ${scrollAttempts} scrolls, ${allJobs.length} unique jobs collected`);
+
     return allJobs;
   }
 
   /**
    * Scroll down to load more jobs (infinite scroll)
    * PeopleSoft uses a specific container for results: win0divHRS_AGNT_RSLT_I$grid$0
+   *
+   * NOTE: PeopleSoft's infinite scroll can be finicky - the container's scrollHeight
+   * may not update until AFTER content loads via AJAX. We use multiple strategies
+   * and always attempt to scroll, then check if new content appeared.
    */
   async scrollToLoadMore(page) {
     try {
@@ -535,58 +554,82 @@ class NYCHealthHospitalsRNScraper {
         return text.split(/\bSelect\b/).length - 1;
       });
 
-      // Scroll the PeopleSoft results container (not the page)
-      const scrollResult = await page.evaluate(() => {
-        // Find the scrollable results container
-        // Primary: PeopleSoft grid container
-        let container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
-
-        // Fallback: Find any scrollable container with significant scroll area
-        if (!container) {
-          const allElements = Array.from(document.querySelectorAll('*'));
-          const scrollables = allElements.filter(el => {
-            const style = window.getComputedStyle(el);
-            return (style.overflowY === 'scroll' || style.overflowY === 'auto') &&
-                   el.scrollHeight > el.clientHeight + 100;
-          }).sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight));
-
-          container = scrollables[0];
+      // Get container info for debugging
+      const containerInfo = await page.evaluate(() => {
+        const container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
+        if (container) {
+          return {
+            found: true,
+            id: container.id,
+            scrollTop: container.scrollTop,
+            scrollHeight: container.scrollHeight,
+            clientHeight: container.clientHeight,
+            maxScroll: container.scrollHeight - container.clientHeight
+          };
         }
-
-        if (!container) {
-          // Last resort: scroll the window
-          window.scrollTo(0, document.body.scrollHeight);
-          return { scrolled: true, method: 'window', scrollTop: window.scrollY };
-        }
-
-        const beforeScrollTop = container.scrollTop;
-        const maxScroll = container.scrollHeight - container.clientHeight;
-
-        // Check if already at bottom
-        if (beforeScrollTop >= maxScroll - 10) {
-          return { scrolled: false, reason: 'already at bottom', scrollTop: beforeScrollTop, maxScroll };
-        }
-
-        // Scroll down by a page height or to the bottom
-        container.scrollTo(0, container.scrollHeight);
-
-        return {
-          scrolled: true,
-          method: 'container',
-          containerId: container.id,
-          beforeScrollTop,
-          afterScrollTop: container.scrollTop,
-          scrollHeight: container.scrollHeight
-        };
+        return { found: false };
       });
 
-      if (!scrollResult.scrolled) {
-        console.log(`   ⚠️  ${scrollResult.reason}`);
-        return false;
+      if (containerInfo.found) {
+        console.log(`   📐 Container: scrollTop=${containerInfo.scrollTop}, scrollHeight=${containerInfo.scrollHeight}, clientHeight=${containerInfo.clientHeight}`);
       }
 
-      // Wait for new content to load
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Strategy 1: Focus on the container and scroll via mouse wheel
+      // Mouse wheel events are more likely to trigger PeopleSoft's infinite scroll listener
+      await page.evaluate(() => {
+        const container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
+        if (container) {
+          container.focus();
+          // Dispatch wheel event to trigger scroll listeners
+          container.dispatchEvent(new WheelEvent('wheel', {
+            deltaY: 1000,
+            bubbles: true
+          }));
+        }
+      });
+
+      // Use Puppeteer's mouse wheel for more realistic scrolling
+      await page.mouse.wheel({ deltaY: 2000 });
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Strategy 2: Scroll the container programmatically in chunks
+      // Some infinite scroll implementations need incremental scrolls
+      for (let i = 0; i < 3; i++) {
+        await page.evaluate(() => {
+          const container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
+          if (container) {
+            container.scrollTop += 500; // Scroll in chunks
+          }
+        });
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      // Strategy 3: Scroll to actual bottom
+      await page.evaluate(() => {
+        const container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
+        if (container) {
+          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      // Strategy 4: Simulate keyboard End key and Page Down
+      await page.keyboard.press('End');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await page.keyboard.press('PageDown');
+
+      // Strategy 5: Scroll the last job row into view - this can trigger "load more"
+      await page.evaluate(() => {
+        // Find all job detail buttons and scroll the last one into view
+        const detailButtons = document.querySelectorAll('[id^="HRS_VIEW_DETAILSPB"]');
+        if (detailButtons.length > 0) {
+          const lastButton = detailButtons[detailButtons.length - 1];
+          lastButton.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      });
+
+      // Wait for AJAX content to load - PeopleSoft can be slow
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
       // Count jobs after scrolling
       const afterCount = await page.evaluate(() => {
@@ -594,17 +637,47 @@ class NYCHealthHospitalsRNScraper {
         return text.split(/\bSelect\b/).length - 1;
       });
 
+      // Get updated container info
+      const afterContainerInfo = await page.evaluate(() => {
+        const container = document.getElementById('win0divHRS_AGNT_RSLT_I$grid$0');
+        if (container) {
+          return {
+            scrollTop: container.scrollTop,
+            scrollHeight: container.scrollHeight,
+            clientHeight: container.clientHeight
+          };
+        }
+        return null;
+      });
+
+      // Check if new jobs appeared (primary success indicator)
       if (afterCount > beforeCount) {
-        console.log(`   📜 Scrolled ${scrollResult.method}: ${beforeCount} → ${afterCount} jobs`);
+        console.log(`   📜 Scrolled: ${beforeCount} → ${afterCount} jobs (+${afterCount - beforeCount})`);
         return true;
       }
 
-      // Check if scroll position actually changed (more content might still load)
-      if (scrollResult.method === 'container' && scrollResult.afterScrollTop > scrollResult.beforeScrollTop) {
-        console.log(`   📜 Scrolled container, waiting for content...`);
+      // Check if container expanded (content might still be rendering)
+      if (afterContainerInfo && containerInfo.found) {
+        if (afterContainerInfo.scrollHeight > containerInfo.scrollHeight) {
+          console.log(`   📜 Container expanded: ${containerInfo.scrollHeight} → ${afterContainerInfo.scrollHeight}px, waiting for content...`);
+          return true;
+        }
+
+        // Check if we're truly at the bottom (scrollHeight hasn't changed and we're at max scroll)
+        const atBottom = afterContainerInfo.scrollTop >= (afterContainerInfo.scrollHeight - afterContainerInfo.clientHeight - 20);
+        if (atBottom && afterContainerInfo.scrollHeight === containerInfo.scrollHeight) {
+          console.log(`   ⚠️  At bottom of container (scrollHeight stable at ${afterContainerInfo.scrollHeight}px)`);
+          return false;
+        }
+      }
+
+      // If we got here but scroll position changed, give it another chance
+      if (afterContainerInfo && afterContainerInfo.scrollTop > containerInfo.scrollTop) {
+        console.log(`   📜 Scroll position changed, content may still load...`);
         return true;
       }
 
+      console.log(`   ⚠️  No new content after scroll (jobs: ${beforeCount} → ${afterCount})`);
       return false;
     } catch (error) {
       console.log(`   Scroll error: ${error.message}`);
