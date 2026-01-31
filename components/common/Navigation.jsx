@@ -1157,7 +1157,7 @@ const Navigation = () => {
         }
         
         .nav-logo-image {
-          height: 200px;
+          height: 80px;
           width: auto;
           object-fit: contain;
           margin-left: -3rem;
@@ -1521,7 +1521,7 @@ const Navigation = () => {
           }
 
           .nav-logo-image {
-            height: 150px;
+            height: 90px;
             margin-left: -1.5rem;
           }
 
