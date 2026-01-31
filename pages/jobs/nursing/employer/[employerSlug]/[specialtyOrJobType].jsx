@@ -8,7 +8,7 @@ import { fetchEmployerSpecialtyJobs, fetchEmployerJobTypeJobs } from '../../../.
 import { generateEmployerSpecialtyPageMetaTags, generateEmployerJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { isJobType } from '../../../../../lib/constants/jobTypes';
-import { specialtyToSlug } from '../../../../../lib/constants/specialties';
+import { specialtyToSlug, normalizeSpecialty } from '../../../../../lib/constants/specialties';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 const { getStateFullName } = require('../../../../../lib/jobScraperUtils');
 
@@ -263,7 +263,7 @@ export default function EmployerSpecialtyOrJobTypePage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.slice(0, 5).map((spec, idx) => {
-                      const specSlug = specialtyToSlug(spec.specialty);
+                      const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                       return (
                         <Link
                           key={idx}
@@ -517,7 +517,7 @@ export default function EmployerSpecialtyOrJobTypePage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.otherSpecialties.map((spec, idx) => {
-                    const specSlug = specialtyToSlug(spec.specialty);
+                    const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
 
                     return (
                       <Link
@@ -549,8 +549,8 @@ export default function EmployerSpecialtyOrJobTypePage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.specialties.map((spec, idx) => {
-                    const specSlug = specialtyToSlug(spec.specialty);
-                    
+                    const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
+
                     return (
                       <Link
                         key={idx}

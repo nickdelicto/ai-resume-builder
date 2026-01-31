@@ -10,7 +10,7 @@ import { formatPayForCard } from '../../../../../lib/utils/jobCardUtils';
 const seoUtils = require('../../../../../lib/seo/jobSEO');
 const { getStateFullName, normalizeCity } = require('../../../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchCitySpecialtyJobs, fetchStateSpecialtyJobTypeJobs } = require('../../../../../lib/services/jobPageData');
-const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug, normalizeSpecialty } = require('../../../../../lib/constants/specialties');
 const { isJobType, jobTypeToDisplay, jobTypeToSlug } = require('../../../../../lib/constants/jobTypes');
 const { normalizeExperienceLevel } = require('../../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
@@ -562,7 +562,7 @@ export default function CitySpecialtyOrStateSpecialtyJobTypePage({
           {/* Salary Banner - After job listings, before footer */}
           <div className="mt-12 mb-8">
             <Link
-              href={`/jobs/nursing/${stateCode.toLowerCase()}/${cityOrSpecialty}/${specialty}/salary`}
+              href={`/jobs/nursing/${stateCode.toLowerCase()}/${cityOrSpecialty}/${specialtySlug || specialty}/salary`}
               className="group flex items-center justify-between p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl shadow-md hover:shadow-lg hover:border-green-300 transition-all"
             >
               <div className="flex items-center gap-4">
@@ -604,7 +604,7 @@ export default function CitySpecialtyOrStateSpecialtyJobTypePage({
                   {stats.otherSpecialties.map((specData, idx) => {
                     const stateSlug = stateCode.toLowerCase();
                     const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
-                    const specialtySlug = specialtyToSlug(specData.specialty);
+                    const specialtySlug = specialtyToSlug(normalizeSpecialty(specData.specialty));
                     
                     return (
                       <Link

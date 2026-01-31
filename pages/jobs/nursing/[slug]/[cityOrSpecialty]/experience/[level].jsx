@@ -5,7 +5,7 @@ import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
 import { fetchCityExperienceLevelJobs, detectStateFromSlug } from '../../../../../../lib/services/jobPageData';
 import { generateCityExperienceLevelPageMetaTags } from '../../../../../../lib/seo/jobSEO';
-import { specialtyToSlug } from '../../../../../../lib/constants/specialties';
+import { specialtyToSlug, normalizeSpecialty } from '../../../../../../lib/constants/specialties';
 import { isExperienceLevel, getExperienceLevelDescription } from '../../../../../../lib/constants/experienceLevels';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 const { getCityDisplayName } = require('../../../../../../lib/utils/cityDisplayUtils');
@@ -159,7 +159,7 @@ export default function CityExperienceLevelPage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.slice(0, 5).map((spec, idx) => {
-                      const specSlug = specialtyToSlug(spec.specialty);
+                      const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                       return (
                         <Link
                           key={idx}
@@ -370,7 +370,7 @@ export default function CityExperienceLevelPage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.specialties.map((spec, idx) => {
-                    const specSlug = specialtyToSlug(spec.specialty);
+                    const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                     return (
                       <Link
                         key={idx}

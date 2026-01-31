@@ -10,7 +10,7 @@ import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
 const { fetchEmployerJobs } = require('../../../../lib/services/jobPageData');
-const { specialtyToSlug } = require('../../../../lib/constants/specialties');
+const { specialtyToSlug, normalizeSpecialty } = require('../../../../lib/constants/specialties');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
 
 /**
@@ -319,7 +319,7 @@ export default function EmployerJobPage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.map((spec, idx) => {
-                      const specialtySlug = specialtyToSlug(spec.specialty);
+                      const specialtySlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                       return (
                         <Link
                           key={idx}

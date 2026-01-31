@@ -10,7 +10,7 @@ import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName, normalizeCity } = require('../../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchCityJobs, fetchStateSpecialtyJobs } = require('../../../../lib/services/jobPageData');
-const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug } = require('../../../../lib/constants/specialties');
+const { isValidSpecialtySlug, slugToSpecialty, specialtyToSlug, normalizeSpecialty } = require('../../../../lib/constants/specialties');
 const { normalizeExperienceLevel } = require('../../../../lib/utils/experienceLevelUtils');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
 const { getSalaryText } = require('../../../../lib/utils/seoTextUtils');
@@ -394,7 +394,7 @@ export default function CityOrSpecialtyPage({
                     {stats.specialties.slice(0, 5).map((specData, idx) => {
                       const stateSlug = stateCode.toLowerCase();
                       const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
-                      const specialtySlug = specialtyToSlug(specData.specialty);
+                      const specialtySlug = specialtyToSlug(normalizeSpecialty(specData.specialty));
                       return (
                         <Link
                         key={idx}
@@ -683,7 +683,7 @@ export default function CityOrSpecialtyPage({
                   {stats.specialties.map((specData, idx) => {
                     const stateSlug = stateCode.toLowerCase();
                     const citySlug = cityDisplayName.toLowerCase().replace(/\s+/g, '-');
-                    const specialtySlug = specialtyToSlug(specData.specialty);
+                    const specialtySlug = specialtyToSlug(normalizeSpecialty(specData.specialty));
 
                     return (
                       <Link

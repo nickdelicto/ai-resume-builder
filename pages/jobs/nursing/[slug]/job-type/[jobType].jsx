@@ -6,7 +6,7 @@ import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
 import { fetchStateJobTypeJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateStateJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
-import { specialtyToSlug } from '../../../../../lib/constants/specialties';
+import { specialtyToSlug, normalizeSpecialty } from '../../../../../lib/constants/specialties';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -396,7 +396,7 @@ export default function StateJobTypePage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.specialties.map((spec, idx) => {
-                    const specSlug = specialtyToSlug(spec.specialty);
+                    const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                     return (
                       <Link
                         key={idx}

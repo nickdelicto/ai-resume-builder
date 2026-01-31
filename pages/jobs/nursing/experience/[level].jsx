@@ -6,7 +6,7 @@ import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 import { fetchExperienceLevelJobs } from '../../../../lib/services/jobPageData';
 import { generateExperienceLevelPageMetaTags } from '../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../lib/utils/experienceLevelUtils';
-import { specialtyToSlug } from '../../../../lib/constants/specialties';
+import { specialtyToSlug, normalizeSpecialty } from '../../../../lib/constants/specialties';
 import { isExperienceLevel, experienceLevelToDisplay, getAllExperienceLevels, getExperienceLevelDescription } from '../../../../lib/constants/experienceLevels';
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
 
@@ -169,7 +169,7 @@ export default function ExperienceLevelPage({
                   </div>
                   <div className="space-y-3">
                     {stats.specialties.slice(0, 5).map((spec, idx) => {
-                      const specSlug = specialtyToSlug(spec.specialty);
+                      const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                       return (
                         <Link
                           key={idx}
@@ -386,7 +386,7 @@ export default function ExperienceLevelPage({
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
                   {stats.specialties.map((spec, idx) => {
-                    const specSlug = specialtyToSlug(spec.specialty);
+                    const specSlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                     return (
                       <Link
                         key={idx}

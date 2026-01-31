@@ -13,7 +13,7 @@ import { trackPageView, trackApplyClick, trackModalSubscribe, trackEmployerRedir
 const seoUtils = require('../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
-const { specialtyToSlug } = require('../../../lib/constants/specialties');
+const { specialtyToSlug, normalizeSpecialty } = require('../../../lib/constants/specialties');
 const { jobTypeToSlug } = require('../../../lib/constants/jobTypes');
 const { shiftTypeToSlug } = require('../../../lib/constants/shiftTypes');
 const { experienceLevelToSlug } = require('../../../lib/constants/experienceLevels');
@@ -721,7 +721,7 @@ export default function JobDetailPage({
                         </div>
                         <div className="space-y-3">
                           {stats.specialties.slice(0, 5).map((spec, idx) => {
-                            const specialtySlug = specialtyToSlug(spec.specialty);
+                            const specialtySlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
                             return (
                               <Link
                               key={idx}
@@ -1152,7 +1152,7 @@ export default function JobDetailPage({
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mb-3">
                   {job.specialty && (
                     <Link
-                      href={`/jobs/nursing/specialty/${specialtyToSlug(job.specialty)}`}
+                      href={`/jobs/nursing/specialty/${specialtyToSlug(normalizeSpecialty(job.specialty))}`}
                       className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
                     >
                       {job.specialty}
@@ -1208,7 +1208,12 @@ export default function JobDetailPage({
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Employer</div>
-                    <div className="font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">{job.employer.name}</div>
+                    <div className="font-semibold text-teal-700 group-hover:text-teal-800 group-hover:underline transition-colors flex items-center gap-1">
+                      {job.employer.name}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                 </Link>
               )}
@@ -1225,9 +1230,12 @@ export default function JobDetailPage({
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
-                    <div className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                    <div className="font-semibold text-blue-700 group-hover:text-blue-800 group-hover:underline transition-colors flex items-center gap-1">
                       {job.city}, {job.state}
                       {job.zipCode && ` ${job.zipCode}`}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
                   </div>
                 </Link>
