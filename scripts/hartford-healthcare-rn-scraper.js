@@ -59,13 +59,13 @@ class HartfordHealthcareRNScraper {
     console.log(`Save to DB: ${this.saveToDatabase}`);
     console.log(`Max Jobs: ${this.maxJobs || 'Unlimited'}\n`);
     
-    const browser = await puppeteer.launch({ 
+    this.browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
+
     try {
-      const page = await browser.newPage();
+      let page = await this.browser.newPage();
       
       // Set user agent
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
@@ -237,9 +237,16 @@ class HartfordHealthcareRNScraper {
           const jobUrl = this.constructJobUrl(job);
           console.log(`[${i + 1}/${jobsToProcess.length}] ${job.title} - ${job.city}, ${job.state}`);
           
-          // Get full description
-          const fullDescription = await this.getJobDescription(page, jobUrl, job);
-          
+          // Get full description (may return new page if recovery was needed)
+          const result = await this.getJobDescription(page, jobUrl, job);
+
+          // Handle case where a new page was created during recovery
+          if (result && result.newPage) {
+            page = result.newPage;
+          }
+
+          const fullDescription = result ? result.description : null;
+
           // Skip job if description is null (too short or failed to fetch)
           if (!fullDescription) {
             console.log(`   ⏭️  Skipped (no valid description)`);
@@ -283,7 +290,7 @@ class HartfordHealthcareRNScraper {
         stats: this.stats
       };
     } finally {
-      await browser.close();
+      await this.browser.close();
     }
   }
 
@@ -297,54 +304,75 @@ class HartfordHealthcareRNScraper {
 
   /**
    * Get full job description from detail page
+   * Returns { description, newPage } - newPage is set if a fresh page was created during recovery
    */
   async getJobDescription(page, jobUrl, jobData) {
+    let newPage = null;
+    let currentPage = page;
+
     try {
       // Check if page is still valid (not detached or closed)
       let pageIsValid = false;
+      let needsNewPage = false;
+
       try {
         // Check if page is closed
-        if (page.isClosed()) {
+        if (currentPage.isClosed()) {
+          needsNewPage = true;
           throw new Error('Page is closed');
         }
         // Quick check if page frame is accessible
-        await page.evaluate(() => document.title);
+        await currentPage.evaluate(() => document.title);
         pageIsValid = true;
       } catch (frameError) {
         // Page frame is detached or closed
         if (frameError.message.includes('closed') || frameError.message.includes('Target closed')) {
-          throw new Error('Page is closed - cannot process job details');
+          needsNewPage = true;
         }
-        // For detached frames, try to recover
+        // For detached frames, mark for recreation
+        needsNewPage = true;
         pageIsValid = false;
       }
-      
-      // If page is not valid, try to re-establish connection
-      if (!pageIsValid) {
-        console.log(`   ⚠️  Page frame was detached, attempting to recover...`);
+
+      // If page is detached, close it and create a new one from browser
+      if (!pageIsValid && needsNewPage) {
+        console.log(`   ⚠️  Page frame detached, creating new page...`);
         try {
-          // Navigate to base URL first to re-establish frame
-          await page.goto(this.baseUrl, { 
+          // Close the dead page (ignore errors if already closed)
+          await currentPage.close().catch(() => {});
+
+          // Create a fresh page from browser
+          currentPage = await this.browser.newPage();
+          newPage = currentPage; // Signal to caller that we have a new page
+
+          // Set user agent for new page
+          await currentPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+          // Navigate to base URL with fresh page to establish connection
+          await currentPage.goto(this.baseUrl, {
             waitUntil: 'networkidle2',
-            timeout: 15000 
+            timeout: 15000
           });
+
           await new Promise(resolve => setTimeout(resolve, 1000));
           pageIsValid = true;
+
+          console.log(`   ✅ Successfully created new page`);
         } catch (reconnectError) {
-          throw new Error(`Page frame detached and cannot recover: ${reconnectError.message}`);
+          throw new Error(`Could not create new page: ${reconnectError.message}`);
         }
       }
-      
+
       // Navigate to job detail page
-      await page.goto(jobUrl, { 
+      await currentPage.goto(jobUrl, {
         waitUntil: 'networkidle2',
-        timeout: 15000 
+        timeout: 15000
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Extract full description from Phenom People job page
-      const description = await page.evaluate(() => {
+      const description = await currentPage.evaluate(() => {
         // Phenom People uses .phw-job-description for job details
         const descriptionSelectors = [
           '.phw-job-description',  // Primary: Phenom People job description container
@@ -356,7 +384,7 @@ class HartfordHealthcareRNScraper {
           'article',
           'main'
         ];
-        
+
         for (const selector of descriptionSelectors) {
           const container = document.querySelector(selector);
           if (container && container.textContent.length > 500) {
@@ -364,31 +392,31 @@ class HartfordHealthcareRNScraper {
             return container.textContent.trim();
           }
         }
-        
+
         // Fallback: shouldn't reach here for Phenom People sites
         return document.body.textContent.trim();
       });
-      
+
       // Clean up description (don't format - LLM will format it during classification)
       const cleaned = description
         .replace(/\s+/g, ' ') // Normalize spaces
         .trim();
-      
-      return cleaned.substring(0, 10000); // Limit to 10k chars
-      
+
+      return { description: cleaned.substring(0, 10000), newPage };
+
     } catch (error) {
       console.log(`   ⚠️  Could not fetch full description: ${error.message}`);
       // Fallback to teaser
       const fallbackDescription = jobData.descriptionTeaser || jobData.ml_job_parser?.descriptionTeaser || '';
-      
+
       // Reject if description is too short (likely incomplete)
       if (fallbackDescription.length < 500) {
         console.log(`   ❌  Skipping job (fallback description too short: ${fallbackDescription.length} chars)`);
-        return null;
+        return { description: null, newPage };
       }
-      
+
       console.log(`   ℹ️  Using fallback teaser (${fallbackDescription.length} chars)`);
-      return fallbackDescription;
+      return { description: fallbackDescription, newPage };
     }
   }
 
