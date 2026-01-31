@@ -516,20 +516,15 @@ class NYCHealthHospitalsRNScraper {
       // Scroll down to trigger loading more jobs
       const scrolled = await this.scrollToLoadMore(page);
       if (!scrolled) {
-        // Don't immediately give up - try one more extraction in case content loaded
-        const finalCheck = await this.extractJobsFromPage(page);
-        const finalNewJobs = finalCheck.filter(job => job.jobId && !seenJobIds.has(job.jobId));
-        if (finalNewJobs.length > 0) {
-          finalNewJobs.forEach(job => seenJobIds.add(job.jobId));
-          allJobs.push(...finalNewJobs);
-          console.log(`   📦 Final check found ${finalNewJobs.length} more jobs (Total: ${allJobs.length})`);
-        }
-        console.log('   ✅ Cannot scroll further');
-        break;
+        // Scroll failed but don't give up - PeopleSoft can be flaky
+        // The consecutiveNoNewJobs logic will determine when to truly stop
+        console.log(`   ⚠️  Scroll returned false, but continuing (will stop after ${maxConsecutiveEmpty} empty attempts)`);
+        // Extra wait when scroll fails - give PeopleSoft time to recover
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } else {
+        // Wait for new content to load
+        await new Promise(resolve => setTimeout(resolve, CONFIG.betweenPagesDelay));
       }
-
-      // Wait for new content to load
-      await new Promise(resolve => setTimeout(resolve, CONFIG.betweenPagesDelay));
     }
 
     // Final summary

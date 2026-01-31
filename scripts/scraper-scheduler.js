@@ -34,7 +34,7 @@ async function scheduleAllScrapers() {
       'scrape-' + employer,
       { employer: employer },
       {
-        attempts: 2,
+        attempts: 4,
         backoff: {
           type: 'exponential',
           delay: 60000,
