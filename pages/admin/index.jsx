@@ -154,7 +154,8 @@ export default function AdminDashboard() {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
+      month: 'short', day: 'numeric', year: 'numeric',
+      timeZone: 'America/New_York'
     });
   };
 
@@ -533,8 +534,9 @@ function ToolsTab() {
 function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, journeysLoading }) {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+      timeZone: 'America/New_York'
     });
   };
 
@@ -646,6 +648,9 @@ function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, jour
       </div>
 
       {/* Time Period Stats */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-gray-400">All times in EST (New York)</span>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TimeCard title="Today" data={funnel.today} />
         <TimeCard title="Last 7 Days" data={funnel.week} />

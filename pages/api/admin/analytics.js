@@ -89,13 +89,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get date boundaries
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(todayStart);
-    monthStart.setDate(monthStart.getDate() - 30);
+    // Get date boundaries in EST/New York timezone
+    // This ensures "today" means today in EST, not UTC
+    const getESTMidnight = (daysAgo = 0) => {
+      const now = new Date();
+      // Format current time in EST to get the EST date components
+      const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const estDate = new Date(estString);
+      // Set to midnight EST
+      estDate.setHours(0, 0, 0, 0);
+      // Subtract days if needed
+      estDate.setDate(estDate.getDate() - daysAgo);
+      // Convert back: find the UTC time when it's midnight EST
+      // EST is UTC-5 (or UTC-4 during DST)
+      const estMidnightString = estDate.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      // Parse and find offset
+      const utcNow = new Date();
+      const estNow = new Date(utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const offsetMs = utcNow.getTime() - estNow.getTime();
+      // Return UTC time that corresponds to EST midnight
+      return new Date(estDate.getTime() + offsetMs);
+    };
+
+    const todayStart = getESTMidnight(0);
+    const weekStart = getESTMidnight(7);
+    const monthStart = getESTMidnight(30);
 
     // Get total counts by event type
     const [totalPageViews, totalApplyClicks, totalEmployerRedirects, totalModalSubscribes] = await Promise.all([
