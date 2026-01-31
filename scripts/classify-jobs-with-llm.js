@@ -724,13 +724,40 @@ async function main() {
     let failCount = 0;
     const results = [];
     
+    // Statistics for skipped jobs
+    let skippedSkeletonCount = 0;
+
     // Process each job
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
       console.log(`\n[${i + 1}/${jobs.length}] Processing: ${job.title}`);
       console.log(`   Employer: ${job.employer?.name || 'N/A'}`);
       console.log(`   Current specialty: ${job.specialty || 'none'}`);
-      
+
+      // ============================================================
+      // SKELETON DESCRIPTION SKIP (NYC Health Hospitals specific)
+      // ============================================================
+      // NYC Health scraper fetches detail pages which can fail, resulting
+      // in skeleton descriptions. Don't classify these - wait for complete data.
+      // Markers indicate successful detail page fetch:
+      // - "Duties & Responsibilities:" - only present when duties extracted
+      // - "Minimum Qualifications:" - only present when qualifications extracted
+      // ============================================================
+      if (job.employer?.slug === 'nyc-health-hospitals') {
+        const rawDesc = job.rawDescription || job.description || '';
+        const hasMarkers = rawDesc.includes('Duties & Responsibilities:') ||
+                          rawDesc.includes('Minimum Qualifications:');
+        const isSubstantial = rawDesc.length > 500;
+        const isComplete = hasMarkers && isSubstantial;
+
+        if (!isComplete) {
+          console.log(`   ⏭️ SKIPPING - skeleton description (${rawDesc.length} chars, no detail page markers)`);
+          console.log(`      Job will be classified when scraper fetches complete detail page data`);
+          skippedSkeletonCount++;
+          continue;
+        }
+      }
+
       const result = await classifyJob(job);
       
       if (result.success) {
@@ -880,9 +907,12 @@ async function main() {
     console.log('═'.repeat(80));
     console.log(`✅ Successful: ${successCount}`);
     console.log(`❌ Failed: ${failCount}`);
+    if (skippedSkeletonCount > 0) {
+      console.log(`⏭️ Skipped (skeleton): ${skippedSkeletonCount} (NYC Health jobs waiting for complete detail page data)`);
+    }
     console.log(`💰 Total Cost: $${totalCost.toFixed(4)}`);
     console.log(`🎫 Total Tokens: ${totalTokens.toLocaleString()}`);
-    console.log(`📈 Average Cost per Job: $${(totalCost / successCount).toFixed(6)}`);
+    console.log(`📈 Average Cost per Job: $${successCount > 0 ? (totalCost / successCount).toFixed(6) : '0.000000'}`);
     
     if (isTestMode) {
       console.log('\n🧪 TEST MODE: No changes were saved to the database');
