@@ -1,6 +1,7 @@
 const { Worker } = require('bullmq');
 const { spawn } = require('child_process');
 const path = require('path');
+const { sendAlert } = require('../lib/services/alertService');
 
 const connection = {
   host: 'localhost',
@@ -83,8 +84,48 @@ worker.on('completed', function(job) {
   console.log('Job ' + job.id + ' (' + job.data.employer + ') completed');
 });
 
-worker.on('failed', function(job, err) {
-  console.error('Job ' + job.id + ' (' + job.data.employer + ') failed:', err.message);
+worker.on('failed', async function(job, err) {
+  const employer = job.data.employer;
+  const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+  const attempts = job.attemptsMade || 1;
+  const maxAttempts = job.opts?.attempts || 4;
+  const willRetry = attempts < maxAttempts;
+
+  console.error('Job ' + job.id + ' (' + employer + ') failed:', err.message);
+
+  // Send email alert
+  const subject = `Scraper Failed: ${employer}` + (willRetry ? ' (will retry)' : ' (FINAL)');
+  const body = `
+SCRAPER FAILURE ALERT
+=====================
+
+Employer:     ${employer}
+Job ID:       ${job.id}
+Time (EST):   ${timestamp}
+Attempt:      ${attempts}/${maxAttempts}
+Will Retry:   ${willRetry ? 'Yes' : 'NO - Final failure'}
+
+ERROR:
+${err.message}
+
+COMMANDS TO INVESTIGATE:
+------------------------
+# Check the log file:
+cat logs/${employer}_scraper_*.log | tail -50
+
+# Manual retry:
+node scripts/scraper-scheduler.js ${employer}
+
+# Check queue status:
+redis-cli LLEN bull:scraper-jobs:wait
+redis-cli ZCARD bull:scraper-jobs:failed
+`.trim();
+
+  try {
+    await sendAlert(subject, body);
+  } catch (emailErr) {
+    console.error('Failed to send alert email:', emailErr.message);
+  }
 });
 
 worker.on('error', function(err) {
