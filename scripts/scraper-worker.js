@@ -25,6 +25,7 @@ const SCRAPER_MAP = {
   'newyork-presbyterian': 'scrape-and-classify.sh newyork-presbyterian',
   'montefiore-einstein': 'scrape-and-classify.sh montefiore-einstein',
   'kaleida-health': 'scrape-and-classify.sh kaleida-health',
+  'hackensack-meridian-health': 'scrape-and-classify.sh hackensack-meridian-health',
 };
 
 const scriptsDir = path.join(__dirname);

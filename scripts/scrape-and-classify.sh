@@ -104,6 +104,7 @@ if [ -z "$EMPLOYER_SLUG" ]; then
   echo "  - nyc-health-hospitals"
   echo "  - montefiore-einstein"
   echo "  - kaleida-health"
+  echo "  - hackensack-meridian-health"
   exit 1
 fi
 
@@ -286,6 +287,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  hackensack-meridian-health)
+    # Hackensack Meridian Health uses TalentBrew (Radancy) scraper (Puppeteer)
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/hackensack-meridian-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/hackensack-meridian-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -306,12 +317,13 @@ case $EMPLOYER_SLUG in
     log_message "  - nyc-health-hospitals"
     log_message "  - montefiore-einstein"
     log_message "  - kaleida-health"
+    log_message "  - hackensack-meridian-health"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals, montefiore-einstein, kaleida-health
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals, montefiore-einstein, kaleida-health, hackensack-meridian-health
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

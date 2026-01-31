@@ -24,6 +24,7 @@ const ALL_EMPLOYERS = [
   'newyork-presbyterian',
   'montefiore-einstein',
   'kaleida-health',
+  'hackensack-meridian-health',
 ];
 
 async function scheduleAllScrapers() {
