@@ -24,6 +24,7 @@ const SCRAPER_MAP = {
   'yale-new-haven-health': 'scrape-and-classify.sh yale-new-haven-health',
   'newyork-presbyterian': 'scrape-and-classify.sh newyork-presbyterian',
   'montefiore-einstein': 'scrape-and-classify.sh montefiore-einstein',
+  'kaleida-health': 'scrape-and-classify.sh kaleida-health',
 };
 
 const scriptsDir = path.join(__dirname);
@@ -126,6 +127,7 @@ redis-cli ZCARD bull:scraper-jobs:failed
   } catch (emailErr) {
     console.error('Failed to send alert email:', emailErr.message);
   }
+  
 });
 
 worker.on('error', function(err) {

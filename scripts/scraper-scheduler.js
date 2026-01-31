@@ -23,6 +23,7 @@ const ALL_EMPLOYERS = [
   'yale-new-haven-health',
   'newyork-presbyterian',
   'montefiore-einstein',
+  'kaleida-health',
 ];
 
 async function scheduleAllScrapers() {
