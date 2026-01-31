@@ -263,6 +263,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  montefiore-einstein)
+    # Montefiore Einstein uses Vizi Recruiter API scraper
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/montefiore-rn-scraper.js" --max-jobs="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/montefiore-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -281,12 +291,13 @@ case $EMPLOYER_SLUG in
     log_message "  - mount-sinai"
     log_message "  - newyork-presbyterian"
     log_message "  - nyc-health-hospitals"
+    log_message "  - montefiore-einstein"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals, montefiore-einstein
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

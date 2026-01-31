@@ -22,6 +22,7 @@ const SCRAPER_MAP = {
   'upstate-medical-university': 'scrape-and-classify.sh upstate-medical-university',
   'yale-new-haven-health': 'scrape-and-classify.sh yale-new-haven-health',
   'newyork-presbyterian': 'scrape-and-classify.sh newyork-presbyterian',
+  'montefiore-einstein': 'scrape-and-classify.sh montefiore-einstein',
 };
 
 const scriptsDir = path.join(__dirname);
