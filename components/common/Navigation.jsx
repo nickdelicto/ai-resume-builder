@@ -1521,7 +1521,7 @@ const Navigation = () => {
           }
 
           .nav-logo-image {
-            height: 150px;
+            height: 100px;
             margin-left: -1.5rem;
           }
 
@@ -1545,7 +1545,7 @@ const Navigation = () => {
 
         @media (max-width: 480px) {
           .nav-logo-image {
-            height: 150px;
+            height: 100px;
           }
         }
         
