@@ -43,6 +43,40 @@ const CONFIG = {
   pageSize: 15, // Fixed by TalentBrew platform
 };
 
+// Rate limit recovery settings
+const RATE_LIMIT_CONFIG = {
+  maxConsecutiveTimeouts: 5,
+  baseDelay: 2000,
+  maxBackoffDelay: 30000,
+};
+
+// User-agent rotation pool
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+];
+
+/**
+ * Get a random user agent from the rotation pool
+ */
+function getRandomUserAgent() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+/**
+ * Get a randomized delay with ±30% variance to avoid pattern detection
+ */
+function getRandomizedDelay(baseDelay) {
+  const variance = 0.3;
+  const min = baseDelay * (1 - variance);
+  const max = baseDelay * (1 + variance);
+  return Math.floor(min + Math.random() * (max - min));
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--no-save') || args.includes('--dry-run');
@@ -325,15 +359,48 @@ async function scrapeJobs() {
   let savedCount = 0;
   let errorCount = 0;
 
-  const browser = await puppeteer.launch({
+  // Rate limit recovery state
+  let consecutiveTimeouts = 0;
+  let currentBackoffDelay = RATE_LIMIT_CONFIG.baseDelay;
+
+  // Browser management for restart capability
+  let browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  try {
+  /**
+   * Create a new page with random user agent
+   */
+  async function createNewPage() {
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(getRandomUserAgent());
     await page.setViewport({ width: 1920, height: 1080 });
+    return page;
+  }
+
+  /**
+   * Restart browser with fresh user agent (rate limit recovery)
+   */
+  async function restartBrowser() {
+    console.log('\n🔄 Restarting browser with fresh user agent (rate limit recovery)...');
+    try {
+      await browser.close();
+    } catch (e) {
+      // Browser may already be closed
+    }
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    consecutiveTimeouts = 0;
+    currentBackoffDelay = RATE_LIMIT_CONFIG.baseDelay;
+    console.log('   Browser restarted successfully\n');
+    return createNewPage();
+  }
+
+  try {
+    let page = await createNewPage();
 
     // Collect job links from search results
     const allJobLinks = [];
@@ -355,9 +422,13 @@ async function scrapeJobs() {
 
       try {
         await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, getRandomizedDelay(2000)));
 
         const links = await extractJobLinks(page);
+
+        // Reset timeout tracking on success
+        consecutiveTimeouts = 0;
+        currentBackoffDelay = RATE_LIMIT_CONFIG.baseDelay;
 
         if (links.length === 0) {
           console.log('   No more jobs found, stopping pagination');
@@ -374,13 +445,30 @@ async function scrapeJobs() {
         console.log(`   Found ${links.length} jobs, total: ${allJobLinks.length}`);
         pageNum++;
 
-        // Small delay between pages
-        await new Promise(r => setTimeout(r, 1000));
+        // Randomized delay between pages
+        await new Promise(r => setTimeout(r, getRandomizedDelay(1000)));
 
       } catch (e) {
         console.log(`   ⚠️ Error loading page ${pageNum}: ${e.message}`);
         errorCount++;
-        break;
+
+        // Track consecutive timeouts for rate limit detection
+        if (e.message.includes('timeout') || e.message.includes('Timeout')) {
+          consecutiveTimeouts++;
+          console.log(`   ⚠️ Consecutive timeouts: ${consecutiveTimeouts}/${RATE_LIMIT_CONFIG.maxConsecutiveTimeouts}`);
+
+          if (consecutiveTimeouts >= RATE_LIMIT_CONFIG.maxConsecutiveTimeouts) {
+            page = await restartBrowser();
+            continue; // Retry this page after restart
+          } else {
+            // Exponential backoff
+            currentBackoffDelay = Math.min(currentBackoffDelay * 2, RATE_LIMIT_CONFIG.maxBackoffDelay);
+            console.log(`   ⏳ Backing off for ${currentBackoffDelay / 1000}s before retry...`);
+            await new Promise(r => setTimeout(r, currentBackoffDelay));
+            continue; // Retry this page
+          }
+        }
+        break; // Non-timeout error, stop pagination
       }
     }
 
@@ -402,11 +490,28 @@ async function scrapeJobs() {
       const jobLink = jobsToProcess[i];
       const jobUrl = `${CONFIG.baseUrl}${jobLink.url}`;
 
+      // Periodic cooldowns to avoid rate limiting
+      if (i > 0 && i % 100 === 0) {
+        console.log(`\n⏸️  Cooldown pause at job ${i} (10 seconds)...`);
+        await new Promise(r => setTimeout(r, 10000));
+      }
+      if (i > 0 && i % 500 === 0) {
+        console.log(`\n⏸️  Extended cooldown at job ${i} (30 seconds)...`);
+        await new Promise(r => setTimeout(r, 30000));
+      }
+
       try {
         await page.goto(jobUrl, { waitUntil: 'networkidle2', timeout: 45000 });
-        await new Promise(r => setTimeout(r, 1500));
+
+        // Randomized delay to avoid pattern detection
+        const delay = getRandomizedDelay(1500);
+        await new Promise(r => setTimeout(r, delay));
 
         const jobData = await extractJobData(page);
+
+        // Reset timeout tracking on success
+        consecutiveTimeouts = 0;
+        currentBackoffDelay = RATE_LIMIT_CONFIG.baseDelay;
 
         if (!jobData) {
           console.log(`[${i + 1}/${jobsToProcess.length}] ⚠️ No JSON-LD data: ${jobLink.url}`);
@@ -507,12 +612,28 @@ async function scrapeJobs() {
           console.log(`   ⚠️ Validation failed: ${validation.errors.join(', ')}`);
         }
 
-        // Small delay between requests
-        await new Promise(r => setTimeout(r, 500));
+        // Randomized delay between requests
+        await new Promise(r => setTimeout(r, getRandomizedDelay(500)));
 
       } catch (e) {
         console.log(`[${i + 1}/${jobsToProcess.length}] ❌ Error: ${e.message}`);
         errorCount++;
+
+        // Track consecutive timeouts for rate limit detection
+        if (e.message.includes('timeout') || e.message.includes('Timeout')) {
+          consecutiveTimeouts++;
+          console.log(`   ⚠️ Consecutive timeouts: ${consecutiveTimeouts}/${RATE_LIMIT_CONFIG.maxConsecutiveTimeouts}`);
+
+          // Check if we need to restart browser (likely rate limited)
+          if (consecutiveTimeouts >= RATE_LIMIT_CONFIG.maxConsecutiveTimeouts) {
+            page = await restartBrowser();
+          } else {
+            // Exponential backoff
+            currentBackoffDelay = Math.min(currentBackoffDelay * 2, RATE_LIMIT_CONFIG.maxBackoffDelay);
+            console.log(`   ⏳ Backing off for ${currentBackoffDelay / 1000}s before retry...`);
+            await new Promise(r => setTimeout(r, currentBackoffDelay));
+          }
+        }
       }
     }
 

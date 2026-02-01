@@ -34,6 +34,41 @@ class ClevelandClinicRNScraper {
     this.saveToDatabase = options.saveToDatabase !== false; // Default true
     this.jobService = options.jobService || new JobBoardService();
     this.maxPages = options.maxPages || null; // Limit pages for testing (null = no limit)
+
+    // Rate limit recovery settings
+    this.browser = null; // Store browser reference for recovery
+    this.consecutiveTimeouts = 0;
+    this.maxConsecutiveTimeouts = 5; // Restart browser after this many consecutive timeouts
+    this.baseDelay = 2000; // Base delay between requests (ms)
+    this.maxBackoffDelay = 30000; // Maximum backoff delay (ms)
+
+    // User-agent rotation to avoid fingerprinting
+    this.userAgents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ];
+  }
+
+  /**
+   * Get a random user agent from the pool
+   */
+  getRandomUserAgent() {
+    return this.userAgents[Math.floor(Math.random() * this.userAgents.length)];
+  }
+
+  /**
+   * Get delay with randomization to avoid pattern detection
+   * Adds ±30% randomness to the base delay
+   */
+  getRandomizedDelay(baseDelay) {
+    const variance = 0.3; // 30% variance
+    const min = baseDelay * (1 - variance);
+    const max = baseDelay * (1 + variance);
+    return Math.floor(min + Math.random() * (max - min));
   }
 
   /**
@@ -179,16 +214,16 @@ class ClevelandClinicRNScraper {
     console.log('🚀 Starting Cleveland Clinic RN Job Scraping (Production)...');
     console.log(`Search URL: ${this.searchUrl}`);
     
-    const browser = await puppeteer.launch({ 
+    this.browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
+
     try {
-      const page = await browser.newPage();
+      let page = await this.browser.newPage();
       
-      // Set user agent to avoid detection
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      // Set random user agent to avoid detection
+      await page.setUserAgent(this.getRandomUserAgent());
       
       // PHASE 1: Collect ALL jobs from ALL pages
       const allJobListings = await this.collectAllJobsFromAllPages(page);
@@ -221,32 +256,90 @@ class ClevelandClinicRNScraper {
       const detailedJobs = [];
       let processedCount = 0;
       let errorCount = 0;
-      
+      this.consecutiveTimeouts = 0; // Reset timeout counter
+
       for (let i = 0; i < rnJobs.length; i++) {
         processedCount++;
         const job = rnJobs[i];
         console.log(`[${processedCount}/${rnJobs.length}] Processing: ${job.title}`);
-        
+
+        // Check if we need to restart browser due to consecutive timeouts
+        if (this.consecutiveTimeouts >= this.maxConsecutiveTimeouts) {
+          console.log(`\n   🔄 Too many consecutive timeouts (${this.consecutiveTimeouts}), restarting browser...`);
+          try {
+            await this.browser.close().catch(() => {});
+            await new Promise(resolve => setTimeout(resolve, 30000)); // 30s cooldown
+
+            this.browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            page = await this.browser.newPage();
+            await page.setUserAgent(this.getRandomUserAgent());
+
+            // Navigate to base URL to establish session
+            await page.goto(this.baseUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            this.consecutiveTimeouts = 0;
+            console.log(`   ✅ Browser restarted successfully\n`);
+          } catch (restartError) {
+            console.log(`   ❌ Failed to restart browser: ${restartError.message}`);
+            // Continue anyway, next iteration might work
+          }
+        }
+
         try {
           const normalizedJob = await this.processJob(page, job);
-          
+
           // Validate the job data
           const validation = validateJobData(normalizedJob);
           if (validation.valid) {
             detailedJobs.push(normalizedJob);
             console.log(`   ✅ Validated and added`);
+            this.consecutiveTimeouts = 0; // Reset on success
           } else {
             errorCount++;
             console.log(`   ⚠️  Validation failed: ${validation.errors.join(', ')}`);
+            // Validation failures aren't timeouts, don't increment
           }
         } catch (error) {
           errorCount++;
           console.log(`   ❌ Error processing job: ${error.message}`);
+
+          // Check if this was a timeout error
+          if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+            this.consecutiveTimeouts++;
+            console.log(`   ⏱️  Consecutive timeouts: ${this.consecutiveTimeouts}/${this.maxConsecutiveTimeouts}`);
+          } else {
+            // Non-timeout errors don't count toward consecutive timeouts
+            this.consecutiveTimeouts = 0;
+          }
         }
-        
-        // Add delay between requests to avoid overwhelming the server
+
+        // Calculate delay with exponential backoff after timeouts
+        let delay = this.baseDelay;
+
+        // Exponential backoff if we have recent timeouts
+        if (this.consecutiveTimeouts > 0) {
+          delay = Math.min(this.baseDelay * Math.pow(2, this.consecutiveTimeouts), this.maxBackoffDelay);
+          console.log(`   ⏳ Backoff delay: ${delay / 1000}s`);
+        }
+
+        // Longer delays after processing many jobs (rate limit prevention)
+        if (i > 0 && i % 100 === 0) {
+          console.log(`   📊 Processed ${i} jobs, adding 10s cooldown...`);
+          delay = Math.max(delay, 10000);
+        }
+        if (i > 0 && i % 500 === 0) {
+          console.log(`   📊 Processed ${i} jobs, adding 30s cooldown...`);
+          delay = Math.max(delay, 30000);
+        }
+
+        // Add randomized delay between requests (±30% variance to avoid pattern detection)
         if (i < rnJobs.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          const randomizedDelay = this.getRandomizedDelay(delay);
+          await new Promise(resolve => setTimeout(resolve, randomizedDelay));
         }
       }
       
@@ -298,7 +391,7 @@ class ClevelandClinicRNScraper {
         jobs: []
       };
     } finally {
-      await browser.close();
+      await this.browser.close();
       
       // Close database connection if we created it
       if (this.jobService) {
