@@ -478,6 +478,11 @@ async function scrapeJobs() {
           salaryMax: details?.salaryMax || null,
           // Detect hourly vs annual: if max salary < 200, it's likely hourly
           salaryType: details?.salaryMin ? (details.salaryMax < 200 ? 'hourly' : 'annual') : null,
+          // Compute normalized hourly/annual for statistics
+          salaryMinHourly: details?.salaryMin ? (details.salaryMax < 200 ? details.salaryMin : Math.round(details.salaryMin / 2080)) : null,
+          salaryMaxHourly: details?.salaryMax ? (details.salaryMax < 200 ? details.salaryMax : Math.round(details.salaryMax / 2080)) : null,
+          salaryMinAnnual: details?.salaryMin ? (details.salaryMax < 200 ? Math.round(details.salaryMin * 2080) : details.salaryMin) : null,
+          salaryMaxAnnual: details?.salaryMax ? (details.salaryMax < 200 ? Math.round(details.salaryMax * 2080) : details.salaryMax) : null,
           signOnBonus: null,
           sourceUrl: buildJobUrl(rawJob.resourceId),
           externalJobId: rawJob.jobId,

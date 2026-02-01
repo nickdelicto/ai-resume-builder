@@ -373,6 +373,11 @@ async function transformJob(apiJob, fetchDetails = true) {
     salaryMin: salary.salaryMin,
     salaryMax: salary.salaryMax,
     salaryType: salary.salaryType,
+    // Compute normalized hourly/annual for statistics
+    salaryMinHourly: salary.salaryMin ? (salary.salaryType === 'hourly' ? salary.salaryMin : Math.round(salary.salaryMin / 2080)) : null,
+    salaryMaxHourly: salary.salaryMax ? (salary.salaryType === 'hourly' ? salary.salaryMax : Math.round(salary.salaryMax / 2080)) : null,
+    salaryMinAnnual: salary.salaryMin ? (salary.salaryType === 'annual' ? salary.salaryMin : Math.round(salary.salaryMin * 2080)) : null,
+    salaryMaxAnnual: salary.salaryMax ? (salary.salaryType === 'annual' ? salary.salaryMax : Math.round(salary.salaryMax * 2080)) : null,
     signOnBonus: null,
     sourceUrl: applyUrl,
     externalJobId: requisitionNumber,

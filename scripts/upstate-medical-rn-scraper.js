@@ -324,6 +324,11 @@ class UpstateMedicalRNScraper {
       salaryMax: null,
       salaryCurrency: 'USD',
       salaryType: null,
+      // Computed fields (null since no salary data from this employer)
+      salaryMinHourly: null,
+      salaryMaxHourly: null,
+      salaryMinAnnual: null,
+      salaryMaxAnnual: null,
 
       postedDate: jobData.datePosted ? new Date(jobData.datePosted).toISOString() : null,
       expiresDate: null,

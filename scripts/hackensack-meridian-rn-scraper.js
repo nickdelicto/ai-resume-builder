@@ -594,6 +594,11 @@ async function scrapeJobs() {
           salaryMin: salaryMin,
           salaryMax: salaryMax,
           salaryType: salaryType,
+          // Compute normalized hourly/annual for statistics
+          salaryMinHourly: salaryMin ? (salaryType === 'hourly' ? salaryMin : Math.round(salaryMin / 2080)) : null,
+          salaryMaxHourly: salaryMax ? (salaryType === 'hourly' ? salaryMax : Math.round(salaryMax / 2080)) : null,
+          salaryMinAnnual: salaryMin ? (salaryType === 'annual' ? salaryMin : Math.round(salaryMin * 2080)) : null,
+          salaryMaxAnnual: salaryMax ? (salaryType === 'annual' ? salaryMax : Math.round(salaryMax * 2080)) : null,
           signOnBonus: null,
           sourceUrl: jobUrl,
           externalJobId: jobLink.jobId,

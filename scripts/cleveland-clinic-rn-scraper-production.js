@@ -1671,9 +1671,15 @@ class ClevelandClinicRNScraper {
           salaryMax = singleValue;
         }
         // Fallback: Single annual value (set as both min and max)
+        // BUT: Add sanity check - values under $500 are clearly hourly rates mislabeled
         else if (singleAnnualMatch) {
-          salaryType = 'annual';
           const singleValue = Math.round(parseFloat(singleAnnualMatch[1].replace(/,/g, '')));
+          // Sanity check: No nurse makes $500/year - this is an hourly rate
+          if (singleValue < 500) {
+            salaryType = 'hourly';
+          } else {
+            salaryType = 'annual';
+          }
           salaryMin = singleValue;
           salaryMax = singleValue;
         }
