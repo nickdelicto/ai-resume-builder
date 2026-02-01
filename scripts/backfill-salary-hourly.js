@@ -80,11 +80,15 @@ async function main() {
       let salaryMaxAnnual = job.salaryMaxAnnual;
       let salaryType = job.salaryType;
 
-      // Detect travel nursing with weekly pay - skip these
-      const isTravel = job.title.toLowerCase().includes('travel');
-      const isWeeklyRange = job.salaryMin >= 1500 && job.salaryMin <= 5000;
-      if (isTravel && isWeeklyRange) {
-        console.log(`  Skipping travel job (weekly pay): ${job.title.substring(0, 40)}`);
+      // Detect weekly pay jobs (Travel, FlexStaff, Temp contracts) - skip these
+      const lower = job.title.toLowerCase();
+      const isWeeklyTitle = lower.includes('travel') ||
+                           lower.includes('flexstaff') ||
+                           (lower.includes('temp') && (lower.includes('contract') || lower.includes('flex'))) ||
+                           /\/\s*w(?:ee)?k/i.test(job.title);
+      const isWeeklyRange = job.salaryMin >= 1500 && job.salaryMin <= 6000;
+      if (isWeeklyTitle && isWeeklyRange) {
+        console.log(`  Skipping weekly-pay job: ${job.title.substring(0, 50)}`);
         skipped++;
         continue;
       }

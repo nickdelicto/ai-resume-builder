@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 /**
- * Fix travel nursing jobs with weekly pay
+ * Fix travel/contract nursing jobs with weekly pay
  *
- * Travel nursing jobs quote weekly rates ($2000-4000/week) which were incorrectly
- * marked as annual. This script:
- * 1. Identifies travel nursing jobs by title pattern
+ * Travel and FlexStaff jobs quote weekly rates ($2000-4000/week) which were
+ * incorrectly marked as annual. This script:
+ * 1. Identifies weekly-pay jobs by title patterns (Travel, FlexStaff, Temp contracts)
  * 2. Sets salaryType to 'weekly'
  * 3. Nulls out hourly/annual computed fields (excludes from salary calculations)
  *
  * The raw salaryMin/salaryMax are preserved for display purposes.
+ *
+ * Detection patterns:
+ * - "Travel" in title
+ * - "FlexStaff" in title
+ * - "Temp" + contract patterns
+ * - Explicit weekly amounts in title ($2902/week, $3k/wk)
  *
  * Usage: node scripts/fix-travel-nursing-weekly.js [--dry-run]
  */
@@ -18,18 +24,36 @@ const prisma = new PrismaClient();
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
+/**
+ * Check if a job title indicates weekly pay
+ */
+function isWeeklyPayTitle(title) {
+  if (!title) return false;
+  const lower = title.toLowerCase();
+
+  // Direct indicators
+  if (lower.includes('travel')) return true;
+  if (lower.includes('flexstaff')) return true;
+
+  // Temp contract patterns
+  if (lower.includes('temp') && (lower.includes('contract') || lower.includes('flex'))) return true;
+
+  // Explicit weekly in title: "$2902/week", "$3k/wk"
+  if (/\/\s*w(?:ee)?k/i.test(title)) return true;
+
+  return false;
+}
+
 async function main() {
-  console.log('=== FIX TRAVEL NURSING WEEKLY PAY ===');
+  console.log('=== FIX WEEKLY PAY JOBS (Travel/FlexStaff/Contracts) ===');
   console.log('Mode:', DRY_RUN ? 'DRY RUN (no changes)' : 'LIVE');
   console.log('');
 
-  // Find travel nursing jobs with suspicious salary data
-  // Criteria: title contains "travel" AND salary in weekly range ($1500-5000)
-  const travelJobs = await prisma.nursingJob.findMany({
+  // Find all jobs with salary in weekly range that aren't already marked weekly
+  const allJobsInRange = await prisma.nursingJob.findMany({
     where: {
       isActive: true,
-      title: { contains: 'Travel', mode: 'insensitive' },
-      salaryMin: { gte: 1500, lte: 5000 },
+      salaryMin: { gte: 1500, lte: 6000 },
       salaryType: { not: 'weekly' }  // Not already fixed
     },
     select: {
@@ -43,9 +67,12 @@ async function main() {
     }
   });
 
-  console.log(`Found ${travelJobs.length} travel nursing jobs with weekly pay\n`);
+  // Filter to only weekly-pay jobs based on title patterns
+  const weeklyJobs = allJobsInRange.filter(job => isWeeklyPayTitle(job.title));
 
-  if (travelJobs.length === 0) {
+  console.log(`Found ${weeklyJobs.length} weekly-pay jobs (from ${allJobsInRange.length} in salary range)\n`);
+
+  if (weeklyJobs.length === 0) {
     console.log('Nothing to fix!');
     await prisma.$disconnect();
     return;
@@ -53,7 +80,7 @@ async function main() {
 
   // Group by employer
   const byEmployer = {};
-  for (const job of travelJobs) {
+  for (const job of weeklyJobs) {
     const slug = job.employer?.slug || 'unknown';
     if (!byEmployer[slug]) {
       byEmployer[slug] = { name: job.employer?.name, jobs: [] };
@@ -67,13 +94,28 @@ async function main() {
   }
   console.log('');
 
+  // Categorize by detection pattern
+  const byPattern = {
+    travel: weeklyJobs.filter(j => j.title.toLowerCase().includes('travel')),
+    flexstaff: weeklyJobs.filter(j => j.title.toLowerCase().includes('flexstaff') && !j.title.toLowerCase().includes('travel')),
+    tempContract: weeklyJobs.filter(j => j.title.toLowerCase().includes('temp') && !j.title.toLowerCase().includes('travel') && !j.title.toLowerCase().includes('flexstaff')),
+    weeklyInTitle: weeklyJobs.filter(j => /\/\s*w(?:ee)?k/i.test(j.title) && !j.title.toLowerCase().includes('travel') && !j.title.toLowerCase().includes('flexstaff'))
+  };
+
+  console.log('By detection pattern:');
+  console.log(`  Travel: ${byPattern.travel.length}`);
+  console.log(`  FlexStaff: ${byPattern.flexstaff.length}`);
+  console.log(`  Temp/Contract: ${byPattern.tempContract.length}`);
+  console.log(`  Weekly in title: ${byPattern.weeklyInTitle.length}`);
+  console.log('');
+
   // Show sample jobs
   console.log('Sample jobs to fix:');
-  for (const job of travelJobs.slice(0, 10)) {
-    console.log(`  $${job.salaryMin}/week | ${job.title.substring(0, 50)}`);
+  for (const job of weeklyJobs.slice(0, 10)) {
+    console.log(`  $${job.salaryMin}/week | ${job.title.substring(0, 55)}`);
   }
-  if (travelJobs.length > 10) {
-    console.log(`  ... and ${travelJobs.length - 10} more`);
+  if (weeklyJobs.length > 10) {
+    console.log(`  ... and ${weeklyJobs.length - 10} more`);
   }
   console.log('');
 
@@ -88,7 +130,7 @@ async function main() {
   } else {
     const result = await prisma.nursingJob.updateMany({
       where: {
-        id: { in: travelJobs.map(j => j.id) }
+        id: { in: weeklyJobs.map(j => j.id) }
       },
       data: {
         salaryType: 'weekly',
@@ -99,7 +141,7 @@ async function main() {
       }
     });
 
-    console.log(`Updated ${result.count} travel nursing jobs`);
+    console.log(`Updated ${result.count} weekly-pay jobs`);
     console.log('  - salaryType set to "weekly"');
     console.log('  - Hourly/annual fields nulled (excluded from salary stats)');
   }
