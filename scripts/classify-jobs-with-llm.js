@@ -374,7 +374,23 @@ Extract the following:
 1. Is this a Staff RN position requiring ONLY an RN license? (Include bedside RNs, charge nurses, nurse managers, coordinators. Exclude only: NP, CRNA, CNS, CNM, non-RN roles)
 2. Specialty (ICU, ER, Med-Surg, OR, etc.)
 3. Job Type (Full Time, Part Time, Per Diem, etc.)
+   - Use what's explicitly stated in the description
+   - If NOT explicitly stated, INFER from context:
+     * "Per Diem" or "PRN" in title → Per Diem
+     * "Part Time" or "PT" in title → Part Time
+     * "Travel" or "FlexStaff" or "Contract" in title → Contract
+     * Otherwise assume Full Time (most common for staff RN)
 4. Shift Type (days, nights, evenings, variable, rotating)
+   - Use what's explicitly stated in the description
+   - If NOT explicitly stated, INFER from context:
+     * "Ambulatory", "Clinic", "Outpatient", "Office" → days
+     * "Home Health", "Home Care", "Visiting" → days
+     * "School Nurse" → days
+     * "ED", "ER", "Emergency", "ICU", "Critical Care" → variable (24/7 units)
+     * "OR", "Surgery", "Perioperative" → variable
+     * "Night" in title → nights
+     * "Evening" in title → evenings
+     * If still unclear, use "variable" rather than null
 5. Experience Level (3-level taxonomy):
    - "New Grad" = 0-12 months, residency programs, "new grad welcome", "GN"
    - "Experienced" = 1+ years, standard staff RN positions (DEFAULT)
