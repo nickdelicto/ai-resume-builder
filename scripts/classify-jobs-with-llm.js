@@ -176,18 +176,28 @@ function buildClassificationPrompt(job) {
   * OR if it's NOT an RN position at all: LPN, LVN, CNA, Medical Assistant, non-nursing roles
 - KEY: If the job only requires RN license (BSN or Associate degree acceptable), return TRUE even if it's a leadership/management role
 
-**Task 2: Assign the MOST ACCURATE specialty**
+**Task 2: Assign the MOST ACCURATE specialty (REQUIRED - never return null)**
 Choose ONE from this list: ${SPECIALTIES.join(', ')}
+
+CRITICAL: You MUST always assign a specialty. Never return null for specialty.
 
 Guidelines:
 - If job clearly specifies a unit/specialty, use that specific specialty (ICU, ER, OR, etc.)
 - Use "Float Pool" ONLY if job explicitly mentions: float, floating, multi-specialty, rotational between units, or can work in any unit
-- Use "General Nursing" ONLY if no specific specialty can be determined from title or description (rare - try to find a specialty first)
+- If no specific specialty can be determined, INFER from context clues:
+  * Job in "ambulatory", "clinic", "outpatient", "physician office" setting → Ambulatory Care
+  * Job mentions "home health", "home care", "visiting nurse" → Home Health
+  * Job in "long-term care", "skilled nursing facility", "SNF", "nursing home" → Long-Term Care
+  * Job in "rehabilitation", "rehab" → Rehabilitation
+  * Job mentions "case management", "care coordination" → Case Management
+  * Job in "oncology", "cancer center" → Oncology
+  * If truly NO context clues exist → "General Nursing" (last resort)
 - Prioritize specific specialties over general ones
 - Examples:
   * "Float Pool RN" or "Multi-Specialty RN" → Float Pool
   * "ICU RN" → ICU
   * "Emergency Department Nurse" → ER
+  * "RN - Outpatient Clinic" → Ambulatory Care
   * "Generic RN with vague description" → General Nursing
 
 **Task 3: Detect employment type**
@@ -345,7 +355,7 @@ Full intro paragraph here with all original text preserved...
 **Return your answer ONLY as valid JSON in this exact format:**
 {
   "isStaffRN": true or false,
-  "specialty": "one of the specialties from the list",
+  "specialty": "REQUIRED - one of the specialties from the list (never null)",
   "jobType": "Full Time" or "Part Time" or "PRN" or "Per Diem" or "Contract" or "Travel" or null,
   "shiftType": "days" or "nights" or "evenings" or "variable" or "rotating" or null,
   "experienceLevel": "New Grad" or "Experienced" or "Leadership" or null,
@@ -372,7 +382,15 @@ ${job.description}
 
 Extract the following:
 1. Is this a Staff RN position requiring ONLY an RN license? (Include bedside RNs, charge nurses, nurse managers, coordinators. Exclude only: NP, CRNA, CNS, CNM, non-RN roles)
-2. Specialty (ICU, ER, Med-Surg, OR, etc.)
+2. Specialty (REQUIRED - never return null)
+   - Use specific specialty if job mentions a unit (ICU, ER, Med-Surg, OR, etc.)
+   - If NOT explicitly stated, INFER from context:
+     * "ambulatory", "clinic", "outpatient" → Ambulatory Care
+     * "home health", "home care", "visiting" → Home Health
+     * "long-term care", "SNF", "nursing home" → Long-Term Care
+     * "rehabilitation", "rehab" → Rehabilitation
+     * "oncology", "cancer" → Oncology
+     * If truly NO context → "General Nursing"
 3. Job Type (Full Time, Part Time, Per Diem, etc.)
    - Use what's explicitly stated in the description
    - If NOT explicitly stated, INFER from context:
@@ -398,12 +416,12 @@ Extract the following:
 6. City and State (2-letter code)
 7. Sign-on Bonus: Does the job mention a sign-on bonus, signing bonus, or welcome bonus? If yes, extract the amount if specified.
 
-**Specialty Options:** ${SPECIALTIES.join(', ')}
+**Specialty Options (REQUIRED - always pick one):** ${SPECIALTIES.join(', ')}
 
 Return ONLY valid JSON:
 {
   "isStaffRN": true or false,
-  "specialty": "from list above",
+  "specialty": "from list above (REQUIRED, never null)",
   "jobType": "Full Time" | "Part Time" | "Per Diem" | "Contract" | "Travel" | null,
   "shiftType": "days" | "nights" | "evenings" | "variable" | "rotating" | null,
   "experienceLevel": "New Grad" | "Experienced" | "Leadership" | null,
@@ -818,7 +836,7 @@ async function main() {
           const updateData = {
             city: c.city,           // Update with LLM-extracted location
             state: c.state,         // Update with LLM-validated state
-            specialty: c.specialty,
+            specialty: c.specialty || job.specialty || 'General Nursing', // Fallback: existing → General Nursing
             jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
             shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
             experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
@@ -865,7 +883,7 @@ async function main() {
         } else if (!isTestMode && c.isStaffRN && (!c.city || !c.state)) {
           // Staff RN but no valid location → Keep inactive but mark as classified
           const updateData = {
-            specialty: c.specialty,
+            specialty: c.specialty || job.specialty || 'General Nursing', // Fallback: existing → General Nursing
             jobType: c.jobType || job.jobType,
             shiftType: c.shiftType || job.shiftType,
             experienceLevel: c.experienceLevel || job.experienceLevel,
