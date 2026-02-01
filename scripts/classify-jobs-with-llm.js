@@ -59,19 +59,21 @@ function extractSalaryFromDescription(description) {
   if (!description) return {};
 
   // Pattern 1: "💰 **Pay:** $XX.XX/hour" or "$XX-$YY/hour" or "$XX.XX - $YY.YY/hr"
+  // IMPORTANT: Dollar sign ($) is REQUIRED to avoid matching work hours like "24 hours"
   const hourlyPatterns = [
-    /\*\*Pay:\*\*\s*\$?([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
-    /Pay:\s*\$?([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
-    /\$?([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i,
-    /\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i
+    /\*\*Pay:\*\*\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
+    /Pay:\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
+    /\$([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i,
+    /\$([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i
   ];
 
   // Pattern 2: Annual salary patterns "$XX,XXX - $YY,YYY" or "$XX,XXX/year"
+  // IMPORTANT: Dollar sign ($) is REQUIRED
   const annualPatterns = [
-    /\*\*Pay:\*\*\s*\$?([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /Pay:\s*\$?([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /\$?([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /salary.*?\$?([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)/i
+    /\*\*Pay:\*\*\s*\$([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /Pay:\s*\$([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /\$([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)\s*\/?\s*(?:year|annual|annually|yr)/i,
+    /salary.*?\$([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)/i
   ];
 
   let salaryMin = null;
@@ -103,8 +105,9 @@ function extractSalaryFromDescription(description) {
   }
 
   // If still no match, try a general dollar amount in Highlights section
+  // IMPORTANT: Dollar sign ($) is REQUIRED
   if (!salaryMin) {
-    const highlightsMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$?([\d,.]+)/i);
+    const highlightsMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$([\d,.]+)/i);
     if (highlightsMatch) {
       const value = parseFloat(highlightsMatch[1].replace(/,/g, ''));
       salaryMin = value;
