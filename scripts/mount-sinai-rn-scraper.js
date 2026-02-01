@@ -166,8 +166,13 @@ function determineSalaryType(minValue, maxValue) {
 function transformJob(apiJob) {
   const jobData = apiJob.data || apiJob;
 
-  const city = jobData.city || '';
-  const state = jobData.state || '';
+  // Default to NYC for Mount Sinai when location is missing (system-wide positions)
+  let city = jobData.city || '';
+  let state = jobData.state || '';
+  if (!city.trim() && !state.trim()) {
+    city = 'New York';
+    state = 'NY';
+  }
 
   // Build job URL
   const jobUrl = `${CONFIG.jobUrlBase}/${jobData.slug}`;
