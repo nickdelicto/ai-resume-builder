@@ -472,7 +472,7 @@ async function scrapeJobs() {
           state: normalizedState,
           zipCode: null,
           jobType: jobType,
-          shift: shift,
+          shiftType: shift,
           experienceLevel: detectExperienceLevel(rawJob.title, description),
           salaryMin: details?.salaryMin || null,
           salaryMax: details?.salaryMax || null,

@@ -589,7 +589,7 @@ async function scrapeJobs() {
           state: state,
           zipCode: zipCode,
           jobType: jobType,
-          shift: shift,
+          shiftType: shift,
           experienceLevel: detectExperienceLevel(jobData.title, description),
           salaryMin: salaryMin,
           salaryMax: salaryMax,
