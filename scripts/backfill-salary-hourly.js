@@ -23,6 +23,8 @@ async function main() {
     where: {
       isActive: true,
       salaryMin: { not: null },
+      // Skip weekly jobs - they should stay excluded from salary stats
+      NOT: { salaryType: 'weekly' },
       OR: [
         { salaryMinHourly: null },
         { salaryMaxHourly: null }
@@ -77,6 +79,15 @@ async function main() {
       let salaryMinAnnual = job.salaryMinAnnual;
       let salaryMaxAnnual = job.salaryMaxAnnual;
       let salaryType = job.salaryType;
+
+      // Detect travel nursing with weekly pay - skip these
+      const isTravel = job.title.toLowerCase().includes('travel');
+      const isWeeklyRange = job.salaryMin >= 1500 && job.salaryMin <= 5000;
+      if (isTravel && isWeeklyRange) {
+        console.log(`  Skipping travel job (weekly pay): ${job.title.substring(0, 40)}`);
+        skipped++;
+        continue;
+      }
 
       // If no salaryType, infer from value magnitude
       if (!salaryType) {
