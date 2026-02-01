@@ -556,7 +556,7 @@ async function scrapeNewYorkPresbyterianJobs() {
       const errors = [];
 
       if (!job.title) errors.push('Missing title');
-      if (!job.externalId) errors.push('Missing externalId');
+      if (!job.sourceJobId) errors.push('Missing sourceJobId');
       if (!job.sourceUrl) errors.push('Missing sourceUrl');
 
       if (errors.length > 0) {
