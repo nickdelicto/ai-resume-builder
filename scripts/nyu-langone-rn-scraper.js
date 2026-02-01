@@ -205,7 +205,7 @@ function transformJob(apiJob) {
 
   return {
     title: job.title,
-    externalId: String(job.id),
+    sourceJobId: String(job.id),
     requisitionId: job.ref || null,
     sourceUrl: jobUrl,
     slug: generateJobSlug(job.title, city, state, job.id),

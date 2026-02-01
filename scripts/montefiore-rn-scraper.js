@@ -380,7 +380,7 @@ async function transformJob(apiJob, fetchDetails = true) {
     salaryMaxAnnual: salary.salaryMax ? (salary.salaryType === 'annual' ? salary.salaryMax : Math.round(salary.salaryMax * 2080)) : null,
     signOnBonus: null,
     sourceUrl: applyUrl,
-    externalJobId: requisitionNumber,
+    sourceJobId: requisitionNumber,
     postedAt: apiJob.issueDate ? new Date(apiJob.issueDate) : new Date(),
   };
 }

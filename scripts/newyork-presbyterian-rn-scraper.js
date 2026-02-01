@@ -398,7 +398,7 @@ function transformJob(listing, details) {
 
   return {
     title: title,
-    externalId: jobId,
+    sourceJobId: jobId,
     requisitionId: jobId,
     sourceUrl: sourceUrl,
     slug: generateJobSlug(title, location.city, location.state, jobId),

@@ -485,7 +485,7 @@ async function scrapeJobs() {
           salaryMaxAnnual: details?.salaryMax ? (details.salaryMax < 200 ? Math.round(details.salaryMax * 2080) : details.salaryMax) : null,
           signOnBonus: null,
           sourceUrl: buildJobUrl(rawJob.resourceId),
-          externalJobId: rawJob.jobId,
+          sourceJobId: rawJob.jobId,
           postedAt: rawJob.postedDate ? new Date(rawJob.postedDate) : new Date(),
           // Employer info
           employerName: CONFIG.employerName,

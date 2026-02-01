@@ -142,10 +142,55 @@ function generateSlug(title) {
 }
 
 /**
- * Parse salary string from API
- * Examples: "$59.689-$59.689/hour", "$78000-$130000/year"
+ * Detect if job title indicates weekly pay (travel/FlexStaff positions)
+ * Returns extracted weekly salary if found, null otherwise
  */
-function parseSalary(salaryStr) {
+function detectWeeklyPayFromTitle(title) {
+  if (!title) return null;
+
+  // Patterns that indicate weekly pay in title:
+  // "$2902/week", "$3k+/Week", "$4323/wk", "$2,902 /wk"
+  const weeklyPattern = /\$[\d,]+(?:\.\d+)?(?:k\+?)?\s*\/\s*w(?:ee)?k/i;
+  const match = title.match(weeklyPattern);
+
+  if (match) {
+    // Extract the numeric value
+    const valueMatch = match[0].match(/\$?([\d,]+(?:\.\d+)?)(k)?/i);
+    if (valueMatch) {
+      let value = parseFloat(valueMatch[1].replace(/,/g, ''));
+      if (valueMatch[2]?.toLowerCase() === 'k') {
+        value *= 1000;
+      }
+      return Math.round(value);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if job is a weekly-pay position (Travel, FlexStaff, Temp contracts)
+ */
+function isWeeklyPayJob(job) {
+  const title = (job.title || '').toLowerCase();
+  const brand = (job.brand || '').toLowerCase();
+
+  // FlexStaff brand is typically travel/contract with weekly pay
+  const isFlexStaff = brand.includes('flexstaff') || title.includes('flexstaff');
+  const isTravel = title.includes('travel');
+  const isTempContract = title.includes('temp') && (title.includes('contract') || title.includes('flexstaff'));
+
+  // Also check for explicit weekly salary in title
+  const hasWeeklyInTitle = /\/\s*w(?:ee)?k/i.test(title);
+
+  return isFlexStaff || isTravel || isTempContract || hasWeeklyInTitle;
+}
+
+/**
+ * Parse salary string from API
+ * Examples: "$59.689-$59.689/hour", "$78000-$130000/year", "$2902-$2902/year" (mislabeled weekly)
+ */
+function parseSalary(salaryStr, job) {
   if (!salaryStr) return null;
 
   // Match pattern: $XX.XX-$YY.YY/hour or $XXXXX-$YYYYY/year
@@ -154,11 +199,33 @@ function parseSalary(salaryStr) {
 
   const min = parseFloat(match[1].replace(/,/g, ''));
   const max = parseFloat(match[2].replace(/,/g, ''));
-  const type = match[3].toLowerCase();
+  const apiType = match[3].toLowerCase();
 
   if (isNaN(min) || isNaN(max)) return null;
 
-  const isHourly = type === 'hour';
+  // Check if this is actually weekly pay (API mislabels weekly as annual)
+  // Weekly jobs: FlexStaff/Travel with values in $1500-5000 range
+  const isWeekly = isWeeklyPayJob(job);
+  const looksLikeWeeklyValue = min >= 1500 && min <= 6000;
+
+  // Also check for weekly amount explicitly in title
+  const weeklyFromTitle = detectWeeklyPayFromTitle(job.title);
+
+  if ((isWeekly && looksLikeWeeklyValue) || weeklyFromTitle) {
+    // Weekly pay - store raw values but exclude from hourly/annual stats
+    return {
+      salaryMin: Math.round(min),
+      salaryMax: Math.round(max),
+      salaryType: 'weekly',
+      // Null out computed fields - weekly jobs excluded from salary statistics
+      salaryMinHourly: null,
+      salaryMaxHourly: null,
+      salaryMinAnnual: null,
+      salaryMaxAnnual: null
+    };
+  }
+
+  const isHourly = apiType === 'hour';
 
   return {
     salaryMin: Math.round(min),
@@ -185,12 +252,12 @@ function transformJob(apiJob) {
   const state = job.primary_state || job.google_locations?.[0]?.state || '';
   const urlSlug = `${slug}-${city.toLowerCase().replace(/\s+/g, '-')}-${state.toLowerCase()}`;
 
-  // Parse salary info
-  const salary = parseSalary(job.salary);
+  // Parse salary info (pass full job for weekly pay detection)
+  const salary = parseSalary(job.salary, job);
 
   return {
     title: job.title,
-    externalId: String(job.id),
+    sourceJobId: String(job.id),  // External job ID for deactivation tracking
     requisitionId: job.ref || null,
     sourceUrl: `${CONFIG.jobUrlBase}/${jobId}/${urlSlug}/`,
     slug: generateJobSlug(job.title, city, state, job.id),
