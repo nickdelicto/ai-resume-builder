@@ -27,6 +27,7 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const OpenAI = require('openai');
 const { normalizeExperienceLevel } = require('../lib/utils/experienceLevelUtils');
+const { normalizeJobType } = require('../lib/constants/jobTypes');
 const googleIndexingService = require('../lib/services/googleIndexingService');
 const { formatJobDescription } = require('../lib/services/jobDescriptionFormatter');
 
@@ -58,22 +59,26 @@ const limit = limitArg ? parseInt(limitArg.split('=')[1]) : (isTestMode ? 20 : n
 function extractSalaryFromDescription(description) {
   if (!description) return {};
 
-  // Pattern 1: "💰 **Pay:** $XX.XX/hour" or "$XX-$YY/hour" or "$XX.XX - $YY.YY/hr"
+  // Pattern 1: "💰 **Pay:** $XX.XX/hour" or "$XX-$YY/hour" or "$XX.XX - $YY.YY/hr" or "$XX - $YY per hour"
   // IMPORTANT: Dollar sign ($) is REQUIRED to avoid matching work hours like "24 hours"
+  // NOTE: "per hour" pattern added to handle Centene/insurance job formats
   const hourlyPatterns = [
-    /\*\*Pay:\*\*\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
-    /Pay:\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:hour|hr|hourly)/i,
-    /\$([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i,
-    /\$([\d,.]+)\s*\/?\s*(?:hour|hr|hourly)/i
+    /\*\*Pay:\*\*\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:per\s+)?(?:hour|hr|hourly)/i,
+    /Pay:\s*\$([\d,.]+)\s*(?:[-–—to]+\s*\$?([\d,.]+))?\s*\/?\s*(?:per\s+)?(?:hour|hr|hourly)/i,
+    /Pay Range:\s*\$([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*(?:per\s+)?(?:hour|hr|hourly)/i,  // "Pay Range: $X - $Y per hour"
+    /\$([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)\s*(?:per\s+)?(?:hour|hr|hourly)/i,
+    /\$([\d,.]+)\s*\/?\s*(?:per\s+)?(?:hour|hr|hourly)/i
   ];
 
-  // Pattern 2: Annual salary patterns "$XX,XXX - $YY,YYY" or "$XX,XXX/year"
+  // Pattern 2: Annual salary patterns "$XX,XXX - $YY,YYY" or "$XX,XXX/year" or "$XX,XXX.00 per year"
   // IMPORTANT: Dollar sign ($) is REQUIRED
+  // NOTE: Added (?:\.00)? to handle decimal format like "$56,200.00"
+  // NOTE: Added (?:per\s+)? to handle "per year" format (common in Centene/insurance jobs)
   const annualPatterns = [
-    /\*\*Pay:\*\*\s*\$([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /Pay:\s*\$([\d,]+)\s*(?:[-–—to]+\s*\$?([\d,]+))?\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /\$([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)\s*\/?\s*(?:year|annual|annually|yr)/i,
-    /salary.*?\$([\d,]+)\s*[-–—to]+\s*\$?([\d,]+)/i
+    /\*\*Pay:\*\*\s*\$([\d,]+)(?:\.00)?\s*(?:[-–—to]+\s*\$?([\d,]+)(?:\.00)?)?\s*\/?\s*(?:per\s+)?(?:year|annual|annually|yr)/i,
+    /Pay:\s*\$([\d,]+)(?:\.00)?\s*(?:[-–—to]+\s*\$?([\d,]+)(?:\.00)?)?\s*\/?\s*(?:per\s+)?(?:year|annual|annually|yr)/i,
+    /\$([\d,]+)(?:\.00)?\s*[-–—to]+\s*\$?([\d,]+)(?:\.00)?\s*\/?\s*(?:per\s+)?(?:year|annual|annually|yr)/i,
+    /salary.*?\$([\d,]+)(?:\.00)?\s*[-–—to]+\s*\$?([\d,]+)(?:\.00)?/i
   ];
 
   let salaryMin = null;
@@ -148,12 +153,73 @@ console.log(`Limit: ${limit || 'ALL jobs'}`);
 console.log(`Employer: ${employerSlug || 'ALL employers'}\n`);
 
 /**
+ * Get employer-specific classifier instructions
+ * These handle unique cases like insurance companies where RN is one of multiple acceptable licenses
+ */
+function getEmployerSpecificClassifierInstructions(job) {
+  const employerSlug = job.employer?.slug;
+
+  // Insurance companies: Jobs often accept multiple license types including RN
+  const insuranceEmployers = ['centene', 'unitedhealth', 'cigna', 'humana', 'cvs-health', 'anthem', 'elevance'];
+
+  if (insuranceEmployers.includes(employerSlug)) {
+    return `
+
+**⚠️ INSURANCE COMPANY SPECIAL INSTRUCTIONS (${job.employer?.name}):**
+This is an insurance/managed care company. Their jobs often accept MULTIPLE license types.
+
+CRITICAL: Check the License/Certification section for "RN" or "Registered Nurse":
+- If RN is listed as ONE of the acceptable licenses (even among LCSW, LMHC, LPC, LMFT), return TRUE
+- Example: "LCSW required OR LMHC required OR LPC required OR RN required" → return TRUE (RN is an option)
+- An RN CAN apply for this job if "RN" appears anywhere in the acceptable licenses list
+
+Return FALSE only if RN is NOT listed at all in the acceptable licenses.`;
+  }
+
+  return ''; // No special instructions for other employers
+}
+
+/**
  * Build the LLM prompt for job classification
  */
 function buildClassificationPrompt(job) {
-  // Truncate description to save tokens (first 1000 chars is usually enough)
-  const descriptionPreview = job.description ? job.description.slice(0, 1300) : '';
-  
+  // Build description preview with smart truncation
+  // Include beginning AND license/requirements section (often at end)
+  let descriptionPreview = '';
+  if (job.description) {
+    const desc = job.description;
+    const beginning = desc.slice(0, 1500);
+
+    // Look for license/requirements section (often contains RN requirements)
+    const licensePatterns = [
+      /License\/Certification/i,
+      /Required Qualifications/i,
+      /Education\/Experience/i,
+      /Requirements:/i,
+      /Qualifications:/i
+    ];
+
+    let requirementsSection = '';
+    for (const pattern of licensePatterns) {
+      const match = desc.match(pattern);
+      if (match && match.index > 1500) {
+        // Found requirements section after our initial truncation
+        // Include 1000 chars from that section
+        requirementsSection = '\n\n[...Requirements Section...]\n' + desc.slice(match.index, match.index + 1000);
+        break;
+      }
+    }
+
+    descriptionPreview = beginning + requirementsSection;
+  }
+
+  const employerInstructions = getEmployerSpecificClassifierInstructions(job);
+
+  // DEBUG: Log employer-specific instructions
+  if (employerInstructions) {
+    console.log('   📋 Adding employer-specific instructions for:', job.employer?.name);
+  }
+
   return `You are an expert nursing job classifier. Analyze this job posting and classify it accurately.
 
 **Job Title:** ${job.title || 'N/A'}
@@ -166,15 +232,32 @@ function buildClassificationPrompt(job) {
 
 ---
 
-**Task 1: Verify this is a Registered Nurse (RN) position that requires ONLY an RN license**
-- Return TRUE if: Staff RN, Bedside RN, Clinical RN, Unit RN, Charge Nurse, Nurse Manager, Assistant Nurse Manager, Team Lead, Coordinator (if only requires RN license)
-- Return FALSE ONLY if the position requires an ADVANCED NURSING DEGREE:
-  * Nurse Practitioner (NP) - requires Master's/DNP
-  * CRNA (Certified Registered Nurse Anesthetist) - requires Master's/DNP
-  * CNS (Clinical Nurse Specialist) - requires Master's/DNP
-  * CNM (Certified Nurse Midwife) - requires Master's/DNP
-  * OR if it's NOT an RN position at all: LPN, LVN, CNA, Medical Assistant, non-nursing roles
-- KEY: If the job only requires RN license (BSN or Associate degree acceptable), return TRUE even if it's a leadership/management role
+**Task 1: Verify this is a position that an RN can apply to**
+
+SEARCH THE ENTIRE DESCRIPTION for ANY mention of RN being required, preferred, or recommended.
+
+Return TRUE if ANY of these conditions are met:
+1. RN license is REQUIRED anywhere in the posting
+2. RN license is PREFERRED anywhere (e.g., "RN preferred", "RN strongly preferred", "RN recommended")
+3. Job title contains "RN" (e.g., "Care Manager (RN)", "Clinical Review Nurse")
+4. Job is for: Staff RN, Bedside RN, Clinical RN, Charge Nurse, Nurse Manager, Team Lead
+
+IMPORTANT FOR INSURANCE/MANAGED CARE JOBS:
+- Many insurance jobs list "LPN required" as minimum qualification BUT also say "RN preferred" elsewhere
+- If you see BOTH "LPN required" AND "RN preferred/recommended" → Return TRUE
+- RNs can apply to these jobs and are the preferred candidates
+
+Return FALSE ONLY if ALL of these are true:
+- Position requires ADVANCED degree (NP, CRNA, CNS, CNM)
+- OR RN is NEVER mentioned as required, preferred, or recommended anywhere
+- OR it's a non-nursing role (Social Worker, Medical Assistant, etc.)
+
+EXAMPLES:
+- "License: LPN required" + "RN strongly preferred" elsewhere → TRUE (RN preferred)
+- "RN or LPN required" → TRUE (RN is an option)
+- "LPN required" with NO mention of RN anywhere → FALSE
+- "Care Manager (RN)" in title → TRUE (title indicates RN)
+${employerInstructions}
 
 **Task 2: Assign the MOST ACCURATE specialty (REQUIRED - never return null)**
 Choose ONE from this list: ${SPECIALTIES.join(', ')}
@@ -185,19 +268,27 @@ Guidelines:
 - If job clearly specifies a unit/specialty, use that specific specialty (ICU, ER, OR, etc.)
 - Use "Float Pool" ONLY if job explicitly mentions: float, floating, multi-specialty, rotational between units, or can work in any unit
 - If no specific specialty can be determined, INFER from context clues:
-  * Job in "ambulatory", "clinic", "outpatient", "physician office" setting → Ambulatory Care
+  * Job in "ambulatory", "clinic", "outpatient", "physician office" setting → Ambulatory
   * Job mentions "home health", "home care", "visiting nurse" → Home Health
-  * Job in "long-term care", "skilled nursing facility", "SNF", "nursing home" → Long-Term Care
+  * Job in "long-term care", "skilled nursing facility", "SNF", "nursing home" → Geriatrics
   * Job in "rehabilitation", "rehab" → Rehabilitation
   * Job mentions "case management", "care coordination" → Case Management
   * Job in "oncology", "cancer center" → Oncology
   * If truly NO context clues exist → "General Nursing" (last resort)
+- NON-BEDSIDE SPECIALTIES (common at insurance companies):
+  * "Utilization review", "utilization management", "UR", "UM", "prior authorization", "medical review", "concurrent review", "appeals" → Utilization Review
+  * "Telehealth", "telemedicine", "virtual care", "nurse line", "telephone triage", "advice nurse" → Telehealth
+  * "Clinical documentation", "CDI", "coding", "documentation improvement" → Clinical Documentation
+  * "Quality assurance", "QA", "quality improvement", "QI", "patient safety", "risk management" → Quality Assurance
+  * "Nurse educator", "clinical educator", "staff development", "nursing instructor" → Nurse Educator
 - Prioritize specific specialties over general ones
 - Examples:
   * "Float Pool RN" or "Multi-Specialty RN" → Float Pool
   * "ICU RN" → ICU
   * "Emergency Department Nurse" → ER
-  * "RN - Outpatient Clinic" → Ambulatory Care
+  * "RN - Outpatient Clinic" → Ambulatory
+  * "Utilization Review Clinician" → Utilization Review
+  * "Telehealth Nurse" → Telehealth
   * "Generic RN with vague description" → General Nursing
 
 **Task 3: Detect employment type**
@@ -354,7 +445,7 @@ Full intro paragraph here with all original text preserved...
 
 **Return your answer ONLY as valid JSON in this exact format:**
 {
-  "isStaffRN": true or false,
+  "isStaffRN": true or false (true if RN is required OR preferred OR recommended ANYWHERE in the posting),
   "specialty": "REQUIRED - one of the specialties from the list (never null)",
   "jobType": "Full Time" or "Part Time" or "PRN" or "Per Diem" or "Contract" or "Travel" or null,
   "shiftType": "days" or "nights" or "evenings" or "variable" or "rotating" or null,
@@ -371,6 +462,12 @@ Full intro paragraph here with all original text preserved...
  * Classify job attributes ONLY (split from formatting for better results)
  */
 async function classifyJobAttributes(job) {
+  // Get employer-specific instructions
+  const employerInstructions = getEmployerSpecificClassifierInstructions(job);
+  if (employerInstructions) {
+    console.log('   📋 Adding employer-specific instructions for:', job.employer?.name);
+  }
+
   const prompt = `Analyze this nursing job and extract key attributes:
 
 Job Title: ${job.title}
@@ -381,7 +478,8 @@ Description:
 ${job.description}
 
 Extract the following:
-1. Is this a Staff RN position requiring ONLY an RN license? (Include bedside RNs, charge nurses, nurse managers, coordinators. Exclude only: NP, CRNA, CNS, CNM, non-RN roles)
+1. Is this a Staff RN position requiring an RN license? (Include bedside RNs, charge nurses, nurse managers, coordinators. Exclude only: NP, CRNA, CNS, CNM, non-RN roles)
+${employerInstructions}
 2. Specialty (REQUIRED - never return null)
    - Use specific specialty if job mentions a unit (ICU, ER, Med-Surg, OR, etc.)
    - If NOT explicitly stated, INFER from context:
@@ -415,6 +513,28 @@ Extract the following:
    - "Leadership" = Charge nurse, manager, director, coordinator, supervisory roles
 6. City and State (2-letter code)
 7. Sign-on Bonus: Does the job mention a sign-on bonus, signing bonus, or welcome bonus? If yes, extract the amount if specified.
+8. Work Arrangement: Detect if the job is remote, hybrid, or onsite
+   - "remote" = 100% remote, work from home, fully remote, telecommute, virtual position
+   - "hybrid" = Mix of remote and onsite, partial remote, flexible work location
+   - "onsite" = Must be physically present, in-person, on-campus, on-site required
+   - null = Not specified or unclear
+
+   Key indicators for REMOTE:
+   - "100% remote", "fully remote", "work from home", "WFH", "telecommute", "virtual"
+   - Job at insurance company (Centene, UnitedHealth, Cigna, Humana) with telehealth/utilization review
+   - "Remote" explicitly in title or location field
+
+   Key indicators for HYBRID:
+   - "hybrid", "partial remote", "flexible work arrangement"
+   - Mentions both remote work AND required office/facility days
+
+   Key indicators for ONSITE:
+   - Most hospital/facility nursing positions are onsite by default
+   - "On-site", "in-person", "on campus", "must report to facility"
+   - Bedside nursing roles (ICU, ER, Med-Surg, OR) are typically onsite
+
+   NOTE: If job is clearly at a hospital/facility for bedside care, assume "onsite" even if not explicitly stated.
+   If job is case management, utilization review, or telehealth with no facility mentioned, check for remote indicators.
 
 **Specialty Options (REQUIRED - always pick one):** ${SPECIALTIES.join(', ')}
 
@@ -429,6 +549,7 @@ Return ONLY valid JSON:
   "state": "2-letter code",
   "hasSignOnBonus": true or false,
   "signOnBonusAmount": 10000 or null (integer only),
+  "workArrangement": "remote" | "hybrid" | "onsite" | null,
   "confidence": 0.95
 }`;
 
@@ -811,6 +932,7 @@ async function main() {
         console.log(`      Experience: ${c.experienceLevel || 'not specified'}`);
         console.log(`      Location: ${c.city || 'unknown'}, ${c.state || 'unknown'}`);
         console.log(`      Sign-on Bonus: ${c.hasSignOnBonus ? (c.signOnBonusAmount ? `$${c.signOnBonusAmount.toLocaleString()}` : 'Yes (amount not specified)') : 'No'}`);
+        console.log(`      Work Arrangement: ${c.workArrangement || 'not specified'}`);
         console.log(`      Confidence: ${(c.confidence * 100).toFixed(0)}%`);
         console.log(`   💰 Cost: $${result.cost.toFixed(6)} | Tokens: ${result.tokensUsed}`);
         
@@ -827,21 +949,37 @@ async function main() {
           state: c.state,
           hasSignOnBonus: c.hasSignOnBonus || false,
           signOnBonusAmount: c.signOnBonusAmount || null,
+          workArrangement: c.workArrangement || null,
           confidence: c.confidence
         });
         
         // Update database if not in test mode
-        if (!isTestMode && c.isStaffRN && c.city && c.state) {
+        // For remote jobs: activate if we have a state (city not required - remote jobs don't have physical cities)
+        // For on-site jobs: require both city and state
+        const isRemoteJob = c.workArrangement === 'remote' || job.workArrangement === 'remote';
+        const hasValidLocation = isRemoteJob
+          ? (c.state || job.state)  // Remote: only need state for licensing
+          : (c.city && c.state);     // On-site: need both city and state
+
+        if (!isTestMode && c.isStaffRN && hasValidLocation) {
           // Staff RN with valid location → Activate job
+          // For remote jobs: ALWAYS use 'Remote' as city (LLM may extract cities from description text like coverage areas)
+          // For on-site jobs: prefer LLM-extracted city, fallback to scraper's city
+          const finalCity = isRemoteJob
+            ? 'Remote'
+            : (c.city || job.city);
+          const finalState = c.state || job.state;
+
           const updateData = {
-            city: c.city,           // Update with LLM-extracted location
-            state: c.state,         // Update with LLM-validated state
+            city: finalCity,         // Use LLM city or fallback to scraper's city for remote jobs
+            state: finalState,       // Update with LLM-validated state
             specialty: c.specialty || job.specialty || 'General Nursing', // Fallback: existing → General Nursing
-            jobType: c.jobType || job.jobType, // Keep existing if LLM didn't detect
+            jobType: normalizeJobType(c.jobType) || normalizeJobType(job.jobType) || job.jobType, // Normalize to canonical format (e.g., "Full Time" → "full-time")
             shiftType: c.shiftType || job.shiftType, // Keep existing if LLM didn't detect
             experienceLevel: c.experienceLevel || job.experienceLevel, // Keep existing if LLM didn't detect
             hasSignOnBonus: c.hasSignOnBonus || false,
             signOnBonusAmount: c.signOnBonusAmount || null,
+            workArrangement: c.workArrangement || null, // remote, hybrid, onsite
             isActive: true,       // ✅ Activate job - validated as Staff RN with location
             wasEverActive: true,  // ✅ One-way flag - enables reactivation if job is deactivated then found again
             classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
@@ -873,22 +1011,23 @@ async function main() {
             where: { id: job.id },
             data: updateData
           });
-          console.log(`   💾 Updated in database with location: ${c.city}, ${c.state}`);
+          console.log(`   💾 Updated in database with location: ${finalCity}, ${finalState}${isRemoteJob ? ' (remote)' : ''}`);
           console.log(`   ✅ Job activated and live on site`);
 
           // Notify Google Indexing API about the new job (for Google for Jobs widget)
           googleIndexingService.notifyJobCreatedOrUpdated({ slug: job.slug }).catch(err => {
             console.error(`   ⚠️ Google Indexing notification failed:`, err.message);
           });
-        } else if (!isTestMode && c.isStaffRN && (!c.city || !c.state)) {
-          // Staff RN but no valid location → Keep inactive but mark as classified
+        } else if (!isTestMode && c.isStaffRN && !hasValidLocation) {
+          // Staff RN but no valid location (on-site without city, or any job without state) → Keep inactive
           const updateData = {
             specialty: c.specialty || job.specialty || 'General Nursing', // Fallback: existing → General Nursing
-            jobType: c.jobType || job.jobType,
+            jobType: normalizeJobType(c.jobType) || normalizeJobType(job.jobType) || job.jobType, // Normalize to canonical format
             shiftType: c.shiftType || job.shiftType,
             experienceLevel: c.experienceLevel || job.experienceLevel,
             hasSignOnBonus: c.hasSignOnBonus || false,
             signOnBonusAmount: c.signOnBonusAmount || null,
+            workArrangement: c.workArrangement || null, // remote, hybrid, onsite
             isActive: false,      // ❌ Keep inactive - no valid location
             classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
           };
