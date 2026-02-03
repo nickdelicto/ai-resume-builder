@@ -31,6 +31,7 @@ const {
   validateJobData
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -579,6 +580,14 @@ async function scrapeJobs() {
           console.log(`   Salary: $${salaryMin}${salaryMax ? ' - $' + salaryMax : ''} (${salaryType || 'unknown'})`);
         }
 
+        // Detect work arrangement (remote/hybrid/onsite)
+        const workArrangement = detectWorkArrangement({
+          title: jobData.title,
+          description: description,
+          location: `${city}, ${state}`,
+          employmentType: jobType
+        });
+
         const job = {
           title: jobData.title,
           slug: generateJobSlug(jobData.title, city, state, jobLink.jobId),
@@ -591,6 +600,7 @@ async function scrapeJobs() {
           jobType: jobType,
           shiftType: shift,
           experienceLevel: detectExperienceLevel(jobData.title, description),
+          workArrangement: workArrangement,
           salaryMin: salaryMin,
           salaryMax: salaryMax,
           salaryType: salaryType,

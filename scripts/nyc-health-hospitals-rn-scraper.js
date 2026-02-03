@@ -35,6 +35,7 @@ const {
   validateJobData
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -1726,6 +1727,13 @@ class NYCHealthHospitalsRNScraper {
       salaryMaxHourly,
       salaryMinAnnual,
       salaryMaxAnnual,
+      // Detect work arrangement (remote/hybrid/onsite)
+      workArrangement: detectWorkArrangement({
+        title: title,
+        description: description,
+        location: location,
+        employmentType: employmentType || ''
+      }),
       sourceUrl: jobUrl, // Required field (validator expects sourceUrl, not jobUrl)
       jobUrl, // Keep for compatibility
       careerPageUrl: this.careerPageUrl,

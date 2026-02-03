@@ -19,6 +19,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const { generateJobSlug, normalizeJobType } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 const prisma = new PrismaClient();
 
@@ -356,6 +357,14 @@ function transformJob(job, detail = null) {
   const description = detail ? extractDescription(detail.requisitionDescriptions) : '';
   const salary = parseSalary(description);
 
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: job.Title || job.title,
+    description: description,
+    location: job.PrimaryLocation || job.primaryLocation || '',
+    employmentType: job.WorkplaceTypeCode || job.workplaceTypeCode || ''
+  });
+
   return {
     title: job.Title || job.title,
     externalId: String(job.Id || job.id),
@@ -368,6 +377,7 @@ function transformJob(job, detail = null) {
     shiftType: extractShift(job.Title || job.title, ''),
     specialty: extractSpecialty(job.Title || job.title),
     description: description,
+    workArrangement: workArrangement,
     postedDate: job.PostedDate ? new Date(job.PostedDate) : new Date(),
     // Salary fields
     ...(salary && {

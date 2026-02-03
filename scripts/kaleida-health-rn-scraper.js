@@ -31,6 +31,7 @@ const {
   validateJobData
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -484,6 +485,13 @@ async function scrapeJobs() {
           salaryMinAnnual: details?.salaryMin ? (details.salaryMax < 200 ? Math.round(details.salaryMin * 2080) : details.salaryMin) : null,
           salaryMaxAnnual: details?.salaryMax ? (details.salaryMax < 200 ? Math.round(details.salaryMax * 2080) : details.salaryMax) : null,
           signOnBonus: null,
+          // Detect work arrangement (remote/hybrid/onsite)
+          workArrangement: detectWorkArrangement({
+            title: rawJob.title,
+            description: description,
+            location: `${city}, ${state}`,
+            employmentType: rawJob.jobType || ''
+          }),
           sourceUrl: buildJobUrl(rawJob.resourceId),
           sourceJobId: rawJob.jobId,
           postedAt: rawJob.postedDate ? new Date(rawJob.postedDate) : new Date(),

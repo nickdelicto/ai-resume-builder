@@ -20,6 +20,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const { generateJobSlug, normalizeJobType } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 const prisma = new PrismaClient();
 
@@ -413,6 +414,14 @@ function transformJob(job) {
   // Source URL - use the canonical URL or build from slug
   const sourceUrl = data.meta_data?.canonical_url || `${CONFIG.jobPageBaseUrl}/${data.slug}?lang=en-us`;
 
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: data.title,
+    description: description,
+    location: city && state ? `${city}, ${state}` : '',
+    employmentType: data.tags4?.[0] || ''
+  });
+
   return {
     title: data.title,
     externalId: data.slug || data.req_id,
@@ -428,7 +437,7 @@ function transformJob(job) {
     postedDate: data.posted_date ? new Date(data.posted_date) : new Date(),
     department: data.tags2?.[0] || null,
     hours: data.tags3?.[0] || null,
-    remoteStatus: data.tags6?.[0] || null,
+    workArrangement: workArrangement,
     address: data.tags7?.[0] || null
   };
 }

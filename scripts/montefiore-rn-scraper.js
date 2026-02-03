@@ -20,6 +20,7 @@
 const https = require('https');
 const JobBoardService = require('../lib/services/JobBoardService');
 const { generateJobSlug } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -358,6 +359,14 @@ async function transformJob(apiJob, fetchDetails = true) {
   // Generate slug (title, city, state, jobId for uniqueness)
   const slug = generateJobSlug(cleanTitle, city, state, requisitionNumber);
 
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: cleanTitle,
+    description: description,
+    location: city && state ? `${city}, ${state}` : (city || state || ''),
+    employmentType: apiJob.level || ''
+  });
+
   return {
     title: cleanTitle,
     slug,
@@ -370,6 +379,7 @@ async function transformJob(apiJob, fetchDetails = true) {
     jobType: apiJob.level?.toLowerCase().includes('per diem') ? 'Per Diem' : 'Staff',
     shift,
     experienceLevel: null,
+    workArrangement: workArrangement,
     salaryMin: salary.salaryMin,
     salaryMax: salary.salaryMax,
     salaryType: salary.salaryType,

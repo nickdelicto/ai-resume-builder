@@ -18,6 +18,7 @@
 const https = require('https');
 const JobBoardService = require('../lib/services/JobBoardService');
 const { generateJobSlug } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -203,6 +204,17 @@ function transformJob(apiJob) {
   // Parse salary info
   const salary = parseSalary(job.salary);
 
+  // Clean description for work arrangement detection
+  const description = cleanDescription(job.description);
+
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: job.title,
+    description: description,
+    location: `${city}, ${state}`,
+    employmentType: job.employment_type || job.schedule || ''
+  });
+
   return {
     title: job.title,
     sourceJobId: String(job.id),
@@ -217,10 +229,11 @@ function transformJob(apiJob) {
     jobType: mapEmploymentType(job),
     shiftType: extractShift(job),
     schedule: job.schedule || null,
-    description: cleanDescription(job.description),
+    description: description,
     specialty: extractSpecialty(job),
     department: job.department || null,
     postedDate: parsePostedDate(job),
+    workArrangement: workArrangement,
     // Salary fields
     ...(salary && {
       salaryMin: salary.salaryMin,

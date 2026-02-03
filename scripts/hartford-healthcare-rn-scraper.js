@@ -15,6 +15,7 @@ const {
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
 const { formatHartfordDescription } = require('../lib/utils/jobDescriptionFormatter');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 /**
  * Hartford Healthcare RN Job Scraper
@@ -471,8 +472,14 @@ class HartfordHealthcareRNScraper {
       city: normalizedCity,
       state: normalizedState,
       zipCode: null, // Not provided
-      isRemote: false,
-      
+      // Detect work arrangement (remote/hybrid/onsite)
+      workArrangement: detectWorkArrangement({
+        title: job.title,
+        description: description,
+        location: `${city}, ${state}`,
+        employmentType: job.type || ''
+      }),
+
       // Classification (will be refined by LLM)
       specialty: this.mapSpecialty(job.subCategory),
       jobType: this.mapJobType(job.type),

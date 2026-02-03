@@ -14,6 +14,7 @@ const {
   validateJobData
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 /**
  * Cleveland Clinic RN Job Scraper - Production Version
@@ -760,7 +761,15 @@ class ClevelandClinicRNScraper {
     
     // Parse location
     const locationParts = this.parseLocation(job.location || jobDetails.location);
-    
+
+    // Detect work arrangement (remote, hybrid, onsite)
+    const workArrangement = detectWorkArrangement({
+      title: job.title || jobDetails.title,
+      description: fullDescription,
+      location: jobDetails.location || job.location || '',
+      employmentType: job.employmentType || jobDetails.employmentType || ''
+    });
+
     // Normalize and create job object
     const normalizedJob = {
       // Required fields
@@ -778,7 +787,7 @@ class ClevelandClinicRNScraper {
       
       // Optional fields
       zipCode: normalizeZipCode(locationParts.zipCode),
-      isRemote: jobDetails.isRemote || false,
+      workArrangement: workArrangement,
       jobType: normalizeJobType(job.employmentType || jobDetails.employmentType),
       shiftType: jobDetails.shiftType || null,
       specialty: detectSpecialty(job.title, jobDetails.description || job.rawText),

@@ -20,6 +20,7 @@ require('dotenv').config();
 const https = require('https');
 const JobBoardService = require('../lib/services/JobBoardService');
 const { generateJobSlug } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -396,6 +397,17 @@ function transformJob(listing, details) {
   // Build source URL
   const sourceUrl = `https://nyp.wd1.myworkdayjobs.com/en-US/nypcareers${listing.externalPath}`;
 
+  // Clean description for work arrangement detection
+  const description = cleanDescription(jobInfo.jobDescription);
+
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: title,
+    description: description,
+    location: `${location.city}, ${location.state}`,
+    employmentType: jobInfo.timeType || ''
+  });
+
   return {
     title: title,
     sourceJobId: jobId,
@@ -410,10 +422,11 @@ function transformJob(listing, details) {
     jobType: extractEmploymentType(jobInfo.timeType, title),
     shiftType: extractShift(title),
     schedule: null,
-    description: cleanDescription(jobInfo.jobDescription),
+    description: description,
     specialty: extractSpecialty(title),
     department: null,
     postedDate: jobInfo.postedOn ? parsePostedDate(jobInfo.postedOn) : new Date(),
+    workArrangement: workArrangement,
     ...salaryData
   };
 }

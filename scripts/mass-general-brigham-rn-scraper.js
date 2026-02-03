@@ -18,6 +18,7 @@
 const https = require('https');
 const JobBoardService = require('../lib/services/JobBoardService');
 const { generateJobSlug } = require('../lib/jobScraperUtils');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 // Configuration
 const CONFIG = {
@@ -486,6 +487,14 @@ function transformJob(listing, detail) {
   const sourceUrl = info.externalUrl ||
     `${API_BASE}/${CONFIG.site}/job/${listing.locationsText || 'location'}/${listing.externalPath?.split('/').pop()}`;
 
+  // Detect work arrangement (remote/hybrid/onsite)
+  const workArrangement = detectWorkArrangement({
+    title: info.title || listing.title,
+    description: info.jobDescription || '',
+    location: listing.locationsText || info.location || '',
+    employmentType: info.timeType || ''
+  });
+
   return {
     title: info.title || listing.title,
     sourceJobId: info.jobReqId || info.id,
@@ -502,7 +511,7 @@ function transformJob(listing, detail) {
     specialty: extractSpecialty(listing.title, info.jobDescription),
     department: hospitalName,
     postedDate: parsePostedDate(listing.postedOn),
-    remoteType: info.remoteType || null,
+    workArrangement: workArrangement,
     // Salary fields
     ...(salary && {
       salaryMin: salary.salaryMin,

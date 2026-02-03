@@ -24,6 +24,7 @@ const {
   validateJobData
 } = require('../lib/jobScraperUtils');
 const JobBoardService = require('../lib/services/JobBoardService');
+const { detectWorkArrangement } = require('../lib/utils/workArrangementUtils');
 
 class UpstateMedicalRNScraper {
   constructor(options = {}) {
@@ -332,6 +333,14 @@ class UpstateMedicalRNScraper {
 
       postedDate: jobData.datePosted ? new Date(jobData.datePosted).toISOString() : null,
       expiresDate: null,
+
+      // Detect work arrangement (remote/hybrid/onsite)
+      workArrangement: detectWorkArrangement({
+        title: title,
+        description: description,
+        location: `${city}, ${state}`,
+        employmentType: jobData.employmentType || ''
+      }),
 
       sourceUrl: jobUrl,
       sourceJobId: sourceJobId,
