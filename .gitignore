@@ -49,3 +49,6 @@ CLAUDE.md
 scripts/indexnow-submitted-urls.json
 public/sitemap.xml
 test-email-preview.html
+
+# Claude Code
+.claude/
