@@ -45,12 +45,12 @@ model User {
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   accounts           Account[]
+  feedback           FeedbackEntry[]
   resumeData         ResumeData[]
   sessions           Session[]
-  subscriptions      UserSubscription[]
-  feedback           FeedbackEntry[]
-  events             UserEvent[]
   discounts          SubscriptionDiscount[]
+  events             UserEvent[]
+  subscriptions      UserSubscription[]
 }
 
 model VerificationToken {
@@ -101,9 +101,9 @@ model UserSubscription {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   metadata              Json?
+  discounts             SubscriptionDiscount[]
   plan                  SubscriptionPlan       @relation(fields: [planId], references: [id])
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  discounts             SubscriptionDiscount[]
 }
 
 model KVStore {
@@ -114,224 +114,177 @@ model KVStore {
   updatedAt DateTime @updatedAt
 }
 
-// Add FeedbackEntry model for storing cancellation feedback
 model FeedbackEntry {
   id        String   @id @default(cuid())
   userId    String
-  type      String // e.g., 'cancellation', 'feature_request', etc.
-  content   Json // Flexible structure for different types of feedback
+  type      String
+  content   Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Add UserEvent model for analytics
 model UserEvent {
   id        String   @id @default(cuid())
   userId    String
-  type      String // e.g., 'retention_discount_applied', 'subscription_canceled', etc.
-  metadata  Json? // Additional data about the event
+  type      String
+  metadata  Json?
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Add SubscriptionDiscount model for tracking discounts
 model SubscriptionDiscount {
-  id              String    @id @default(cuid())
+  id              String           @id @default(cuid())
   subscriptionId  String
   userId          String
   discountPercent Float
   originalPrice   Float
   discountedPrice Float
   stripeCouponId  String?
-  appliedAt       DateTime  @default(now())
-  expiresAt       DateTime? // Null means forever
-  isActive        Boolean   @default(true)
-  reason          String? // e.g., 'retention', 'promotion', etc.
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  subscription UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appliedAt       DateTime         @default(now())
+  expiresAt       DateTime?
+  isActive        Boolean          @default(true)
+  reason          String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  subscription    UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ============================================================================
-// RN Job Board Models - For Programmatic SEO Job Board Feature
-// ============================================================================
-
-// Stores information about healthcare employers we scrape jobs from
 model HealthcareEmployer {
   id            String       @id @default(cuid())
-  name          String       @unique // Company name like "Cleveland Clinic"
-  slug          String       @unique // URL-friendly version like "cleveland-clinic" for /jobs/nursing/cleveland-clinic
-  careerPageUrl String // Where we scrape from
-  atsPlatform   String? // ATS platform used: "custom", "workday", "icims", etc.
-  isActive      Boolean      @default(true) // Whether we're still scraping from them
-  lastScraped   DateTime? // When we last scraped them
-  jobs          NursingJob[] // All job postings from this employer
-  jobAlerts     JobAlert[]   // Job alerts filtered by this employer
+  name          String       @unique
+  slug          String       @unique
+  careerPageUrl String
+  atsPlatform   String?
+  isActive      Boolean      @default(true)
+  lastScraped   DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  jobs          NursingJob[]
+  jobAlerts     JobAlert[]
 
   @@index([isActive, lastScraped])
 }
 
-// Stores individual RN job postings scraped from healthcare employers
 model NursingJob {
-  id String @id @default(cuid())
+  id                    String             @id @default(cuid())
+  title                 String
+  employerId            String
+  location              String
+  city                  String
+  state                 String
+  zipCode               String?
+  jobType               String?
+  specialty             String?
+  experienceLevel       String?
+  description           String
+  requirements          String?
+  responsibilities      String?
+  benefits              String?
+  department            String?
+  salaryMin             Int?
+  salaryMax             Int?
+  salaryCurrency        String?            @default("USD")
+  sourceUrl             String             @unique
+  sourceJobId           String?
+  isActive              Boolean            @default(true)
+  postedDate            DateTime?
+  expiresDate           DateTime?
+  slug                  String             @unique
+  metaDescription       String?
+  keywords              String[]
+  scrapedAt             DateTime           @default(now())
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  calculatedExpiresDate DateTime?
+  salaryMaxAnnual       Int?
+  salaryMaxHourly       Int?
+  salaryMinAnnual       Int?
+  salaryMinHourly       Int?
+  salaryType            String?
+  shiftType             String?
+  classifiedAt          DateTime?
+  googleIndexedAt       DateTime?
+  hasSignOnBonus        Boolean            @default(false)
+  signOnBonusAmount     Int?
+  wasEverActive         Boolean            @default(false)
+  rawDescription        String?
+  workArrangement       WorkArrangement?
+  employer              HealthcareEmployer @relation(fields: [employerId], references: [id], onDelete: Cascade)
 
-  // Basic Information
-  title      String // Job title like "ICU Registered Nurse"
-  employerId String // Which company this job is from
-  employer   HealthcareEmployer @relation(fields: [employerId], references: [id], onDelete: Cascade)
-
-  // Location Information (critical for SEO location-based pages)
-  location String // Full location string like "Mayfield Heights, OH 44124"
-  city     String // Normalized city name like "Mayfield Heights"
-  state    String // Normalized state abbreviation like "OH"
-  zipCode  String? // Optional zip code
-  isRemote Boolean @default(false) // True if remote position
-
-  // Job Classification (for specialty pages and filtering)
-  jobType         String? // Employment type: "full-time", "part-time", "prn", "contract"
-  shiftType       String? // Shift type: "days", "nights", "evenings", "variable", "rotating"
-  specialty       String? // RN specialty: "ICU", "ER", "Travel", "Med-Surg", "Home Health", etc.
-  experienceLevel String? // Experience required: "new-grad", "experienced", "senior"
-
-  // Job Details
-  description      String  @db.Text // Full job description (formatted by LLM)
-  rawDescription   String? @db.Text // Original description from scraper (for skip logic - checks markers like "Duties & Responsibilities:")
-  requirements     String? @db.Text // Qualifications and requirements
-  responsibilities String? @db.Text // Job responsibilities
-  benefits         String? @db.Text // Benefits information if available
-  department       String? // Department or facility name
-
-  // Compensation Information (if available)
-  salaryMin      Int? // Minimum salary if listed (raw value as scraped)
-  salaryMax      Int? // Maximum salary if listed (raw value as scraped)
-  salaryCurrency String? @default("USD") // Currency code
-  salaryType     String? // "hourly" or "annual" - how the salary is specified
-  // Normalized values for comparison/statistics (allows comparing hourly vs annual jobs)
-  salaryMinHourly Int? // Normalized hourly equivalent (annual/2080 if annual, same if hourly)
-  salaryMaxHourly Int? // Normalized hourly equivalent
-  salaryMinAnnual Int? // Normalized annual equivalent (hourly*2080 if hourly, same if annual)
-  salaryMaxAnnual Int? // Normalized annual equivalent
-
-  // Sign-on Bonus (LLM-extracted from job description)
-  hasSignOnBonus    Boolean @default(false) // Whether job mentions a sign-on bonus
-  signOnBonusAmount Int?    // Sign-on bonus amount in USD if specified (e.g., 10000 for $10,000)
-
-  // Source Tracking
-  sourceUrl   String  @unique // Original job posting URL where users can apply
-  sourceJobId String? // Job ID from employer's system (for deduplication)
-
-  // Status Tracking
-  isActive            Boolean   @default(true) // Whether job is still open
-  postedDate          DateTime? // When job was posted (if available)
-  expiresDate         DateTime? // When job expires (if available from source)
-  calculatedExpiresDate DateTime? // Calculated expiry (scrapedAt + 60 days) if no expiresDate provided
-  classifiedAt        DateTime? // When job was classified by LLM (null = needs classification)
-  wasEverActive       Boolean   @default(false) // True if job was ever approved/activated (one-way flag for reactivation logic)
-
-  // SEO Fields (for programmatic SEO pages)
-  slug            String   @unique // URL-friendly version like "icu-rn-mayfield-heights-12345"
-  metaDescription String? // Short description for SEO meta tags
-  keywords        String[] // Array of keywords for AI SEO like ["icu", "registered nurse", "ohio"]
-
-  // Timestamps
-  scrapedAt       DateTime  @default(now()) // When we scraped this job
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  googleIndexedAt DateTime? // When job was submitted to Google Indexing API
-
-  // Indexes for fast queries
-  @@index([state, city]) // For location-based pages like /jobs/nursing/ohio/chicago
-  @@index([specialty]) // For specialty pages like /jobs/nursing/icu
-  @@index([employerId, isActive]) // For employer pages like /jobs/nursing/cleveland-clinic
-  @@index([isActive, scrapedAt]) // For filtering active jobs by freshness
-  @@index([slug]) // For job detail page lookups
-  @@index([jobType, specialty]) // For filtering by type and specialty
+  @@index([state, city])
+  @@index([specialty])
+  @@index([employerId, isActive])
+  @@index([isActive, scrapedAt])
+  @@index([slug])
+  @@index([jobType, specialty])
 }
 
-// Reference table for normalized location data (prevents duplicates and ensures consistency)
 model Location {
   id        String  @id @default(cuid())
-  city      String // City name
-  state     String // State abbreviation like "OH"
-  stateFull String // Full state name like "Ohio"
-  region    String? // Optional region like "Midwest", "Northeast", etc.
+  city      String
+  state     String
+  stateFull String
+  region    String?
 
   @@unique([city, state])
   @@index([state])
 }
 
-// Track deleted job slugs to return 410 Gone instead of 404 Not Found
-// This improves SEO by telling search engines the page is permanently removed
 model DeletedJob {
   id        String   @id @default(cuid())
-  slug      String   @unique // The job slug that was deleted
-  deletedAt DateTime @default(now()) // When it was deleted
-  reason    String?  // Optional: why it was deleted (e.g., "testing cleanup", "duplicate", etc.)
+  slug      String   @unique
+  deletedAt DateTime @default(now())
+  reason    String?
 
-  @@index([slug]) // Fast lookup when checking if a slug was deleted
+  @@index([slug])
 }
 
-// Job alert subscriptions for email notifications
-// Users can sign up from salary calculator or job pages to receive matching job alerts
 model JobAlert {
-  id               String   @id @default(cuid())
-  email            String   // User's email address
-  name             String?  // Optional: User's name for personalization
-  
-  // Alert criteria (what jobs to match)
-  specialty        String   // e.g., "ICU", "ER", "Med-Surg"
-  location         String   // Human-readable: "Cleveland, OH" or "Ohio" or "Nationwide"
-  state            String?  // State code: "OH", "CA", etc.
-  city             String?  // City name if location is city-specific
-  employerId       String?  // Optional: Filter by specific employer
+  id               String              @id @default(cuid())
+  email            String
+  name             String?
+  specialty        String
+  location         String
+  state            String?
+  city             String?
+  employerId       String?
+  source           String
+  active           Boolean             @default(true)
+  unsubscribeToken String              @unique @default(cuid())
+  createdAt        DateTime            @default(now())
+  lastEmailSent    DateTime?
   employer         HealthcareEmployer? @relation(fields: [employerId], references: [id])
-  
-  // Metadata
-  source           String   // Where they signed up: "salary-calculator", "job-page", etc.
-  active           Boolean  @default(true) // Can be toggled off without deleting
-  unsubscribeToken String   @unique @default(cuid()) // Magic token for preference management
-  
-  // Timestamps
-  createdAt        DateTime @default(now())
-  lastEmailSent    DateTime? // Track when we last sent them jobs
-  
-  @@index([email, active]) // Fast lookup for active alerts by email
-  @@index([specialty, state]) // Fast lookup for matching jobs
-  @@index([unsubscribeToken]) // Fast token validation
-  @@map("jobalert") // Explicitly map to lowercase table name (PostgreSQL default)
+
+  @@index([email, active])
+  @@index([specialty, state])
+  @@index([unsubscribeToken])
+  @@map("jobalert")
 }
 
-// Analytics events for internal job board tracking
-// Tracks: page_view, apply_click, employer_redirect, modal_subscribe, resume_click
 model AnalyticsEvent {
   id        Int      @id @default(autoincrement())
-  sessionId String   // Links events from same visitor (localStorage-based)
-  eventType String   // "page_view", "apply_click", "modal_subscribe", "resume_click"
-  email     String?  // Filled when user subscribes, then backfills previous events
-
-  // Job context (optional - not all events have a specific job)
-  jobId     String?  // Internal job ID
-  jobSlug   String?  // Job URL slug
-  sourceUrl String   // Full URL where event occurred
-
-  // Job metadata for analytics breakdowns
-  employer  String?  // Employer name
-  specialty String?  // Job specialty
-  state     String?  // State code
-  city      String?  // City name
-
+  sessionId String
+  eventType String
+  email     String?
+  jobId     String?
+  jobSlug   String?
+  sourceUrl String
+  employer  String?
+  specialty String?
+  state     String?
+  city      String?
   createdAt DateTime @default(now())
 
-  @@index([eventType, createdAt]) // For filtering by type and time range
-  @@index([sessionId])           // For linking events from same visitor
-  @@index([email])               // For finding all events from a known user
-  @@index([createdAt])           // For time-based queries
+  @@index([eventType, createdAt])
+  @@index([sessionId])
+  @@index([email])
+  @@index([createdAt])
+}
+
+enum WorkArrangement {
+  remote
+  hybrid
+  onsite
 }
