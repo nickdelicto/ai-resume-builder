@@ -12,7 +12,7 @@ import { trackPageView, trackApplyClick, trackModalSubscribe, trackEmployerRedir
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
-const { detectStateFromSlug, fetchStateJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
+const { detectStateFromSlug, isRemoteSlug, fetchStateJobs, fetchRemoteJobs, fetchJobBySlug } = require('../../../lib/services/jobPageData');
 const { specialtyToSlug, normalizeSpecialty } = require('../../../lib/constants/specialties');
 const { jobTypeToSlug } = require('../../../lib/constants/jobTypes');
 const { shiftTypeToSlug } = require('../../../lib/constants/shiftTypes');
@@ -28,6 +28,21 @@ export async function getServerSideProps({ params, query, res }) {
   const page = query.page || '1';
 
   try {
+    // Check if slug is "remote" (pseudo-location for remote jobs)
+    if (isRemoteSlug(slug)) {
+      const { jobs, pagination, statistics, maxHourlyRate } = await fetchRemoteJobs(page);
+
+      return {
+        props: {
+          isRemotePage: true,
+          jobs,
+          pagination,
+          maxHourlyRate,
+          stats: statistics
+        }
+      };
+    }
+
     // Check if slug is a state (state page) or job (job detail page)
     const stateInfo = detectStateFromSlug(slug);
 
@@ -103,6 +118,7 @@ export async function getServerSideProps({ params, query, res }) {
 
 export default function JobDetailPage({
   isStatePage = false,
+  isRemotePage = false,
   stateCode = null,
   stateFullName = null,
   jobs = [],
@@ -528,6 +544,408 @@ export default function JobDetailPage({
     );
   }
 
+  // If this is a remote jobs page, render remote page UI
+  if (isRemotePage) {
+    // Generate SEO meta tags
+    const seoMeta = seoUtils.generateRemotePageMetaTags(
+      {
+        total: pagination?.total || 0,
+        specialties: stats?.specialties || []
+      },
+      maxHourlyRate
+    );
+
+    return (
+      <>
+        <Head>
+          {/* Primary Meta Tags */}
+          <title>{seoMeta.title}</title>
+          <meta name="description" content={seoMeta.description} />
+          <meta name="keywords" content={seoMeta.keywords} />
+
+          {/* Canonical URL */}
+          <link rel="canonical" href={seoMeta.canonicalUrl} key="canonical" />
+
+          {/* Robots - INDEX THIS PAGE */}
+          <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+          {/* Open Graph / Facebook */}
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content={seoMeta.canonicalUrl} />
+          <meta property="og:title" content={seoMeta.title} />
+          <meta property="og:description" content={seoMeta.description} />
+          <meta property="og:image" content={seoMeta.ogImage} />
+          <meta property="og:site_name" content="IntelliResume Health" />
+
+          {/* Twitter */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:url" content={seoMeta.canonicalUrl} />
+          <meta name="twitter:title" content={seoMeta.title} />
+          <meta name="twitter:description" content={seoMeta.description} />
+          <meta name="twitter:image" content={seoMeta.ogImage} />
+
+          {/* CollectionPage Schema - CRITICAL for SEO */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "CollectionPage",
+                "name": seoMeta.title,
+                "description": seoMeta.description,
+                "url": seoMeta.canonicalUrl,
+                "numberOfItems": pagination?.total || 0,
+                "mainEntity": {
+                  "@type": "ItemList",
+                  "numberOfItems": pagination?.total || 0,
+                  "itemListElement": jobs.slice(0, 10).map((jobItem, index) => {
+                    const jobPostingSchema = seoUtils.generateJobPostingSchema(jobItem);
+                    if (!jobPostingSchema) return null;
+                    return {
+                      "@type": "ListItem",
+                      "position": index + 1,
+                      "item": jobPostingSchema
+                    };
+                  }).filter(Boolean)
+                }
+              })
+            }}
+          />
+
+          {/* BreadcrumbList Schema for better navigation */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                  {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://intelliresume.net"
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "RN Jobs",
+                    "item": "https://intelliresume.net/jobs/nursing"
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": "Remote",
+                    "item": seoMeta.canonicalUrl
+                  }
+                ]
+              })
+            }}
+          />
+        </Head>
+
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 py-8" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/jobs/nursing" className="hover:text-blue-600 transition-colors">All Jobs</Link>
+              <span>/</span>
+              <span className="text-gray-900 font-medium">Remote</span>
+            </nav>
+
+            {/* Header Section */}
+            <div className="mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Remote RN Jobs
+              </h1>
+              <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-4">
+                {pagination?.total > 0 ? (
+                  <>
+                    Browse <strong>{pagination.total}</strong> remote and work-from-home Registered Nurse position{pagination.total === 1 ? '' : 's'}
+                    {stats?.states && stats.states.length > 0 ? (
+                      <> across <strong>{stats.states.length}</strong> state{stats.states.length === 1 ? '' : 's'}</>
+                    ) : null}
+                    . Find {stats?.specialties && stats.specialties.length > 0 ? (
+                      <>specialties like {stats.specialties.slice(0, 3).map(s => s.specialty).join(', ')}{stats.specialties.length > 3 ? ' and more' : ''}</>
+                    ) : (
+                      <>telehealth, case management, utilization review, and other remote nursing roles</>
+                    )} at top healthcare employers. Apply today!
+                  </>
+                ) : (
+                  <>Find remote and work-from-home Registered Nurse positions. Browse telehealth, case management, utilization review, and other remote nursing roles at top healthcare employers. Apply today!</>
+                )}
+              </p>
+              {pagination && pagination.total > 0 && (
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clipRule="evenodd" />
+                  </svg>
+                  <span>{pagination.total} remote {pagination.total === 1 ? 'job' : 'jobs'} available</span>
+                </div>
+              )}
+            </div>
+
+            {/* Stats Cards */}
+            {stats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    {stats.states && stats.states.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Top States</h3>
+                        </div>
+                        <div className="space-y-3">
+                          {stats.states.slice(0, 5).map((state, idx) => (
+                            <Link
+                              key={idx}
+                              href={`/jobs/nursing/${state.state?.toLowerCase()}`}
+                              className="flex justify-between items-center group hover:text-blue-600 transition-colors py-1"
+                            >
+                              <span className="text-gray-900 group-hover:text-blue-600 font-medium">{getStateFullName(state.state) || state.state}</span>
+                              <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded-full text-xs">{state.count}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {stats.specialties && stats.specialties.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 bg-purple-50 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Specialties</h3>
+                        </div>
+                        <div className="space-y-3">
+                          {stats.specialties.slice(0, 5).map((spec, idx) => {
+                            const specialtySlug = specialtyToSlug(normalizeSpecialty(spec.specialty));
+                            // Use /remote/ prefix when on remote page, otherwise /specialty/
+                            const specialtyHref = isRemotePage
+                              ? `/jobs/nursing/remote/${specialtySlug}`
+                              : `/jobs/nursing/specialty/${specialtySlug}`;
+                            return specialtySlug ? (
+                              <Link
+                                key={idx}
+                                href={specialtyHref}
+                                className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
+                              >
+                                <span className="text-gray-900 group-hover:text-purple-600 font-medium">{spec.specialty}</span>
+                                <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
+                              </Link>
+                            ) : (
+                              <div
+                                key={idx}
+                                className="flex justify-between items-center py-1"
+                              >
+                                <span className="text-gray-900 font-medium">{spec.specialty}</span>
+                                <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{spec.count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {stats.employers && stats.employers.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 bg-green-50 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1.707.707L10 12.414l-4.293 4.293A1 1 0 014 16V4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Top Employers</h3>
+                        </div>
+                        <div className="space-y-3">
+                          {stats.employers.slice(0, 5).map((emp, idx) => {
+                            const employerSlug = emp.employer?.slug;
+                            // Use /remote suffix when on remote page
+                            const employerHref = isRemotePage
+                              ? `/jobs/nursing/employer/${employerSlug}/remote`
+                              : `/jobs/nursing/employer/${employerSlug}`;
+                            return employerSlug ? (
+                              <Link
+                                key={idx}
+                                href={employerHref}
+                                className="flex justify-between items-center group hover:text-green-600 transition-colors py-1"
+                              >
+                                <span className="text-gray-900 group-hover:text-green-600 font-medium">{emp.employer?.name || 'Unknown'}</span>
+                                <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
+                              </Link>
+                            ) : (
+                              <div
+                                key={idx}
+                                className="flex justify-between items-center py-1"
+                              >
+                                <span className="text-gray-900 font-medium">{emp.employer?.name || 'Unknown'}</span>
+                                <span className="text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full text-xs">{emp.count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+              )}
+
+            {/* Job Listings */}
+            {jobs.length === 0 ? (
+                  <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No remote jobs found</h3>
+                    <p className="text-gray-600 mb-6">Check back soon for new remote and work-from-home nursing positions.</p>
+                    <Link href="/jobs/nursing" className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Browse All Jobs
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 mb-8">
+                  {jobs.map((jobItem, index) => (
+                    <React.Fragment key={jobItem.id}>
+                    <Link
+                      href={`/jobs/nursing/${jobItem.slug}`}
+                      className="group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-blue-200 overflow-hidden"
+                    >
+                      <div className="p-4 sm:p-6 flex gap-4">
+                        {/* Employer logo on left */}
+                        {jobItem.employer && getEmployerLogoPath(jobItem.employer.slug) && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-28 sm:h-28 flex items-center justify-center bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+                            <img
+                              src={getEmployerLogoPath(jobItem.employer.slug)}
+                              alt={`${jobItem.employer.name} logo`}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* Job content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1.5 line-clamp-2">
+                            {jobItem.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-gray-600 text-sm mb-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clipRule="evenodd" />
+                              </svg>
+                              {jobItem.workArrangement === 'hybrid' ? 'Hybrid' : 'Remote'}
+                              {jobItem.state && <span className="text-gray-400">({jobItem.state})</span>}
+                            </span>
+                            {jobItem.employer && (
+                              <span className="text-gray-500">• {jobItem.employer.name}</span>
+                            )}
+                            {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType) && (
+                              <span className="text-green-700 font-medium">
+                                • {formatPayForCard(jobItem.salaryMin, jobItem.salaryMax, jobItem.salaryType, jobItem.jobType)}
+                              </span>
+                            )}
+                          </div>
+                          {/* Tags: Specialty, Job Type, Experience Level */}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {/* Remote/Hybrid badge */}
+                            <span className="inline-flex items-center px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              {jobItem.workArrangement === 'hybrid' ? 'Hybrid' : 'Remote'}
+                            </span>
+                            {jobItem.specialty && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                {(() => {
+                                  if (jobItem.specialty.toLowerCase() === 'all specialties') {
+                                    return 'General Nursing';
+                                  }
+                                  const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
+                                  return jobItem.specialty.split(' ').map(word => {
+                                    const upperWord = word.toUpperCase();
+                                    return nursingAcronyms.includes(upperWord) ? upperWord : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                  }).join(' ');
+                                })()}
+                              </span>
+                            )}
+                            {jobItem.jobType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                                {jobItem.jobType.toLowerCase() === 'prn' || jobItem.jobType.toLowerCase() === 'per diem' ? 'PRN' : jobItem.jobType.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                              </span>
+                            )}
+                            {jobItem.shiftType && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium capitalize">
+                                {jobItem.shiftType}
+                              </span>
+                            )}
+                            {jobItem.experienceLevel && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                                {jobItem.experienceLevel}
+                              </span>
+                            )}
+                            {jobItem.hasSignOnBonus && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                                <span>💰</span>
+                                Sign-On Bonus
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+
+                      {/* Job Alert Signup after every 5 listings */}
+                      {(index + 1) % 5 === 0 && index < jobs.length - 1 && (
+                        <div className="my-6">
+                          <JobAlertSignup
+                            location="Remote"
+                            compact={true}
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                    </div>
+
+                    {pagination && pagination.totalPages > 1 && (
+                      <div className="flex justify-center items-center space-x-4 mt-8">
+                        <button
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={!pagination.hasPrev}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-gray-700">
+                          Page {pagination.page} of {pagination.totalPages}
+                        </span>
+                        <button
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={!pagination.hasNext}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+            {/* Job Alert Signup - Before Footer */}
+            <div className="mt-16" data-job-alert-form>
+              <JobAlertSignup
+                location="Remote"
+              />
+            </div>
+
+            {/* Sticky Bottom CTA Banner */}
+            <StickyJobAlertCTA
+              specialty=""
+              location="Remote"
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
+
   // If this is a state page, render state page UI
   if (isStatePage && stateCode) {
     const stateDisplayName = stateFullName || getStateFullName(stateCode) || stateCode;
@@ -749,10 +1167,14 @@ export default function JobDetailPage({
                         <div className="space-y-3">
                           {stats.employers.slice(0, 5).map((emp, idx) => {
                             const employerSlug = emp.employer?.slug;
+                            // Use /remote suffix when on remote page
+                            const employerHref = isRemotePage
+                              ? `/jobs/nursing/employer/${employerSlug}/remote`
+                              : `/jobs/nursing/employer/${employerSlug}`;
                             return employerSlug ? (
                               <Link
                                 key={idx}
-                                href={`/jobs/nursing/employer/${employerSlug}`}
+                                href={employerHref}
                                 className="flex justify-between items-center group hover:text-green-600 transition-colors py-1"
                               >
                                 <span className="text-gray-900 group-hover:text-green-600 font-medium">{emp.employer?.name || 'Unknown'}</span>
@@ -810,10 +1232,28 @@ export default function JobDetailPage({
                           </h3>
                           <div className="flex items-center gap-2 text-gray-600 text-sm mb-2 flex-wrap">
                             <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                              </svg>
-                              {jobItem.city}, {jobItem.state}
+                              {jobItem.workArrangement === 'remote' ? (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                  </svg>
+                                  Remote{jobItem.state && <span className="text-gray-400"> ({jobItem.state})</span>}
+                                </>
+                              ) : jobItem.workArrangement === 'hybrid' ? (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                  </svg>
+                                  Hybrid - {jobItem.city}, {jobItem.state}
+                                </>
+                              ) : (
+                                <>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                  </svg>
+                                  {jobItem.city}, {jobItem.state}
+                                </>
+                              )}
                             </span>
                             {jobItem.employer && (
                               <span className="text-gray-500">• {jobItem.employer.name}</span>
@@ -824,8 +1264,15 @@ export default function JobDetailPage({
                               </span>
                             )}
                           </div>
-                          {/* Tags: Specialty, Job Type, Experience Level */}
+                          {/* Tags: Specialty, Job Type, Experience Level, Remote */}
                           <div className="flex flex-wrap items-center gap-1.5">
+                            {(jobItem.workArrangement === 'remote' || jobItem.workArrangement === 'hybrid') && (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                jobItem.workArrangement === 'remote' ? 'bg-green-100 text-green-800' : 'bg-teal-100 text-teal-800'
+                              }`}>
+                                {jobItem.workArrangement === 'hybrid' ? 'Hybrid' : 'Remote'}
+                              </span>
+                            )}
                             {jobItem.specialty && (
                               <span className="inline-flex items-center px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                                 {(() => {
@@ -1096,8 +1543,8 @@ export default function JobDetailPage({
         {/* Floating Share Buttons - Left side */}
         <ShareButtons
           url={`https://intelliresume.net/jobs/nursing/${job.slug}`}
-          title={`${job.title} at ${job.employer?.name || 'Healthcare Employer'} - ${job.city}, ${job.state}`}
-          description={`Check out this RN position: ${job.title} in ${job.city}, ${job.state}`}
+          title={`${job.title} at ${job.employer?.name || 'Healthcare Employer'} - ${job.workArrangement === 'remote' ? `Remote${job.state ? ` (${job.state})` : ''}` : `${job.city}, ${job.state}`}`}
+          description={`Check out this RN position: ${job.title} ${job.workArrangement === 'remote' ? `(Remote${job.state ? ` - ${job.state}` : ''})` : `in ${job.city}, ${job.state}`}`}
         />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1218,7 +1665,27 @@ export default function JobDetailPage({
                 </Link>
               )}
 
-              {job.city && job.state ? (
+              {job.workArrangement === 'remote' ? (
+                <Link
+                  href={`/jobs/nursing/remote`}
+                  className="flex items-center gap-3 group hover:bg-green-50 rounded-lg p-1 -m-1 transition-colors"
+                >
+                  <div className="p-2 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
+                    <div className="font-semibold text-green-700 group-hover:text-green-800 group-hover:underline transition-colors flex items-center gap-1">
+                      Remote{job.state && ` (${job.state})`}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ) : job.city && job.state ? (
                 <Link
                   href={`/jobs/nursing/${job.state.toLowerCase()}/${job.city.toLowerCase().replace(/\s+/g, '-')}`}
                   className="flex items-center gap-3 group hover:bg-blue-50 rounded-lg p-1 -m-1 transition-colors"
@@ -1231,7 +1698,7 @@ export default function JobDetailPage({
                   <div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
                     <div className="font-semibold text-blue-700 group-hover:text-blue-800 group-hover:underline transition-colors flex items-center gap-1">
-                      {job.city}, {job.state}
+                      {job.workArrangement === 'hybrid' ? `Hybrid - ${job.city}, ${job.state}` : `${job.city}, ${job.state}`}
                       {job.zipCode && ` ${job.zipCode}`}
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 opacity-60 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -1413,7 +1880,7 @@ export default function JobDetailPage({
                       event_label: 'Customize Resume to Job',
                       job_title: job.title,
                       employer: job.employer?.name,
-                      location: `${job.city}, ${job.state}`
+                      location: job.workArrangement === 'remote' ? `Remote (${job.state || 'USA'})` : `${job.city}, ${job.state}`
                     });
                   }
                 }}
@@ -1538,11 +2005,11 @@ export default function JobDetailPage({
 
           {/* Job Alert Signup - After Related Jobs */}
           <div className="mt-8" data-job-alert-form>
-            <JobAlertSignup 
+            <JobAlertSignup
               specialty={job.specialty}
-              location={`${job.city}, ${job.state}`}
+              location={job.workArrangement === 'remote' ? `Remote${job.state ? ` (${job.state})` : ''}` : `${job.city}, ${job.state}`}
               state={job.state}
-              city={job.city}
+              city={job.workArrangement === 'remote' ? null : job.city}
             />
           </div>
 
@@ -1587,7 +2054,11 @@ export default function JobDetailPage({
               <p className="text-gray-600">
                 Want to get notified about similar{' '}
                 <span className="font-semibold text-blue-600">{job.specialty || 'RN'}</span> jobs
-                {job.state && <> in <span className="font-semibold text-blue-600">{job.city ? `${job.city}, ${job.state}` : job.state}</span></>}?
+                {job.workArrangement === 'remote' ? (
+                  <> that are <span className="font-semibold text-green-600">Remote</span>{job.state && <> in <span className="font-semibold text-blue-600">{job.state}</span></>}</>
+                ) : job.state && (
+                  <> in <span className="font-semibold text-blue-600">{job.city ? `${job.city}, ${job.state}` : job.state}</span></>
+                )}?
               </p>
             </div>
 
