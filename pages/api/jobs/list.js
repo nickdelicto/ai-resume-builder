@@ -68,6 +68,8 @@ export default async function handler(req, res) {
       experienceLevel,
       shiftType,
       signOnBonus,
+      remote,
+      hybrid,
       search,
       isActive = true
     } = req.query;
@@ -194,6 +196,17 @@ export default async function handler(req, res) {
     // Filter by sign-on bonus
     if (signOnBonus === 'true') {
       where.hasSignOnBonus = true;
+    }
+
+    // Filter by work arrangement (remote/hybrid)
+    // If both are selected, show jobs that are either remote OR hybrid
+    // If only one is selected, filter to just that type
+    if (remote === 'true' && hybrid === 'true') {
+      where.workArrangement = { in: ['remote', 'hybrid'] };
+    } else if (remote === 'true') {
+      where.workArrangement = 'remote';
+    } else if (hybrid === 'true') {
+      where.workArrangement = 'hybrid';
     }
 
     // Search in title and description
