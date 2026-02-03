@@ -37,7 +37,7 @@ const BrowseJobsFooter = () => {
           <span className="hiring-badge">(Hiring!)</span>
         </h2>
 
-        {/* Featured Link */}
+        {/* Featured Links */}
         <div className="featured-section">
           <Link
             href="/jobs/nursing/sign-on-bonus"
@@ -47,30 +47,53 @@ const BrowseJobsFooter = () => {
               alignItems: 'center',
               gap: '10px',
               padding: '12px 24px',
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: 'white',
               borderRadius: '12px',
               fontFamily: "var(--font-figtree), 'Inter', sans-serif",
               fontSize: '15px',
               fontWeight: '600',
               textDecoration: 'none',
-              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
               transition: 'all 0.25s ease',
             }}
           >
+            <span style={{ fontSize: '20px' }}>💰</span>
+            <span>Sign-On Bonus RN Jobs</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              style={{ width: '20px', height: '20px', flexShrink: 0 }}
+              style={{ width: '18px', height: '18px', flexShrink: 0 }}
               viewBox="0 0 20 20"
               fill="currentColor"
             >
               <path
                 fillRule="evenodd"
-                d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
                 clipRule="evenodd"
               />
             </svg>
-            <span>RN Jobs with Sign-On Bonus</span>
+          </Link>
+          <Link
+            href="/jobs/nursing/remote"
+            className="featured-link"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 24px',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              color: 'white',
+              borderRadius: '12px',
+              fontFamily: "var(--font-figtree), 'Inter', sans-serif",
+              fontSize: '15px',
+              fontWeight: '600',
+              textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)',
+              transition: 'all 0.25s ease',
+            }}
+          >
+            <span style={{ fontSize: '20px' }}>🏠</span>
+            <span>Remote RN Jobs</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               style={{ width: '18px', height: '18px', flexShrink: 0 }}
@@ -325,7 +348,9 @@ const BrowseJobsFooter = () => {
         /* Featured Section */
         .featured-section {
           display: flex;
+          flex-wrap: wrap;
           justify-content: center;
+          gap: 12px;
           margin-bottom: 32px;
           padding-bottom: 24px;
           border-bottom: 1px solid #e2e8f0;

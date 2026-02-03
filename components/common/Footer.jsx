@@ -56,6 +56,9 @@ const Footer = () => {
               <li>
                 <Link href="/jobs/nursing/sign-on-bonus">Sign-On Bonus RN Jobs</Link>
               </li>
+              <li>
+                <Link href="/jobs/nursing/remote">Remote RN Jobs</Link>
+              </li>
             </ul>
           </div>
 

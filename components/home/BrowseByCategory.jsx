@@ -144,6 +144,10 @@ const BrowseByCategory = ({ initialStats }) => {
             <span className="pill-emoji">🎓</span>
             <span className="pill-text">New Grad RN Jobs</span>
           </Link>
+          <Link href="/jobs/nursing/remote" className="pill teal-pill">
+            <span className="pill-emoji">🏠</span>
+            <span className="pill-text">Remote RN Jobs</span>
+          </Link>
         </div>
 
         {/* By Specialty */}
@@ -472,6 +476,20 @@ const BrowseByCategory = ({ initialStats }) => {
 
         .browse-section .pill.blue-pill:hover {
           background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .browse-section .pill.teal-pill {
+          background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+          border-color: transparent;
+          color: white;
+        }
+
+        .browse-section .pill.teal-pill .pill-text {
+          color: white;
+        }
+
+        .browse-section .pill.teal-pill:hover {
+          background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
         }
 
         /* Responsive for Link styles */
