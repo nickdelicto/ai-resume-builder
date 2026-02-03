@@ -15,6 +15,7 @@
 #   ./scrape-and-classify.sh adventist-healthcare
 #   ./scrape-and-classify.sh hartford-healthcare
 #   ./scrape-and-classify.sh yale-new-haven-health
+#   ./scrape-and-classify.sh centene
 #
 # Features:
 # - Runs scraper first, then classifier (only if scraper succeeds)
@@ -297,6 +298,16 @@ case $EMPLOYER_SLUG in
     SCRAPER_EXIT_CODE=$?
     ;;
 
+  centene)
+    # Centene uses Workday API scraper (remote/hybrid nursing jobs)
+    if [ -n "$MAX_PAGES" ]; then
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/centene-rn-scraper.js" --max-pages="$MAX_PAGES" > "$SCRAPER_LOG" 2>&1
+    else
+      /usr/bin/nice -n 10 node "$PROJECT_ROOT/scripts/centene-rn-scraper.js" > "$SCRAPER_LOG" 2>&1
+    fi
+    SCRAPER_EXIT_CODE=$?
+    ;;
+
   *)
     log_message "❌ ERROR: Unknown employer slug: $EMPLOYER_SLUG"
     log_message ""
@@ -318,12 +329,13 @@ case $EMPLOYER_SLUG in
     log_message "  - montefiore-einstein"
     log_message "  - kaleida-health"
     log_message "  - hackensack-meridian-health"
+    log_message "  - centene"
 
     # Send failure email
     send_email "❌ Scraper Failed: Unknown Employer" \
 "Scraper execution failed for unknown employer: $EMPLOYER_SLUG
 
-Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals, montefiore-einstein, kaleida-health, hackensack-meridian-health
+Available employers: cleveland-clinic, uhs, adventist-healthcare, northwell-health, hartford-healthcare, upstate-medical-university, strong-memorial-hospital, mass-general-brigham, guthrie, yale-new-haven-health, nyu-langone-health, mount-sinai, newyork-presbyterian, nyc-health-hospitals, montefiore-einstein, kaleida-health, hackensack-meridian-health, centene
 
 Time: $DATE_READABLE
 Hostname: $(hostname)"

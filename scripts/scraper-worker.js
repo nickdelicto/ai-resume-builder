@@ -26,6 +26,7 @@ const SCRAPER_MAP = {
   'montefiore-einstein': 'scrape-and-classify.sh montefiore-einstein',
   'kaleida-health': 'scrape-and-classify.sh kaleida-health',
   'hackensack-meridian-health': 'scrape-and-classify.sh hackensack-meridian-health',
+  'centene': 'scrape-and-classify.sh centene',
 };
 
 const scriptsDir = path.join(__dirname);
