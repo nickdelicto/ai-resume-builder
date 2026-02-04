@@ -550,6 +550,19 @@ ${employerInstructions}
    NOTE: If job is clearly at a hospital/facility for bedside care, assume "onsite" even if not explicitly stated.
    If job is case management, utilization review, or telehealth with no facility mentioned, check for remote indicators.
 
+9. Education Level: What minimum education is required?
+   - "associate_degree" = ADN, Associate's degree in Nursing, 2-year nursing program (DEFAULT for RN jobs)
+   - "bachelor_degree" = BSN required, Bachelor's degree in Nursing, 4-year degree explicitly required
+   - "professional_certificate" = Certification-based (rare)
+   - "postgraduate_degree" = MSN required, Master's degree, DNP, doctoral degree
+
+   Key indicators:
+   - "BSN required", "Bachelor's required" → bachelor_degree
+   - "BSN preferred" but ADN accepted → associate_degree
+   - "ADN accepted", "Associate's degree" → associate_degree
+   - "MSN required", "Master's degree required" → postgraduate_degree
+   - If not specified, default to "associate_degree" (minimum for RN licensure)
+
 **Specialty Options (REQUIRED - always pick one):** ${SPECIALTIES.join(', ')}
 
 Return ONLY valid JSON:
@@ -564,6 +577,7 @@ Return ONLY valid JSON:
   "hasSignOnBonus": true or false,
   "signOnBonusAmount": 10000 or null (integer only),
   "workArrangement": "remote" | "hybrid" | "onsite" | null,
+  "educationLevel": "associate_degree" | "bachelor_degree" | "professional_certificate" | "postgraduate_degree",
   "confidence": 0.95
 }`;
 
@@ -947,6 +961,7 @@ async function main() {
         console.log(`      Location: ${c.city || 'unknown'}, ${c.state || 'unknown'}`);
         console.log(`      Sign-on Bonus: ${c.hasSignOnBonus ? (c.signOnBonusAmount ? `$${c.signOnBonusAmount.toLocaleString()}` : 'Yes (amount not specified)') : 'No'}`);
         console.log(`      Work Arrangement: ${c.workArrangement || 'not specified'}`);
+        console.log(`      Education Level: ${c.educationLevel || 'not specified'}`);
         console.log(`      Confidence: ${(c.confidence * 100).toFixed(0)}%`);
         console.log(`   💰 Cost: $${result.cost.toFixed(6)} | Tokens: ${result.tokensUsed}`);
         
@@ -964,6 +979,7 @@ async function main() {
           hasSignOnBonus: c.hasSignOnBonus || false,
           signOnBonusAmount: c.signOnBonusAmount || null,
           workArrangement: c.workArrangement || null,
+          educationLevel: c.educationLevel || null,
           confidence: c.confidence
         });
         
@@ -994,6 +1010,7 @@ async function main() {
             hasSignOnBonus: c.hasSignOnBonus || false,
             signOnBonusAmount: c.signOnBonusAmount || null,
             workArrangement: c.workArrangement || null, // remote, hybrid, onsite
+            educationLevel: c.educationLevel || 'associate_degree', // Default to ADN (minimum for RN)
             isActive: true,       // ✅ Activate job - validated as Staff RN with location
             wasEverActive: true,  // ✅ One-way flag - enables reactivation if job is deactivated then found again
             classifiedAt: new Date()  // ✅ Mark as classified (prevents future re-classification)
@@ -1042,6 +1059,7 @@ async function main() {
             hasSignOnBonus: c.hasSignOnBonus || false,
             signOnBonusAmount: c.signOnBonusAmount || null,
             workArrangement: c.workArrangement || null, // remote, hybrid, onsite
+            educationLevel: c.educationLevel || 'associate_degree', // Default to ADN (minimum for RN)
             isActive: false,      // ❌ Keep inactive - no valid location
             classifiedAt: new Date()  // ✅ Mark as classified (prevents reprocessing)
           };

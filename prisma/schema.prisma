@@ -211,6 +211,7 @@ model NursingJob {
   wasEverActive         Boolean            @default(false)
   rawDescription        String?
   workArrangement       WorkArrangement?
+  educationLevel        EducationLevel?
   employer              HealthcareEmployer @relation(fields: [employerId], references: [id], onDelete: Cascade)
 
   @@index([state, city])
@@ -287,4 +288,13 @@ enum WorkArrangement {
   remote
   hybrid
   onsite
+}
+
+// Education level for Google JobPosting structured data
+// Values match Google's credentialCategory requirements
+enum EducationLevel {
+  associate_degree
+  bachelor_degree
+  professional_certificate
+  postgraduate_degree
 }
