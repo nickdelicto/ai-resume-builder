@@ -336,9 +336,9 @@ class UpstateMedicalRNScraper {
 
       // Detect work arrangement (remote/hybrid/onsite)
       workArrangement: detectWorkArrangement({
-        title: title,
-        description: description,
-        location: `${city}, ${state}`,
+        title: jobData.title,
+        description: cleanDescription,
+        location: `${normalizedCity}, ${normalizedState}`,
         employmentType: jobData.employmentType || ''
       }),
 

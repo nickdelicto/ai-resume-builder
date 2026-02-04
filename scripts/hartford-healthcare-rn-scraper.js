@@ -475,8 +475,8 @@ class HartfordHealthcareRNScraper {
       // Detect work arrangement (remote/hybrid/onsite)
       workArrangement: detectWorkArrangement({
         title: job.title,
-        description: description,
-        location: `${city}, ${state}`,
+        description: formattedDescription,
+        location: `${normalizedCity}, ${normalizedState}`,
         employmentType: job.type || ''
       }),
 
