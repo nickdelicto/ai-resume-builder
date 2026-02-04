@@ -26,6 +26,7 @@ const ALL_EMPLOYERS = [
   'kaleida-health',
   'hackensack-meridian-health',
   'centene',
+  'unitedhealthgroup',
 ];
 
 async function scheduleAllScrapers() {

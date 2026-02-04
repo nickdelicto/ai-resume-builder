@@ -1020,21 +1020,33 @@ async function main() {
           if (result.formattedDescription) {
             updateData.description = result.formattedDescription;
             console.log(`   📝 Saving formatted description (${result.formattedDescription.length} chars)`);
+          }
 
-            // Extract salary from formatted description and update salary fields
-            // (only if job doesn't already have salary from scraper)
-            if (!job.salaryMin && !job.salaryMax) {
-              const salaryData = extractSalaryFromDescription(result.formattedDescription);
+          // Extract salary if job doesn't already have it
+          // Try formatted description first, then raw description as fallback
+          if (!job.salaryMin && !job.salaryMax) {
+            let salaryData = null;
+            // Try formatted description (either new or existing)
+            const descToCheck = result.formattedDescription || job.description;
+            if (descToCheck) {
+              salaryData = extractSalaryFromDescription(descToCheck);
+            }
+            // Fall back to raw description if formatted didn't have salary
+            if (!salaryData?.salaryMin && job.rawDescription) {
+              salaryData = extractSalaryFromDescription(job.rawDescription);
               if (salaryData.salaryMin) {
-                updateData.salaryMin = salaryData.salaryMin;
-                updateData.salaryMax = salaryData.salaryMax;
-                updateData.salaryType = salaryData.salaryType;
-                updateData.salaryMinHourly = salaryData.salaryMinHourly;
-                updateData.salaryMaxHourly = salaryData.salaryMaxHourly;
-                updateData.salaryMinAnnual = salaryData.salaryMinAnnual;
-                updateData.salaryMaxAnnual = salaryData.salaryMaxAnnual;
-                console.log(`   💰 Extracted salary: $${salaryData.salaryMin}${salaryData.salaryMax !== salaryData.salaryMin ? '-$' + salaryData.salaryMax : ''}/${salaryData.salaryType}`);
+                console.log(`   💰 Extracted salary from raw description (LLM missed it)`);
               }
+            }
+            if (salaryData?.salaryMin) {
+              updateData.salaryMin = salaryData.salaryMin;
+              updateData.salaryMax = salaryData.salaryMax;
+              updateData.salaryType = salaryData.salaryType;
+              updateData.salaryMinHourly = salaryData.salaryMinHourly;
+              updateData.salaryMaxHourly = salaryData.salaryMaxHourly;
+              updateData.salaryMinAnnual = salaryData.salaryMinAnnual;
+              updateData.salaryMaxAnnual = salaryData.salaryMaxAnnual;
+              console.log(`   💰 Extracted salary: $${salaryData.salaryMin}${salaryData.salaryMax !== salaryData.salaryMin ? '-$' + salaryData.salaryMax : ''}/${salaryData.salaryType}`);
             }
           }
 
@@ -1069,8 +1081,12 @@ async function main() {
             updateData.description = result.formattedDescription;
 
             // Extract salary from formatted description (even for inactive jobs)
+            // Fall back to raw description if formatted doesn't have it
             if (!job.salaryMin && !job.salaryMax) {
-              const salaryData = extractSalaryFromDescription(result.formattedDescription);
+              let salaryData = extractSalaryFromDescription(result.formattedDescription);
+              if (!salaryData.salaryMin && job.rawDescription) {
+                salaryData = extractSalaryFromDescription(job.rawDescription);
+              }
               if (salaryData.salaryMin) {
                 updateData.salaryMin = salaryData.salaryMin;
                 updateData.salaryMax = salaryData.salaryMax;

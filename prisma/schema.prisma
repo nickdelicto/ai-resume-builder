@@ -183,6 +183,7 @@ model NursingJob {
   responsibilities      String?
   benefits              String?
   department            String?
+  brand                 String?
   salaryMin             Int?
   salaryMax             Int?
   salaryCurrency        String?            @default("USD")

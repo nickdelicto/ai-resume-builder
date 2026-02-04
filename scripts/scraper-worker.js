@@ -27,6 +27,7 @@ const SCRAPER_MAP = {
   'kaleida-health': 'scrape-and-classify.sh kaleida-health',
   'hackensack-meridian-health': 'scrape-and-classify.sh hackensack-meridian-health',
   'centene': 'scrape-and-classify.sh centene',
+  'unitedhealthgroup': 'scrape-and-classify.sh unitedhealthgroup',
 };
 
 const scriptsDir = path.join(__dirname);
