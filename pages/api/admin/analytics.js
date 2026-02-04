@@ -206,10 +206,11 @@ export default async function handler(req, res) {
         ])
       ]);
 
-      // Calculate deltas and percentages
-      const calcDelta = (a, b) => {
-        const diff = a - b;
-        const pct = b === 0 ? (a > 0 ? 100 : 0) : ((diff / b) * 100);
+      // Calculate deltas: how Date B (new) compares to Date A (old)
+      // Positive = Date B is higher, Negative = Date B is lower
+      const calcDelta = (oldVal, newVal) => {
+        const diff = newVal - oldVal;
+        const pct = oldVal === 0 ? (newVal > 0 ? 100 : 0) : ((diff / oldVal) * 100);
         return { diff, pct: parseFloat(pct.toFixed(1)) };
       };
 

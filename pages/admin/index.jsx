@@ -780,13 +780,13 @@ function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, jour
                   <thead>
                     <tr className="border-b border-slate-600">
                       <th className="text-left py-3 px-4 font-semibold text-slate-300">Metric</th>
-                      <th className="text-right py-3 px-4 bg-cyan-500/10 rounded-t-lg">
-                        <span className="font-bold text-cyan-400">[Date A]</span>
-                        <div className="text-xs text-cyan-300/70 mt-0.5">{new Date(analytics.comparison.dateA + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                      </th>
                       <th className="text-right py-3 px-4">
-                        <span className="font-semibold text-slate-400">Date B</span>
-                        <div className="text-xs text-slate-500 mt-0.5">{new Date(analytics.comparison.dateB + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        <span className="font-semibold text-slate-300">{new Date(analytics.comparison.dateA + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <div className="text-xs text-slate-500 mt-0.5">Date A</div>
+                      </th>
+                      <th className="text-right py-3 px-4 bg-cyan-500/10 rounded-t-lg">
+                        <span className="font-bold text-cyan-400">{new Date(analytics.comparison.dateB + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <div className="text-xs text-cyan-300/70 mt-0.5">Date B</div>
                       </th>
                       <th className="text-right py-3 px-4 font-semibold text-slate-300">Change</th>
                     </tr>
@@ -893,15 +893,15 @@ function TimeCard({ title, data, highlight = false, loading = false }) {
 }
 
 // Comparison row for the comparison table
-// b = old value, a = new value, delta = change from old to new
+// a = Date A (old/baseline), b = Date B (new), delta = change from A to B
 function ComparisonRow({ label, a, b, delta, dark = false }) {
   const isPositive = delta.diff > 0;
   const isNeutral = delta.diff === 0;
   return (
     <tr className={`border-b last:border-0 ${dark ? 'border-slate-700/50' : 'border-gray-100'}`}>
       <td className={`py-3 px-4 font-medium ${dark ? 'text-slate-200' : 'text-gray-700'}`}>{label}</td>
-      <td className={`py-3 px-4 text-right font-bold text-lg ${dark ? 'bg-cyan-500/10 text-cyan-400' : 'bg-indigo-50 text-indigo-600'}`}>{a}</td>
-      <td className={`py-3 px-4 text-right ${dark ? 'text-slate-400' : 'text-gray-600'}`}>{b}</td>
+      <td className={`py-3 px-4 text-right ${dark ? 'text-slate-400' : 'text-gray-600'}`}>{a}</td>
+      <td className={`py-3 px-4 text-right font-bold text-lg ${dark ? 'bg-cyan-500/10 text-cyan-400' : 'bg-indigo-50 text-indigo-600'}`}>{b}</td>
       <td className={`py-3 px-4 text-right font-semibold ${isNeutral ? (dark ? 'text-slate-500' : 'text-gray-400') : isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
         {isNeutral ? '—' : (
           <span className="flex items-center justify-end gap-1">
