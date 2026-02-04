@@ -173,6 +173,17 @@ function parseSalary(salaryStr) {
 
   const isHourly = type === 'hour';
 
+  // Sanity check: reject impossible values that indicate bad API data
+  // (e.g., "$64-$135000/hour" mixing hourly min with annual max)
+  if (isHourly && (max > 500 || min > 500)) {
+    console.log(`⚠️  Rejecting impossible hourly salary: $${min}-$${max}/hour`);
+    return null;
+  }
+  if (!isHourly && (min < 15000 || max < 15000)) {
+    console.log(`⚠️  Rejecting impossible annual salary: $${min}-$${max}/year`);
+    return null;
+  }
+
   return {
     salaryMin: Math.round(min * 100) / 100,
     salaryMax: Math.round(max * 100) / 100,
