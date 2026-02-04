@@ -412,40 +412,11 @@ if [ $CLASSIFIER_EXIT_CODE -eq 0 ]; then
   
   log_message ""
   log_message "=========================================="
-  log_message "✅ SUCCESS: Both scraper and classifier completed"
-  log_message "=========================================="
-  
-  # STEP 3/3: Submit URLs to IndexNow (batched to avoid rate limiting)
-  log_message ""
-  log_message "=========================================="
-  log_message "STEP 3/3: Submitting URLs to IndexNow..."
-  log_message "=========================================="
-  
-  INDEXNOW_LOG="${LOG_DIR}/${EMPLOYER_SLUG}_indexnow_${TIMESTAMP}.log"
-  log_message "   📂 IndexNow log: $INDEXNOW_LOG"
-  log_message ""
-  
-  /usr/bin/nice -n 15 node "$PROJECT_ROOT/scripts/batch-indexnow.js" --employer="$EMPLOYER_SLUG" > "$INDEXNOW_LOG" 2>&1
-  INDEXNOW_EXIT_CODE=$?
-  
-  if [ $INDEXNOW_EXIT_CODE -eq 0 ]; then
-    log_message "✅ IndexNow submission completed"
-    
-    # Show summary from log
-    if grep -q "Total submitted:" "$INDEXNOW_LOG"; then
-      SUBMITTED_COUNT=$(grep "Total submitted:" "$INDEXNOW_LOG" | awk '{print $3}')
-      log_message "   📤 Submitted: $SUBMITTED_COUNT URLs"
-    fi
-  else
-    log_message "⚠️  IndexNow submission had issues (exit code: $INDEXNOW_EXIT_CODE)"
-    log_message "   This is non-critical - jobs are still saved and active"
-    log_message "   Check log: $INDEXNOW_LOG"
-  fi
-  
-  log_message ""
-  log_message "=========================================="
   log_message "✅ WORKFLOW COMPLETE"
   log_message "=========================================="
+  log_message ""
+  log_message "Note: IndexNow URLs are queued automatically during scraping"
+  log_message "      and processed by the indexnow-worker (streaming mode)."
   
 else
   log_message "❌ Classifier FAILED (exit code: $CLASSIFIER_EXIT_CODE)"

@@ -163,14 +163,18 @@ node scripts/index-programmatic-pages.js --dry-run
 
 ## Comparison with Job Listings Submission
 
-| Feature | Job Listings (`batch-indexnow.js`) | Programmatic Pages (`index-programmatic-pages.js`) |
+| Feature | Job Listings (Queue + Worker) | Programmatic Pages (`index-programmatic-pages.js`) |
 |---------|-----------------------------------|--------------------------------------------------|
 | **What** | Individual job postings | State/city/specialty/salary pages |
-| **When** | After every scrape | Weekly (Wednesday 1 AM) |
-| **How** | Compare slugs | Compare fingerprints (job counts) |
-| **Frequency** | High (2x/week per employer) | Low (1x/week) |
-| **Volume** | 100-200 URLs per scrape | 300-400 URLs total |
-| **Tracking** | `indexnow-submitted-urls.json` | `indexnow-programmatic-urls.json` |
+| **When** | Real-time (as jobs are saved) | Weekly (Wednesday 1 AM) |
+| **How** | Auto-queued in Redis, throttled | Compare fingerprints (job counts) |
+| **Mode** | Streaming (1 URL/6 sec) | Batch (50 URLs, 3 min delay) |
+| **Volume** | Continuous | 300-400 URLs total |
+| **Tracking** | Redis (auto-dedupe) | `indexnow-programmatic-urls.json` |
+
+> **Note:** Job listings now use streaming mode via BullMQ queue (`indexnow-worker.js`)
+> instead of the deprecated `batch-indexnow.js`. This appeases Bing's preference for
+> streaming over batch submissions.
 
 ## Troubleshooting
 
@@ -191,9 +195,11 @@ node scripts/index-programmatic-pages.js --dry-run
 
 ## Related Files
 
-- `scripts/index-programmatic-pages.js` - Main script
-- `scripts/batch-indexnow.js` - Job listings submission (runs after scrapes)
+- `scripts/index-programmatic-pages.js` - Programmatic pages submission (weekly cron)
+- `scripts/indexnow-worker.js` - Job listings worker (streaming mode, runs via PM2)
+- `lib/services/indexNowQueueService.js` - Queue service for job URLs
 - `scripts/indexnow-programmatic-urls.json` - Tracking file (auto-generated)
 - `scripts/CRONTAB-INDEXNOW.txt` - Cron entry reference
 - `pages/jobs-sitemap.xml.js` - Dynamic sitemap generator
+- `scripts/batch-indexnow.js` - **DEPRECATED** (replaced by queue + worker)
 
