@@ -315,7 +315,8 @@ function parseSalary(description) {
   if (hourlyMatch) {
     const min = parseFloat(hourlyMatch[1].replace(/,/g, ''));
     const max = parseFloat(hourlyMatch[2].replace(/,/g, ''));
-    if (!isNaN(min) && !isNaN(max) && min < 200 && max < 200) {
+    // Sanity check: realistic RN hourly range is $20-200
+    if (!isNaN(min) && !isNaN(max) && min >= 20 && min < 200 && max < 200) {
       return {
         salaryMin: Math.round(min),
         salaryMax: Math.round(max),
@@ -333,7 +334,8 @@ function parseSalary(description) {
   if (genericMatch) {
     const min = parseFloat(genericMatch[1].replace(/,/g, ''));
     const max = parseFloat(genericMatch[2].replace(/,/g, ''));
-    if (!isNaN(min) && !isNaN(max) && min < 200 && max < 200) {
+    // Sanity check: realistic RN hourly range is $20-200
+    if (!isNaN(min) && !isNaN(max) && min >= 20 && min < 200 && max < 200) {
       return {
         salaryMin: Math.round(min),
         salaryMax: Math.round(max),

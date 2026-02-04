@@ -124,6 +124,20 @@ function extractSalaryFromDescription(description) {
 
   if (!salaryMin) return {};
 
+  // Sanity check: reject unrealistic salary values
+  // Realistic RN salary ranges: $20-500/hr or $40k-$1M/yr
+  if (salaryType === 'hourly') {
+    if (salaryMin < 20 || salaryMax > 500) {
+      console.log(`   ⚠️  Rejecting unrealistic hourly salary: $${salaryMin}-$${salaryMax}/hour`);
+      return {};
+    }
+  } else if (salaryType === 'annual') {
+    if (salaryMin < 40000 || salaryMax < 40000) {
+      console.log(`   ⚠️  Rejecting unrealistic annual salary: $${salaryMin}-$${salaryMax}/year`);
+      return {};
+    }
+  }
+
   // Calculate hourly/annual equivalents
   const result = {
     salaryMin: salaryMin,

@@ -174,14 +174,17 @@ function parseSalary(salaryStr) {
   const isHourly = type === 'hour';
 
   // Sanity check: reject impossible values that indicate bad API data
-  // (e.g., "$64-$135000/hour" mixing hourly min with annual max)
-  if (isHourly && (max > 500 || min > 500)) {
-    console.log(`⚠️  Rejecting impossible hourly salary: $${min}-$${max}/hour`);
-    return null;
-  }
-  if (!isHourly && (min < 15000 || max < 15000)) {
-    console.log(`⚠️  Rejecting impossible annual salary: $${min}-$${max}/year`);
-    return null;
+  // Realistic RN salary ranges: $20-500/hr or $40k-$1M/yr
+  if (isHourly) {
+    if (min < 20 || max > 500) {
+      console.log(`⚠️  Rejecting impossible hourly salary: $${min}-$${max}/hour`);
+      return null;
+    }
+  } else {
+    if (min < 40000 || max < 40000) {
+      console.log(`⚠️  Rejecting impossible annual salary: $${min}-$${max}/year`);
+      return null;
+    }
   }
 
   return {
