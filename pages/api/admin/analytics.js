@@ -88,6 +88,10 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  // Get custom date from query params (format: YYYY-MM-DD)
+  // For comparison mode: dateA and dateB
+  const { date: customDate, dateA, dateB } = req.query;
+
   try {
     // Get date boundaries in EST/New York timezone
     // This ensures "today" means today in EST, not UTC
@@ -114,6 +118,27 @@ export default async function handler(req, res) {
     const todayStart = getESTMidnight(0);
     const weekStart = getESTMidnight(7);
     const monthStart = getESTMidnight(30);
+
+    // Parse custom date if provided (format: YYYY-MM-DD)
+    // Returns { start: Date, end: Date } for the full day in EST
+    const getCustomDateRange = (dateStr) => {
+      if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+      const [year, month, day] = dateStr.split('-').map(Number);
+      // Create date at midnight EST for the given date
+      const estDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+      // Convert to UTC (same logic as getESTMidnight)
+      const utcNow = new Date();
+      const estNow = new Date(utcNow.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const offsetMs = utcNow.getTime() - estNow.getTime();
+      const start = new Date(estDate.getTime() + offsetMs);
+      // End is start of next day
+      const nextDay = new Date(estDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const end = new Date(nextDay.getTime() + offsetMs);
+      return { start, end };
+    };
+
+    const customDateRange = getCustomDateRange(customDate);
 
     // Get total counts by event type
     const [totalPageViews, totalApplyClicks, totalEmployerRedirects, totalModalSubscribes] = await Promise.all([
@@ -146,6 +171,71 @@ export default async function handler(req, res) {
       prisma.analyticsEvent.count({ where: { eventType: 'employer_redirect', createdAt: { gte: monthStart } } }),
       prisma.analyticsEvent.count({ where: { eventType: 'modal_subscribe', createdAt: { gte: monthStart } } })
     ]);
+
+    // Get counts for custom date (if provided)
+    let customPageViews = 0, customApplyClicks = 0, customEmployerRedirects = 0, customModalSubscribes = 0;
+    if (customDateRange) {
+      [customPageViews, customApplyClicks, customEmployerRedirects, customModalSubscribes] = await Promise.all([
+        prisma.analyticsEvent.count({ where: { eventType: 'page_view', createdAt: { gte: customDateRange.start, lt: customDateRange.end } } }),
+        prisma.analyticsEvent.count({ where: { eventType: 'apply_click', createdAt: { gte: customDateRange.start, lt: customDateRange.end } } }),
+        prisma.analyticsEvent.count({ where: { eventType: 'employer_redirect', createdAt: { gte: customDateRange.start, lt: customDateRange.end } } }),
+        prisma.analyticsEvent.count({ where: { eventType: 'modal_subscribe', createdAt: { gte: customDateRange.start, lt: customDateRange.end } } })
+      ]);
+    }
+
+    // Comparison mode: Get counts for dateA and dateB
+    let comparison = null;
+    const dateARangeData = getCustomDateRange(dateA);
+    const dateBRangeData = getCustomDateRange(dateB);
+
+    if (dateARangeData && dateBRangeData) {
+      const [periodA, periodB] = await Promise.all([
+        // Period A counts
+        Promise.all([
+          prisma.analyticsEvent.count({ where: { eventType: 'page_view', createdAt: { gte: dateARangeData.start, lt: dateARangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'apply_click', createdAt: { gte: dateARangeData.start, lt: dateARangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'employer_redirect', createdAt: { gte: dateARangeData.start, lt: dateARangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'modal_subscribe', createdAt: { gte: dateARangeData.start, lt: dateARangeData.end } } })
+        ]),
+        // Period B counts
+        Promise.all([
+          prisma.analyticsEvent.count({ where: { eventType: 'page_view', createdAt: { gte: dateBRangeData.start, lt: dateBRangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'apply_click', createdAt: { gte: dateBRangeData.start, lt: dateBRangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'employer_redirect', createdAt: { gte: dateBRangeData.start, lt: dateBRangeData.end } } }),
+          prisma.analyticsEvent.count({ where: { eventType: 'modal_subscribe', createdAt: { gte: dateBRangeData.start, lt: dateBRangeData.end } } })
+        ])
+      ]);
+
+      // Calculate deltas and percentages
+      const calcDelta = (a, b) => {
+        const diff = a - b;
+        const pct = b === 0 ? (a > 0 ? 100 : 0) : ((diff / b) * 100);
+        return { diff, pct: parseFloat(pct.toFixed(1)) };
+      };
+
+      comparison = {
+        dateA,
+        dateB,
+        periodA: {
+          pageViews: periodA[0],
+          applyClicks: periodA[1],
+          employerRedirects: periodA[2],
+          modalSubscribes: periodA[3]
+        },
+        periodB: {
+          pageViews: periodB[0],
+          applyClicks: periodB[1],
+          employerRedirects: periodB[2],
+          modalSubscribes: periodB[3]
+        },
+        delta: {
+          pageViews: calcDelta(periodA[0], periodB[0]),
+          applyClicks: calcDelta(periodA[1], periodB[1]),
+          employerRedirects: calcDelta(periodA[2], periodB[2]),
+          modalSubscribes: calcDelta(periodA[3], periodB[3])
+        }
+      };
+    }
 
     // Get unique sessions and emails
     const uniqueSessions = await prisma.analyticsEvent.groupBy({
@@ -311,6 +401,16 @@ export default async function handler(req, res) {
           employerRedirects: monthEmployerRedirects,
           modalSubscribes: monthModalSubscribes
         },
+        // Custom date data (only if date param provided)
+        ...(customDateRange && {
+          custom: {
+            date: customDate,
+            pageViews: customPageViews,
+            applyClicks: customApplyClicks,
+            employerRedirects: customEmployerRedirects,
+            modalSubscribes: customModalSubscribes
+          }
+        }),
         rates: {
           applyRate: parseFloat(applyRate),
           redirectRate: parseFloat(redirectRate),
@@ -334,7 +434,9 @@ export default async function handler(req, res) {
         cities: mergeCityBreakdownData(topCitiesClicks, topCitiesApplied)
       },
       dailyStats: dailyStats,
-      recentKnownUsers: recentKnownUsers
+      recentKnownUsers: recentKnownUsers,
+      // Comparison data (only if both dateA and dateB provided)
+      ...(comparison && { comparison })
     });
 
   } catch (error) {

@@ -28,6 +28,13 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState(null);
+  const [customDate, setCustomDate] = useState(''); // Format: YYYY-MM-DD
+  const [customDateLoading, setCustomDateLoading] = useState(false); // Separate loading for custom date
+  // Comparison mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareDateA, setCompareDateA] = useState('');
+  const [compareDateB, setCompareDateB] = useState('');
+  const [compareLoading, setCompareLoading] = useState(false);
 
   // User journeys state
   const [userJourneys, setUserJourneys] = useState(null);
@@ -100,18 +107,45 @@ export default function AdminDashboard() {
   };
 
   // Fetch analytics
-  const fetchAnalytics = async () => {
-    setAnalyticsLoading(true);
+  // skipMainLoading: true = only show loading on custom date card (for date picker changes)
+  const fetchAnalytics = async (date = '', skipMainLoading = false) => {
+    if (skipMainLoading) {
+      setCustomDateLoading(true);
+    } else {
+      setAnalyticsLoading(true);
+    }
     setAnalyticsError(null);
     try {
-      const response = await fetch('/api/admin/analytics');
+      const url = date ? `/api/admin/analytics?date=${date}` : '/api/admin/analytics';
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch analytics');
       const data = await response.json();
       setAnalytics(data);
     } catch (error) {
       setAnalyticsError(error.message);
     } finally {
-      setAnalyticsLoading(false);
+      if (skipMainLoading) {
+        setCustomDateLoading(false);
+      } else {
+        setAnalyticsLoading(false);
+      }
+    }
+  };
+
+  // Fetch comparison data
+  const fetchComparison = async (dateA, dateB) => {
+    if (!dateA || !dateB) return;
+    setCompareLoading(true);
+    try {
+      const url = `/api/admin/analytics?dateA=${dateA}&dateB=${dateB}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch comparison');
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      setAnalyticsError(error.message);
+    } finally {
+      setCompareLoading(false);
     }
   };
 
@@ -241,9 +275,19 @@ export default function AdminDashboard() {
               analytics={analytics}
               loading={analyticsLoading}
               error={analyticsError}
-              onRefresh={() => { fetchAnalytics(); fetchUserJourneys(); }}
+              onRefresh={() => { fetchAnalytics(customDate); fetchUserJourneys(); }}
               userJourneys={userJourneys}
               journeysLoading={journeysLoading}
+              customDate={customDate}
+              customDateLoading={customDateLoading}
+              onCustomDateChange={(date) => { setCustomDate(date); if (date) fetchAnalytics(date, true); }}
+              compareMode={compareMode}
+              setCompareMode={setCompareMode}
+              compareDateA={compareDateA}
+              compareDateB={compareDateB}
+              onCompareDateAChange={(date) => { setCompareDateA(date); if (date && compareDateB) fetchComparison(date, compareDateB); }}
+              onCompareDateBChange={(date) => { setCompareDateB(date); if (compareDateA && date) fetchComparison(compareDateA, date); }}
+              compareLoading={compareLoading}
             />
           )}
 
@@ -531,7 +575,7 @@ function ToolsTab() {
 }
 
 // Analytics Tab Component
-function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, journeysLoading }) {
+function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, journeysLoading, customDate, customDateLoading, onCustomDateChange, compareMode, setCompareMode, compareDateA, compareDateB, onCompareDateAChange, onCompareDateBChange, compareLoading }) {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleString('en-US', {
@@ -650,11 +694,118 @@ function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, jour
       {/* Time Period Stats */}
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-gray-400">All times in EST (New York)</span>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500">Custom date:</label>
+          <input
+            type="date"
+            value={customDate}
+            onChange={(e) => onCustomDateChange(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
+            className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {customDate && (
+            <button
+              onClick={() => onCustomDateChange('')}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 gap-4 ${(funnel.custom || customDateLoading) ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
         <TimeCard title="Today" data={funnel.today} />
         <TimeCard title="Last 7 Days" data={funnel.week} />
         <TimeCard title="Last 30 Days" data={funnel.month} />
+        {(funnel.custom || customDateLoading) && (
+          <TimeCard
+            title={funnel.custom ? new Date(funnel.custom.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Loading...'}
+            data={funnel.custom || { pageViews: 0, applyClicks: 0, employerRedirects: 0, modalSubscribes: 0 }}
+            highlight={true}
+            loading={customDateLoading}
+          />
+        )}
+      </div>
+
+      {/* Comparison Mode - Dark Theme */}
+      <div className="bg-slate-800 rounded-xl shadow-lg p-5 border border-slate-700">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-bold text-lg text-white flex items-center gap-2">
+            📊 Compare Dates
+          </h4>
+          <button
+            onClick={() => setCompareMode(!compareMode)}
+            className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${compareMode ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+          >
+            {compareMode ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        {compareMode && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-4 bg-slate-900/50 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-slate-300">Date A:</label>
+                <input
+                  type="date"
+                  value={compareDateA}
+                  onChange={(e) => onCompareDateAChange(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <span className="text-slate-500 font-bold text-lg">vs</span>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-slate-300">Date B:</label>
+                <input
+                  type="date"
+                  value={compareDateB}
+                  onChange={(e) => onCompareDateBChange(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="text-sm bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Comparison Results */}
+            {compareLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin h-6 w-6 border-2 border-indigo-400 border-t-transparent rounded-full"></div>
+              </div>
+            )}
+
+            {!compareLoading && analytics?.comparison && (
+              <div className="overflow-x-auto bg-slate-900/30 rounded-lg">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-600">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-300">Metric</th>
+                      <th className="text-right py-3 px-4 bg-cyan-500/10 rounded-t-lg">
+                        <span className="font-bold text-cyan-400">[Date A]</span>
+                        <div className="text-xs text-cyan-300/70 mt-0.5">{new Date(analytics.comparison.dateA + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                      </th>
+                      <th className="text-right py-3 px-4">
+                        <span className="font-semibold text-slate-400">Date B</span>
+                        <div className="text-xs text-slate-500 mt-0.5">{new Date(analytics.comparison.dateB + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-300">Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <ComparisonRow label="Views" a={analytics.comparison.periodA.pageViews} b={analytics.comparison.periodB.pageViews} delta={analytics.comparison.delta.pageViews} dark />
+                    <ComparisonRow label="Modals" a={analytics.comparison.periodA.applyClicks} b={analytics.comparison.periodB.applyClicks} delta={analytics.comparison.delta.applyClicks} dark />
+                    <ComparisonRow label="Applied" a={analytics.comparison.periodA.employerRedirects} b={analytics.comparison.periodB.employerRedirects} delta={analytics.comparison.delta.employerRedirects} dark />
+                    <ComparisonRow label="Subs" a={analytics.comparison.periodA.modalSubscribes} b={analytics.comparison.periodB.modalSubscribes} delta={analytics.comparison.delta.modalSubscribes} dark />
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {!compareLoading && compareDateA && compareDateB && !analytics?.comparison && (
+              <p className="text-sm text-slate-400 text-center py-4">Select two dates to compare</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* All-Time Summary */}
@@ -710,10 +861,15 @@ function AnalyticsTab({ analytics, loading, error, onRefresh, userJourneys, jour
 }
 
 // Time period card for analytics
-function TimeCard({ title, data }) {
+function TimeCard({ title, data, highlight = false, loading = false }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-      <h4 className="font-semibold text-gray-900 mb-3">{title}</h4>
+    <div className={`rounded-xl shadow-sm p-4 relative ${highlight ? 'bg-indigo-50 border-2 border-indigo-200' : 'bg-white border border-gray-100'}`}>
+      {loading && (
+        <div className="absolute inset-0 bg-white/50 rounded-xl flex items-center justify-center">
+          <div className="animate-spin h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+        </div>
+      )}
+      <h4 className={`font-semibold mb-3 ${highlight ? 'text-indigo-900' : 'text-gray-900'}`}>{title}</h4>
       <div className="grid grid-cols-4 gap-2 text-center">
         <div>
           <div className="text-lg font-bold text-blue-600">{data.pageViews}</div>
@@ -733,6 +889,28 @@ function TimeCard({ title, data }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Comparison row for the comparison table
+// b = old value, a = new value, delta = change from old to new
+function ComparisonRow({ label, a, b, delta, dark = false }) {
+  const isPositive = delta.diff > 0;
+  const isNeutral = delta.diff === 0;
+  return (
+    <tr className={`border-b last:border-0 ${dark ? 'border-slate-700/50' : 'border-gray-100'}`}>
+      <td className={`py-3 px-4 font-medium ${dark ? 'text-slate-200' : 'text-gray-700'}`}>{label}</td>
+      <td className={`py-3 px-4 text-right font-bold text-lg ${dark ? 'bg-cyan-500/10 text-cyan-400' : 'bg-indigo-50 text-indigo-600'}`}>{a}</td>
+      <td className={`py-3 px-4 text-right ${dark ? 'text-slate-400' : 'text-gray-600'}`}>{b}</td>
+      <td className={`py-3 px-4 text-right font-semibold ${isNeutral ? (dark ? 'text-slate-500' : 'text-gray-400') : isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+        {isNeutral ? '—' : (
+          <span className="flex items-center justify-end gap-1">
+            {isPositive ? '↑' : '↓'}
+            {Math.abs(delta.diff)} ({isPositive ? '+' : ''}{delta.pct}%)
+          </span>
+        )}
+      </td>
+    </tr>
   );
 }
 
