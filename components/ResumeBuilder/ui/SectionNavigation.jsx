@@ -54,14 +54,26 @@ const SectionNavigation = ({
   if (typeof window === 'undefined') {
     return (
       <div className={styles.navigationContainer}>
-        <div className={styles.navigationTitle}>Resume Sections</div>
-        
+        <div className={styles.navigationHeader}>
+          <div className={styles.navigationTitle}>Resume Sections</div>
+          <div className={styles.resetButtonWrapper}>
+            <button
+              className={styles.resetOrderButton}
+              onClick={onResetSectionOrder}
+              aria-label="Reset section order"
+            >
+              <span className={styles.resetIcon}>↻</span>
+            </button>
+            <span className={styles.tooltip}>Reset Sections order</span>
+          </div>
+        </div>
+
         <ul className={styles.sectionsList}>
           {sections.map((section, index) => {
             const isComplete = completedSections[section.id];
             const isActive = activeSection === section.id;
-            const isFixed = section.id === 'personalInfo';
-            
+            const isFixed = section.id === 'personalInfo' || section.id === 'summary';
+
             return (
               <BasicSectionItem
                 key={section.id}
@@ -74,22 +86,10 @@ const SectionNavigation = ({
             );
           })}
         </ul>
-        
-        <div className={styles.resetOrderInfo}>
-          <small>Changed resume section order? You can restore the recommended order here.</small>
-        </div>
-        
-        <button 
-          className={styles.resetOrderButton}
-          onClick={onResetSectionOrder}
-          title="Return sections to recommended order"
-        >
-          <span className={styles.resetIcon}>↻</span> Restore Default Order
-        </button>
       </div>
     );
   }
-  
+
   // Use dynamic imports for browser-only code with proper ESM syntax
   // State to track if we should show the reset hint animation
   const [showResetHint, setShowResetHint] = useState(false);
@@ -173,41 +173,41 @@ const SectionNavigation = ({
   // Client-side rendering with DnD
   return (
     <div className={styles.navigationContainer}>
-        <div className={styles.navigationTitle}>Edit Resume Sections</div>
-        
-        <ul className={styles.sectionsList}>
-          {sections.map((section, index) => {
-            const isComplete = completedSections[section.id];
-            const isActive = activeSection === section.id;
-            const isFixed = section.id === 'personalInfo'; // Personal Info is fixed at the top
-            
-            return (
-              <DraggableSectionItem
-                key={section.id}
-                section={section}
-                index={index}
-                isActive={isActive}
-                isComplete={isComplete}
-                isFixed={isFixed}
-                moveSection={innerMoveSection}
-                onSectionChange={onSectionChange}
-              />
-            );
-          })}
-        </ul>
-        
-        <div className={styles.resetOrderInfo}>
-          <small>Changed resume section order? You can restore the recommended order here.</small>
+      <div className={styles.navigationHeader}>
+        <div className={styles.navigationTitle}>Edit Sections</div>
+        <div className={styles.resetButtonWrapper}>
+          <button
+            className={`${styles.resetOrderButton} ${showResetHint ? styles.showResetHint : ''}`}
+            onClick={onResetSectionOrder}
+            aria-label="Reset section order"
+          >
+            <span className={styles.resetIcon}>↻</span>
+          </button>
+          <span className={styles.tooltip}>Reset order</span>
         </div>
-        
-        <button 
-          className={`${styles.resetOrderButton} ${showResetHint ? styles.showResetHint : ''}`}
-          onClick={onResetSectionOrder}
-          title="Return sections to recommended order"
-        >
-          <span className={styles.resetIcon}>↻</span> Restore Default Order
-        </button>
       </div>
+
+      <ul className={styles.sectionsList}>
+        {sections.map((section, index) => {
+          const isComplete = completedSections[section.id];
+          const isActive = activeSection === section.id;
+          const isFixed = section.id === 'personalInfo' || section.id === 'summary'; // Personal Info + Summary are fixed
+
+          return (
+            <DraggableSectionItem
+              key={section.id}
+              section={section}
+              index={index}
+              isActive={isActive}
+              isComplete={isComplete}
+              isFixed={isFixed}
+              moveSection={innerMoveSection}
+              onSectionChange={onSectionChange}
+            />
+          );
+        })}
+      </ul>
+    </div>
   );
 };
 

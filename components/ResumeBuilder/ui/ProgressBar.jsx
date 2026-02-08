@@ -1,73 +1,58 @@
+/**
+ * ProgressBar - Healthcare-Focused Resume Progress Tracker
+ * Encouraging messages for busy nurses building their resumes
+ */
 import React from 'react';
 import styles from './ProgressBar.module.css';
-import Image from 'next/image';
 
 const ProgressBar = ({ progress, completedSections, totalSections }) => {
-  // Determine the appropriate message based on progress
+  // Healthcare-focused encouraging messages
   const getMessage = () => {
     if (progress === 100) {
-      return "Congratulations! Your resume is complete!";
+      return "Your resume is ready to land your next role!";
     } else if (progress >= 75) {
-      return "Almost there! Just a few more sections to go.";
+      return "Almost done! You've got this.";
     } else if (progress >= 50) {
-      return "Great progress! Keep going!";
+      return "Halfway there - great progress!";
     } else if (progress >= 25) {
-      return "Good start! Continue building your resume.";
+      return "Nice start! Keep it up.";
     } else {
-      return "Start building your professional resume.";
+      return "Tap sections to fill in your info";
     }
   };
-  
-  // Determine which mascot image to use based on progress
-  const getMascotImage = () => {
-    if (progress === 100) {
-      return "/images/mascot/happy-mascot.svg";
-    } else if (progress >= 50) {
-      return "/images/mascot/progress-mascot.svg";
-    } else {
-      return "/images/mascot/starting-mascot.svg";
-    }
+
+  // Get emoji based on progress
+  const getEmoji = () => {
+    if (progress === 100) return "🎉";
+    if (progress >= 75) return "💪";
+    if (progress >= 50) return "⭐";
+    if (progress >= 25) return "👍";
+    return "👋";
   };
 
   return (
     <div className={styles.progressContainer}>
       <div className={styles.progressHeader}>
-        <div className={styles.progressInfo}>
-          <div className={styles.progressStats}>
-            <span>{completedSections}/{totalSections} sections completed</span>
-            <span>{progress}% Complete</span>
-          </div>
-          
-          <div className={styles.progressBarOuter}>
-            <div 
-              className={styles.progressBarInner} 
-              style={{ width: `${progress}%` }}
-            >
-              {progress > 0 && progress < 100 && (
-                <div className={styles.progressPulse}></div>
-              )}
-            </div>
-          </div>
-          
-          {/* Message below progress bar */}
-          <div className={styles.progressMessage}>
-            {getMessage()}
+        <div className={styles.progressLeft}>
+          <span className={styles.progressEmoji}>{getEmoji()}</span>
+          <div className={styles.progressText}>
+            <span className={styles.progressCount}>
+              {completedSections} of {totalSections} done
+            </span>
+            <span className={styles.progressMessage}>{getMessage()}</span>
           </div>
         </div>
-        
-        {/* Mascot now positioned to the right of text */}
-        <div className={styles.mascotContainer}>
-          <Image 
-            src={getMascotImage()}
-            alt="Resume mascot"
-            width={90}
-            height={90}
-            priority  /* Ensure fast loading of mascot */
-          />
-        </div>
+        <span className={styles.progressPercent}>{progress}%</span>
+      </div>
+
+      <div className={styles.progressBarOuter}>
+        <div
+          className={styles.progressBarInner}
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   );
 };
 
-export default ProgressBar; 
+export default ProgressBar;
