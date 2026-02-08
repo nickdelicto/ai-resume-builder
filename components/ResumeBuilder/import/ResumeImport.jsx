@@ -162,7 +162,8 @@ const ResumeImport = ({ onComplete }) => {
           };
         }
         
-        const requiredSections = ['personalInfo', 'experience', 'education', 'skills'];
+        // Note: 'skills' removed - soft skills implied for nurses, clinical skills in healthcareSkills
+        const requiredSections = ['personalInfo', 'experience', 'education'];
         const missingSections = requiredSections.filter(section => !result.data[section]);
         
         if (missingSections.length > 0) {

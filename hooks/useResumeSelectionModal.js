@@ -53,7 +53,7 @@ const useResumeSelectionModal = () => {
         const cachedPlanName = localStorage.getItem('current_subscription_plan');
         console.log('📊 Resume Selection Modal - Cached plan name:', cachedPlanName);
         
-        if (cachedPlanName === 'Short-Term Job Hunt' || cachedPlanName === 'Long-Term Job Hunt') {
+        if (cachedPlanName === 'Weekly Pro' || cachedPlanName === 'Monthly Pro') {
           // For weekly or monthly plans, skip the modal and go directly to subscription page
           console.log('📊 Resume Selection Modal - User has a recurring subscription plan, skipping resume selection modal');
           shouldShowModal = false;

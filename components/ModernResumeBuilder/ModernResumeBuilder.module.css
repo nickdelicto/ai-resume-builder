@@ -19,7 +19,8 @@
   margin: 0 auto;
   padding: 20px;
   padding-top: 80px; /* Add padding to account for fixed navigation header */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  /* Use Figtree to match main site - inherits from app-wrapper via CSS variable */
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-medium);
   background-color: var(--background-color);
   letter-spacing: 0.01em;
@@ -27,12 +28,26 @@
   position: relative;
 }
 
+/* ===== Builder Title - Healthcare Focused ===== */
 .builderTitle {
-  font-size: 32px;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 15px;
-  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+@media (max-width: 640px) {
+  .builderTitle {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 375px) {
+  .builderTitle {
+    font-size: 1.35rem;
+  }
 }
 
 /* Stacked layout container */
@@ -129,30 +144,71 @@
   background: linear-gradient(90deg, var(--primary-blue), var(--tertiary-purple));
 }
 
+/* Preview/ATS Score Tabs - Healthcare Mobile-First */
+.previewTabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 20px;
+  background: #f0f0f0;
+  border-radius: 12px;
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 12px 16px;
+  min-height: 48px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+}
+
+.tabButton:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: #374151;
+}
+
+.tabButton.activeTab {
+  background: #ffffff;
+  color: #1a73e8;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+}
+
+.tabButton svg {
+  font-size: 1rem;
+}
+
 .previewHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(233, 236, 239, 0.7);
+  margin-bottom: 16px;
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .previewTitle {
-  font-size: 22px;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-blue), var(--tertiary-purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 5px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d2129;
+  margin: 0;
 }
 
 .previewSubtitle {
-  font-size: 14px;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-light);
-  margin-top: 5px;
+  color: #6b7280;
+  margin: 0;
 }
 
 /* Floating preview button - Improved with gradient background for better visibility */
@@ -364,52 +420,103 @@
   border-bottom: 1px solid rgba(233, 236, 239, 0.7);
 }
 
-/* Import Resume Button Styles */
+/* ===== Import Resume - Healthcare Mobile-First ===== */
 .importButtonContainer {
-  background: linear-gradient(135deg, rgba(26, 115, 232, 0.08), rgba(108, 92, 231, 0.08));
-  border: 1px solid rgba(26, 115, 232, 0.1);
-  border-radius: 14px;
-  padding: 20px;
-  margin: 20px 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  transition: var(--transition-smooth);
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border: 1.5px solid #93c5fd;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 
 .importButton {
-  background: var(--surface-color);
-  color: var(--primary-blue);
-  border: 1px solid rgba(26, 115, 232, 0.3);
-  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+  color: #1a73e8;
+  border: 1.5px solid #93c5fd;
   border-radius: 10px;
-  padding: 12px 24px;
-  font-size: 16px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  transition: var(--transition-smooth);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  min-height: 44px;
 }
 
 .importButton:hover {
-  background: linear-gradient(135deg, var(--primary-blue), var(--tertiary-purple));
+  background: #1a73e8;
   color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(26, 115, 232, 0.2);
+  border-color: #1a73e8;
+}
+
+.importButton:active {
+  transform: scale(0.98);
 }
 
 .importIcon {
-  margin-right: 10px;
-  font-size: 18px;
+  font-size: 1.1rem;
 }
 
 .importDescription {
-  margin-top: 10px;
-  font-size: 14px;
-  color: var(--text-light);
-  text-align: center;
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.4;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .importButtonContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .importButton {
+    justify-content: center;
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .importDescription {
+    text-align: center;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .importButtonContainer {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .importButton {
+    font-size: 16px; /* Prevents iOS zoom */
+    min-height: 48px;
+  }
+}
+
+/* Touch device enhancements */
+@media (hover: none) and (pointer: coarse) {
+  .importButton:hover {
+    background: #ffffff;
+    color: #1a73e8;
+    border-color: #93c5fd;
+  }
+
+  .importButton:active {
+    background: #1a73e8;
+    color: white;
+    border-color: #1a73e8;
+    transform: scale(0.98);
+  }
 }
 
 /* Compact Import Link for Job Tailoring Mode */
@@ -1126,4 +1233,94 @@
 .buyPlanButton:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 25px rgba(243, 156, 18, 0.3) !important;
-} 
+}
+
+/* Mobile responsive styles for Preview/ATS Score tabs */
+@media (max-width: 768px) {
+  .previewTabs {
+    padding: 5px;
+    margin-bottom: 16px;
+    gap: 4px;
+  }
+
+  .tabButton {
+    padding: 10px 12px;
+    min-height: 44px;
+    font-size: 0.85rem;
+    gap: 6px;
+    border-radius: 8px;
+  }
+
+  .tabButton svg {
+    font-size: 0.9rem;
+  }
+}
+
+/* Small phones - keep horizontal, just smaller */
+@media (max-width: 375px) {
+  .previewTabs {
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .tabButton {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+}
+
+/* ── Section Next / Back navigation ────────────────── */
+.sectionNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 1px solid #374151;
+  margin-top: 8px;
+  background: #111827;
+  border-radius: 0 0 16px 16px;
+}
+
+.sectionNavBack,
+.sectionNavNext {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-figtree), 'Figtree', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sectionNavBack {
+  background: transparent;
+  color: #9ca3af;
+}
+.sectionNavBack:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+.sectionNavNext {
+  background: #ffffff;
+  color: #111827;
+}
+.sectionNavNext:hover {
+  background: #e5e7eb;
+}
+
+@media (max-width: 480px) {
+  .sectionNav {
+    padding: 16px;
+  }
+  .sectionNavBack,
+  .sectionNavNext {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ResumeProvider } from '../ResumeBuilder/ResumeContext';
 import SectionNavigation from '../ResumeBuilder/ui/SectionNavigation';
 import ProgressBar from '../ResumeBuilder/ui/ProgressBar';
@@ -8,8 +8,12 @@ import PersonalInfo from '../ResumeBuilder/sections/PersonalInfo';
 import Summary from '../ResumeBuilder/sections/Summary';
 import Experience from '../ResumeBuilder/sections/Experience';
 import Education from '../ResumeBuilder/sections/Education';
-import Skills from '../ResumeBuilder/sections/Skills';
+// Skills section removed - soft skills are implied for healthcare workers
+// Clinical skills are covered by HealthcareSkills component
 import AdditionalInfo from '../ResumeBuilder/sections/AdditionalInfo';
+import Licenses from '../ResumeBuilder/sections/Licenses';
+import Certifications from '../ResumeBuilder/sections/Certifications';
+import HealthcareSkills from '../ResumeBuilder/sections/HealthcareSkills';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { saveResumeData as saveToLocalStorage, getResumeData as getFromLocalStorage, saveResumeProgress, getResumeProgress } from '../ResumeBuilder/utils/localStorage';
@@ -18,11 +22,13 @@ import { useResumeService } from '../../lib/contexts/ResumeServiceContext';
 import styles from './ModernResumeBuilder.module.css';
 import Head from 'next/head';
 import TemplateSelector from '../ResumeBuilder/ui/TemplateSelector';
-import { FaArrowLeft, FaPencilAlt, FaBriefcase, FaInfoCircle, FaTimes, FaLightbulb, FaSpinner, FaDownload } from 'react-icons/fa';
+import { FaArrowLeft, FaPencilAlt, FaBriefcase, FaInfoCircle, FaTimes, FaLightbulb, FaSpinner, FaDownload, FaEye, FaChartLine } from 'react-icons/fa';
+import { ATSScorePanel } from '../ResumeBuilder/ATSScore';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import { useResumeSelection } from '../common/ResumeSelectionProvider';
+import { usePaywall } from '../common/PaywallModal';
 
 // Helper function to mark localStorage data for migration to database
 // This can be imported and called when a user signs in from another component
@@ -246,7 +252,10 @@ const ModernResumeBuilder = ({
   
   // Add ref for scrolling to preview
   const previewRef = useRef(null);
-  
+
+  // Add ref for section content (for mobile smooth scroll)
+  const sectionContentRef = useRef(null);
+
   // Add ref to track if a migration has already run in this session
   const hasMigratedRef = useRef(false);
   const templateChangeFromDbLoad = useRef(false);
@@ -426,13 +435,18 @@ const ModernResumeBuilder = ({
     }
   }, [jobContext]);
   
-  // Define all resume sections in order
+  // Define all resume sections in builder fill order
+  // Experience right after Personal Info — it's the most important section
+  // Summary near end — so AI has full context to generate a strong summary
+  // Note: The actual resume render order (preview/PDF) pins Summary as #2
   const defaultSections = [
     { id: 'personalInfo', label: 'Personal Info', component: PersonalInfo },
-    { id: 'summary', label: 'Summary', component: Summary },
     { id: 'experience', label: 'Experience', component: Experience },
+    { id: 'licenses', label: 'Licenses', component: Licenses },
+    { id: 'certifications', label: 'Certifications', component: Certifications },
+    { id: 'healthcareSkills', label: 'Clinical Skills', component: HealthcareSkills },
     { id: 'education', label: 'Education', component: Education },
-    { id: 'skills', label: 'Skills', component: Skills },
+    { id: 'summary', label: 'Summary', component: Summary },
     { id: 'additional', label: 'Additional', component: AdditionalInfo },
   ];
   
@@ -465,10 +479,26 @@ const ModernResumeBuilder = ({
     return defaultSections.map(section => section.id);
   });
   
-  // Get ordered sections
+  // Get ordered sections (for builder navigation)
   const orderedSections = sectionOrder.map(
     sectionId => defaultSections.find(s => s.id === sectionId)
   ).filter(Boolean); // Filter out any undefined sections
+
+  // Resume render order — for preview/PDF, always pin Summary as #2
+  // Builder fill order may differ (Summary near end), but the actual resume
+  // always shows: Personal Info → Summary → everything else
+  const resumeRenderOrder = useMemo(() => {
+    const order = [...sectionOrder];
+    // Remove summary from its current position
+    const summaryIdx = order.indexOf('summary');
+    if (summaryIdx > -1) {
+      order.splice(summaryIdx, 1);
+    }
+    // Insert summary right after personalInfo (index 1)
+    const personalIdx = order.indexOf('personalInfo');
+    order.splice(personalIdx + 1, 0, 'summary');
+    return order;
+  }, [sectionOrder]);
   
   // Default template for new resumes
   const defaultTemplate = {
@@ -480,12 +510,20 @@ const ModernResumeBuilder = ({
       linkedin: '',
       website: ''
     },
+    licenses: [], // Nursing licenses [{type, state, licenseNumber, isCompact, expirationDate}]
+    certifications: [], // Healthcare certifications [{id, name, fullName, expirationDate, issuingBody}]
     summary: '',
     experience: [],
     education: [],
     skills: [],
+    healthcareSkills: { // Clinical skills picker data
+      ehrSystems: [],
+      clinicalSkills: [],
+      specialty: '',
+      customSkills: []
+    },
     additional: {
-      certifications: [],
+      certifications: [], // Legacy - keeping for backwards compatibility
       projects: [],
       languages: [],
       volunteer: [],
@@ -1029,6 +1067,7 @@ const ModernResumeBuilder = ({
   // State for celebration animations
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState('');
+  const [isFullCelebration, setIsFullCelebration] = useState(false);
   
   // State to track if preview was recently updated
   const [previewUpdated, setPreviewUpdated] = useState(false);
@@ -1063,11 +1102,17 @@ const ModernResumeBuilder = ({
   
   // Add state for download status
   const [isDownloading, setIsDownloading] = useState(false);
-  
+
+  // Add state for preview/ATS Score tab
+  const [activePreviewTab, setActivePreviewTab] = useState('preview'); // 'preview' | 'score'
+
   // Function to reorder sections
   const reorderSections = (fromIndex, toIndex) => {
-    // Don't allow reordering the first item (personalInfo)
+    // Don't allow reordering fixed sections (personalInfo, summary)
     if (fromIndex === 0 || toIndex === 0) return;
+    const fromId = sectionOrder[fromIndex];
+    const toId = sectionOrder[toIndex];
+    if (fromId === 'summary' || toId === 'summary') return;
     
     const newOrder = [...sectionOrder];
     const [movedItem] = newOrder.splice(fromIndex, 1);
@@ -1108,69 +1153,82 @@ const ModernResumeBuilder = ({
     setTimeout(() => setPreviewUpdated(false), 2000);
     
     // Show toast message without celebration animation
-    showToastMessage("Successfully restored recommended section order!");
+    showToastMessage("Section order reset");
   };
   
   // Helper function to show a toast message without confetti
   const showToastMessage = (message) => {
-    // Update message but don't trigger the celebration animation
-    setCelebrationMessage(message);
-    
-    // Create a toast-only element by setting a custom data attribute
+    // Create toast container
+    const toastContainer = document.createElement('div');
+    toastContainer.style.position = 'fixed';
+    toastContainer.style.bottom = '24px';
+    toastContainer.style.left = '50%';
+    toastContainer.style.transform = 'translateX(-50%)';
+    toastContainer.style.zIndex = '1000';
+    toastContainer.style.pointerEvents = 'none';
+
+    // Create toast element matching Celebrations component styling
     const toastEl = document.createElement('div');
-    toastEl.className = 'toast-message';
-    toastEl.textContent = message;
-    toastEl.style.position = 'fixed';
-    toastEl.style.bottom = '20px';
-    toastEl.style.left = '50%';
-    toastEl.style.transform = 'translateX(-50%)';
-    toastEl.style.backgroundColor = 'rgba(40, 167, 69, 0.95)'; // Success green color
-    toastEl.style.color = 'white';
-    toastEl.style.padding = '12px 24px';
-    toastEl.style.borderRadius = '4px';
-    toastEl.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-    toastEl.style.zIndex = '9999';
-    toastEl.style.textAlign = 'center';
-    toastEl.style.fontWeight = '500';
-    toastEl.style.maxWidth = '80%';
     toastEl.style.display = 'flex';
     toastEl.style.alignItems = 'center';
-    toastEl.style.border = '1px solid rgba(25, 135, 84, 0.3)'; // Subtle border
-    
-    // Add a checkmark icon
+    toastEl.style.gap = '10px';
+    toastEl.style.padding = '12px 20px';
+    toastEl.style.background = '#1d2129';
+    toastEl.style.color = 'white';
+    toastEl.style.borderRadius = '10px';
+    toastEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+    toastEl.style.fontFamily = "'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    toastEl.style.animation = 'toastSlideUp 0.3s ease-out';
+
+    // Add checkmark icon
     const iconEl = document.createElement('span');
     iconEl.textContent = '✓';
-    iconEl.style.marginRight = '10px';
-    iconEl.style.fontWeight = 'bold';
-    iconEl.style.fontSize = '16px';
-    toastEl.prepend(iconEl);
-    
-    // Add to document
-    document.body.appendChild(toastEl);
-    
-    // Animate in
-    toastEl.style.animation = 'fadeInUp 0.3s ease forwards';
-    
-    // Remove after delay
+    iconEl.style.display = 'flex';
+    iconEl.style.alignItems = 'center';
+    iconEl.style.justifyContent = 'center';
+    iconEl.style.width = '22px';
+    iconEl.style.height = '22px';
+    iconEl.style.background = '#34a853';
+    iconEl.style.color = 'white';
+    iconEl.style.borderRadius = '50%';
+    iconEl.style.fontSize = '12px';
+    iconEl.style.fontWeight = '700';
+    iconEl.style.flexShrink = '0';
+
+    // Add message
+    const messageEl = document.createElement('span');
+    messageEl.textContent = message;
+    messageEl.style.fontSize = '0.95rem';
+    messageEl.style.fontWeight = '500';
+    messageEl.style.lineHeight = '1.3';
+
+    toastEl.appendChild(iconEl);
+    toastEl.appendChild(messageEl);
+    toastContainer.appendChild(toastEl);
+    document.body.appendChild(toastContainer);
+
+    // Remove after delay with fade out
     setTimeout(() => {
-      toastEl.style.animation = 'fadeOutDown 0.3s ease forwards';
+      toastEl.style.animation = 'toastFadeOut 0.3s ease-in forwards';
       setTimeout(() => {
-        document.body.removeChild(toastEl);
+        if (document.body.contains(toastContainer)) {
+          document.body.removeChild(toastContainer);
+        }
       }, 300);
-    }, 3000);
+    }, 2000);
   };
   
   // Add animation styles to head
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translate(-50%, 20px); }
-        to { opacity: 1; transform: translate(-50%, 0); }
+      @keyframes toastSlideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-      @keyframes fadeOutDown {
-        from { opacity: 1; transform: translate(-50%, 0); }
-        to { opacity: 0; transform: translate(-50%, 20px); }
+      @keyframes toastFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
       }
     `;
     document.head.appendChild(style);
@@ -1479,6 +1537,30 @@ const ModernResumeBuilder = ({
       }
     }
     
+    // Licenses section - at least one license with state selected
+    if (Array.isArray(data.licenses) && data.licenses.length > 0) {
+      const hasValidLicense = data.licenses.some(lic => lic.state);
+      if (hasValidLicense) {
+        newCompletions.licenses = true;
+      }
+    }
+
+    // Certifications section - at least one certification
+    if (Array.isArray(data.certifications) && data.certifications.length > 0) {
+      newCompletions.certifications = true;
+    }
+
+    // Healthcare Skills section - at least one EHR, clinical skill, or custom skill
+    if (data.healthcareSkills) {
+      const hasHealthcareSkills =
+        (data.healthcareSkills.ehrSystems && data.healthcareSkills.ehrSystems.length > 0) ||
+        (data.healthcareSkills.clinicalSkills && data.healthcareSkills.clinicalSkills.length > 0) ||
+        (data.healthcareSkills.customSkills && data.healthcareSkills.customSkills.length > 0);
+      if (hasHealthcareSkills) {
+        newCompletions.healthcareSkills = true;
+      }
+    }
+
     // Additional info section - check if any subfield has content
     const hasAdditionalInfo = data.additional && (
       (Array.isArray(data.additional.certifications) && data.additional.certifications.length > 0) ||
@@ -1488,11 +1570,11 @@ const ModernResumeBuilder = ({
       (Array.isArray(data.additional.awards) && data.additional.awards.length > 0) ||
       (Array.isArray(data.additional.customSections) && data.additional.customSections.length > 0)
     );
-    
+
     if (hasAdditionalInfo) {
       newCompletions.additional = true;
     }
-    
+
     console.log('📊 Calculated completion status:', newCompletions);
     setCompletedSections(newCompletions);
     localStorage.setItem('modern_resume_progress', JSON.stringify(newCompletions));
@@ -1741,61 +1823,66 @@ const ModernResumeBuilder = ({
         saveResumeProgress(updatedCompletions);
       }
       
-      // Show celebration when a section is newly completed
+      // Show toast when a section is newly completed
       if (isComplete && !completedSections[sectionId]) {
-        // Message pools for each section
-        const messagePool = {
-          personalInfo: [
-            "Off to a great start! Your contact details look polished.",
-            "Perfect start! Employers now know how to reach their next great hire.",
-            "Contact details added with style! You're making yourself accessible.",
-            "Great job adding your details! First connection with employers: established."
-          ],
-          summary: [
-            "That summary really packs a punch! Employers will take notice.",
-            "Compelling overview! Your professional brand is shining through.",
-            "What a captivating introduction to your professional story!",
-            "Your summary sets the perfect tone for the rest of your resume!"
-          ],
-          experience: [
-            "Your professional journey is looking impressive!",
-            "Those career highlights show your professional growth beautifully!",
-            "Your experience section really demonstrates your expertise!",
-            "Oh my...What a compelling work history!"
-          ],
-          education: [
-            "Your academic credentials are shaping up nicely!",
-            "Educational background that speaks volumes about your knowledge base!",
-            "Your learning journey shows dedication and expertise!",
-            "Those academic achievements set a strong foundation!"
-          ],
-          skills: [
-            "What a well-rounded set of abilities you've highlighted!",
-            "Those skills showcase your professional toolkit perfectly!",
-            "Your capabilities align wonderfully with what employers seek!",
-            "Your skill set demonstrates your professional versatility!"
-          ],
-          additional: [
-            "Those extra details add wonderful depth to your story!",
-            "The additional information really rounds out your professional profile!",
-            "These personal touches make your resume more memorable!",
-            "Extra details that showcase your well-rounded background!"
-          ]
-        };
-        
-        // Get section id
-        const sectionMessages = messagePool[sectionId] || [`Your ${orderedSections.find(s => s.id === sectionId).label} section is looking great!`];
-        
-        // Randomly select a message
-        const randomIndex = Math.floor(Math.random() * sectionMessages.length);
-        const message = sectionMessages[randomIndex];
-        
-        setCelebrationMessage(message);
-        setShowCelebration(true);
-        
-        setTimeout(() => {
-          setShowCelebration(false);
-        }, 3000);
+        // Check if this completion brings us to 100%
+        const newCompletions = { ...completedSections, [sectionId]: true };
+        const allComplete = orderedSections.every(s => newCompletions[s.id]);
+
+        if (allComplete) {
+          // Full celebration: confetti + voice
+          setCelebrationMessage("Your resume is ready to land your next role!");
+          setIsFullCelebration(true);
+          setShowCelebration(true);
+
+          // Trigger speech NOW — must be in user gesture context (onChange chain)
+          // setTimeout breaks the gesture chain, so we speak synchronously here
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance('Well, that was easy!');
+            utterance.rate = 0.95;
+            utterance.pitch = 0.85;
+            utterance.volume = 0.9;
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v =>
+              v.name.includes('Google US English') || v.name === 'Daniel' || v.name === 'Alex'
+            ) || voices.find(v =>
+              v.name.includes('Google') && v.lang.startsWith('en')
+            ) || voices.find(v =>
+              v.lang.startsWith('en')
+            );
+            if (preferred) utterance.voice = preferred;
+            window.speechSynthesis.speak(utterance);
+          }
+
+          setTimeout(() => {
+            setShowCelebration(false);
+            setIsFullCelebration(false);
+          }, 6500);
+        } else {
+          // Regular toast for individual section
+          const messages = {
+            personalInfo: "Contact info added",
+            summary: "Summary done",
+            experience: "Experience added",
+            education: "Education added",
+            skills: "Skills added",
+            additional: "Additional info saved",
+            licenses: "License added",
+            certifications: "Certifications added",
+            healthcareSkills: "Clinical skills added"
+          };
+
+          const message = messages[sectionId] || "Section complete";
+
+          setIsFullCelebration(false);
+          setCelebrationMessage(message);
+          setShowCelebration(true);
+
+          setTimeout(() => {
+            setShowCelebration(false);
+          }, 2500);
+        }
       }
     }
   };
@@ -1823,11 +1910,27 @@ const ModernResumeBuilder = ({
       
       case 'skills':
         return data.length >= 3;
-      
+
+      case 'licenses':
+        // At least one license with state selected
+        return Array.isArray(data) && data.length > 0 && data.some(lic => lic.state);
+
+      case 'certifications':
+        // At least one certification selected
+        return Array.isArray(data) && data.length > 0;
+
+      case 'healthcareSkills':
+        // At least one EHR system or clinical skill selected
+        return data && (
+          (data.ehrSystems && data.ehrSystems.length > 0) ||
+          (data.clinicalSkills && data.clinicalSkills.length > 0) ||
+          (data.customSkills && data.customSkills.length > 0)
+        );
+
       case 'additional':
         // Additional info is optional
         return true;
-      
+
       default:
         return false;
     }
@@ -1864,14 +1967,45 @@ const ModernResumeBuilder = ({
   const handleAdditionalInfoChange = (data) => {
     updateResumeData('additional', data);
   };
-  
+
+  // Healthcare-specific section handlers
+  const handleLicensesChange = (data) => {
+    updateResumeData('licenses', data);
+  };
+
+  const handleCertificationsChange = (data) => {
+    updateResumeData('certifications', data);
+  };
+
+  const handleHealthcareSkillsChange = (data) => {
+    updateResumeData('healthcareSkills', data);
+  };
+
   // Handle section completion
   const handleSectionComplete = (sectionId) => {
     // This function will be called when a section signals it's complete
     // We could add additional logic here if needed beyond what's in updateResumeData
     console.log(`Section ${sectionId} marked as complete`);
   };
-  
+
+  // Handle section change with smooth scroll on mobile
+  const handleSectionChange = (sectionId) => {
+    setActiveSection(sectionId);
+
+    // Scroll to the top of the section content on all screen sizes
+    setTimeout(() => {
+      if (sectionContentRef.current) {
+        // Reset internal scroll position
+        sectionContentRef.current.scrollTop = 0;
+        // Scroll viewport so the section is visible
+        sectionContentRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 50);
+  };
+
   // Render current section component
   const renderCurrentSection = () => {
     console.log(`📊 Rendering section: ${activeSection}`);
@@ -1883,22 +2017,47 @@ const ModernResumeBuilder = ({
     switch (activeSection) {
       case 'personalInfo':
         return (
-          <PersonalInfo 
-            data={resumeData.personalInfo} 
-            updateData={handlePersonalInfoChange} 
+          <PersonalInfo
+            data={resumeData.personalInfo}
+            updateData={handlePersonalInfoChange}
             onComplete={() => handleSectionComplete('personalInfo')}
             isCompleted={completedSections.personalInfo}
             jobContext={internalJobContext}
           />
         );
+      case 'licenses':
+        return (
+          <Licenses
+            data={resumeData.licenses || []}
+            updateData={handleLicensesChange}
+          />
+        );
+      case 'certifications':
+        return (
+          <Certifications
+            data={resumeData.certifications || []}
+            updateData={handleCertificationsChange}
+          />
+        );
+      case 'healthcareSkills':
+        return (
+          <HealthcareSkills
+            data={resumeData.healthcareSkills || { ehrSystems: [], clinicalSkills: [], specialty: '', customSkills: [] }}
+            updateData={handleHealthcareSkillsChange}
+            experienceData={resumeData.experience}
+            certifications={resumeData.certifications}
+            onNavigateToSection={handleSectionChange}
+          />
+        );
       case 'summary':
         return (
-          <Summary 
-            data={resumeData.summary} 
-            updateData={handleSummaryChange} 
+          <Summary
+            data={resumeData.summary}
+            updateData={handleSummaryChange}
             onComplete={() => handleSectionComplete('summary')}
             isCompleted={completedSections.summary}
             jobContext={internalJobContext}
+            onNavigateToSection={handleSectionChange}
           />
         );
       case 'experience':
@@ -2308,6 +2467,7 @@ const ModernResumeBuilder = ({
 
   // Get the resume selection modal functionality
   const { navigateToPricing } = useResumeSelection();
+  const { showPaywall } = usePaywall();
 
   // Replace the download handler with Puppeteer-based logic
   const handleDownloadPDF = async () => {
@@ -2340,20 +2500,9 @@ const ModernResumeBuilder = ({
       return;
     }
 
-    // If we already know the resume isn't eligible, redirect to subscription page using the modal
+    // If we already know the resume isn't eligible, show paywall modal
     if ((!isEligibleForDownload || (subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) && currentResumeId) {
-      // Save the current state before redirecting
-      localStorage.setItem('pending_resume_download', 'true');
-      localStorage.setItem('modern_resume_data', JSON.stringify(resumeData));
-      localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
-      localStorage.setItem('selected_resume_template', selectedTemplate);
-      
-      // Store the current resume ID to maintain context after purchase
-      localStorage.setItem('pending_download_resume_id', currentResumeId);
-      
-      // Use the resume selection modal to navigate to subscription page
-      // Pass false for forceModal to skip the modal and use the current resumeId directly
-      navigateToPricing(`/subscription?action=download&resumeId=${currentResumeId}`, false);
+      showPaywall('download');
       return;
     }
 
@@ -2370,18 +2519,9 @@ const ModernResumeBuilder = ({
       const eligibilityData = await eligibilityResponse.json();
 
       if (!eligibilityData.eligible) {
-        // User doesn't have an active subscription
-        toast.error(eligibilityData.message || 'Subscription required', { id: toastId });
+        toast.dismiss(toastId);
         setIsDownloading(false);
-        
-        // Save the current state before redirecting
-        localStorage.setItem('pending_resume_download', 'true');
-        localStorage.setItem('modern_resume_data', JSON.stringify(resumeData));
-        localStorage.setItem('resume_section_order', JSON.stringify(sectionOrder));
-        localStorage.setItem('selected_resume_template', selectedTemplate);
-        
-        // Redirect to subscription page with download action
-        router.push('/subscription?action=download');
+        showPaywall('download');
         return;
       }
       
@@ -2497,7 +2637,7 @@ const ModernResumeBuilder = ({
         body: JSON.stringify({
           template: selectedTemplate || 'ats', // Default to ATS-Friendly if not set
           resumeData,
-          sectionOrder,
+          sectionOrder: resumeRenderOrder, // Render order pins Summary as #2
           resumeId: resumeIdForDownload,
           resumeName
         }),
@@ -2549,6 +2689,11 @@ const ModernResumeBuilder = ({
       }
 
       toast.success('Resume downloaded successfully!', { id: toastId });
+
+      // If this was a free download, flip eligibility so next attempt shows paywall
+      if (eligibilityData.isFreeDownload) {
+        setIsEligibleForDownload(false);
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to download resume. Please try again later.', { id: toastId });
@@ -3271,9 +3416,9 @@ const ModernResumeBuilder = ({
           
           // Map plan IDs to display names
           if (data.plan === 'weekly') {
-            planDisplayName = 'Short-Term Job Hunt';
+            planDisplayName = 'Weekly Pro';
           } else if (data.plan === 'monthly') {
-            planDisplayName = 'Long-Term Job Hunt';
+            planDisplayName = 'Monthly Pro';
           } else if (data.plan === 'one-time') {
             planDisplayName = 'One-Time Download';
             
@@ -3356,7 +3501,7 @@ const ModernResumeBuilder = ({
         />
         
         {showCelebration && (
-          <Celebrations message={celebrationMessage} />
+          <Celebrations message={celebrationMessage} isFullCelebration={isFullCelebration} />
         )}
         
         {/* Floating View Preview Button */}
@@ -3454,23 +3599,23 @@ const ModernResumeBuilder = ({
             />
           )}
           
-          {/* Move Import Resume to compact button when in job tailoring mode */}
-          {!internalJobContext && (
+          {/* Import Resume - only show when no sections completed yet */}
+          {!internalJobContext && calculateProgress() === 0 && (
             <div className={styles.importButtonContainer}>
-              <a 
-                href="/resume-import" 
+              <a
+                href="/resume-import"
                 className={styles.importButton}
                 onClick={() => {
-                  // Set flags to indicate this is an import operation that should create a new resume
                   localStorage.setItem('import_pending', 'true');
                   localStorage.setItem('import_create_new', 'true');
-                  console.log('📊 Setting import flags for creating a new resume from import');
                 }}
               >
                 <span className={styles.importIcon}>📄</span>
-                Import Resume
+                Import
               </a>
-              <p className={styles.importDescription}>Have an existing resume? Import it to save time!</p>
+              <p className={styles.importDescription}>
+                Have an existing resume? Import it to save time!
+              </p>
             </div>
           )}
           
@@ -3495,18 +3640,70 @@ const ModernResumeBuilder = ({
           
           <div className={styles.builderContent}>
             <div className={styles.navigationColumn}>
-              <SectionNavigation 
+              <SectionNavigation
                 sections={orderedSections}
                 activeSection={activeSection}
                 completedSections={completedSections}
-                onSectionChange={setActiveSection}
+                onSectionChange={handleSectionChange}
                 onReorderSections={reorderSections}
                 onResetSectionOrder={resetSectionOrder}
               />
             </div>
-            
-            <div className={styles.sectionContent}>
+
+            <div className={styles.sectionContent} ref={sectionContentRef}>
               {renderCurrentSection()}
+
+              {/* Next / Back section navigation */}
+              {(() => {
+                const currentIdx = orderedSections.findIndex(s => s.id === activeSection);
+                const prevSection = currentIdx > 0 ? orderedSections[currentIdx - 1] : null;
+                const nextSection = currentIdx < orderedSections.length - 1 ? orderedSections[currentIdx + 1] : null;
+                const isLast = currentIdx === orderedSections.length - 1;
+
+                return (
+                  <div className={styles.sectionNav}>
+                    {prevSection ? (
+                      <button
+                        className={styles.sectionNavBack}
+                        onClick={() => handleSectionChange(prevSection.id)}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        {prevSection.label}
+                      </button>
+                    ) : <span />}
+
+                    {nextSection ? (
+                      <button
+                        className={styles.sectionNavNext}
+                        onClick={() => handleSectionChange(nextSection.id)}
+                      >
+                        {nextSection.label}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </button>
+                    ) : isLast ? (
+                      <button
+                        className={styles.sectionNavNext}
+                        onClick={() => {
+                          // Scroll to template selector / preview area
+                          const templateSection = document.querySelector(`.${styles.templateSelectorContainer}`);
+                          if (templateSection) {
+                            templateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }}
+                      >
+                        Preview &amp; Download
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </button>
+                    ) : <span />}
+                  </div>
+                );
+              })()}
             </div>
           </div>
           
@@ -3521,15 +3718,41 @@ const ModernResumeBuilder = ({
         </div>
         
         <div className={styles.previewColumn} ref={previewRef}>
-          <div className={styles.previewHeader}>
-            <h2 className={styles.previewTitle}>Resume Preview</h2>
-            <p className={styles.previewSubtitle}>This is how your resume will look to employers</p>
+          {/* Tab Navigation */}
+          <div className={styles.previewTabs}>
+            <button
+              className={`${styles.tabButton} ${activePreviewTab === 'preview' ? styles.activeTab : ''}`}
+              onClick={() => setActivePreviewTab('preview')}
+            >
+              <FaEye /> Preview
+            </button>
+            <button
+              className={`${styles.tabButton} ${activePreviewTab === 'score' ? styles.activeTab : ''}`}
+              onClick={() => setActivePreviewTab('score')}
+            >
+              <FaChartLine /> ATS Score
+            </button>
           </div>
-          <ResumePreview 
-            resumeData={resumeData} 
-            template={selectedTemplate} 
-            sectionOrder={sectionOrder}
-          />
+
+          {/* Tab Content */}
+          {activePreviewTab === 'preview' ? (
+            <>
+              <div className={styles.previewHeader}>
+                <h2 className={styles.previewTitle}>Resume Preview</h2>
+                <p className={styles.previewSubtitle}>This is how your resume will look to employers</p>
+              </div>
+              <ResumePreview
+                resumeData={resumeData}
+                template={selectedTemplate}
+                sectionOrder={resumeRenderOrder}
+              />
+            </>
+          ) : (
+            <ATSScorePanel
+              resumeData={resumeData}
+              jobContext={internalJobContext}
+            />
+          )}
         </div>
         
         <div className={styles.actionContainer}>
