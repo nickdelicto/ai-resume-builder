@@ -188,7 +188,7 @@ export default async function handler(req, res) {
     }
 
     // Create a checkout session
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSessionParams = {
       customer: customer.id,
       client_reference_id: session.user.id,
       payment_method_types: ['card'],
@@ -201,7 +201,21 @@ export default async function handler(req, res) {
         planId: plan.id,
         ...metadata
       },
-    });
+    };
+
+    // For subscriptions, also set metadata on the Stripe subscription itself
+    // so webhook handlers (invoice.payment_succeeded, customer.subscription.deleted)
+    // can identify the user from the subscription object
+    if (mode === 'subscription') {
+      checkoutSessionParams.subscription_data = {
+        metadata: {
+          userId: session.user.id,
+          planId: plan.id,
+        },
+      };
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(checkoutSessionParams);
 
     // TEMPORARY: Update database directly for testing
     // This is needed because the webhook might not be working properly in development
@@ -245,13 +259,12 @@ async function updateDatabaseForTesting(userId, planId, metadata) {
       currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
     }
 
-    // If this is an upgrade/downgrade, handle the previous subscription
+    // If this is an upgrade/downgrade, cancel the previous subscription
     if (metadata?.previousSubscriptionId) {
       await prisma.userSubscription.update({
         where: { id: metadata.previousSubscriptionId },
         data: {
-          status: 'canceled',
-          canceledAt: new Date()
+          status: 'canceled'
         }
       });
     }

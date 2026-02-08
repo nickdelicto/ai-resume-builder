@@ -18,19 +18,16 @@ export default async function handler(req, res) {
     apiVersion: '2024-06-20',
   });
 
-  // Get the raw request body
+  // Get the raw request body (must pass buffer directly, not string, for signature verification)
   const buf = await buffer(req);
-  const rawBody = buf.toString('utf8');
-  
-  // Get the Stripe signature from headers
   const signature = req.headers['stripe-signature'];
-  
+
   let event;
 
   try {
     // Verify and construct the webhook event
     event = stripe.webhooks.constructEvent(
-      rawBody,
+      buf,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -118,6 +115,29 @@ export default async function handler(req, res) {
                 }
               }
               
+              // Deactivate any active discounts on the previous subscription
+              const prevDiscounts = await prisma.subscriptionDiscount.findMany({
+                where: { subscriptionId: previousSubscriptionId, isActive: true }
+              });
+              if (prevDiscounts.length > 0) {
+                await prisma.subscriptionDiscount.updateMany({
+                  where: { subscriptionId: previousSubscriptionId, isActive: true },
+                  data: { isActive: false }
+                });
+                console.log(`Deactivated ${prevDiscounts.length} discount(s) from previous subscription`);
+
+                // Clean up Stripe coupons
+                for (const disc of prevDiscounts) {
+                  if (disc.stripeCouponId) {
+                    try {
+                      await stripe.coupons.del(disc.stripeCouponId);
+                    } catch (e) {
+                      console.error('Error deleting Stripe coupon during plan change:', e.message);
+                    }
+                  }
+                }
+              }
+
               // Update the previous subscription status in our database
               await prisma.userSubscription.update({
                 where: { id: previousSubscriptionId },
@@ -131,7 +151,7 @@ export default async function handler(req, res) {
                   }
                 }
               });
-              
+
               console.log(`Marked previous subscription ${previousSubscriptionId} as canceled in database`);
             } else {
               console.log(`Previous subscription ${previousSubscriptionId} not found in database`);
@@ -319,63 +339,105 @@ export default async function handler(req, res) {
       case 'invoice.payment_succeeded': {
         // Handle subscription renewal
         const invoice = event.data.object;
-        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-        const userId = subscription.metadata.userId;
-        
-        if (userId) {
-          // Find the user's subscription
-          const userSubscription = await prisma.userSubscription.findFirst({
-            where: {
-              stripeSubscriptionId: invoice.subscription,
-              userId: userId,
+
+        if (!invoice.subscription) {
+          console.log('Invoice has no subscription ID, skipping (likely a one-time payment)');
+          break;
+        }
+
+        // Look up our subscription record by Stripe subscription ID (not metadata — metadata may be empty)
+        const renewedSubscription = await prisma.userSubscription.findFirst({
+          where: {
+            stripeSubscriptionId: invoice.subscription,
+          },
+        });
+
+        if (renewedSubscription) {
+          // Fetch the latest period dates from Stripe
+          const stripeSubscription = await stripe.subscriptions.retrieve(invoice.subscription);
+
+          // Update subscription period
+          await prisma.userSubscription.update({
+            where: { id: renewedSubscription.id },
+            data: {
+              currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+              currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+              status: 'active',
+              updatedAt: new Date(),
             },
           });
-          
-          if (userSubscription) {
-            // Update subscription period
-            await prisma.userSubscription.update({
-              where: { id: userSubscription.id },
-              data: {
-                currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                status: 'active',
-                updatedAt: new Date(),
-              },
-            });
-            
-            // Update user's plan expiration date
-            await prisma.user.update({
-              where: { id: userId },
-              data: {
-                planExpirationDate: new Date(subscription.current_period_end * 1000),
-              },
-            });
-            
-            console.log(`Subscription renewed for user ${userId}`);
-          }
+
+          // Update user's plan expiration date
+          await prisma.user.update({
+            where: { id: renewedSubscription.userId },
+            data: {
+              planExpirationDate: new Date(stripeSubscription.current_period_end * 1000),
+            },
+          });
+
+          console.log(`Subscription renewed for user ${renewedSubscription.userId} (subscription: ${renewedSubscription.id})`);
+        } else {
+          console.log(`No subscription found in database for Stripe subscription ${invoice.subscription}`);
         }
         break;
       }
       
       case 'customer.subscription.deleted': {
-        // Handle subscription cancellation
-        const subscription = event.data.object;
-        const userId = subscription.metadata.userId;
-        
-        if (userId) {
-          // Update subscription status
-          await prisma.userSubscription.updateMany({
+        // Handle subscription cancellation (fired by Stripe on cancel, payment failure, etc.)
+        const deletedSubscription = event.data.object;
+
+        // Look up by Stripe subscription ID directly (not metadata — metadata may be empty)
+        const ourSubscription = await prisma.userSubscription.findFirst({
+          where: {
+            stripeSubscriptionId: deletedSubscription.id,
+          }
+        });
+
+        if (ourSubscription) {
+          // Deactivate any active discounts on this subscription
+          const deactivatedDiscounts = await prisma.subscriptionDiscount.findMany({
             where: {
-              stripeSubscriptionId: subscription.id,
-              userId: userId,
-            },
+              subscriptionId: ourSubscription.id,
+              isActive: true
+            }
+          });
+
+          if (deactivatedDiscounts.length > 0) {
+            await prisma.subscriptionDiscount.updateMany({
+              where: {
+                subscriptionId: ourSubscription.id,
+                isActive: true
+              },
+              data: { isActive: false }
+            });
+
+            // Clean up Stripe coupons
+            for (const disc of deactivatedDiscounts) {
+              if (disc.stripeCouponId) {
+                try {
+                  await stripe.coupons.del(disc.stripeCouponId);
+                } catch (e) {
+                  console.error('Error deleting Stripe coupon during subscription deletion:', e.message);
+                }
+              }
+            }
+
+            console.log(`Deactivated ${deactivatedDiscounts.length} discount(s) for subscription ${ourSubscription.id}`);
+          }
+
+          // Update subscription status
+          await prisma.userSubscription.update({
+            where: { id: ourSubscription.id },
             data: {
               status: 'canceled',
+              canceledAt: new Date(),
               updatedAt: new Date(),
             },
           });
-          
-          console.log(`Subscription canceled for user ${userId}`);
+
+          console.log(`Subscription ${ourSubscription.id} canceled for user ${ourSubscription.userId}`);
+        } else {
+          console.log(`No subscription found in database for Stripe subscription ${deletedSubscription.id}`);
         }
         break;
       }

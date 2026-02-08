@@ -66,25 +66,36 @@ export default async function handler(req, res) {
       });
     }
 
+    // Check if this user has EVER received a retention discount (across all subscriptions)
+    const anyPreviousRetentionDiscount = await prisma.subscriptionDiscount.findFirst({
+      where: {
+        userId: session.user.id,
+        reason: 'retention'
+      }
+    });
+    const hasEverUsedRetentionDiscount = !!anyPreviousRetentionDiscount;
+
     // Check if there's an active discount
     if (subscription.discounts.length === 0) {
       // Check if there's discount information in the metadata (for backward compatibility)
       if (subscription.metadata?.hasDiscount && subscription.metadata?.discountPercent) {
         return res.status(200).json({
           success: true,
+          hasEverUsedRetentionDiscount,
           discount: {
             discountPercent: subscription.metadata.discountPercent,
             originalPrice: subscription.metadata.originalPrice || subscription.plan.price,
-            discountedPrice: subscription.metadata.discountedPrice || 
+            discountedPrice: subscription.metadata.discountedPrice ||
               (subscription.plan.price * (1 - subscription.metadata.discountPercent / 100)),
             appliedAt: subscription.metadata.discountAppliedAt || subscription.updatedAt
           }
         });
       }
-      
+
       // No discount found
       return res.status(200).json({
         success: true,
+        hasEverUsedRetentionDiscount,
         discount: null
       });
     }
@@ -93,6 +104,7 @@ export default async function handler(req, res) {
     const activeDiscount = subscription.discounts[0];
     return res.status(200).json({
       success: true,
+      hasEverUsedRetentionDiscount,
       discount: {
         id: activeDiscount.id,
         discountPercent: activeDiscount.discountPercent,

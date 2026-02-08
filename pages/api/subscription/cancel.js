@@ -94,10 +94,36 @@ export default async function handler(req, res) {
       console.log('No Stripe subscription ID found, only updating local database');
     }
 
+    // Deactivate any active discounts on this subscription
+    const activeDiscounts = await prisma.subscriptionDiscount.findMany({
+      where: { subscriptionId, isActive: true }
+    });
+
+    if (activeDiscounts.length > 0) {
+      await prisma.subscriptionDiscount.updateMany({
+        where: { subscriptionId, isActive: true },
+        data: { isActive: false }
+      });
+      console.log(`Deactivated ${activeDiscounts.length} active discount(s) for subscription ${subscriptionId}`);
+
+      // Also remove the Stripe coupon from the subscription if it exists
+      for (const discount of activeDiscounts) {
+        if (discount.stripeCouponId && subscription.stripeSubscriptionId) {
+          try {
+            await stripe.coupons.del(discount.stripeCouponId);
+            console.log(`Deleted Stripe coupon ${discount.stripeCouponId}`);
+          } catch (couponError) {
+            // Coupon may already be deleted or subscription already canceled in Stripe
+            console.error('Error deleting Stripe coupon:', couponError.message);
+          }
+        }
+      }
+    }
+
     // Update the subscription in the database
     const updatedSubscription = await prisma.userSubscription.update({
       where: { id: subscriptionId },
-      data: { 
+      data: {
         status: 'canceled',
         // Don't change the currentPeriodEnd - user should have access until then
       }

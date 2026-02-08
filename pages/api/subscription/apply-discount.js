@@ -54,6 +54,23 @@ export default async function handler(req, res) {
 
     console.log(`Attempting to apply ${discount}% discount to subscription ${subscriptionId} for user ${session.user.id}`);
 
+    // LIFETIME GUARD: Check if this user has EVER received a retention discount (across all subscriptions)
+    const previousRetentionDiscount = await prisma.subscriptionDiscount.findFirst({
+      where: {
+        userId: session.user.id,
+        reason: 'retention'
+      }
+    });
+
+    if (previousRetentionDiscount) {
+      console.log(`User ${session.user.id} already used retention discount on subscription ${previousRetentionDiscount.subscriptionId} at ${previousRetentionDiscount.appliedAt}`);
+      return res.status(400).json({
+        success: false,
+        error: 'Discount already used',
+        message: 'This discount can only be used once per account.'
+      });
+    }
+
     // Get the subscription from the database
     const subscription = await prisma.userSubscription.findFirst({
       where: {
@@ -87,28 +104,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // Check if there's already an active discount
+    // Check if there's already an active discount on this subscription
     if (subscription.discounts.length > 0) {
-      const existingDiscount = subscription.discounts[0];
-      
-      // If the existing discount is the same or better, don't apply a new one
-      if (existingDiscount.discountPercent >= discount) {
-        return res.status(200).json({
-          success: true,
-          message: `A ${existingDiscount.discountPercent}% discount is already applied to this subscription`,
-          subscription: {
-            id: subscription.id,
-            discountPercent: existingDiscount.discountPercent,
-            originalPrice: existingDiscount.originalPrice,
-            discountedPrice: existingDiscount.discountedPrice
-          }
-        });
-      }
-      
-      // If the new discount is better, deactivate the old one
-      await prisma.subscriptionDiscount.update({
-        where: { id: existingDiscount.id },
-        data: { isActive: false }
+      return res.status(400).json({
+        success: false,
+        error: 'Discount already applied',
+        message: 'This subscription already has an active discount.'
       });
     }
 

@@ -109,7 +109,8 @@ async function handleSubscriptionCreated(subscription) {
  */
 async function handleSubscriptionUpdated(subscription) {
   console.log('Subscription updated:', subscription.id);
-  
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
   try {
     // Find the user subscription in our database
     const userSubscription = await prisma.userSubscription.findFirst({
