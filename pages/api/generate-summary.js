@@ -20,6 +20,9 @@ const GenerateSummarySchema = z.object({
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     description: z.string().optional(),
+    unit: z.string().optional(),
+    facilityType: z.string().optional(),
+    shiftType: z.string().optional(),
   })).optional(),
   education: z.array(z.object({
     degree: z.string().optional(),
@@ -27,6 +30,21 @@ const GenerateSummarySchema = z.object({
     fieldOfStudy: z.string().optional(),
   })).optional(),
   skills: z.array(z.string()).optional(),
+  certifications: z.array(z.object({
+    name: z.string().optional(),
+    fullName: z.string().optional(),
+  })).optional(),
+  licenses: z.array(z.object({
+    type: z.string().optional(),
+    state: z.string().optional(),
+    isCompact: z.boolean().optional(),
+  })).optional(),
+  healthcareSkills: z.object({
+    ehrSystems: z.array(z.string()).optional(),
+    clinicalSkills: z.array(z.string()).optional(),
+    specialty: z.string().optional(),
+    customSkills: z.array(z.string()).optional(),
+  }).optional(),
   jobContext: z.string().optional().nullable(),
   action: z.enum(['generate', 'improve']).default('generate'),
 });
@@ -40,12 +58,15 @@ export default async function handler(req, res) {
   try {
     // Validate input
     const validatedInput = GenerateSummarySchema.parse(req.body);
-    const { 
-      existingSummary, 
-      professionalContext, 
+    const {
+      existingSummary,
+      professionalContext,
       experience,
       education,
       skills,
+      certifications,
+      licenses,
+      healthcareSkills,
       jobContext,
       action
     } = validatedInput;
@@ -72,6 +93,9 @@ export default async function handler(req, res) {
       experience,
       education,
       skills,
+      certifications,
+      licenses,
+      healthcareSkills,
       jobContext,
       action
     );
@@ -146,31 +170,34 @@ function performSecurityCheck(inputs) {
 }
 
 // Create an appropriate prompt based on the available data
-function createPrompt(existingSummary, professionalContext, experience, education, skills, jobContext, action) {
+function createPrompt(existingSummary, professionalContext, experience, education, skills, certifications, licenses, healthcareSkills, jobContext, action) {
   // Create system message with detailed instructions
   const systemMessage = {
     role: "system",
-    content: `You are a professional resume writer specializing in crafting compelling professional summaries. You focus on highlighting key strengths, experiences, and career objectives.
-    Your task is to ${action === 'improve' ? 'improve the existing summary' : 'create a new professional summary'} based on the provided information.
-    
-    Guidelines:
-    - Create a concise, impactful professional summary in accordance with best practices for resumes (3-4 sentences, maximum 100 words)   
-    - Use a professional tone with strong action verbs
-    - Highlight key skills, experiences, and accomplishments
-    - Include relevant keywords for ATS optimization
-    - Focus on quantifiable achievements when possible
-    - Tailor to the job description if provided
-    - Do not use first-person pronouns (I, me, my)
-    - Start with a strong professional identifier (e.g., "Experienced Software Engineer" rather than "I am a Software Engineer")
-    - Format as a single paragraph
-    - NEVER mention "resume" or "CV" in the summary
-    - NEVER address the reader directly
-    - NEVER mention "seeking new opportunities" or job searching
-    
-    VERY IMPORTANT: Respond ONLY with the professional summary text. Do not include ANY explanations, introductions, or comments.`
+    content: `You are a professional resume writer specializing in nursing careers — Registered Nurses, charge nurses, travel nurses, and nursing leadership.
+Your task is to ${action === 'improve' ? 'improve the existing summary' : 'create a new professional summary'} based on the provided nursing context.
+
+Guidelines:
+- Create a concise, impactful professional summary (3-4 sentences, 50-75 words)
+- HARD LIMIT: Never exceed 500 characters. Aim for 300-450 characters
+- Lead with nursing specialty and years of experience (e.g., "Dedicated ICU Registered Nurse with 8+ years...")
+- The four must-have elements: (1) professional title + specialty, (2) years of experience, (3) key credentials/certifications, (4) one core competency or achievement
+- Include nursing-specific ATS keywords: patient care, clinical documentation, interdisciplinary collaboration, medication administration, patient assessment, care coordination
+- If certifications are provided (BLS, ACLS, CCRN, etc.), mention the most relevant 1-2 by abbreviation
+- If license info is provided, mention compact/multi-state licensure if applicable
+- Reference facility types or care settings when relevant (Level I trauma, Magnet hospital, teaching facility)
+- If a nursing specialty is provided, use specialty-specific terminology
+- Calculate years of experience from the earliest start date to most recent end date. Round to nearest whole number. Use "X+" format (e.g., "8+ years")
+- Use nursing-appropriate professional tone
+- Do not use first-person pronouns (I, me, my)
+- NEVER mention "resume", "seeking opportunities", or "looking for"
+- NEVER fabricate certifications or credentials not provided in the context
+- Format as a single paragraph
+
+VERY IMPORTANT: Respond ONLY with the professional summary text. Do not include ANY explanations, introductions, or comments.`
   };
 
-  const userMessage = buildUserMessageContent(existingSummary, professionalContext, experience, education, skills, jobContext, action);
+  const userMessage = buildUserMessageContent(existingSummary, professionalContext, experience, education, skills, certifications, licenses, healthcareSkills, jobContext, action);
 
   return [
     systemMessage,
@@ -182,7 +209,7 @@ function createPrompt(existingSummary, professionalContext, experience, educatio
 }
 
 // Build the user message with all available context
-function buildUserMessageContent(existingSummary, professionalContext, experience, education, skills, jobContext, action) {
+function buildUserMessageContent(existingSummary, professionalContext, experience, education, skills, certifications, licenses, healthcareSkills, jobContext, action) {
   let content = '';
 
   // Add clear boundary markers to prevent data confusion
@@ -210,15 +237,64 @@ function buildUserMessageContent(existingSummary, professionalContext, experienc
     experience.forEach((exp, _index) => {
       content += `Position ${_index + 1}: ${exp.title} at ${exp.company}\n`;
       if (exp.startDate && exp.endDate) content += `Duration: ${exp.startDate} - ${exp.endDate}\n`;
+      if (exp.unit) content += `Unit: ${exp.unit}\n`;
+      if (exp.facilityType) content += `Facility: ${exp.facilityType}\n`;
+      if (exp.shiftType) content += `Shift: ${exp.shiftType}\n`;
       if (exp.description) content += `Description: ${exp.description}\n`;
       content += '\n';
     });
   }
 
+  // Add certifications if available
+  if (certifications && certifications.length > 0) {
+    content += '=== CERTIFICATIONS ===\n';
+    certifications.forEach(cert => {
+      const display = cert.fullName ? `${cert.name} (${cert.fullName})` : cert.name;
+      if (display) content += `${display}\n`;
+    });
+    content += '\n';
+  }
+
+  // Add licenses if available
+  if (licenses && licenses.length > 0) {
+    content += '=== NURSING LICENSES ===\n';
+    licenses.forEach(lic => {
+      let licLine = lic.type ? lic.type.toUpperCase() : '';
+      if (lic.state) licLine += ` - ${lic.state}`;
+      if (lic.isCompact) licLine += ' (Compact/Multi-State)';
+      if (licLine) content += `${licLine}\n`;
+    });
+    content += '\n';
+  }
+
+  // Add healthcare skills if available
+  if (healthcareSkills) {
+    const hasData = healthcareSkills.specialty ||
+      (healthcareSkills.ehrSystems && healthcareSkills.ehrSystems.length > 0) ||
+      (healthcareSkills.clinicalSkills && healthcareSkills.clinicalSkills.length > 0) ||
+      (healthcareSkills.customSkills && healthcareSkills.customSkills.length > 0);
+
+    if (hasData) {
+      content += '=== HEALTHCARE SKILLS ===\n';
+      if (healthcareSkills.specialty) content += `Nursing Specialty: ${healthcareSkills.specialty}\n`;
+      if (healthcareSkills.ehrSystems && healthcareSkills.ehrSystems.length > 0) {
+        content += `EHR Systems: ${healthcareSkills.ehrSystems.join(', ')}\n`;
+      }
+      const allSkills = [
+        ...(healthcareSkills.clinicalSkills || []),
+        ...(healthcareSkills.customSkills || [])
+      ];
+      if (allSkills.length > 0) {
+        content += `Clinical Skills: ${allSkills.join(', ')}\n`;
+      }
+      content += '\n';
+    }
+  }
+
   // Add education if available
   if (education && education.length > 0) {
     content += '=== EDUCATION ===\n';
-    education.forEach((edu, _index) => {
+    education.forEach((edu) => {
       if (edu.degree) content += `Degree: ${edu.degree}\n`;
       if (edu.school) content += `School: ${edu.school}\n`;
       if (edu.fieldOfStudy) content += `Field of Study: ${edu.fieldOfStudy}\n`;
@@ -241,9 +317,9 @@ function buildUserMessageContent(existingSummary, professionalContext, experienc
   // Add final request
   content += '=== INSTRUCTIONS ===\n';
   if (action === 'improve') {
-    content += 'Please improve the existing summary using the provided context. Make it more professional, impactful, and tailored to the job description if provided, and always according to resume best practices.\n';
+    content += 'Please improve the existing summary using ALL the provided context (experience, certifications, licenses, skills). Make it more professional, impactful, and ATS-optimized. Keep it under 500 characters.\n';
   } else {
-    content += 'Please create a professional summary based on the provided information. Make it impactful and tailored to the job description if provided, and always according to resume best practices.\n';
+    content += 'Please create a professional summary using ALL the provided context (experience, certifications, licenses, skills). Make it impactful and ATS-optimized. Keep it under 500 characters.\n';
   }
   content += 'Remember to follow the guidelines in your instructions.';
 

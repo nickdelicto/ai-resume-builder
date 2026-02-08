@@ -28,7 +28,12 @@ const GenerateSkillsSchema = z.object({
   })).optional(),
   summary: z.string().optional(),
   jobContext: z.string().optional().nullable(),
-  count: z.number().min(3).max(15).default(8)
+  count: z.number().min(3).max(15).default(8),
+  specialty: z.string().optional(),
+  certifications: z.array(z.object({
+    name: z.string().optional(),
+    id: z.string().optional(),
+  })).optional(),
 });
 
 export default async function handler(req, res) {
@@ -40,14 +45,16 @@ export default async function handler(req, res) {
   try {
     // Validate input
     const validatedInput = GenerateSkillsSchema.parse(req.body);
-    const { 
-      existingSkills = [], 
+    const {
+      existingSkills = [],
       professionalContext,
       experience,
       education,
       summary,
       jobContext,
-      count
+      count,
+      specialty,
+      certifications
     } = validatedInput;
 
     // Check if we have sufficient context
@@ -81,7 +88,9 @@ export default async function handler(req, res) {
       education,
       summary,
       jobContext,
-      count
+      count,
+      specialty,
+      certifications
     );
 
     // Call OpenAI with the newer SDK format
@@ -157,30 +166,32 @@ function performSecurityCheck(inputs) {
 }
 
 // Create an appropriate prompt based on the available data
-function createPrompt(existingSkills, professionalContext, experience, education, summary, jobContext, count) {
+function createPrompt(existingSkills, professionalContext, experience, education, summary, jobContext, count, specialty, certifications) {
   // Create system message with detailed instructions
   const systemMessage = {
     role: "system",
-    content: `You are an expert resume writer, specializing in identifying relevant skills for job seekers based on their work experience and target roles.
+    content: `You are an expert nursing resume writer specializing in clinical skills for Registered Nurses, charge nurses, travel nurses, and nursing leadership.
 
     Guidelines:
-    - Generate ${count} relevant skills based on the person's work experience and job targets
-    - Include a mix of technical skills, industry-specific skills, and soft skills
-    - Focus on skills that are relevant to the target job (if provided)
+    - Generate ${count} relevant clinical skills based on the nurse's work experience and specialty
+    - Focus on nursing-specific clinical competencies, not generic soft skills
+    - Include skills that ATS systems used by healthcare employers scan for
+    - Prioritize: clinical procedures, assessment skills, documentation competencies, patient care techniques, and unit-specific competencies
+    - If a nursing specialty is provided, suggest skills common for that specialty
     - Do not include skills already in the existing skills list
-    - Do not include skills that require further training or certifications or education if the person does not have it
-    - Skills should be suitable for a resume and be concise (1-4 words each)
-    - Format each skill as a single word or short phrase (e.g., "JavaScript" or "Project Management")
+    - Do not suggest certifications (BLS, ACLS, etc.) — those belong in the certifications section
+    - Do not suggest EHR system names — those belong in the EHR section
+    - Skills should be concise (1-4 words each), e.g., "Ventilator Management", "IV Insertion", "Wound Care"
     - Do NOT number the skills
     - Do NOT use bullet points
     - Do NOT include explanations or descriptions
     - Do NOT group skills by category
-    
-    You should respond ONLY with a LIST of skills, one per line, separated by newlines. 
+
+    Respond ONLY with a LIST of skills, one per line, separated by newlines.
     DO NOT include ANY explanatory text, headers, or additional formatting.`
   };
 
-  const userMessage = buildUserMessageContent(existingSkills, professionalContext, experience, education, summary, jobContext, count);
+  const userMessage = buildUserMessageContent(existingSkills, professionalContext, experience, education, summary, jobContext, count, specialty, certifications);
 
   return [
     systemMessage,
@@ -192,12 +203,27 @@ function createPrompt(existingSkills, professionalContext, experience, education
 }
 
 // Build the user message with all available context
-function buildUserMessageContent(existingSkills, professionalContext, experience, education, summary, jobContext, count) {
+function buildUserMessageContent(existingSkills, professionalContext, experience, education, summary, jobContext, count, specialty, certifications) {
   let content = '';
 
   // Add clear boundary markers to prevent data confusion
   content += '=== TASK ===\n';
-  content += `Generate ${count} relevant professional skills for my resume\n\n`;
+  content += `Generate ${count} relevant clinical skills for my nursing resume\n\n`;
+
+  // Add nursing specialty if available
+  if (specialty) {
+    content += '=== NURSING SPECIALTY ===\n';
+    content += `${specialty}\n\n`;
+  }
+
+  // Add certifications if available
+  if (certifications && certifications.length > 0) {
+    content += '=== CERTIFICATIONS ===\n';
+    certifications.forEach(cert => {
+      if (cert.name) content += `${cert.name}\n`;
+    });
+    content += '\n';
+  }
 
   // Add existing skills if available
   if (existingSkills && existingSkills.length > 0) {
@@ -253,16 +279,17 @@ function buildUserMessageContent(existingSkills, professionalContext, experience
 
   // Add final request
   content += '=== INSTRUCTIONS ===\n';
-  content += `Based on the information above, provide ${count} relevant skills for my resume. `;
-  
+  content += `Based on the information above, provide ${count} relevant clinical nursing skills for my resume. `;
+
   if (existingSkills && existingSkills.length > 0) {
     content += `Do NOT duplicate any of my existing skills. `;
   }
-  
+
   if (jobContext) {
     content += `Focus on skills that are relevant to the target job description. `;
   }
-  
+
+  content += `Suggest nursing-specific clinical competencies, not generic soft skills. `;
   content += `Remember to follow the guidelines in your instructions and list ONLY the skills, one per line, without numbers, bullets, or explanations.`;
 
   return content;
