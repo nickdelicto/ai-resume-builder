@@ -2,26 +2,30 @@ import React from 'react';
 import styles from './TemplateSelector.module.css';
 
 const templates = [
-  { 
-    id: 'ats', 
-    name: 'ATS-Friendly', 
-    description: 'Clean and standard professional layout',
-    isRecommended: true 
+  {
+    id: 'ats',
+    name: 'Hospital-Ready',
+    description: 'Passes screening software used by most hospitals',
+    bestFor: 'Hospital jobs, large health systems',
+    isRecommended: true
   },
-  { 
-    id: 'modern', 
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'Clean design with subtle blue accents',
+    bestFor: 'Clinics, outpatient, ambulatory care'
+  },
+  {
+    id: 'modern',
     name: 'Modern',
-    description: 'Contemporary design with colored accents' 
+    description: 'Bold header with colorful styling',
+    bestFor: 'Telehealth, startups, younger facilities'
   },
-  // { 
-  //   id: 'creative', 
-  //   name: 'Creative',
-  //   description: 'Unique layout with visual elements' 
-  // }, // Deactivated for launch focus
-  { 
-    id: 'minimalist', 
-    name: 'Minimalist', 
-    description: 'Simple and elegant minimal design' 
+  {
+    id: 'minimalist',
+    name: 'Minimalist',
+    description: 'Elegant serif font, refined look',
+    bestFor: 'Leadership roles, NP, experienced nurses'
   }
 ];
 
@@ -77,20 +81,15 @@ const TemplateSelector = ({ selectedTemplate, onSelectTemplate }) => {
             <h3 className={styles.templateName}>
               {template.name}
               {template.isRecommended && (
-                <span style={{
-                  marginLeft: '8px',
-                  fontSize: '12px',
-                  padding: '2px 6px',
-                  background: '#e7f5ff',
-                  color: '#1c7ed6',
-                  borderRadius: '4px',
-                  fontWeight: '500'
-                }}>
+                <span className={styles.recommendedBadge}>
                   Recommended
                 </span>
               )}
             </h3>
             <p className={styles.templateDescription}>{template.description}</p>
+            {template.bestFor && (
+              <p className={styles.templateBestFor}>Best for: {template.bestFor}</p>
+            )}
           </div>
         </div>
       ))}

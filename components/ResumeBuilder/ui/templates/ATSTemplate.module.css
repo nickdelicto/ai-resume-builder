@@ -1,19 +1,39 @@
+/* ==========================================================================
+   Hospital-Ready (ATS) Template
+   Optimized for Applicant Tracking Systems used by hospitals and healthcare employers.
+
+   Design principles:
+   - Arial only (most ATS-safe font)
+   - Pure black text (#000) everywhere — no grays, no colors
+   - All sizes in pt for consistency
+   - Single column, no tables, no columns
+   - Clean hierarchy: Name (18pt) > Section Titles (12pt) > Job Titles (11pt bold) > Body (10.5pt)
+   - Tight spacing to maximize content per page
+   - Company + Location on ONE line to save vertical space
+   ========================================================================== */
+
 .resumePreview {
   font-family: Arial, Helvetica, sans-serif !important;
   color: #000 !important;
-  line-height: 1.5;
+  line-height: 1.35;
   padding: 0;
+  font-size: 10.5pt;
 }
 
+/* ===== Header ===== */
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
 }
 
 .name {
-  font-size: 24px;
+  font-size: 18pt;
   font-weight: 700 !important;
   color: #000 !important;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0;
 }
 
 .contactInfo {
@@ -21,7 +41,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0;
-  font-size: 11pt;
+  font-size: 10pt;
   font-family: Arial, Helvetica, sans-serif !important;
   color: #000 !important;
 }
@@ -34,9 +54,9 @@
   color: #000 !important;
 }
 
-/* Ensure contact links are blue and underlined for ATS template */
+/* Contact links — black with underline for max ATS compatibility */
 .contactInfo a {
-  color: #2563eb;
+  color: #000;
   text-decoration: underline;
 }
 
@@ -47,7 +67,7 @@
   justify-content: center;
   margin: 0 8px;
   color: #000;
-  font-size: 11pt;
+  font-size: 10pt;
   line-height: 1;
 }
 
@@ -56,62 +76,75 @@
   content: none !important;
 }
 
+/* ===== Sections ===== */
+.section {
+  margin-bottom: 4px;
+}
+
+.section:not(:first-child) {
+  margin-top: 12px;
+}
+
 .sectionTitle {
-  font-size: 14px;
+  font-size: 12pt;
   font-weight: 700 !important;
   color: #000 !important;
   text-transform: uppercase;
   border-bottom: 1px solid #000;
-  padding-bottom: 5px;
-  margin-bottom: 15px;
+  padding-bottom: 2px;
+  margin-bottom: 6px;
   font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0.5px;
 }
 
+/* ===== Experience / Education Items ===== */
 .item {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .itemHeader {
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 
-/* Experience section: ensure job title and dates are on the same line, dates right-aligned */
+/* Job title and dates on the same line, dates right-aligned */
 .itemTitle {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13pt;
+  font-size: 11pt;
   font-weight: bold !important;
   color: #000 !important;
-  margin-bottom: 2px;
+  margin-bottom: 0;
   font-family: Arial, Helvetica, sans-serif !important;
 }
 
-.certDetails {
+/* Company + Location on ONE line: "UHS, Binghamton" — saves vertical space */
+.itemSubtitle {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  font-size: 11pt;
-  color: #222;
-  margin-bottom: 2px;
-}
-
-.certIssuer {
-  font-weight: normal;
-  color: #222;
-}
-
-.certDate {
-  font-style: italic;
-  color: #555;
-  margin-left: 4px;
-}
-
-.description {
+  gap: 0;
+  color: #000;
   font-size: 10pt;
-  color: #444;
-  margin-top: 2px;
+}
+
+.company,
+.school {
+  font-weight: 600;
+  color: #000;
+  font-size: 10pt;
+}
+
+.location {
+  color: #000;
+  font-size: 10pt;
+}
+
+/* Add comma separator before location when it follows company */
+.location::before {
+  content: ",\00a0";
 }
 
 .dates {
@@ -122,18 +155,25 @@
   white-space: nowrap;
   padding-left: 15px;
   text-align: right;
+  font-weight: normal;
 }
 
-.company {
-  font-weight: 600;
-  color: #000;
-  font-size: 11pt;
-  margin-bottom: 2px;
+.description {
+  font-size: 10pt;
+  color: #000 !important;
+  margin-top: 2px;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
-.location {
-  color: #000;
-  font-size: 11pt;
+/* ===== Bullet Points ===== */
+.bulletPoint {
+  position: relative;
+  padding-left: 15px;
+  margin: 2px 0;
+  font-size: 10.5pt;
+  color: #000 !important;
+  line-height: 1.35;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .bullet {
@@ -142,16 +182,16 @@
   font-family: Arial, Helvetica, sans-serif !important;
 }
 
-.bulletPoint {
-  position: relative;
-  padding-left: 15px;
-  margin: 4px 0;
-  font-size: 11pt;
+/* ===== Summary ===== */
+.summary {
+  font-size: 10.5pt;
   color: #000 !important;
-  line-height: 1.5;
+  line-height: 1.35;
+  margin-bottom: 0;
   font-family: Arial, Helvetica, sans-serif !important;
 }
 
+/* ===== Skills ===== */
 .skill {
   display: inline;
   background: none;
@@ -159,43 +199,50 @@
   margin-right: 15px;
   font-weight: normal;
   color: #000 !important;
-  font-size: 11pt;
+  font-size: 10.5pt;
   font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .skillsList {
   display: block;
-  margin-top: 8px;
-}
-
-.itemSubtitle {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  margin-top: 2px;
+  font-size: 10.5pt;
   color: #000;
-  font-size: 11pt;
 }
 
-.summary {
-  font-size: 11pt;
-  color: #000 !important;
-  line-height: 1.5;
-  margin-bottom: 15px;
-  font-family: Arial, Helvetica, sans-serif !important;
+/* ===== Certifications ===== */
+.certDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5pt;
+  color: #000;
+  margin-bottom: 2px;
 }
 
-/* Languages section styles for ATS template */
+.certIssuer {
+  font-weight: normal;
+  color: #000;
+}
+
+.certDate {
+  font-style: italic;
+  color: #000;
+  margin-left: 4px;
+}
+
+/* ===== Languages ===== */
 .languagesList {
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
-  margin-top: 8px;
+  margin-top: 2px;
 }
 
 .language {
   display: flex;
   align-items: center;
-  font-size: 11pt;
+  font-size: 10.5pt;
 }
 
 .languageName {
@@ -205,10 +252,6 @@
 
 .languageProficiency {
   font-style: italic;
-  color: #555;
+  color: #000;
   margin-left: 2px;
 }
-
-.section:not(:first-child) {
-  margin-top: 32px;
-} 

@@ -4,9 +4,6 @@
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
   padding: 20px;
-  overflow: auto;
-  max-height: 800px;
-  height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -29,9 +26,6 @@
   color: #333;
   line-height: 1.5;
   font-size: 11pt;
-  overflow-y: auto;
-  flex-grow: 1;
-  min-height: min-content; /* Ensure it grows to fit content */
 }
 
 .header {
@@ -58,10 +52,18 @@
 }
 
 .contactInfo span:not(:last-child)::after {
-  content: "•";
-  position: absolute;
-  right: -8px;
+  content: none; /* Disabled - using explicit separator spans instead */
+}
+
+/* Explicit separator for contact info items */
+.separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
   color: #adb5bd;
+  font-size: 11pt;
+  line-height: 1;
 }
 
 .section {
@@ -248,10 +250,20 @@
 @media (max-width: 768px) {
   .previewContainer {
     padding: 15px;
-    max-height: 600px;
   }
-  
+
   .resumePreview {
     padding: 20px;
   }
-} 
+}
+
+/* PDF capture mode — remove interactive preview constraints */
+.pdfMode {
+  max-height: none !important;
+  overflow: visible !important;
+  height: auto !important;
+  border: none !important;
+  box-shadow: none !important;
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+}

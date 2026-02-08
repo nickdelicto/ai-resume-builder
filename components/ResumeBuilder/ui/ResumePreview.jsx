@@ -7,17 +7,16 @@ import creativeStyles from './templates/CreativeTemplate.module.css';
 import executiveStyles from './templates/ExecutiveTemplate.module.css';
 import atsStyles from './templates/ATSTemplate.module.css';
 
-const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = null }) => {
+const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = null, isPdfCapture = false }) => {
   // Refs for scroll detection
   const previewContainerRef = useRef(null);
   const resumePreviewRef = useRef(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   
-  // Function to check if this preview is being rendered for PDF capture
-  const isForPdfCapture = useRef(false);
-  
-  // Default section order if not provided
-  const defaultSectionOrder = ['personalInfo', 'summary', 'experience', 'education', 'skills', 'additional'];
+  // Default section order if not provided (healthcare-focused order)
+  // Summary → Experience → Credentials — experience is what employers look at first
+  // Note: 'skills' removed - soft skills are implied for nurses, clinical skills in healthcareSkills
+  const defaultSectionOrder = ['personalInfo', 'summary', 'experience', 'licenses', 'certifications', 'healthcareSkills', 'education', 'additional'];
   
   // Use provided section order or default
   const usedSectionOrder = sectionOrder || defaultSectionOrder;
@@ -41,63 +40,37 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     }
   })();
   
-  // Check if the component is rendered within a PDF capture container
+  // Detect if content is scrollable (skip for PDF capture)
   useEffect(() => {
-    if (!resumeData) return; // Skip effect if no data
-    
-    if (typeof document !== 'undefined' && resumePreviewRef.current) {
-      // Look for a parent with the PDF capture class
-      let parent = resumePreviewRef.current.parentElement;
-      while (parent) {
-        if (parent.classList && 
-            (parent.classList.contains('pdf-capture-container') || 
-             parent.classList.contains('resume-content-for-pdf'))) {
-          isForPdfCapture.current = true;
-          console.log('Resume preview detected as being used for PDF capture');
-          break;
-        }
-        parent = parent.parentElement;
-      }
-    }
-  }, [resumeData]);
-  
-  // Detect if content is scrollable
-  useEffect(() => {
-    if (!resumeData) return; // Skip effect if no data
-    
+    if (!resumeData || isPdfCapture) return;
+
     const checkScrollability = () => {
       if (resumePreviewRef.current) {
         const isScrollable = resumePreviewRef.current.scrollHeight > resumePreviewRef.current.clientHeight;
         setShowScrollIndicator(isScrollable);
       }
     };
-    
+
     // Initial check
     checkScrollability();
-    
+
     // Check again after a short delay to account for any rendering delays
     const timer = setTimeout(checkScrollability, 500);
-    
+
     // Add resize listener
     window.addEventListener('resize', checkScrollability);
-    
+
     // Cleanup
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', checkScrollability);
     };
-  }, [resumeData, template]);
+  }, [resumeData, template, isPdfCapture]);
   
-  // Copy protection
+  // Copy protection (skip for PDF capture)
   useEffect(() => {
-    if (!resumeData) return; // Skip effect if no data
-    
-    // Skip copy protection when rendered for PDF capture
-    if (isForPdfCapture.current) {
-      console.log('Skipping copy protection for PDF capture');
-      return;
-    }
-    
+    if (!resumeData || isPdfCapture) return;
+
     // Function to prevent copy/cut events
     const preventCopy = (e) => {
       e.preventDefault();
@@ -141,8 +114,8 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         previewElement.removeEventListener('contextmenu', preventCopy);
       }
     };
-  }, [resumeData]);
-  
+  }, [resumeData, isPdfCapture]);
+
   // Helper function for rendering bulleted text
   const renderBulletedText = (text) => {
     if (!text) return null;
@@ -157,12 +130,12 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
 
     // If text doesn't have any bullet indicators, render as plain paragraph
     if (!hasBulletPoints) {
-      return <p className={styles.description}>{text}</p>;
+      return <p className={`${styles.description} ${templateStyles.description || ''}`}>{text}</p>;
     }
 
     // Split text by various potential delimiters
     let lines = [];
-    
+
     // First check if it has multiple paragraphs
     if (text.includes('\n\n')) {
       lines = text.split('\n\n').filter(line => line.trim() !== '');
@@ -172,31 +145,31 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
       // If no newlines, try to split by bullet characters
       const bulletSplitRegex = /(?:^|\s)(?:[•\-*]|\d+\.)\s+/g;
       const parts = text.split(bulletSplitRegex).filter(part => part.trim());
-      
+
       if (parts.length > 1) {
         lines = parts;
       } else {
         // If no bullet splitting worked, just use the text as is
-        return <p className={styles.description}>{text}</p>;
+        return <p className={`${styles.description} ${templateStyles.description || ''}`}>{text}</p>;
       }
     }
-    
+
     if (lines.length === 0) return null;
-    
+
     // If we only have one line, just return a paragraph
     if (lines.length === 1) {
-      return <p className={styles.description}>{text}</p>;
+      return <p className={`${styles.description} ${templateStyles.description || ''}`}>{text}</p>;
     }
-    
+
     return (
       <div className={styles.bulletedDescription}>
         {lines.map((line, i) => {
           // Clean up the line - remove leading bullet points if they exist
           const cleanLine = line.trim().replace(/^[•\-*]\s*|^\d+\.\s*/, '');
-          
+
           return (
-            <div key={i} className={styles.bulletPoint}>
-              <span className={styles.bullet}>•</span>
+            <div key={i} className={`${styles.bulletPoint} ${templateStyles.bulletPoint || ''}`}>
+              <span className={`${styles.bullet} ${templateStyles.bullet || ''}`}>•</span>
               {cleanLine}
             </div>
           );
@@ -207,9 +180,19 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
   
   // Early return moved to here
   if (!resumeData) return null;
-  
+
   // Extract data for convenience in the rendering functions
-  const { personalInfo, summary, experience, education, skills, additional } = resumeData;
+  const { personalInfo, summary, experience, education, skills, additional, licenses, certifications, healthcareSkills } = resumeData;
+
+  // Template-aware colors for inline styles in healthcare sections
+  // ATS template: pure black everywhere. Others: muted grays for visual hierarchy.
+  const isAts = template === 'ats';
+  const colors = {
+    muted: isAts ? '#000' : '#6b7280',
+    separator: isAts ? '#000' : '#d1d5db',
+    accent: isAts ? '#000' : '#059669',
+    reference: isAts ? '#000' : '#6b7280',
+  };
   
   // Render header with personal info
   const renderHeader = () => {
@@ -217,31 +200,30 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     
     switch(template) {
       case 'modern':
+        // Build contact items array for separator logic
+        const modernContactItems = [];
+        if (personalInfo.email) modernContactItems.push(personalInfo.email);
+        if (personalInfo.phone) modernContactItems.push(personalInfo.phone);
+        if (personalInfo.location) modernContactItems.push(personalInfo.location);
+        if (personalInfo.linkedin) modernContactItems.push(
+          <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
+        );
+        if (personalInfo.website) modernContactItems.push(
+          <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" key="portfolio">Portfolio</a>
+        );
+
         return (
           <div className={`${styles.header} ${templateStyles.header}`}>
-            <div className={templateStyles.headerSidebar}>
-              <h1 className={`${styles.name} ${templateStyles.name}`}>{personalInfo.name || 'Your Name'}</h1>
-            </div>
-            <div className={templateStyles.contactContainer}>
-              {personalInfo.email && (
-                <span className={templateStyles.contactItem}>{personalInfo.email}</span>
-              )}
-              {personalInfo.phone && (
-                <span className={templateStyles.contactItem}>{personalInfo.phone}</span>
-              )}
-              {personalInfo.location && (
-                <span className={templateStyles.contactItem}>{personalInfo.location}</span>
-              )}
-              {personalInfo.linkedin && (
-                <span className={templateStyles.contactItem}>
-                  <a href={personalInfo.linkedin}>LinkedIn</a>
+            <h1 className={`${styles.name} ${templateStyles.name}`}>{personalInfo.name || 'Your Name'}</h1>
+            <div className={`${styles.contactInfo} ${templateStyles.contactInfo}`}>
+              {modernContactItems.map((item, idx) => (
+                <span key={idx}>
+                  {item}
+                  {idx < modernContactItems.length - 1 && (
+                    <span className={`${styles.separator} ${templateStyles.separator}`}>•</span>
+                  )}
                 </span>
-              )}
-              {personalInfo.website && (
-                <span className={templateStyles.contactItem}>
-                  <a href={personalInfo.website}>Portfolio</a>
-                </span>
-              )}
+              ))}
             </div>
           </div>
         );
@@ -352,15 +334,30 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         
       case 'professional':
       default:
+        // Build contact items array for separator logic
+        const professionalContactItems = [];
+        if (personalInfo.email) professionalContactItems.push(personalInfo.email);
+        if (personalInfo.phone) professionalContactItems.push(personalInfo.phone);
+        if (personalInfo.location) professionalContactItems.push(personalInfo.location);
+        if (personalInfo.linkedin) professionalContactItems.push(
+          <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
+        );
+        if (personalInfo.website) professionalContactItems.push(
+          <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" key="portfolio">Portfolio</a>
+        );
+
         return (
-          <div className={styles.header}>
+          <div className={`${styles.header} ${templateStyles.header || ''}`}>
             <h1 className={`${styles.name} ${templateStyles.name || ''}`}>{personalInfo.name || 'Your Name'}</h1>
             <div className={`${styles.contactInfo} ${templateStyles.contactInfo || ''}`}>
-              {personalInfo.email && <span>{personalInfo.email}</span>}
-              {personalInfo.phone && <span>{personalInfo.phone}</span>}
-              {personalInfo.location && <span>{personalInfo.location}</span>}
-              {personalInfo.linkedin && <span><a href={personalInfo.linkedin}>LinkedIn</a></span>}
-              {personalInfo.website && <span><a href={personalInfo.website}>Portfolio</a></span>}
+              {professionalContactItems.map((item, idx) => (
+                <span key={idx}>
+                  {item}
+                  {idx < professionalContactItems.length - 1 && (
+                    <span className={`${styles.separator} ${templateStyles.separator || ''}`}>•</span>
+                  )}
+                </span>
+              ))}
             </div>
           </div>
         );
@@ -422,7 +419,7 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <span className={`${styles.itemTitle} ${templateStyles.itemTitle || ''}`}>{edu.degree}</span>
                 {edu.graduationDate && (
-                  <span style={{ fontWeight: 'bold', marginLeft: '16px', whiteSpace: 'nowrap' }} className={`${styles.dates} ${templateStyles.dates || ''}`}>{edu.graduationDate}</span>
+                  <span style={{ marginLeft: '16px', whiteSpace: 'nowrap' }} className={`${styles.dates} ${templateStyles.dates || ''}`}>{edu.graduationDate}</span>
                 )}
               </div>
               {/* School and location on next line */}
@@ -432,7 +429,7 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
               </div>
             </div>
             {/* Description below, if present */}
-            {edu.description && <p className={styles.description}>{edu.description}</p>}
+            {edu.description && <p className={`${styles.description} ${templateStyles.description || ''}`}>{edu.description}</p>}
           </div>
         ))}
       </div>
@@ -448,7 +445,7 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         <div className={`${styles.section} ${templateStyles.section || ''}`}>
           <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Skills</h2>
           {/* ATS-friendly: plain text, vertical bar separated */}
-          <div style={{ fontWeight: 400, fontSize: 15, color: '#222', fontFamily: 'Playfair Display' }}>
+          <div style={{ fontWeight: 400, fontSize: 15, color: '#222', fontFamily: 'Georgia' }}>
             {skills.filter(Boolean).join(' | ')}
           </div>
         </div>
@@ -460,7 +457,7 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         <div className={`${styles.section} ${templateStyles.section || ''}`}>
           <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Skills</h2>
           {/* ATS best practice: comma-separated for easy ATS parsing */}
-          <div className={templateStyles.skillsList} style={{ fontWeight: 'normal', fontSize: '11pt', color: '#000' }}>
+          <div className={templateStyles.skillsList}>
             {skills.filter(Boolean).join(', ')}
           </div>
         </div>
@@ -479,51 +476,208 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     );
   };
   
-  // Render additional info section
-  const renderAdditional = () => {
-    if (!additional) return null;
-    
-    const hasContent = additional.certifications?.length > 0 || 
-                       additional.languages?.length > 0 || 
-                       additional.projects?.length > 0 ||
-                       additional.customSections?.length > 0;
-    
-    if (!hasContent) return null;
-    
+  // Render licenses section (nursing licenses)
+  const renderLicenses = () => {
+    if (!licenses || licenses.length === 0) return null;
+
     return (
-      <>
-        {additional.certifications?.length > 0 && (
-          <div className={`${styles.section} ${templateStyles.section || ''}`}>
-            <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Certifications</h2>
-            {additional.certifications.map((cert, index) => (
-              <div key={index} className={`${styles.item} ${templateStyles.item || ''}`}>
-                <h3 className={`${styles.itemTitle} ${templateStyles.itemTitle || ''}`}>{cert.name}</h3>
-                <div className={styles.certDetails}>
-                  {cert.issuer && <span className={styles.certIssuer}>{cert.issuer}</span>}
-                  {cert.date && <span className={styles.certDate}>({cert.date})</span>}
-                </div>
-                {cert.description && <p className={styles.description}>{cert.description}</p>}
-              </div>
-            ))}
+      <div className={`${styles.section} ${templateStyles.section || ''}`}>
+        <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Licenses</h2>
+        <div className={styles.licensesList || ''}>
+          {licenses.map((license, index) => (
+            <div key={index} className={styles.licenseItem || ''} style={{ marginBottom: '4px', fontSize: '10.5pt' }}>
+              <span style={{ fontWeight: 600 }}>{license.type?.toUpperCase()}</span>
+              {license.state && <span> - {license.state}</span>}
+              {license.licenseNumber && <span> #{license.licenseNumber}</span>}
+              {license.isCompact && <span style={{ color: colors.accent, marginLeft: '8px' }}>(Compact)</span>}
+              {license.expirationDate && (
+                <span style={{ color: colors.muted, marginLeft: '8px' }}>
+                  Exp: {new Date(license.expirationDate + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render certifications section (healthcare certifications)
+  const renderCertifications = () => {
+    if (!certifications || certifications.length === 0) return null;
+
+    // Format certifications as a clean list
+    return (
+      <div className={`${styles.section} ${templateStyles.section || ''}`}>
+        <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Certifications</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', fontSize: '10.5pt' }}>
+          {certifications.map((cert, index) => (
+            <span key={index} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontWeight: 600 }}>{cert.name}</span>
+              {cert.fullName && cert.fullName !== cert.name && (
+                <span style={{ color: colors.muted }}>({cert.fullName})</span>
+              )}
+              {cert.expirationDate && (
+                <span style={{ color: colors.muted, fontSize: '0.9em' }}>
+                  - Exp: {new Date(cert.expirationDate + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+              )}
+              {index < certifications.length - 1 && <span style={{ color: colors.separator }}>|</span>}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render healthcare skills section
+  const renderHealthcareSkills = () => {
+    if (!healthcareSkills) return null;
+
+    const { ehrSystems, clinicalSkills, customSkills } = healthcareSkills;
+    const hasEhr = ehrSystems && ehrSystems.length > 0;
+    const hasClinical = clinicalSkills && clinicalSkills.length > 0;
+    const hasCustom = customSkills && customSkills.length > 0;
+
+    if (!hasEhr && !hasClinical && !hasCustom) return null;
+
+    // Map EHR IDs to names
+    const ehrNames = {
+      'epic': 'Epic',
+      'cerner': 'Cerner',
+      'meditech': 'Meditech',
+      'allscripts': 'Allscripts',
+      'eclinicalworks': 'eClinicalWorks',
+      'nextgen': 'NextGen',
+      'athenahealth': 'athenahealth',
+      'cpsi': 'CPSI',
+      'veradigm': 'Veradigm',
+      'drchrono': 'DrChrono',
+      'pointclickcare': 'PointClickCare',
+      'netsmart': 'Netsmart',
+      'homecare-homebase': 'HomeCare HomeBase',
+      'matrixcare': 'MatrixCare',
+      'kareo': 'Kareo'
+    };
+
+    return (
+      <div className={`${styles.section} ${templateStyles.section || ''}`}>
+        <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Clinical Skills</h2>
+
+        {hasEhr && (
+          <div style={{ marginBottom: '6px', fontSize: '10.5pt' }}>
+            <span style={{ fontWeight: 600 }}>EHR/EMR: </span>
+            <span>{ehrSystems.map(id => ehrNames[id] || id).join(', ')}</span>
           </div>
         )}
-        
+
+        {(hasClinical || hasCustom) && (
+          <div style={{ marginBottom: '6px', fontSize: '10.5pt' }}>
+            <span style={{ fontWeight: 600 }}>Clinical: </span>
+            <span>{[...(clinicalSkills || []), ...(customSkills || [])].join(', ')}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render additional info section (supports both old and new data structures)
+  const renderAdditional = () => {
+    if (!additional) return null;
+
+    // Check for content (both old and new structures)
+    const hasContent = additional.languages?.length > 0 ||
+                       additional.memberships?.length > 0 ||
+                       additional.awards?.length > 0 ||
+                       additional.volunteer?.length > 0 ||
+                       additional.references === 'available' ||
+                       additional.projects?.length > 0 ||
+                       additional.customSections?.length > 0;
+
+    if (!hasContent) return null;
+
+    // Format proficiency for display
+    const formatProficiency = (prof) => {
+      const labels = {
+        native: 'Native',
+        fluent: 'Fluent',
+        proficient: 'Proficient',
+        conversational: 'Conversational',
+        // Old format support
+        Native: 'Native',
+        Fluent: 'Fluent',
+        Proficient: 'Proficient',
+        Intermediate: 'Intermediate',
+        Conversational: 'Conversational',
+        Basic: 'Basic'
+      };
+      return labels[prof] || prof;
+    };
+
+    return (
+      <>
+        {/* Languages */}
         {additional.languages?.length > 0 && (
           <div className={`${styles.section} ${templateStyles.section || ''}`}>
             <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Languages</h2>
-            <div className={styles.languagesList}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', fontSize: '10.5pt' }}>
               {additional.languages.map((lang, index) => (
-                <div key={index} className={styles.language}>
-                  <span className={styles.languageName}>{lang.language}</span>
+                <span key={index} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontWeight: 600 }}>{lang.language}</span>
                   {lang.proficiency && (
-                    <span className={styles.languageProficiency}>({lang.proficiency})</span>
+                    <span style={{ color: colors.muted }}>({formatProficiency(lang.proficiency)})</span>
                   )}
-                </div>
+                  {index < additional.languages.length - 1 && <span style={{ color: colors.separator, marginLeft: '8px' }}>|</span>}
+                </span>
               ))}
             </div>
           </div>
         )}
-        
+
+        {/* Professional Memberships (new structure) */}
+        {additional.memberships?.length > 0 && (
+          <div className={`${styles.section} ${templateStyles.section || ''}`}>
+            <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Professional Memberships</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: '10.5pt' }}>
+              {additional.memberships.map((mem, index) => (
+                <span key={index}>
+                  {mem.name}
+                  {index < additional.memberships.length - 1 && <span style={{ color: colors.separator, marginLeft: '8px' }}>|</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Awards (new structure) */}
+        {additional.awards?.length > 0 && (
+          <div className={`${styles.section} ${templateStyles.section || ''}`}>
+            <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Awards & Recognition</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: '10.5pt' }}>
+              {additional.awards.map((award, index) => (
+                <span key={index}>
+                  {award.name}
+                  {index < additional.awards.length - 1 && <span style={{ color: colors.separator, marginLeft: '8px' }}>|</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Volunteer Experience (new structure) */}
+        {additional.volunteer?.length > 0 && (
+          <div className={`${styles.section} ${templateStyles.section || ''}`}>
+            <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Volunteer Experience</h2>
+            {additional.volunteer.map((vol, index) => (
+              <div key={index} style={{ marginBottom: '4px', fontSize: '10.5pt' }}>
+                <span style={{ fontWeight: 600 }}>{vol.organization}</span>
+                {vol.role && <span style={{ color: colors.muted }}> - {vol.role}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Projects (legacy support) */}
         {additional.projects?.length > 0 && (
           <div className={`${styles.section} ${templateStyles.section || ''}`}>
             <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Projects</h2>
@@ -538,7 +692,8 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
             ))}
           </div>
         )}
-        
+
+        {/* Custom Sections (legacy support) */}
         {additional.customSections?.length > 0 && additional.customSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className={`${styles.section} ${templateStyles.section || ''}`}>
             <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>{section.title}</h2>
@@ -554,6 +709,14 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
             ))}
           </div>
         ))}
+
+        {/* References */}
+        {additional.references === 'available' && (
+          <div className={`${styles.section} ${templateStyles.section || ''}`}>
+            <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>References</h2>
+            <p style={{ fontStyle: 'italic', color: colors.reference }}>Available upon request</p>
+          </div>
+        )}
       </>
     );
   };
@@ -571,23 +734,28 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         return renderSkills();
       case 'additional':
         return renderAdditional();
+      case 'licenses':
+        return renderLicenses();
+      case 'certifications':
+        return renderCertifications();
+      case 'healthcareSkills':
+        return renderHealthcareSkills();
       default:
         return null;
     }
   };
   
-  return (
-    <div className={styles.previewContainer} ref={previewContainerRef}>
-      <div 
-        className={`${styles.resumePreview} ${templateStyles.resumePreview || ''} ${styles.noCopy}`}
+  // PDF capture mode: no previewContainer wrapper, no noCopy, no scroll indicator
+  if (isPdfCapture) {
+    return (
+      <div
+        className={`${styles.resumePreview} ${templateStyles.resumePreview || ''}`}
         ref={resumePreviewRef}
+        style={{ maxHeight: 'none', overflow: 'visible', height: 'auto' }}
       >
-        {/* Header with personal info is always first */}
         {renderHeader()}
-        
-        {/* Render other sections in the specified order */}
         {usedSectionOrder
-          .filter(sectionId => sectionId !== 'personalInfo') // Skip personalInfo which is already rendered
+          .filter(sectionId => sectionId !== 'personalInfo')
           .map(sectionId => (
             <React.Fragment key={sectionId}>
               {renderSectionContent(sectionId)}
@@ -595,8 +763,27 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
           ))
         }
       </div>
-      
-      {/* Scroll indicator */}
+    );
+  }
+
+  // Live preview mode: full interactive wrapper
+  return (
+    <div className={styles.previewContainer} ref={previewContainerRef}>
+      <div
+        className={`${styles.resumePreview} ${templateStyles.resumePreview || ''} ${styles.noCopy}`}
+        ref={resumePreviewRef}
+      >
+        {renderHeader()}
+        {usedSectionOrder
+          .filter(sectionId => sectionId !== 'personalInfo')
+          .map(sectionId => (
+            <React.Fragment key={sectionId}>
+              {renderSectionContent(sectionId)}
+            </React.Fragment>
+          ))
+        }
+      </div>
+
       {showScrollIndicator && (
         <div className={`${styles.scrollIndicator} ${styles.showScrollIndicator}`}>
           Scroll to see more

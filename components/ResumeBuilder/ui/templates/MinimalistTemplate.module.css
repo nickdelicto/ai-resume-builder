@@ -1,19 +1,19 @@
 /*
-  Minimalist Template: Enforce Playfair Display as the only font for all text.
+  Minimalist Template: Uses Georgia serif font for elegant, refined look.
+  Georgia is universally available on all systems - no embedding issues for ATS.
   This ensures pixel-perfect consistency between the resume preview and PDF output.
-  Do not add other font-families or fallbacks here.
 */
 
 .resumePreview {
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
   color: #333;
   line-height: 1.6;
   letter-spacing: 0.02em;
 }
 
-/* Explicitly enforce Playfair Display for all text elements */
+/* Explicitly enforce Georgia for all text elements */
 .header, .name, .contactInfo, .sectionTitle, .itemTitle, .dates, .bullet, .skill, .itemSubtitle, .description, .summary, .languagesList, .language, .languageName, .languageProficiency {
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .name {
@@ -51,7 +51,7 @@
   border-bottom: 1px solid #eee;
   padding-bottom: 5px;
   margin-bottom: 18px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .itemTitle {
@@ -60,7 +60,7 @@
   font-weight: 700;
   color: #111;
   margin-bottom: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .itemSubtitle {
@@ -68,7 +68,7 @@
   color: #444;
   font-weight: 600;
   margin-bottom: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .dates {
@@ -79,7 +79,7 @@
   white-space: nowrap;
   padding-left: 15px;
   text-align: right;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .bulletPoint {
@@ -89,7 +89,7 @@
   font-size: 15px;
   color: #222;
   line-height: 1.6;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .bullet {
@@ -98,7 +98,7 @@
   left: 0;
   top: 2px;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .skill {
@@ -122,7 +122,7 @@
   line-height: 1;
   vertical-align: middle;
   margin: 0 8px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
   color: #aaa !important; /* Faint gray for minimalist PDF/preview consistency */
 }
 
@@ -136,7 +136,7 @@
   gap: 12px;
   margin-top: 10px;
   margin-bottom: 18px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .skill {
@@ -146,7 +146,7 @@
   border-radius: 4px;
   border: 1px solid #eee;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
   font-weight: 400;
   display: inline-block;
   margin-bottom: 4px;
@@ -165,7 +165,7 @@
   font-weight: 700;
   color: #111;
   margin-bottom: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .certDetails {
@@ -175,13 +175,13 @@
   font-size: 15px;
   color: #444;
   margin-bottom: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .certIssuer {
   font-weight: 400;
   color: #444;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .certDate {
@@ -189,7 +189,7 @@
   color: #888;
   font-size: 14px;
   margin-left: 6px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .itemSubtitle {
@@ -197,7 +197,7 @@
   color: #444;
   font-weight: 400;
   margin-bottom: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 /*
@@ -209,14 +209,14 @@
   flex-wrap: wrap;
   gap: 24px;
   margin-top: 10px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .language {
   display: flex;
   align-items: baseline;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
   margin-bottom: 4px;
 }
 
@@ -224,7 +224,7 @@
   font-weight: 700;
   color: #222;
   margin-right: 4px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 .languageProficiency {
@@ -232,7 +232,7 @@
   color: #888;
   font-size: 15px;
   margin-left: 2px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 /* --- Experience Section Flex Row --- */
@@ -273,7 +273,7 @@
   align-items: center;
   margin-bottom: 2px;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 /* --- School & Location Row for Education Section --- */
@@ -282,7 +282,7 @@
   align-items: center;
   margin-bottom: 2px;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 /* --- School name for Education Section (Minimalist) --- */
@@ -290,7 +290,7 @@
   color: #444;
   font-weight: 600;
   font-size: 15px;
-  font-family: 'Playfair Display' !important;
+  font-family: 'Georgia' !important;
 }
 
 /* Ensure consistent spacing after summary section for minimalist template */

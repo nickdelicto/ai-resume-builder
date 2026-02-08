@@ -1,58 +1,60 @@
 .resumePreview {
-  font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #333;
   line-height: 1.5;
-  padding: 30px;
+  padding: 0;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  margin-bottom: 25px;
-  position: relative;
-  width: 100%;
-}
-
-.headerSidebar {
-  background-color: #4263eb;
-  padding: 20px;
-  margin: -30px -30px 15px -30px;
-  width: calc(100% + 60px);
+  margin-bottom: 20px;
+  border-bottom: 3px solid #4263eb;
+  padding-bottom: 15px;
 }
 
 .name {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  color: white !important;
-  margin: 0;
-  letter-spacing: 0.7px;
+  color: #4263eb;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.5px;
 }
 
 .contactContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  padding: 0 5px;
-  margin-top: 15px;
+  gap: 0;
+  align-items: center;
 }
 
-.contactItem {
+.contactInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
   font-size: 11pt;
-  color: #495057;
-  position: relative;
-  padding-right: 20px;
+  color: #333;
 }
 
-.contactItem:not(:last-child):after {
-  content: "•";
-  position: absolute;
-  right: 0;
-  color: #4263eb;
+.contactInfo span {
+  display: flex;
+  align-items: center;
 }
 
-.contactItem a {
+.contactInfo a {
   color: #4263eb;
   text-decoration: none;
+}
+
+.contactInfo .separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  color: #4263eb;
+  font-size: 11pt;
+  line-height: 1;
 }
 
 .section {

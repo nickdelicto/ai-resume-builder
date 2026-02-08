@@ -1,7 +1,20 @@
+/* ==========================================================================
+   Professional Template
+   Clean design with subtle blue accents - great for clinics and outpatient
+   Uses Calibri font for broad compatibility
+   ========================================================================== */
+
 .resumePreview {
   font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #333;
   line-height: 1.5;
+  padding: 0;
+}
+
+.header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #1c7ed6;
+  padding-bottom: 15px;
 }
 
 .name {
@@ -10,6 +23,47 @@
   color: #1c7ed6;
   margin: 0 0 10px 0;
   letter-spacing: 0.5px;
+}
+
+.contactInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  font-size: 11pt;
+  color: #333;
+}
+
+.contactInfo span {
+  display: flex;
+  align-items: center;
+}
+
+.contactInfo a {
+  color: #1c7ed6;
+  text-decoration: none;
+}
+
+.contactInfo .separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  color: #1c7ed6;
+  font-size: 11pt;
+  line-height: 1;
+}
+
+.contactInfo span:not(:last-child)::after {
+  content: none !important;
+}
+
+.section {
+  margin-bottom: 18px;
+}
+
+.section:not(:first-child) {
+  margin-top: 24px;
 }
 
 .sectionTitle {
@@ -23,6 +77,14 @@
   margin-bottom: 12px;
 }
 
+.item {
+  margin-bottom: 15px;
+}
+
+.itemHeader {
+  margin-bottom: 6px;
+}
+
 .itemTitle {
   font-size: 13pt;
   font-weight: 600;
@@ -31,13 +93,25 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  margin-bottom: 2px;
 }
 
 .itemSubtitle {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   color: #495057;
+  font-size: 11pt;
+}
+
+.company, .school {
+  font-weight: 600;
+  color: #333;
+  font-size: 11pt;
+}
+
+.location {
+  color: #666;
   font-size: 11pt;
 }
 
@@ -48,15 +122,94 @@
   margin-left: auto;
   white-space: nowrap;
   padding-left: 15px;
+  text-align: right;
+}
+
+.bulletPoint {
+  position: relative;
+  padding-left: 15px;
+  margin: 4px 0;
+  font-size: 11pt;
+  color: #333;
+  line-height: 1.5;
 }
 
 .bullet {
   color: #1c7ed6 !important;
+  margin-right: 8px;
+}
+
+.summary {
+  font-size: 11pt;
+  color: #333;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.skillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .skill {
   background-color: #e7f5ff;
   color: #1c7ed6;
-  padding: 3px 8px;
-  border-radius: 3px;
-} 
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11pt;
+  font-weight: 500;
+}
+
+/* Certifications */
+.certDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11pt;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.certIssuer {
+  font-weight: normal;
+  color: #495057;
+}
+
+.certDate {
+  font-style: italic;
+  color: #666;
+  margin-left: 4px;
+}
+
+.description {
+  font-size: 10pt;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Languages */
+.languagesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.language {
+  display: flex;
+  align-items: center;
+  font-size: 11pt;
+}
+
+.languageName {
+  font-weight: 600;
+  color: #333;
+}
+
+.languageProficiency {
+  font-style: italic;
+  color: #666;
+  margin-left: 4px;
+}
