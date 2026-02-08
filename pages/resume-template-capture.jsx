@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import RawResumeTemplate from '../components/ResumeBuilder/ui/RawResumeTemplate';
+import ResumePreview from '../components/ResumeBuilder/ui/ResumePreview';
 import { getResumeData } from '../components/ResumeBuilder/utils/localStorage';
 
 /**
@@ -227,12 +227,14 @@ const ResumeTemplateCapture = () => {
     <>
       <Head>
         <title>Resume Template for PDF Generation</title>
-        {/* Load Playfair Display for minimalist template and Montserrat for modern, etc. */}
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" 
-          rel="stylesheet"
-        />
-        {/* It's important to load Playfair Display here so the minimalist template PDF matches the preview exactly. */}
+        {/*
+          Templates now use system fonts for maximum ATS compatibility:
+          - Minimalist: Georgia (universal serif)
+          - Modern: Calibri (widely available)
+          - ATS: Arial (safest for ATS)
+          - Professional: Calibri
+          No Google Fonts loading needed - this ensures PDF matches preview exactly.
+        */}
         <style>{pdfCaptureStyles}</style>
       </Head>
       
@@ -245,10 +247,11 @@ const ResumeTemplateCapture = () => {
         marginBottom: 0,
         overflow: 'visible'
       }}>
-        <RawResumeTemplate 
-          resumeData={resumeData} 
+        <ResumePreview
+          resumeData={resumeData}
           template={template}
           sectionOrder={sectionOrder}
+          isPdfCapture={true}
         />
       </div>
       
