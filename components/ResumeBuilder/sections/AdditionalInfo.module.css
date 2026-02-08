@@ -1,0 +1,753 @@
+/* ==========================================================================
+   Additional Info Section - Healthcare Optimized
+   Collapsible cards with unified design system
+   Mobile-First Healthcare Design - Touch targets: 44px minimum
+   ========================================================================== */
+
+/* ===== Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+  box-sizing: border-box;
+  /* Ensure Figtree font is applied throughout */
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #4e5968;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.badge {
+  background: linear-gradient(135deg, #6c5ce7, #5f4dd0);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(108, 92, 231, 0.25);
+}
+
+/* ===== Collapsible Cards ===== */
+.card {
+  background: #ffffff;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card:hover {
+  border-color: #c4d9f7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cardHeader:hover {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardIcon {
+  font-size: 1.3rem;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.cardCount {
+  background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  color: #1a73e8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.cardArrow {
+  color: #8a94a6;
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+/* ===== Card Content ===== */
+.cardContent {
+  padding: 0 18px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #4e5968;
+  margin: 14px 0;
+  line-height: 1.6;
+}
+
+/* ===== Options Grid ===== */
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-top: 14px;
+}
+
+.optionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4e5968;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-align: left;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.optionBtn:hover {
+  background: #f0f7ff;
+  border-color: #c4d9f7;
+  transform: translateY(-1px);
+}
+
+.optionBtnSelected {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.optionBtnSelected:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.checkmark {
+  color: #10b981;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 1rem;
+}
+
+/* ===== Selected Items ===== */
+.selectedItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-radius: 12px;
+}
+
+.selectedLanguage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 10px;
+}
+
+.langInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.langName {
+  font-weight: 600;
+  color: #047857;
+}
+
+.proficiencySelect {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #4e5968;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.proficiencySelect:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  color: #8a94a6;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+  border-radius: 10px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.removeBtn:hover {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+/* ===== Selected Tags ===== */
+.selectedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.selectedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  border: 1.5px solid #93c5fd;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a73e8;
+}
+
+.tagRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tagRemove:hover {
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* ===== Custom Input ===== */
+.customInput {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.input {
+  flex: 1;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1d2129;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+}
+
+.input:hover {
+  border-color: #c9cdd4;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.input::placeholder {
+  color: #8a94a6;
+}
+
+.addBtn {
+  min-height: 44px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1a73e8, #1557b0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1557b0, #0d47a1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Volunteer Section ===== */
+.volunteerList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.volunteerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 12px;
+}
+
+.volunteerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.volunteerOrg {
+  font-weight: 600;
+  color: #047857;
+  font-size: 0.95rem;
+}
+
+.volunteerRole {
+  font-size: 0.85rem;
+  color: #4e5968;
+}
+
+.volunteerForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .volunteerForm {
+    flex-direction: row;
+  }
+
+  .volunteerForm .input:first-child {
+    flex: 2;
+  }
+
+  .volunteerForm .input:nth-child(2) {
+    flex: 1;
+  }
+}
+
+/* ===== References Section ===== */
+.referenceOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.referenceOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.referenceOption:hover {
+  background: #f0f7ff;
+  border-color: #c4d9f7;
+}
+
+.referenceOption input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #1a73e8;
+  cursor: pointer;
+}
+
+.referenceLabel {
+  font-size: 0.95rem;
+  color: #1d2129;
+  font-weight: 500;
+}
+
+.referenceHint {
+  font-size: 0.85rem;
+  color: #8a94a6;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ===== Completion Hint / Pro Tip ===== */
+.completionHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fcd34d;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.hintIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.hintText {
+  font-size: 0.9rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.hintText strong {
+  color: #78350f;
+}
+
+/* ===== Mobile Responsiveness ===== */
+@media (max-width: 640px) {
+  .optionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .optionBtn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .customInput {
+    flex-direction: column;
+  }
+
+  .addBtn {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  .selectedLanguage {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .langInfo {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .removeBtn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+  }
+
+  .selectedLanguage {
+    position: relative;
+    padding-right: 52px;
+  }
+
+  .cardHeader {
+    padding: 14px 16px;
+  }
+
+  .cardContent {
+    padding: 0 16px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .optionsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small phones */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .optionBtn {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  .input {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .addBtn {
+    min-height: 50px;
+  }
+
+  .selectedTag {
+    padding: 10px 14px;
+  }
+
+  .referenceOption {
+    min-height: 52px;
+    padding: 14px 16px;
+  }
+
+  .referenceOption input[type="radio"] {
+    width: 24px;
+    height: 24px;
+  }
+
+  .proficiencySelect {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  .completionHint {
+    padding: 14px;
+  }
+
+  .hintText {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+   Desktop Breakpoint (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .title {
+    font-size: 1.35rem;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .optionBtn:hover {
+    transform: none;
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .optionBtn:active {
+    transform: scale(0.98);
+    background: #f0f7ff;
+  }
+
+  .optionBtnSelected:hover {
+    transform: none;
+  }
+
+  .optionBtnSelected:active {
+    transform: scale(0.98);
+  }
+
+  .card:hover {
+    border-color: #e1e4e8;
+    box-shadow: none;
+  }
+
+  .cardHeader:hover {
+    background: transparent;
+  }
+
+  .cardHeader:active {
+    background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  }
+
+  .referenceOption:hover {
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .referenceOption:active {
+    background: #f0f7ff;
+    border-color: #c4d9f7;
+  }
+
+  .addBtn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+  }
+
+  .addBtn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .tagRemove:hover {
+    transform: none;
+  }
+
+  .tagRemove:active {
+    transform: scale(1.1);
+    color: #dc2626;
+  }
+
+  .removeBtn:hover {
+    background-color: transparent;
+  }
+
+  .removeBtn:active {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  .card {
+    margin-left: max(0px, env(safe-area-inset-left));
+    margin-right: max(0px, env(safe-area-inset-right));
+  }
+
+  .selectedItems {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+@media (max-width: 375px) {
+  @supports (padding: max(0px)) {
+    .container {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardHeader,
+  .optionBtn,
+  .selectedTag,
+  .tagRemove,
+  .removeBtn,
+  .input,
+  .addBtn,
+  .proficiencySelect,
+  .referenceOption,
+  .cardArrow {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}

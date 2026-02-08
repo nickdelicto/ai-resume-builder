@@ -1,530 +1,637 @@
+/**
+ * Additional Info Section - Healthcare Optimized
+ * Simple, tap-to-select design for busy nurses
+ *
+ * Design: No tabs, just clean collapsible cards with pre-populated options
+ */
+
 import React, { useState, useEffect } from 'react';
-import styles from './Sections.module.css';
+import styles from './AdditionalInfo.module.css';
+
+// Common languages in healthcare settings
+const COMMON_LANGUAGES = [
+  { id: 'spanish', name: 'Spanish' },
+  { id: 'tagalog', name: 'Tagalog' },
+  { id: 'mandarin', name: 'Mandarin' },
+  { id: 'cantonese', name: 'Cantonese' },
+  { id: 'vietnamese', name: 'Vietnamese' },
+  { id: 'korean', name: 'Korean' },
+  { id: 'arabic', name: 'Arabic' },
+  { id: 'russian', name: 'Russian' },
+  { id: 'haitian-creole', name: 'Haitian Creole' },
+  { id: 'portuguese', name: 'Portuguese' },
+  { id: 'french', name: 'French' },
+  { id: 'hindi', name: 'Hindi' },
+  { id: 'polish', name: 'Polish' },
+  { id: 'asl', name: 'American Sign Language (ASL)' }
+];
+
+const PROFICIENCY_LEVELS = [
+  { id: 'native', label: 'Native', description: 'First language' },
+  { id: 'fluent', label: 'Fluent', description: 'Near-native proficiency' },
+  { id: 'proficient', label: 'Proficient', description: 'Can discuss medical topics' },
+  { id: 'conversational', label: 'Conversational', description: 'Basic patient communication' }
+];
+
+// Common nursing professional organizations
+const NURSING_ORGANIZATIONS = [
+  { id: 'ana', name: 'American Nurses Association (ANA)' },
+  { id: 'aacn', name: 'AACN - Critical Care Nurses' },
+  { id: 'aorn', name: 'AORN - Perioperative Nurses' },
+  { id: 'ena', name: 'ENA - Emergency Nurses' },
+  { id: 'oncology', name: 'ONS - Oncology Nursing Society' },
+  { id: 'aann', name: 'AANN - Neuroscience Nurses' },
+  { id: 'awhonn', name: 'AWHONN - Women\'s Health/OB Nurses' },
+  { id: 'apna', name: 'APNA - Psychiatric Nurses' },
+  { id: 'sigma', name: 'Sigma Theta Tau International' }
+];
+
+// Common nursing awards
+const COMMON_AWARDS = [
+  { id: 'daisy', name: 'DAISY Award' },
+  { id: 'employee-month', name: 'Employee of the Month' },
+  { id: 'excellence', name: 'Nursing Excellence Award' },
+  { id: 'preceptor', name: 'Preceptor of the Year' },
+  { id: 'patient-satisfaction', name: 'Patient Satisfaction Award' },
+  { id: 'safety', name: 'Patient Safety Award' }
+];
 
 const AdditionalInfo = ({ data, updateData }) => {
-  const [activeTab, setActiveTab] = useState('projects');
-  const [additionalData, setAdditionalData] = useState(data || {
-    projects: [],
-    certifications: [],
+  const [additionalData, setAdditionalData] = useState({
     languages: [],
-    customSections: []
+    memberships: [],
+    awards: [],
+    volunteer: [],
+    references: 'none', // 'none', 'available', 'listed'
+    ...data
   });
-  
-  // State for new items
-  const [newProject, setNewProject] = useState({ name: '', description: '' });
-  const [newCertification, setNewCertification] = useState({ name: '', issuer: '', date: '' });
-  const [newLanguage, setNewLanguage] = useState({ language: '', proficiency: 'Conversational' });
-  const [newCustomSection, setNewCustomSection] = useState({ title: '', items: [] });
-  const [newCustomItem, setNewCustomItem] = useState({ title: '', content: '' });
-  const [editingSectionIndex, setEditingSectionIndex] = useState(null);
-  
+
+  // For custom inputs
+  const [customLanguage, setCustomLanguage] = useState('');
+  const [customMembership, setCustomMembership] = useState('');
+  const [customAward, setCustomAward] = useState('');
+  const [volunteerEntry, setVolunteerEntry] = useState({ org: '', role: '' });
+
+  // Expanded sections
+  const [expandedSection, setExpandedSection] = useState('languages');
+
   useEffect(() => {
     if (data) {
       setAdditionalData({
-        projects: data.projects || [],
-        certifications: data.certifications || [],
         languages: data.languages || [],
-        customSections: data.customSections || []
+        memberships: data.memberships || [],
+        awards: data.awards || [],
+        volunteer: data.volunteer || [],
+        references: data.references || 'none'
       });
     }
   }, [data]);
-  
-  const updateDataAndState = (updatedData) => {
-    setAdditionalData(updatedData);
-    updateData(updatedData);
-  };
-  
-  // Projects handlers
-  const addProject = () => {
-    if (!newProject.name.trim()) return;
-    
-    const updatedData = {
-      ...additionalData,
-      projects: [...additionalData.projects, {...newProject}]
-    };
-    
-    updateDataAndState(updatedData);
-    setNewProject({ name: '', description: '' });
-  };
-  
-  const removeProject = (index) => {
-    const updatedData = {
-      ...additionalData,
-      projects: additionalData.projects.filter((_, i) => i !== index)
-    };
-    
-    updateDataAndState(updatedData);
-  };
-  
-  // Certifications handlers
-  const addCertification = () => {
-    if (!newCertification.name.trim()) return;
-    
-    const updatedData = {
-      ...additionalData,
-      certifications: [...additionalData.certifications, {...newCertification}]
-    };
-    
-    updateDataAndState(updatedData);
-    setNewCertification({ name: '', issuer: '', date: '' });
-  };
-  
-  const removeCertification = (index) => {
-    const updatedData = {
-      ...additionalData,
-      certifications: additionalData.certifications.filter((_, i) => i !== index)
-    };
-    
-    updateDataAndState(updatedData);
-  };
-  
-  // Languages handlers
-  const addLanguage = () => {
-    if (!newLanguage.language.trim()) return;
-    
-    const updatedData = {
-      ...additionalData,
-      languages: [...additionalData.languages, {...newLanguage}]
-    };
-    
-    updateDataAndState(updatedData);
-    setNewLanguage({ language: '', proficiency: 'Conversational' });
-  };
-  
-  const removeLanguage = (index) => {
-    const updatedData = {
-      ...additionalData,
-      languages: additionalData.languages.filter((_, i) => i !== index)
-    };
-    
-    updateDataAndState(updatedData);
-  };
-  
-  // Custom Sections methods
-  const addCustomSection = () => {
-    if (!newCustomSection.title) return;
-    
-    const updatedData = {
-      ...additionalData,
-      customSections: [
-        ...additionalData.customSections,
-        {
-          id: `section_${Date.now()}`,
-          title: newCustomSection.title,
-          items: []
-        }
-      ]
-    };
-    
-    updateDataAndState(updatedData);
-    setNewCustomSection({ title: '', items: [] });
-    setEditingSectionIndex(updatedData.customSections.length - 1);
-  };
-  
-  const removeCustomSection = (index) => {
-    const updatedData = {
-      ...additionalData,
-      customSections: additionalData.customSections.filter((_, i) => i !== index)
-    };
-    
-    updateDataAndState(updatedData);
-    if (editingSectionIndex === index) {
-      setEditingSectionIndex(null);
-    }
-  };
-  
-  const addCustomItem = () => {
-    if (!newCustomItem.content || editingSectionIndex === null) return;
-    
-    const updatedSections = [...additionalData.customSections];
-    updatedSections[editingSectionIndex].items.push({
-      id: `item_${Date.now()}`,
-      title: newCustomItem.title,
-      content: newCustomItem.content
-    });
-    
-    const updatedData = {
-      ...additionalData,
-      customSections: updatedSections
-    };
-    
-    updateDataAndState(updatedData);
-    setNewCustomItem({ title: '', content: '' });
-  };
-  
-  const removeCustomItem = (sectionIndex, itemIndex) => {
-    const updatedSections = [...additionalData.customSections];
-    updatedSections[sectionIndex].items = updatedSections[sectionIndex].items.filter((_, i) => i !== itemIndex);
-    
-    const updatedData = {
-      ...additionalData,
-      customSections: updatedSections
-    };
-    
-    updateDataAndState(updatedData);
+
+  const updateAndSave = (newData) => {
+    setAdditionalData(newData);
+    updateData(newData);
   };
 
+  // Language handlers
+  const toggleLanguage = (langId, proficiency = 'conversational') => {
+    const existing = additionalData.languages.find(l => l.id === langId);
+    if (existing) {
+      // Remove it
+      updateAndSave({
+        ...additionalData,
+        languages: additionalData.languages.filter(l => l.id !== langId)
+      });
+    } else {
+      // Add it
+      const langData = COMMON_LANGUAGES.find(l => l.id === langId);
+      updateAndSave({
+        ...additionalData,
+        languages: [...additionalData.languages, {
+          id: langId,
+          language: langData?.name || langId,
+          proficiency
+        }]
+      });
+    }
+  };
+
+  const updateLanguageProficiency = (langId, proficiency) => {
+    updateAndSave({
+      ...additionalData,
+      languages: additionalData.languages.map(l =>
+        l.id === langId ? { ...l, proficiency } : l
+      )
+    });
+  };
+
+  const addCustomLanguage = () => {
+    if (!customLanguage.trim()) return;
+    const id = `custom-${Date.now()}`;
+    updateAndSave({
+      ...additionalData,
+      languages: [...additionalData.languages, {
+        id,
+        language: customLanguage.trim(),
+        proficiency: 'conversational'
+      }]
+    });
+    setCustomLanguage('');
+  };
+
+  // Membership handlers
+  const toggleMembership = (orgId) => {
+    const existing = additionalData.memberships.find(m => m.id === orgId);
+    if (existing) {
+      updateAndSave({
+        ...additionalData,
+        memberships: additionalData.memberships.filter(m => m.id !== orgId)
+      });
+    } else {
+      const orgData = NURSING_ORGANIZATIONS.find(o => o.id === orgId);
+      updateAndSave({
+        ...additionalData,
+        memberships: [...additionalData.memberships, {
+          id: orgId,
+          name: orgData?.name || orgId
+        }]
+      });
+    }
+  };
+
+  const addCustomMembership = () => {
+    if (!customMembership.trim()) return;
+    updateAndSave({
+      ...additionalData,
+      memberships: [...additionalData.memberships, {
+        id: `custom-${Date.now()}`,
+        name: customMembership.trim()
+      }]
+    });
+    setCustomMembership('');
+  };
+
+  // Award handlers
+  const toggleAward = (awardId) => {
+    const existing = additionalData.awards.find(a => a.id === awardId);
+    if (existing) {
+      updateAndSave({
+        ...additionalData,
+        awards: additionalData.awards.filter(a => a.id !== awardId)
+      });
+    } else {
+      const awardData = COMMON_AWARDS.find(a => a.id === awardId);
+      updateAndSave({
+        ...additionalData,
+        awards: [...additionalData.awards, {
+          id: awardId,
+          name: awardData?.name || awardId
+        }]
+      });
+    }
+  };
+
+  const addCustomAward = () => {
+    if (!customAward.trim()) return;
+    updateAndSave({
+      ...additionalData,
+      awards: [...additionalData.awards, {
+        id: `custom-${Date.now()}`,
+        name: customAward.trim()
+      }]
+    });
+    setCustomAward('');
+  };
+
+  // Volunteer handlers
+  const addVolunteer = () => {
+    if (!volunteerEntry.org.trim()) return;
+    updateAndSave({
+      ...additionalData,
+      volunteer: [...additionalData.volunteer, {
+        id: `vol-${Date.now()}`,
+        organization: volunteerEntry.org.trim(),
+        role: volunteerEntry.role.trim()
+      }]
+    });
+    setVolunteerEntry({ org: '', role: '' });
+  };
+
+  const removeVolunteer = (volId) => {
+    updateAndSave({
+      ...additionalData,
+      volunteer: additionalData.volunteer.filter(v => v.id !== volId)
+    });
+  };
+
+  // Reference handler
+  const setReferences = (value) => {
+    updateAndSave({ ...additionalData, references: value });
+  };
+
+  // Count total items
+  const totalItems =
+    additionalData.languages.length +
+    additionalData.memberships.length +
+    additionalData.awards.length +
+    additionalData.volunteer.length +
+    (additionalData.references !== 'none' ? 1 : 0);
+
   return (
-    <div className={styles.sectionContainer}>
-      <h2 className={styles.sectionTitle}>Additional Information</h2>
-      <p className={styles.sectionDescription}>
-        Include other relevant information that showcases your qualifications.
-      </p>
-      
-      <div className={styles.tabNavigation}>
-        <button 
-          className={`${styles.tabButton} ${activeTab === 'projects' ? styles.activeTabButton : ''}`}
-          onClick={() => setActiveTab('projects')}
-        >
-          Projects
-        </button>
-        <button 
-          className={`${styles.tabButton} ${activeTab === 'certifications' ? styles.activeTabButton : ''}`}
-          onClick={() => setActiveTab('certifications')}
-        >
-          Certifications
-        </button>
-        <button 
-          className={`${styles.tabButton} ${activeTab === 'languages' ? styles.activeTabButton : ''}`}
-          onClick={() => setActiveTab('languages')}
-        >
-          Languages
-        </button>
-        <button 
-          className={`${styles.tabButton} ${activeTab === 'customSections' ? styles.activeTabButton : ''}`}
-          onClick={() => setActiveTab('customSections')}
-        >
-          Custom Sections
-        </button>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>
+          <span className={styles.titleIcon}>📋</span>
+          Additional Info
+        </h2>
+        {totalItems > 0 && (
+          <span className={styles.badge}>{totalItems} added</span>
+        )}
       </div>
-      
-      {activeTab === 'projects' && (
-        <div className={styles.tabContent}>
-          <h3 className={styles.tabTitle}>Projects</h3>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="projectName">Project Name</label>
-            <input
-              type="text"
-              id="projectName"
-              className={styles.formInput}
-              value={newProject.name}
-              onChange={(e) => setNewProject({...newProject, name: e.target.value})}
-              placeholder="e.g. Website Redesign"
-            />
+
+      <p className={styles.description}>
+        Quick-add languages, memberships, awards, and more. All optional!
+      </p>
+
+      {/* Languages Section */}
+      <div className={styles.card}>
+        <button
+          className={styles.cardHeader}
+          onClick={() => setExpandedSection(expandedSection === 'languages' ? '' : 'languages')}
+        >
+          <div className={styles.cardHeaderLeft}>
+            <span className={styles.cardIcon}>🌍</span>
+            <span className={styles.cardTitle}>Languages</span>
+            {additionalData.languages.length > 0 && (
+              <span className={styles.cardCount}>{additionalData.languages.length}</span>
+            )}
           </div>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="projectDescription">Description</label>
-            <textarea
-              id="projectDescription"
-              className={styles.formInput}
-              rows={4}
-              value={newProject.description}
-              onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-              placeholder="Describe your role and the impact of the project"
-            />
-          </div>
-          
-          <button 
-            className={styles.addItemButton}
-            onClick={addProject}
-            disabled={!newProject.name}
-          >
-            Add Project
-          </button>
-          
-          <div className={styles.itemsList}>
-            {additionalData.projects.map((project, index) => (
-              <div key={index} className={styles.itemCard}>
-                <div className={styles.itemHeader}>
-                  <h4 className={styles.itemTitle}>{project.name}</h4>
-                  <button 
-                    className={styles.removeItemButton}
-                    onClick={() => removeProject(index)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <p className={styles.itemDescription}>{project.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {activeTab === 'certifications' && (
-        <div className={styles.tabContent}>
-          <h3 className={styles.tabTitle}>Certifications</h3>
-          
-          <div className={styles.formGrid}>
-            <div className={styles.formGroup}>
-              <label htmlFor="certName">Certification Name</label>
-              <input
-                type="text"
-                id="certName"
-                value={newCertification.name}
-                onChange={(e) => setNewCertification({...newCertification, name: e.target.value})}
-                placeholder="e.g. Project Management Professional (PMP)"
-                className={styles.formInput}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="certIssuer">Issuing Organization</label>
-              <input
-                type="text"
-                id="certIssuer"
-                value={newCertification.issuer}
-                onChange={(e) => setNewCertification({...newCertification, issuer: e.target.value})}
-                placeholder="e.g. Project Management Institute"
-                className={styles.formInput}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="certDate">Date</label>
-              <input
-                type="text"
-                id="certDate"
-                value={newCertification.date}
-                onChange={(e) => setNewCertification({...newCertification, date: e.target.value})}
-                placeholder="e.g. April 2020"
-                className={styles.formInput}
-              />
-            </div>
-          </div>
-          
-          <button 
-            className={styles.addItemButton}
-            onClick={addCertification}
-          >
-            Add Certification
-          </button>
-          
-          <div className={styles.itemsList}>
-            {additionalData.certifications.map((cert, index) => (
-              <div key={index} className={styles.itemCard}>
-                <div className={styles.itemHeader}>
-                  <h4 className={styles.itemTitle}>{cert.name}</h4>
-                  <button 
-                    className={styles.removeItemButton}
-                    onClick={() => removeCertification(index)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <p className={styles.itemDescription}>
-                  {cert.issuer && `${cert.issuer}`}
-                  {cert.issuer && cert.date && ' • '}
-                  {cert.date && `${cert.date}`}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {activeTab === 'languages' && (
-        <div className={styles.tabContent}>
-          <h3 className={styles.tabTitle}>Languages</h3>
-          
-          <div className={styles.formGrid}>
-            <div className={styles.formGroup}>
-              <label htmlFor="language">Language</label>
-              <input
-                type="text"
-                id="language"
-                value={newLanguage.language}
-                onChange={(e) => setNewLanguage({...newLanguage, language: e.target.value})}
-                placeholder="e.g. Spanish"
-                className={styles.formInput}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="proficiency">Proficiency</label>
-              <select
-                id="proficiency"
-                value={newLanguage.proficiency}
-                onChange={(e) => setNewLanguage({...newLanguage, proficiency: e.target.value})}
-                className={styles.formInput}
-              >
-                <option value="Native">Native</option>
-                <option value="Fluent">Fluent</option>
-                <option value="Proficient">Proficient</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Conversational">Conversational</option>
-                <option value="Basic">Basic</option>
-              </select>
-            </div>
-          </div>
-          
-          <button 
-            className={styles.addItemButton}
-            onClick={addLanguage}
-          >
-            Add Language
-          </button>
-          
-          <div className={styles.itemsList}>
-            {additionalData.languages.map((lang, index) => (
-              <div key={index} className={styles.itemCard}>
-                <div className={styles.itemHeader}>
-                  <h4 className={styles.itemTitle}>{lang.language}</h4>
-                  <button 
-                    className={styles.removeItemButton}
-                    onClick={() => removeLanguage(index)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <p className={styles.itemDescription}>{lang.proficiency}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {activeTab === 'customSections' && (
-        <div className={styles.tabContent}>
-          <h3 className={styles.tabTitle}>Custom Sections</h3>
-          
-          {editingSectionIndex === null ? (
-            <>
-              <p className={styles.tabDescription}>
-                Create custom sections for achievements, references, volunteer work, or any other information you'd like to include.
-              </p>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="customSectionTitle">Section Title</label>
-                <input
-                  type="text"
-                  id="customSectionTitle"
-                  className={styles.formInput}
-                  value={newCustomSection.title}
-                  onChange={(e) => setNewCustomSection({...newCustomSection, title: e.target.value})}
-                  placeholder="e.g. Achievements, References, Volunteer Work"
-                />
-              </div>
-              
-              <button 
-                className={styles.addItemButton}
-                onClick={addCustomSection}
-                disabled={!newCustomSection.title}
-              >
-                Create Section
-              </button>
-              
-              {additionalData.customSections.length > 0 && (
-                <div className={styles.customSectionsList}>
-                  <h4 className={styles.subsectionTitle}>Your Custom Sections</h4>
-                  {additionalData.customSections.map((section, index) => (
-                    <div key={section.id} className={styles.itemCard}>
-                      <div className={styles.itemHeader}>
-                        <h4 className={styles.itemTitle}>{section.title}</h4>
-                        <div className={styles.buttonGroup}>
-                          <button 
-                            className={styles.editButton}
-                            onClick={() => setEditingSectionIndex(index)}
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            className={styles.removeItemButton}
-                            onClick={() => removeCustomSection(index)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                      <p className={styles.itemDescription}>
-                        {section.items.length} item{section.items.length !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className={styles.customSectionEditor}>
-              <div className={styles.editorHeader}>
-                <h4 className={styles.editorTitle}>
-                  Editing: {additionalData.customSections[editingSectionIndex].title}
-                </h4>
-                <button 
-                  className={styles.backButton}
-                  onClick={() => setEditingSectionIndex(null)}
-                >
-                  Back to Sections
-                </button>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="customItemTitle">Item Title (Optional)</label>
-                <input
-                  type="text"
-                  id="customItemTitle"
-                  className={styles.formInput}
-                  value={newCustomItem.title}
-                  onChange={(e) => setNewCustomItem({...newCustomItem, title: e.target.value})}
-                  placeholder="e.g. Achievement Title (Optional)"
-                />
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="customItemContent">Content</label>
-                <textarea
-                  id="customItemContent"
-                  className={styles.formInput}
-                  rows={4}
-                  value={newCustomItem.content}
-                  onChange={(e) => setNewCustomItem({...newCustomItem, content: e.target.value})}
-                  placeholder="Describe your achievement, reference, or other information"
-                />
-              </div>
-              
-              <button 
-                className={styles.addItemButton}
-                onClick={addCustomItem}
-                disabled={!newCustomItem.content}
-              >
-                Add Item
-              </button>
-              
-              <div className={styles.itemsList}>
-                {additionalData.customSections[editingSectionIndex].items.map((item, itemIndex) => (
-                  <div key={item.id} className={styles.itemCard}>
-                    <div className={styles.itemHeader}>
-                      {item.title && <h4 className={styles.itemTitle}>{item.title}</h4>}
-                      <button 
-                        className={styles.removeItemButton}
-                        onClick={() => removeCustomItem(editingSectionIndex, itemIndex)}
+          <span className={styles.cardArrow}>
+            {expandedSection === 'languages' ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSection === 'languages' && (
+          <div className={styles.cardContent}>
+            <p className={styles.hint}>
+              Bilingual nurses are in high demand! Tap to add languages you speak.
+            </p>
+
+            {/* Selected languages with proficiency */}
+            {additionalData.languages.length > 0 && (
+              <div className={styles.selectedItems}>
+                {additionalData.languages.map(lang => (
+                  <div key={lang.id} className={styles.selectedLanguage}>
+                    <div className={styles.langInfo}>
+                      <span className={styles.langName}>{lang.language}</span>
+                      <select
+                        value={lang.proficiency}
+                        onChange={(e) => updateLanguageProficiency(lang.id, e.target.value)}
+                        className={styles.proficiencySelect}
                       >
-                        Remove
-                      </button>
+                        {PROFICIENCY_LEVELS.map(level => (
+                          <option key={level.id} value={level.id}>{level.label}</option>
+                        ))}
+                      </select>
                     </div>
-                    <p className={styles.itemDescription}>{item.content}</p>
+                    <button
+                      className={styles.removeBtn}
+                      onClick={() => toggleLanguage(lang.id)}
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
-                
-                {additionalData.customSections[editingSectionIndex].items.length === 0 && (
-                  <p className={styles.emptyMessage}>No items yet. Add some using the form above.</p>
-                )}
               </div>
+            )}
+
+            {/* Language buttons */}
+            <div className={styles.optionsGrid}>
+              {COMMON_LANGUAGES.map(lang => {
+                const isSelected = additionalData.languages.some(l => l.id === lang.id);
+                return (
+                  <button
+                    key={lang.id}
+                    className={`${styles.optionBtn} ${isSelected ? styles.optionBtnSelected : ''}`}
+                    onClick={() => toggleLanguage(lang.id)}
+                  >
+                    {lang.name}
+                    {isSelected && <span className={styles.checkmark}>✓</span>}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
-      
+
+            {/* Custom language input */}
+            <div className={styles.customInput}>
+              <input
+                type="text"
+                placeholder="Other language..."
+                value={customLanguage}
+                onChange={(e) => setCustomLanguage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addCustomLanguage()}
+                className={styles.input}
+              />
+              <button
+                onClick={addCustomLanguage}
+                disabled={!customLanguage.trim()}
+                className={styles.addBtn}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Professional Memberships Section */}
+      <div className={styles.card}>
+        <button
+          className={styles.cardHeader}
+          onClick={() => setExpandedSection(expandedSection === 'memberships' ? '' : 'memberships')}
+        >
+          <div className={styles.cardHeaderLeft}>
+            <span className={styles.cardIcon}>🏥</span>
+            <span className={styles.cardTitle}>Professional Memberships</span>
+            {additionalData.memberships.length > 0 && (
+              <span className={styles.cardCount}>{additionalData.memberships.length}</span>
+            )}
+          </div>
+          <span className={styles.cardArrow}>
+            {expandedSection === 'memberships' ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSection === 'memberships' && (
+          <div className={styles.cardContent}>
+            <p className={styles.hint}>
+              Professional memberships show dedication to your specialty.
+            </p>
+
+            {/* Selected memberships */}
+            {additionalData.memberships.length > 0 && (
+              <div className={styles.selectedTags}>
+                {additionalData.memberships.map(mem => (
+                  <span key={mem.id} className={styles.selectedTag}>
+                    {mem.name}
+                    <button
+                      className={styles.tagRemove}
+                      onClick={() => toggleMembership(mem.id)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Membership buttons */}
+            <div className={styles.optionsGrid}>
+              {NURSING_ORGANIZATIONS.map(org => {
+                const isSelected = additionalData.memberships.some(m => m.id === org.id);
+                return (
+                  <button
+                    key={org.id}
+                    className={`${styles.optionBtn} ${isSelected ? styles.optionBtnSelected : ''}`}
+                    onClick={() => toggleMembership(org.id)}
+                  >
+                    {org.name}
+                    {isSelected && <span className={styles.checkmark}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom membership input */}
+            <div className={styles.customInput}>
+              <input
+                type="text"
+                placeholder="Other organization..."
+                value={customMembership}
+                onChange={(e) => setCustomMembership(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addCustomMembership()}
+                className={styles.input}
+              />
+              <button
+                onClick={addCustomMembership}
+                disabled={!customMembership.trim()}
+                className={styles.addBtn}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Awards Section */}
+      <div className={styles.card}>
+        <button
+          className={styles.cardHeader}
+          onClick={() => setExpandedSection(expandedSection === 'awards' ? '' : 'awards')}
+        >
+          <div className={styles.cardHeaderLeft}>
+            <span className={styles.cardIcon}>🏆</span>
+            <span className={styles.cardTitle}>Awards & Recognition</span>
+            {additionalData.awards.length > 0 && (
+              <span className={styles.cardCount}>{additionalData.awards.length}</span>
+            )}
+          </div>
+          <span className={styles.cardArrow}>
+            {expandedSection === 'awards' ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSection === 'awards' && (
+          <div className={styles.cardContent}>
+            <p className={styles.hint}>
+              Received any awards? They make your resume stand out!
+            </p>
+
+            {/* Selected awards */}
+            {additionalData.awards.length > 0 && (
+              <div className={styles.selectedTags}>
+                {additionalData.awards.map(award => (
+                  <span key={award.id} className={styles.selectedTag}>
+                    {award.name}
+                    <button
+                      className={styles.tagRemove}
+                      onClick={() => toggleAward(award.id)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Award buttons */}
+            <div className={styles.optionsGrid}>
+              {COMMON_AWARDS.map(award => {
+                const isSelected = additionalData.awards.some(a => a.id === award.id);
+                return (
+                  <button
+                    key={award.id}
+                    className={`${styles.optionBtn} ${isSelected ? styles.optionBtnSelected : ''}`}
+                    onClick={() => toggleAward(award.id)}
+                  >
+                    {award.name}
+                    {isSelected && <span className={styles.checkmark}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom award input */}
+            <div className={styles.customInput}>
+              <input
+                type="text"
+                placeholder="Other award..."
+                value={customAward}
+                onChange={(e) => setCustomAward(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addCustomAward()}
+                className={styles.input}
+              />
+              <button
+                onClick={addCustomAward}
+                disabled={!customAward.trim()}
+                className={styles.addBtn}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Volunteer Section */}
+      <div className={styles.card}>
+        <button
+          className={styles.cardHeader}
+          onClick={() => setExpandedSection(expandedSection === 'volunteer' ? '' : 'volunteer')}
+        >
+          <div className={styles.cardHeaderLeft}>
+            <span className={styles.cardIcon}>❤️</span>
+            <span className={styles.cardTitle}>Volunteer Experience</span>
+            {additionalData.volunteer.length > 0 && (
+              <span className={styles.cardCount}>{additionalData.volunteer.length}</span>
+            )}
+          </div>
+          <span className={styles.cardArrow}>
+            {expandedSection === 'volunteer' ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSection === 'volunteer' && (
+          <div className={styles.cardContent}>
+            <p className={styles.hint}>
+              Community involvement shows character and commitment.
+            </p>
+
+            {/* Volunteer entries */}
+            {additionalData.volunteer.length > 0 && (
+              <div className={styles.volunteerList}>
+                {additionalData.volunteer.map(vol => (
+                  <div key={vol.id} className={styles.volunteerItem}>
+                    <div className={styles.volunteerInfo}>
+                      <span className={styles.volunteerOrg}>{vol.organization}</span>
+                      {vol.role && <span className={styles.volunteerRole}>{vol.role}</span>}
+                    </div>
+                    <button
+                      className={styles.removeBtn}
+                      onClick={() => removeVolunteer(vol.id)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add volunteer */}
+            <div className={styles.volunteerForm}>
+              <input
+                type="text"
+                placeholder="Organization name"
+                value={volunteerEntry.org}
+                onChange={(e) => setVolunteerEntry({ ...volunteerEntry, org: e.target.value })}
+                className={styles.input}
+              />
+              <input
+                type="text"
+                placeholder="Your role (optional)"
+                value={volunteerEntry.role}
+                onChange={(e) => setVolunteerEntry({ ...volunteerEntry, role: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && addVolunteer()}
+                className={styles.input}
+              />
+              <button
+                onClick={addVolunteer}
+                disabled={!volunteerEntry.org.trim()}
+                className={styles.addBtn}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* References Section */}
+      <div className={styles.card}>
+        <button
+          className={styles.cardHeader}
+          onClick={() => setExpandedSection(expandedSection === 'references' ? '' : 'references')}
+        >
+          <div className={styles.cardHeaderLeft}>
+            <span className={styles.cardIcon}>📋</span>
+            <span className={styles.cardTitle}>References</span>
+            {additionalData.references !== 'none' && (
+              <span className={styles.cardCount}>✓</span>
+            )}
+          </div>
+          <span className={styles.cardArrow}>
+            {expandedSection === 'references' ? '▼' : '▶'}
+          </span>
+        </button>
+
+        {expandedSection === 'references' && (
+          <div className={styles.cardContent}>
+            <div className={styles.referenceOptions}>
+              <label className={styles.referenceOption}>
+                <input
+                  type="radio"
+                  name="references"
+                  checked={additionalData.references === 'none'}
+                  onChange={() => setReferences('none')}
+                />
+                <span className={styles.referenceLabel}>Don't include references section</span>
+              </label>
+              <label className={styles.referenceOption}>
+                <input
+                  type="radio"
+                  name="references"
+                  checked={additionalData.references === 'available'}
+                  onChange={() => setReferences('available')}
+                />
+                <span className={styles.referenceLabel}>"References available upon request"</span>
+              </label>
+            </div>
+            <p className={styles.referenceHint}>
+              Most recruiters prefer no references section - they'll ask if needed.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Tip */}
       <div className={styles.completionHint}>
         <span className={styles.hintIcon}>💡</span>
         <span className={styles.hintText}>
-          <strong>Pro Tip:</strong> Only include additional information that is relevant to the job you're applying for.
+          <strong>Pro Tip:</strong> Only include what's relevant to the job. Less is more!
         </span>
       </div>
     </div>
   );
 };
 
-export default AdditionalInfo; 
+export default AdditionalInfo;

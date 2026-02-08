@@ -1,0 +1,856 @@
+/* ==========================================================================
+   Summary Section - Healthcare-Focused Mobile-First Design
+   Built for tired nurses on phone breaks - tap, don't type!
+   Touch targets: 44px minimum | Large text | Clear visual hierarchy
+   ========================================================================== */
+
+/* ===== Main Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+  /* Ensure Figtree font is applied throughout */
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Header ===== */
+.header {
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #4e5968;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+/* ===== Form Group ===== */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.formGroup label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.formInput {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1d2129;
+  background: #fafbfc;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.formInput:hover {
+  border-color: #c4d9f7;
+  background: #ffffff;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.formInput::placeholder {
+  color: #a0aab8;
+}
+
+textarea.formInput {
+  min-height: 160px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+/* Warn state — over character limit */
+.formInputWarn {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+}
+.formInputWarn:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* ===== Character Counter ===== */
+.charCounter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.charCount {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+.charCountWarn {
+  color: #d97706;
+}
+.charCountOver {
+  color: #ef4444;
+}
+.charLimitMsg {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* ===== AI Button ===== */
+.aiButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #5b4cdb 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.35);
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.aiButton:hover {
+  background: linear-gradient(135deg, #5b4cdb 0%, #4a3dc9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45);
+}
+
+.aiButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(108, 92, 231, 0.3);
+}
+
+.aiButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Generating State */
+.generating {
+  background: linear-gradient(135deg, #8b7cf5 0%, #7b6cf0 100%);
+}
+
+.generating::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Completion Hint / Pro Tip ===== */
+.completionHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 14px;
+}
+
+.hintIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.hintText {
+  font-size: 0.95rem;
+  color: #991b1b;
+  line-height: 1.6;
+}
+
+.hintText strong {
+  color: #7f1d1d;
+}
+
+/* Warning Hint Variant */
+.warningHint {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+  margin-bottom: 16px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.sectionLink {
+  color: #1a73e8;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sectionLink:hover {
+  color: #1557b0;
+}
+
+/* ==========================================================================
+   Template Section - Quick Start Cards
+   ========================================================================== */
+.templateSection {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  border: 2px solid #e1e4e8;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.templateSection::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #6c5ce7 0%, #1a73e8 100%);
+}
+
+/* Collapsible Header Button */
+.templateHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.templateHeader:hover {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+}
+
+.templateHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.templateIcon {
+  font-size: 1.4rem;
+}
+
+.templateTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d2129;
+}
+
+.templateHint {
+  font-size: 0.8rem;
+  color: #8a94a6;
+  font-weight: 500;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #e1e4e8;
+}
+
+.templateArrow {
+  color: #4e5968;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+/* ==========================================================================
+   Template Grid - Flex-wrap chips that flow naturally on all screens
+   ========================================================================== */
+.templateGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 16px 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Template Cards - Compact Touch Targets for More Options
+   ========================================================================== */
+.templateCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-align: left;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.templateCard:hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.templateCard:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+}
+
+/* Suggested template highlight */
+.templateCardSuggested {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  position: relative;
+}
+.templateCardSuggested:hover {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.suggestedBadge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #3b82f6;
+  padding: 2px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.cardIcon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.cardLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1d2129;
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   Summary Textarea
+   ========================================================================== */
+.textareaLabel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1d2129;
+}
+
+.editHint {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d97706;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #fcd34d;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px; /* Prevents iOS zoom */
+  font-family: inherit;
+  color: #1d2129;
+  background: #fafbfc;
+  line-height: 1.7;
+  resize: vertical;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.textarea:hover {
+  border-color: #c4d9f7;
+  background: #ffffff;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.textarea::placeholder {
+  color: #a0aab8;
+}
+
+/* ==========================================================================
+   AI Generate Button
+   ========================================================================== */
+.generateButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #5b4cdb 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.35);
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.generateButton:hover {
+  background: linear-gradient(135deg, #5b4cdb 0%, #4a3dc9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45);
+}
+
+.generateButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(108, 92, 231, 0.3);
+}
+
+.generateButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Generating State */
+.generating {
+  background: linear-gradient(135deg, #8b7cf5 0%, #7b6cf0 100%);
+}
+
+.generating::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Warning Banner
+   ========================================================================== */
+.warningBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 14px;
+  margin-top: 16px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.warningIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.warningText {
+  font-size: 0.95rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.warningText strong {
+  color: #78350f;
+}
+
+.warningText a {
+  color: #1a73e8;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Pro Tip Section
+   ========================================================================== */
+.proTip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 14px;
+}
+
+.proTipIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.proTipText {
+  font-size: 0.95rem;
+  color: #78350f;
+  line-height: 1.6;
+}
+
+.proTipText strong {
+  color: #92400e;
+}
+
+/* ==========================================================================
+   Tablet Breakpoint (640px+)
+   ========================================================================== */
+@media (min-width: 640px) {
+  .templateGrid {
+    gap: 12px;
+    padding: 0 20px 20px;
+  }
+
+  .templateCard {
+    padding: 12px 18px;
+    gap: 10px;
+  }
+
+  .cardLabel {
+    font-size: 0.85rem;
+  }
+
+  .templateHeader {
+    padding: 18px 24px;
+  }
+
+  .generateButton {
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ==========================================================================
+   Desktop Breakpoint (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .templateGrid {
+    gap: 12px;
+  }
+
+  .templateCard {
+    padding: 12px 20px;
+  }
+
+  .templateCard:hover {
+    transform: translateY(-2px);
+  }
+
+  .cardLabel {
+    font-size: 0.875rem;
+  }
+
+  .textarea,
+  .formInput {
+    min-height: 140px;
+    padding: 14px 16px;
+  }
+
+  .generateButton,
+  .aiButton {
+    min-height: 54px;
+  }
+
+  .generateButton:hover,
+  .aiButton:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* ==========================================================================
+   Small Phones (375px and below)
+   ========================================================================== */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .templateSection {
+    border-radius: 14px;
+  }
+
+  .templateGrid {
+    gap: 8px;
+    padding: 0 12px 12px;
+  }
+
+  .templateCard {
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 6px;
+    border-radius: 20px;
+  }
+
+  .cardIcon {
+    font-size: 1rem;
+  }
+
+  .cardLabel {
+    font-size: 0.7rem;
+  }
+
+  .suggestedBadge {
+    font-size: 0.5rem;
+    padding: 1px 4px;
+  }
+
+  .templateHeader {
+    min-height: 52px;
+    padding: 14px 16px;
+  }
+
+  textarea.formInput {
+    min-height: 140px;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .aiButton {
+    min-height: 54px;
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+
+  .textareaLabel {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .templateHint {
+    display: none;
+  }
+
+  .charCounter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .templateCard:hover {
+    transform: none;
+    box-shadow: none;
+    background: #ffffff;
+    border-color: #e1e4e8;
+  }
+
+  .templateCard:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #6ee7b7;
+  }
+
+  .templateHeader:hover {
+    background: transparent;
+  }
+
+  .templateHeader:active {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  }
+
+  .textarea:hover,
+  .formInput:hover {
+    border-color: #e1e4e8;
+    background: #fafbfc;
+  }
+
+  .generateButton:hover,
+  .aiButton:hover {
+    transform: none;
+    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.35);
+  }
+
+  .generateButton:active,
+  .aiButton:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  .templateSection {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  .proTip,
+  .warningBanner,
+  .completionHint {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .templateCard,
+  .templateHeader,
+  .textarea,
+  .formInput,
+  .generateButton,
+  .aiButton,
+  .templateArrow {
+    transition: none;
+  }
+
+  .templateGrid,
+  .warningBanner,
+  .warningHint {
+    animation: none;
+  }
+
+  .editHint {
+    animation: none;
+  }
+
+  .generating::after {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}

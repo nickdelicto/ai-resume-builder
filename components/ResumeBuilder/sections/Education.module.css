@@ -1,0 +1,722 @@
+/* ==========================================================================
+   Education Section - Healthcare-Focused Mobile-First Design
+   Built for tired nurses on phone breaks - tap, don't type!
+   Touch targets: 44px minimum | Large text | Clear visual hierarchy
+   ========================================================================== */
+
+/* ===== Main Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #4e5968;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+/* ===== Experience/Education Tabs Navigation ===== */
+.experienceTabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.experienceTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.experienceTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4e5968;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.experienceTab:hover {
+  border-color: #93c5fd;
+  background: #f8f9fc;
+}
+
+.activeTab {
+  border-color: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
+}
+
+.activeTab:hover {
+  background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%);
+}
+
+.draggingTab {
+  opacity: 0.5;
+}
+
+.tabContent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tabNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.activeTab .tabNumber {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-left: 4px;
+  cursor: grab;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.dragHandle:hover {
+  opacity: 1;
+}
+
+.dragIcon {
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+.removeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  color: #8c9aad;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeButton:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.activeTab .removeButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.activeTab .removeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* ===== Add Button ===== */
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  color: #1a73e8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addButton:hover {
+  background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  border-color: #1a73e8;
+  border-style: solid;
+}
+
+/* ===== Form Grid ===== */
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.formInput {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1d2129;
+  background: #fafbfc;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.formInput:hover {
+  border-color: #c4d9f7;
+  background: #ffffff;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.formInput::placeholder {
+  color: #a0aab8;
+}
+
+textarea.formInput {
+  min-height: 120px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.sublabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #8c9aad;
+  margin-top: 2px;
+}
+
+/* ===== Completion Hint / Pro Tip ===== */
+.completionHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 14px;
+  margin-top: 24px;
+}
+
+.hintIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.hintText {
+  font-size: 0.95rem;
+  color: #78350f;
+  line-height: 1.6;
+}
+
+.hintText strong {
+  color: #92400e;
+}
+
+/* ==========================================================================
+   Degree Quick Select Section - Tap to Select
+   ========================================================================== */
+.degreeSection {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  border: 2px solid #e1e4e8;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.degreeSection::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #1a73e8 0%, #6c5ce7 100%);
+}
+
+.degreeHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.degreeIcon {
+  font-size: 1.5rem;
+}
+
+.degreeTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1d2129;
+}
+
+/* ===== Degree Categories ===== */
+.degreeCategory {
+  margin-bottom: 20px;
+}
+
+.degreeCategory:last-of-type {
+  margin-bottom: 0;
+}
+
+.categoryLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Degree Grid - 2 Columns on Mobile ===== */
+.degreeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* ===== Degree Button - Large Touch Target ===== */
+.degreeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4e5968;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  text-align: center;
+}
+
+.degreeBtn:hover {
+  border-color: #93c5fd;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+}
+
+.degreeBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.1);
+}
+
+/* Selected Degree State */
+.degreeBtnSelected {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #047857;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+}
+
+.degreeBtnSelected:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #34d399;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+
+.checkmark {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.1rem;
+  animation: pop 0.3s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ===== Custom Degree Input ===== */
+.customDegree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px dashed #e1e4e8;
+}
+
+.customLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4e5968;
+}
+
+.degreeInput {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px; /* Prevents iOS zoom */
+  font-family: inherit;
+  color: #1d2129;
+  background: #ffffff;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.degreeInput:hover {
+  border-color: #c4d9f7;
+}
+
+.degreeInput:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.degreeInput::placeholder {
+  color: #a0aab8;
+}
+
+/* ==========================================================================
+   Graduation Date - Month/Year Selectors
+   ========================================================================== */
+.gradDateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gradSelect {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px; /* Prevents iOS zoom */
+  font-family: inherit;
+  color: #1d2129;
+  background: #fafbfc;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234e5968' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+  cursor: pointer;
+}
+
+.gradSelect:hover {
+  border-color: #c4d9f7;
+  background-color: #ffffff;
+}
+
+.gradSelect:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+/* ==========================================================================
+   Tablet Breakpoint (640px+)
+   ========================================================================== */
+@media (min-width: 640px) {
+  .degreeGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .degreeSection {
+    padding: 24px;
+  }
+
+  .degreeInput {
+    max-width: 400px;
+  }
+
+  .completionHint {
+    max-width: 600px;
+  }
+}
+
+/* ==========================================================================
+   Desktop Breakpoint (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .degreeBtn {
+    min-height: 48px;
+    padding: 12px 20px;
+  }
+
+  .degreeBtn:hover {
+    transform: translateY(-3px);
+  }
+
+  .degreeInput,
+  .formInput,
+  .gradSelect {
+    min-height: 50px;
+    padding: 14px 16px;
+  }
+
+  .experienceTab {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .experienceTab:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ==========================================================================
+   Small Phones (375px and below)
+   ========================================================================== */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .degreeSection {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .degreeGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .degreeBtn {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .experienceTab {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .degreeInput,
+  .formInput,
+  .gradSelect {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .degreeBtn:hover {
+    border-color: #e1e4e8;
+    background: #ffffff;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .degreeBtnSelected:hover {
+    transform: none;
+  }
+
+  .degreeBtn:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  }
+
+  .degreeBtnSelected:active {
+    transform: scale(0.98);
+  }
+
+  .experienceTab:hover {
+    border-color: #e1e4e8;
+    background: #ffffff;
+    transform: none;
+  }
+
+  .activeTab:hover {
+    transform: none;
+  }
+
+  .experienceTab:active {
+    transform: scale(0.98);
+  }
+
+  .degreeInput:hover,
+  .formInput:hover,
+  .gradSelect:hover {
+    border-color: #e1e4e8;
+    background: #fafbfc;
+  }
+
+  .addButton:hover {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+    border-style: dashed;
+  }
+
+  .addButton:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  .degreeSection {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .degreeBtn,
+  .experienceTab,
+  .addButton,
+  .degreeInput,
+  .formInput,
+  .gradSelect,
+  .removeButton {
+    transition: none;
+  }
+
+  .checkmark {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}

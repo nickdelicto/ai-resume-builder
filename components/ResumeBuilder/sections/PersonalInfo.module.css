@@ -1,0 +1,439 @@
+/* ==========================================================================
+   Personal Info Section - Healthcare-Focused Mobile-First Design
+   Built for tired nurses on phone breaks - tap, don't type!
+   Touch targets: 44px minimum | Large text | Clear visual hierarchy
+   ========================================================================== */
+
+/* ===== Main Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+}
+
+/* ===== Header with Welcome Message ===== */
+.header {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #4e5968;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===== Field Groups ===== */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Required field indicator */
+.required {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* ===== Labels with Icons ===== */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.labelIcon {
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.labelOptional {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #8c9aad;
+  margin-left: auto;
+}
+
+/* ===== Large Touch-Friendly Inputs ===== */
+.input {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 16px; /* Prevents iOS zoom */
+  font-family: inherit;
+  color: #1d2129;
+  background: #fafbfc;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input:hover {
+  border-color: #c4d9f7;
+  background: #ffffff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.input::placeholder {
+  color: #a0aab8;
+}
+
+/* ===== Field Validation States ===== */
+.inputValid {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.inputValid:focus {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+/* ===== Required Fields Card ===== */
+.requiredCard {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  border: 2px solid #e1e4e8;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.requiredCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #1a73e8 0%, #6c5ce7 100%);
+}
+
+.requiredCardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a73e8;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requiredFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Optional Fields Card ===== */
+.optionalCard {
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
+  border-radius: 18px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.optionalCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4e5968;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.optionalFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Completion Badge ===== */
+.completionBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid #6ee7b7;
+  border-radius: 14px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.completionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #10b981;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.completionText {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+/* ===== Pro Tips Section ===== */
+.tipsSection {
+  margin-top: 28px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.tipsToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tipsToggle:hover {
+  background: rgba(252, 211, 77, 0.2);
+}
+
+.tipsIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.tipsArrow {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #b45309;
+  transition: transform 0.2s ease;
+}
+
+.tipsContent {
+  padding: 0 18px 18px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.tipsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #78350f;
+}
+
+.tipBullet {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ===== Phone Input with Format Hint ===== */
+.phoneHint {
+  font-size: 0.8rem;
+  color: #8c9aad;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   Tablet Breakpoint (640px+)
+   ========================================================================== */
+@media (min-width: 640px) {
+  .requiredFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .optionalFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .requiredCard,
+  .optionalCard {
+    padding: 24px;
+  }
+
+  .completionBadge {
+    max-width: 400px;
+  }
+}
+
+/* ==========================================================================
+   Desktop Breakpoint (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .input {
+    min-height: 50px;
+    padding: 14px 16px;
+  }
+
+  .requiredCard,
+  .optionalCard {
+    padding: 28px;
+  }
+}
+
+/* ==========================================================================
+   Small Phones (375px and below)
+   ========================================================================== */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .requiredCard,
+  .optionalCard {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .input {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  .tipsToggle {
+    min-height: 52px;
+    padding: 14px 16px;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .input:hover {
+    border-color: #e1e4e8;
+    background: #fafbfc;
+  }
+
+  .input:focus {
+    border-color: #1a73e8;
+    background: #ffffff;
+  }
+
+  .tipsToggle:hover {
+    background: transparent;
+  }
+
+  .tipsToggle:active {
+    background: rgba(252, 211, 77, 0.3);
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .requiredCard,
+  .optionalCard {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .tipsToggle,
+  .completionBadge {
+    transition: none;
+  }
+
+  .completionBadge,
+  .tipsContent {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}

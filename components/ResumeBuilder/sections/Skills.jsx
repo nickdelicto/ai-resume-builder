@@ -1,344 +1,289 @@
-import React, { useState, useEffect } from 'react';
-import styles from './Sections.module.css';
-import { useResumeContext } from '../ResumeContext';
-import { toast } from 'react-hot-toast';
+/**
+ * Skills Section - Healthcare Optimized
+ * Tap-to-select soft skills, leadership, and other non-clinical skills
+ *
+ * Note: Clinical skills and EHR systems are in HealthcareSkills.jsx
+ * This section is for soft skills, leadership, and general professional skills
+ */
 
-const Skills = ({ data, updateData, jobContext, onNavigateToSection }) => {
-  const [skills, setSkills] = useState(data || []);
-  const [newSkill, setNewSkill] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [manuallyAddedSkills, setManuallyAddedSkills] = useState(new Set());
-  const [showContextWarning, setShowContextWarning] = useState(false);
-  const [showLimitWarning, setShowLimitWarning] = useState(false);
-  
-  // Get resume context to access experience data
-  const resumeContext = useResumeContext();
-  const experienceData = resumeContext?.resumeData?.experience || [];
-  
-  // Function to navigate to the Experience section
-  const navigateToExperience = (e) => {
-    e.preventDefault();
-    if (onNavigateToSection) {
-      onNavigateToSection('experience');
-    }
-  };
-  
+import React, { useState, useEffect } from 'react';
+import styles from './Skills.module.css';
+
+// Soft skills highly valued in healthcare
+const SOFT_SKILLS = [
+  { id: 'communication', name: 'Communication' },
+  { id: 'teamwork', name: 'Teamwork' },
+  { id: 'critical-thinking', name: 'Critical Thinking' },
+  { id: 'time-management', name: 'Time Management' },
+  { id: 'adaptability', name: 'Adaptability' },
+  { id: 'attention-detail', name: 'Attention to Detail' },
+  { id: 'problem-solving', name: 'Problem Solving' },
+  { id: 'stress-management', name: 'Stress Management' },
+  { id: 'empathy', name: 'Empathy' },
+  { id: 'active-listening', name: 'Active Listening' }
+];
+
+// Patient-focused skills
+const PATIENT_SKILLS = [
+  { id: 'patient-advocacy', name: 'Patient Advocacy' },
+  { id: 'patient-education', name: 'Patient Education' },
+  { id: 'family-communication', name: 'Family Communication' },
+  { id: 'cultural-competency', name: 'Cultural Competency' },
+  { id: 'compassionate-care', name: 'Compassionate Care' },
+  { id: 'patient-safety', name: 'Patient Safety' },
+  { id: 'discharge-planning', name: 'Discharge Planning' },
+  { id: 'care-coordination', name: 'Care Coordination' }
+];
+
+// Leadership & mentoring skills
+const LEADERSHIP_SKILLS = [
+  { id: 'charge-nurse', name: 'Charge Nurse Experience' },
+  { id: 'preceptor', name: 'Preceptor/Mentor' },
+  { id: 'team-leadership', name: 'Team Leadership' },
+  { id: 'conflict-resolution', name: 'Conflict Resolution' },
+  { id: 'delegation', name: 'Delegation' },
+  { id: 'staff-training', name: 'Staff Training' },
+  { id: 'quality-improvement', name: 'Quality Improvement' },
+  { id: 'policy-development', name: 'Policy Development' }
+];
+
+// Technical/administrative skills
+const TECHNICAL_SKILLS = [
+  { id: 'documentation', name: 'Clinical Documentation' },
+  { id: 'hipaa', name: 'HIPAA Compliance' },
+  { id: 'infection-control', name: 'Infection Control' },
+  { id: 'inventory-management', name: 'Supply/Inventory Management' },
+  { id: 'scheduling', name: 'Staff Scheduling' },
+  { id: 'microsoft-office', name: 'Microsoft Office' },
+  { id: 'telehealth', name: 'Telehealth/Virtual Care' },
+  { id: 'data-entry', name: 'Data Entry' }
+];
+
+const Skills = ({ data, updateData }) => {
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [customSkill, setCustomSkill] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState('soft');
+
+  // Sync with parent data
   useEffect(() => {
     if (data && Array.isArray(data)) {
-      setSkills(data);
-      
-      // Initialize manually added skills tracking from existing data
-      const initialManualSkills = new Set();
-      data.forEach(skill => initialManualSkills.add(skill));
-      setManuallyAddedSkills(initialManualSkills);
+      // Convert string array to our format if needed
+      const formatted = data.map(skill => {
+        if (typeof skill === 'string') {
+          // Check if it matches a pre-defined skill
+          const allSkills = [...SOFT_SKILLS, ...PATIENT_SKILLS, ...LEADERSHIP_SKILLS, ...TECHNICAL_SKILLS];
+          const found = allSkills.find(s => s.name === skill);
+          return found ? { id: found.id, name: skill } : { id: `custom-${skill}`, name: skill };
+        }
+        return skill;
+      });
+      setSelectedSkills(formatted);
     }
   }, [data]);
-  
-  const addSkill = () => {
-    if (!newSkill.trim()) return;
-    
-    const skillToAdd = newSkill.trim();
-    
-    // Check for maximum skills limit
-    const MAX_SKILLS = 20;
-    if (skills.length >= MAX_SKILLS) {
-      setShowLimitWarning(true);
-      // Clear warning after 10 seconds
-      setTimeout(() => setShowLimitWarning(false), 10000);
-      setNewSkill('');
-      return;
-    }
-    
-    // Only add if not already in the list
-    if (!skills.includes(skillToAdd)) {
-      const updatedSkills = [...skills, skillToAdd];
-    setSkills(updatedSkills);
-      updateData(updatedSkills);
-      
-      // Track that this was manually added
-      const updatedManualSkills = new Set(manuallyAddedSkills);
-      updatedManualSkills.add(skillToAdd);
-      setManuallyAddedSkills(updatedManualSkills);
-      
-      // Check if we're approaching or at the limit after adding
-      const remainingSlots = MAX_SKILLS - updatedSkills.length;
-      if (remainingSlots === 0) {
-        toast.info('You\'ve reached the maximum limit of 20 skills.', { duration: 3000 });
-      } else if (remainingSlots <= 3) {
-        toast.info(`You can add ${remainingSlots} more skill${remainingSlots !== 1 ? 's' : ''} before reaching the limit.`, { duration: 3000 });
-      }
-    } else {
-      toast.info('This skill is already in your list.', { duration: 2000 });
-    }
-    
-    setNewSkill('');
-  };
-  
-  const removeSkill = (index) => {
-    const skillToRemove = skills[index];
-    const updatedSkills = skills.filter((_, i) => i !== index);
-    setSkills(updatedSkills);
-    updateData(updatedSkills);
-    
-    // Remove from manually added set if present
-    if (manuallyAddedSkills.has(skillToRemove)) {
-      const updatedManualSkills = new Set(manuallyAddedSkills);
-      updatedManualSkills.delete(skillToRemove);
-      setManuallyAddedSkills(updatedManualSkills);
-    }
-    
-    // Clear limit warning if we're removing skills
-    if (showLimitWarning) {
-      setShowLimitWarning(false);
-    }
-  };
-  
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addSkill();
-    }
-  };
-  
-  const generateSkills = async () => {
-    // Check if already at maximum skill limit (20)
-    const MAX_SKILLS = 20;
-    if (skills.length >= MAX_SKILLS) {
-      setShowLimitWarning(true);
-      // Clear warning after 10 seconds
-      setTimeout(() => setShowLimitWarning(false), 10000);
-      return;
-    }
-    
-    // Check if we have enough experience data to generate relevant skills
-    const hasEnoughContext = experienceData && 
-      experienceData.length > 0 && 
-      experienceData[0].title && 
-      experienceData[0].company;
-    
-    if (!hasEnoughContext) {
-      // Show contextual warning if no experience data
-      setShowContextWarning(true);
-      // Clear warning after 10 seconds
-      setTimeout(() => setShowContextWarning(false), 10000);
-      return;
-    }
-    
-    setIsGenerating(true);
-    
-    // Calculate how many more skills we can add before hitting the limit
-    const remainingSlots = MAX_SKILLS - skills.length;
-    
-    try {
-      // Get the resume summary and personal info from context
-      const summary = resumeContext?.resumeData?.summary || '';
-      const education = resumeContext?.resumeData?.education || [];
-      const personalInfo = resumeContext?.resumeData?.personalInfo || {};
-      
-      // Prepare the API request payload
-      // Adjust requested skill count based on remaining slots
-      const requestCount = Math.min(8, remainingSlots);
-      
-      const payload = {
-        existingSkills: skills,
-        professionalContext: {
-          title: experienceData[0]?.title || '',
-          linkedin: personalInfo.linkedin || '',
-          website: personalInfo.website || ''
-        },
-        experience: experienceData.map(exp => ({
-          title: exp.title || '',
-          company: exp.company || '',
-          startDate: exp.startDate || '',
-          endDate: exp.endDate || '',
-          description: exp.description || ''
-        })),
-        education: education,
-        summary: summary,
-        jobContext: jobContext?.description || null,
-        count: requestCount // Request only as many skills as we have space for
-      };
-      
-      // Call our API endpoint
-      const response = await fetch('/api/generate-skills', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to generate skills');
-      }
-      
-      const data = await response.json();
-      
-      if (data.skills && Array.isArray(data.skills) && data.skills.length > 0) {
-        // Only add skills that don't already exist in the list
-        const newSkills = data.skills.filter(skill => 
-          !skills.includes(skill) && skill.trim() !== ''
-        );
-        
-        if (newSkills.length > 0) {
-          const updatedSkills = [...skills, ...newSkills];
-          setSkills(updatedSkills);
-          updateData(updatedSkills);
-          
-          // Check if we've reached or are approaching the maximum after adding new skills
-          const updatedCount = updatedSkills.length;
-          const isAtMaximum = updatedCount >= MAX_SKILLS;
-          const isApproachingMax = updatedCount >= MAX_SKILLS - 3;
-          
-          // Show appropriate success message
-          if (isAtMaximum) {
-            toast.success(
-              <div>
-                <p>Added {newSkills.length} skills to your resume!</p>
-                <p>You've reached the maximum limit of {MAX_SKILLS} skills.</p>
-              </div>, 
-              { duration: 5000 }
-            );
-          } else if (isApproachingMax) {
-            toast.success(
-              <div>
-                <p>Added {newSkills.length} skills to your resume!</p>
-                <p>You can add {MAX_SKILLS - updatedCount} more skill{MAX_SKILLS - updatedCount !== 1 ? 's' : ''} before reaching the limit.</p>
-              </div>, 
-              { duration: 5000 }
-            );
-          } else {
-            toast.success(`Added ${newSkills.length} relevant skills to your resume!`, { duration: 3000 });
-          }
-        } else {
-          // If all suggested skills were duplicates
-          toast.info('All suggested skills are already in your list. Try adding some experience details for more varied suggestions.', { duration: 4000 });
-        }
-      } else {
-        throw new Error('No skills generated');
-      }
-    } catch (error) {
-      console.error('Error generating skills:', error);
-      
-      // Create custom error messages based on error type
-      let errorMessage = 'We\'re having trouble generating skills.';
-      
-      // Check for common API errors
-      if (error.message.includes('API key')) {
-        errorMessage = 'Our AI service is temporarily unavailable.';
-      } else if (error.message.includes('rate limit')) {
-        errorMessage = 'We\'ve reached our AI service limit for the moment.';
-      } else if (error.message.includes('timeout') || error.message.includes('network')) {
-        errorMessage = 'Connection to our AI service timed out.';
-      }
-      
-      toast.error(
-        <div>
-          <p>{errorMessage}</p>
-          <p>Please try again later or add skills manually.</p>
-        </div>,
-        { duration: 7000 }
-      );
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-  
-  // Helper function to shuffle array (used for sample skills)
-  const shuffleArray = (array) => {
-    // Create a copy to avoid mutating the original array
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
+
+  const updateAndSave = (newSkills) => {
+    setSelectedSkills(newSkills);
+    // Save as string array for compatibility
+    updateData(newSkills.map(s => s.name));
   };
 
+  // Toggle skill selection
+  const toggleSkill = (skillId, skillName) => {
+    const existing = selectedSkills.find(s => s.id === skillId);
+    if (existing) {
+      updateAndSave(selectedSkills.filter(s => s.id !== skillId));
+    } else {
+      updateAndSave([...selectedSkills, { id: skillId, name: skillName }]);
+    }
+  };
+
+  // Add custom skill
+  const addCustomSkill = () => {
+    if (!customSkill.trim()) return;
+    const skillName = customSkill.trim();
+    // Check for duplicates
+    if (selectedSkills.some(s => s.name.toLowerCase() === skillName.toLowerCase())) {
+      setCustomSkill('');
+      return;
+    }
+    updateAndSave([...selectedSkills, { id: `custom-${Date.now()}`, name: skillName }]);
+    setCustomSkill('');
+  };
+
+  // Remove skill
+  const removeSkill = (skillId) => {
+    updateAndSave(selectedSkills.filter(s => s.id !== skillId));
+  };
+
+  // Check if skill is selected
+  const isSelected = (skillId) => selectedSkills.some(s => s.id === skillId);
+
+  // Render skill buttons for a category
+  const renderSkillButtons = (skillList) => (
+    <div className={styles.skillGrid}>
+      {skillList.map(skill => (
+        <button
+          key={skill.id}
+          className={`${styles.skillBtn} ${isSelected(skill.id) ? styles.skillBtnSelected : ''}`}
+          onClick={() => toggleSkill(skill.id, skill.name)}
+        >
+          {skill.name}
+          {isSelected(skill.id) && <span className={styles.checkmark}>✓</span>}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className={styles.sectionContainer}>
-      <h2 className={styles.sectionTitle}>Skills</h2>
-      <p className={styles.sectionDescription}>
-        List your technical, professional, and relevant soft skills.
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>
+          <span className={styles.titleIcon}>💼</span>
+          Other Skills
+        </h2>
+        {selectedSkills.length > 0 && (
+          <span className={styles.badge}>{selectedSkills.length} selected</span>
+        )}
+      </div>
+
+      <p className={styles.description}>
+        Tap to add soft skills, leadership abilities, and professional competencies.
+        Clinical skills are in the Clinical Skills section above.
       </p>
-      
-        <div className={styles.skillInputContainer}>
+
+      {/* Selected Skills Display */}
+      {selectedSkills.length > 0 && (
+        <div className={styles.selectedSkills}>
+          {selectedSkills.map(skill => (
+            <span key={skill.id} className={styles.selectedTag}>
+              {skill.name}
+              <button
+                className={styles.tagRemove}
+                onClick={() => removeSkill(skill.id)}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Soft Skills Category */}
+      <div className={styles.category}>
+        <button
+          className={styles.categoryHeader}
+          onClick={() => setExpandedCategory(expandedCategory === 'soft' ? '' : 'soft')}
+        >
+          <div className={styles.categoryLeft}>
+            <span className={styles.categoryIcon}>💬</span>
+            <span className={styles.categoryTitle}>Soft Skills</span>
+            <span className={styles.categoryHint}>Most important for nurses</span>
+          </div>
+          <span className={styles.categoryArrow}>
+            {expandedCategory === 'soft' ? '▼' : '▶'}
+          </span>
+        </button>
+        {expandedCategory === 'soft' && (
+          <div className={styles.categoryContent}>
+            {renderSkillButtons(SOFT_SKILLS)}
+          </div>
+        )}
+      </div>
+
+      {/* Patient Care Category */}
+      <div className={styles.category}>
+        <button
+          className={styles.categoryHeader}
+          onClick={() => setExpandedCategory(expandedCategory === 'patient' ? '' : 'patient')}
+        >
+          <div className={styles.categoryLeft}>
+            <span className={styles.categoryIcon}>❤️</span>
+            <span className={styles.categoryTitle}>Patient Care</span>
+          </div>
+          <span className={styles.categoryArrow}>
+            {expandedCategory === 'patient' ? '▼' : '▶'}
+          </span>
+        </button>
+        {expandedCategory === 'patient' && (
+          <div className={styles.categoryContent}>
+            {renderSkillButtons(PATIENT_SKILLS)}
+          </div>
+        )}
+      </div>
+
+      {/* Leadership Category */}
+      <div className={styles.category}>
+        <button
+          className={styles.categoryHeader}
+          onClick={() => setExpandedCategory(expandedCategory === 'leadership' ? '' : 'leadership')}
+        >
+          <div className={styles.categoryLeft}>
+            <span className={styles.categoryIcon}>👑</span>
+            <span className={styles.categoryTitle}>Leadership & Mentoring</span>
+          </div>
+          <span className={styles.categoryArrow}>
+            {expandedCategory === 'leadership' ? '▼' : '▶'}
+          </span>
+        </button>
+        {expandedCategory === 'leadership' && (
+          <div className={styles.categoryContent}>
+            {renderSkillButtons(LEADERSHIP_SKILLS)}
+          </div>
+        )}
+      </div>
+
+      {/* Technical Category */}
+      <div className={styles.category}>
+        <button
+          className={styles.categoryHeader}
+          onClick={() => setExpandedCategory(expandedCategory === 'technical' ? '' : 'technical')}
+        >
+          <div className={styles.categoryLeft}>
+            <span className={styles.categoryIcon}>💻</span>
+            <span className={styles.categoryTitle}>Technical & Administrative</span>
+          </div>
+          <span className={styles.categoryArrow}>
+            {expandedCategory === 'technical' ? '▼' : '▶'}
+          </span>
+        </button>
+        {expandedCategory === 'technical' && (
+          <div className={styles.categoryContent}>
+            {renderSkillButtons(TECHNICAL_SKILLS)}
+          </div>
+        )}
+      </div>
+
+      {/* Custom Skill Input */}
+      <div className={styles.customSection}>
+        <span className={styles.customLabel}>Add other skill:</span>
+        <div className={styles.customInput}>
           <input
             type="text"
-          className={styles.formInput}
-          placeholder="Add a skill (e.g. Project Management)"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-            onKeyDown={handleKeyDown}
+            placeholder="Type a skill..."
+            value={customSkill}
+            onChange={(e) => setCustomSkill(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomSkill())}
+            className={styles.input}
           />
-          <button 
-            className={styles.addSkillButton}
-            onClick={addSkill}
-          disabled={!newSkill.trim()}
+          <button
+            onClick={addCustomSkill}
+            disabled={!customSkill.trim()}
+            className={styles.addBtn}
           >
             Add
           </button>
         </div>
-      
-      {showLimitWarning && (
-        <div className={`${styles.completionHint} ${styles.warningHint}`}>
-          <span className={styles.hintIcon}>⚠️</span>
-          <span className={styles.hintText}>
-            <strong>Maximum skills limit reached (20).</strong> Please remove some skills before adding more to maintain a focused, relevant skills section.
-          </span>
       </div>
-      )}
-      
-      <div className={styles.skillsContainer}>
-        {skills.map((skill, index) => (
-          <div 
-            key={index} 
-            className={`${styles.skillBadge} ${manuallyAddedSkills.has(skill) ? styles.manualSkill : styles.aiSkill}`}
-          >
-            <span className={styles.skillText}>{skill}</span>
-            <button 
-              className={styles.removeSkillButton}
-              onClick={() => removeSkill(index)}
-              aria-label={`Remove ${skill}`}
-            >
-              &times;
-            </button>
-          </div>
-        ))}
-      </div>
-      
-      {/* {skills.length === 0 && (
-        <div className={styles.emptyMessage}>
-          No skills added yet. Add skills manually or generate them.
-        </div>
-      )} */}
-      
-      {showContextWarning && (
-        <div className={`${styles.completionHint} ${styles.warningHint}`}>
-          <span className={styles.hintIcon}>⚠️</span>
-          <span className={styles.hintText}>
-            <strong>Please <a href="#" className={styles.sectionLink} onClick={navigateToExperience}>add work experience first</a>!</strong> This helps our AI suggest skills relevant to your background. Or, you can add skills manually using the input above.
-          </span>
-        </div>
-      )}
-      
-      <button 
-        className={`${styles.aiButton} ${isGenerating ? styles.generating : ''}`}
-        onClick={generateSkills}
-        disabled={isGenerating}
-      >
-        {isGenerating ? 'Generating...' : '✨ Suggest Relevant Skills'}
-      </button>
-      
+
+      {/* Tip */}
       <div className={styles.completionHint}>
         <span className={styles.hintIcon}>💡</span>
         <span className={styles.hintText}>
-          <strong>Pro Tip:</strong> Include a mix of technical skills, soft skills, and industry-specific expertise. Aim for 8-12 key skills.
+          <strong>Pro Tip:</strong> Soft skills like Communication and Critical Thinking are highly valued by nurse recruiters. Select 5-8 that best represent you.
         </span>
       </div>
     </div>
   );
 };
 
-export default Skills; 
+export default Skills;

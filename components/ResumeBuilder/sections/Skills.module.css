@@ -1,0 +1,547 @@
+/* ==========================================================================
+   Skills Section - Mobile-First Healthcare Optimized
+   Tap-to-select soft skills, leadership, and professional competencies
+   ========================================================================== */
+
+/* ===== Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+  box-sizing: border-box;
+  /* Ensure Figtree font is applied throughout */
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.3rem;
+}
+
+.badge {
+  background: linear-gradient(135deg, #6c5ce7, #5f4dd0);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(108, 92, 231, 0.25);
+}
+
+/* ===== Description ===== */
+.description {
+  color: #5f6d7a;
+  font-size: 0.95rem;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+/* ===== Selected Skills Display ===== */
+.selectedSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 14px;
+}
+
+.selectedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: white;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  color: #047857;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.selectedTag:hover {
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.tagRemove {
+  background: none;
+  border: none;
+  color: #34d399;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tagRemove:hover {
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* ===== Category Cards ===== */
+.category {
+  background: #ffffff;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.category:hover {
+  border-color: #c4d9f7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  min-height: 52px;
+}
+
+.categoryHeader:hover {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+}
+
+.categoryLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.categoryIcon {
+  font-size: 1.3rem;
+}
+
+.categoryTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.categoryHint {
+  font-size: 0.75rem;
+  color: #34a853;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.categoryArrow {
+  color: #8a94a6;
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.categoryContent {
+  padding: 0 18px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ===== Skill Grid ===== */
+.skillGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding-top: 16px;
+}
+
+.skillBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #4e5968;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-align: left;
+  font-weight: 500;
+  min-height: 48px;
+}
+
+.skillBtn:hover {
+  background: #f0f7ff;
+  border-color: #c4d9f7;
+  transform: translateY(-1px);
+}
+
+.skillBtnSelected {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.skillBtnSelected:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.checkmark {
+  color: #10b981;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 1rem;
+}
+
+/* ===== Custom Skill Section ===== */
+.customSection {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  border: 1.5px solid #e1e4e8;
+  border-radius: 14px;
+}
+
+.customLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4e5968;
+  margin-bottom: 12px;
+}
+
+.customInput {
+  display: flex;
+  gap: 10px;
+}
+
+.input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 16px;
+  color: #1d2129;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.input:hover {
+  border-color: #c9cdd4;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.input::placeholder {
+  color: #8a94a6;
+}
+
+.addBtn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1a73e8, #1557b0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+  min-height: 48px;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1557b0, #0d47a1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Completion Hint / Pro Tip ===== */
+.completionHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fcd34d;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.hintIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.hintText {
+  font-size: 0.9rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.hintText strong {
+  color: #78350f;
+}
+
+/* ==========================================================================
+   Tablet Styles (640px+)
+   ========================================================================== */
+@media (min-width: 640px) {
+  .skillGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ==========================================================================
+   Desktop Styles (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .skillGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ==========================================================================
+   Mobile Responsiveness (640px and below)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .customInput {
+    flex-direction: column;
+  }
+
+  .addBtn {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  .categoryHint {
+    display: none;
+  }
+
+  .categoryHeader {
+    padding: 14px 16px;
+  }
+
+  .selectedSkills {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .selectedTag {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+   Small Phones (375px and below)
+   ========================================================================== */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .titleIcon {
+    font-size: 1.1rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .skillGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .skillBtn {
+    min-height: 50px;
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+
+  .input {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .addBtn {
+    min-height: 50px;
+  }
+
+  .selectedTag {
+    padding: 10px 14px;
+  }
+
+  .customSection {
+    padding: 16px;
+  }
+
+  .completionHint {
+    padding: 14px;
+  }
+
+  .hintText {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .skillBtn:hover {
+    transform: none;
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .skillBtn:active {
+    transform: scale(0.98);
+    background: #f0f7ff;
+  }
+
+  .skillBtnSelected:hover {
+    transform: none;
+  }
+
+  .skillBtnSelected:active {
+    transform: scale(0.98);
+  }
+
+  .categoryHeader:hover {
+    background: transparent;
+  }
+
+  .categoryHeader:active {
+    background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  }
+
+  .addBtn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+  }
+
+  .addBtn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .tagRemove:hover {
+    transform: none;
+  }
+
+  .tagRemove:active {
+    transform: scale(1.1);
+    color: #dc2626;
+  }
+
+  .category:hover {
+    border-color: #e1e4e8;
+    box-shadow: none;
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  .selectedSkills {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .customSection {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+}
+
+@media (max-width: 375px) {
+  @supports (padding: max(0px)) {
+    .container {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .skillBtn,
+  .category,
+  .categoryHeader,
+  .selectedTag,
+  .tagRemove,
+  .input,
+  .addBtn,
+  .categoryArrow {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}
