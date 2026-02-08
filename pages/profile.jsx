@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useResumeSelection } from '../components/common/ResumeSelectionProvider';
+import { usePaywall } from '../components/common/PaywallModal';
 import Meta from '../components/common/Meta';
 
 export default function ProfilePage() {
@@ -65,6 +66,9 @@ export default function ProfilePage() {
   // Add state to track which resume IDs are eligible for download with existing plans
   const [eligibleResumeIds, setEligibleResumeIds] = useState([]);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
+
+  // Track if user has a free download available
+  const [isFreeDownload, setIsFreeDownload] = useState(false);
   
   // Add state for screen size
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -88,6 +92,7 @@ export default function ProfilePage() {
   
   // Add state for discount info
   const [discountInfo, setDiscountInfo] = useState(null);
+  const [hasEverUsedRetentionDiscount, setHasEverUsedRetentionDiscount] = useState(false);
   
   // State variables for resume tailoring functionality
   const [showTailorModal, setShowTailorModal] = useState(false);
@@ -100,7 +105,24 @@ export default function ProfilePage() {
   const [activeTooltip, setActiveTooltip] = useState(null);
   
   const { navigateToPricing } = useResumeSelection();
-  
+  const { showPaywall } = usePaywall();
+
+  // Check creation eligibility before creating a new resume
+  const handleCreateNewResume = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const res = await fetch('/api/resume/check-creation-eligibility');
+      const data = await res.json();
+      if (!data.eligible) {
+        showPaywall('resume_creation');
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking creation eligibility:', err);
+    }
+    router.push('/resume-builder');
+  };
+
   // Handle pricing navigation
   const handlePricingNavigation = (e) => {
     e.preventDefault();
@@ -271,11 +293,11 @@ export default function ProfilePage() {
               
               // Map plan IDs to display names
               if (data.plan === 'weekly') {
-                planDisplayName = 'Short-Term Job Hunt';
-                console.log('Setting plan name to Short-Term Job Hunt');
+                planDisplayName = 'Weekly Pro';
+                console.log('Setting plan name to Weekly Pro');
               } else if (data.plan === 'monthly') {
-                planDisplayName = 'Long-Term Job Hunt';
-                console.log('Setting plan name to Long-Term Job Hunt');
+                planDisplayName = 'Monthly Pro';
+                console.log('Setting plan name to Monthly Pro');
               } else if (data.plan === 'one-time') {
                 planDisplayName = 'One-Time Download';
                 console.log('Setting plan name to One-Time Download');
@@ -437,11 +459,11 @@ export default function ProfilePage() {
           
           // Map plan IDs to display names
           if (data.plan === 'weekly') {
-            planDisplayName = 'Short-Term Job Hunt';
-            console.log('Setting plan name to Short-Term Job Hunt');
+            planDisplayName = 'Weekly Pro';
+            console.log('Setting plan name to Weekly Pro');
           } else if (data.plan === 'monthly') {
-            planDisplayName = 'Long-Term Job Hunt';
-            console.log('Setting plan name to Long-Term Job Hunt');
+            planDisplayName = 'Monthly Pro';
+            console.log('Setting plan name to Monthly Pro');
           } else if (data.plan === 'one-time') {
             planDisplayName = 'One-Time Download';
             console.log('Setting plan name to One-Time Download');
@@ -585,9 +607,22 @@ export default function ProfilePage() {
   // Handle duplicate resume
   const handleDuplicate = async (resumeId) => {
     console.log('🔍 Starting resume duplication process for ID:', resumeId);
+
+    // Check creation eligibility before duplicating
+    try {
+      const eligibilityRes = await fetch('/api/resume/check-creation-eligibility');
+      const eligibilityData = await eligibilityRes.json();
+      if (!eligibilityData.eligible) {
+        showPaywall('resume_creation');
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking creation eligibility:', err);
+    }
+
     setIsDuplicating(true);
     setDuplicatingId(resumeId);
-    
+
     try {
       // First, fetch the complete resume data for the resume to duplicate
       console.log('📥 Fetching resume data for duplication...');
@@ -691,11 +726,16 @@ export default function ProfilePage() {
         let errorDetails = '';
         try {
           const errorData = await saveResponse.json();
+          // Safety net: if the API rejects due to resume limit, show paywall
+          if (errorData.error === 'resume_limit_reached') {
+            showPaywall('resume_creation');
+            return;
+          }
           errorDetails = JSON.stringify(errorData);
         } catch (e) {
           errorDetails = 'Could not parse error response';
         }
-        
+
         console.error('❌ Failed to save duplicate resume:', saveResponse.status, saveResponse.statusText, errorDetails);
         throw new Error(`Failed to duplicate resume: ${saveResponse.status} ${saveResponse.statusText}`);
       }
@@ -969,18 +1009,24 @@ export default function ProfilePage() {
                   Template: {paymentSuccessResume.template.toUpperCase()}
                 </p>
               </div>
-              <a 
-                href={hasActiveSubscription && eligibleResumeIds.includes(paymentSuccessResume.id) ? `/api/resume/direct-download?id=${paymentSuccessResume.id}` : '#'} 
+              <a
+                href={hasActiveSubscription && eligibleResumeIds.includes(paymentSuccessResume.id) ? `/api/resume/direct-download?id=${paymentSuccessResume.id}` : '#'}
                 onClick={(e) => {
                   if (!hasActiveSubscription || !eligibleResumeIds.includes(paymentSuccessResume.id)) {
                     e.preventDefault();
-                    toast.error('You need to purchase a plan to download this resume');
-                    router.push(`/subscription?action=download&resumeId=${paymentSuccessResume.id}`);
+                    showPaywall('download');
                     return;
                   }
-                  
+
                   e.preventDefault();
                   handleDownloadClick(paymentSuccessResume.id);
+
+                  if (isFreeDownload) {
+                    setIsFreeDownload(false);
+                    setHasActiveSubscription(false);
+                    setEligibleResumeIds([]);
+                  }
+
                   window.location.href = `/api/resume/direct-download?id=${paymentSuccessResume.id}`;
                 }}
                 style={{
@@ -1078,7 +1124,7 @@ export default function ProfilePage() {
           gap: '15px',
           flexWrap: 'wrap'
         }}>
-          <Link href="/resume-builder" style={{
+          <a href="/resume-builder" onClick={handleCreateNewResume} style={{
             textDecoration: 'none',
             padding: '8px 16px',
             background: 'transparent',
@@ -1088,15 +1134,16 @@ export default function ProfilePage() {
             fontSize: '14px',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px'
+            gap: '6px',
+            cursor: 'pointer'
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Create New Resume
-          </Link>
-          
+          </a>
+
           {userResumes.length > 0 && (
             <a href="#resumes" style={{
               textDecoration: 'none',
@@ -1173,11 +1220,11 @@ export default function ProfilePage() {
         
         // Map plan IDs to display names
         if (eligibilityData.plan === 'weekly') {
-          planDisplayName = 'Short-Term Job Hunt';
-          console.log('Setting plan name to Short-Term Job Hunt');
+          planDisplayName = 'Weekly Pro';
+          console.log('Setting plan name to Weekly Pro');
         } else if (eligibilityData.plan === 'monthly') {
-          planDisplayName = 'Long-Term Job Hunt';
-          console.log('Setting plan name to Long-Term Job Hunt');
+          planDisplayName = 'Monthly Pro';
+          console.log('Setting plan name to Monthly Pro');
         } else if (eligibilityData.plan === 'one-time') {
           planDisplayName = 'One-Time Download';
           console.log('Setting plan name to One-Time Download');
@@ -1231,10 +1278,17 @@ export default function ProfilePage() {
         // For weekly/monthly subscription plans, all resumes are eligible
         console.log(`Subscription plan detected (${eligibilityData.plan}), all resumes are eligible`);
         setEligibleResumeIds(userResumes.map(resume => resume.id));
+        setIsFreeDownload(false);
+      } else if (eligibilityData.eligible && eligibilityData.plan === 'free' && eligibilityData.isFreeDownload) {
+        // Free user with 1 free download available — all resumes eligible (they pick which one)
+        console.log('Free download available, all resumes are eligible');
+        setEligibleResumeIds(userResumes.map(resume => resume.id));
+        setIsFreeDownload(true);
       } else {
-        // For free plans or expired plans, no resumes are eligible
-        console.log('Free or expired plan detected, no resumes are eligible for download');
+        // For expired plans or used free downloads, no resumes are eligible
+        console.log('No eligible plan detected, no resumes are eligible for download');
         setEligibleResumeIds([]);
+        setIsFreeDownload(false);
       }
     } catch (error) {
       console.error('Error checking resume eligibility:', error);
@@ -1311,7 +1365,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchDiscountInfo = async () => {
       if (!hasActiveSubscription || !activeSubscriptionId) return;
-      
+
       try {
         const response = await fetch(`/api/subscription/get-discount?subscriptionId=${activeSubscriptionId}`);
         if (response.ok) {
@@ -1319,12 +1373,15 @@ export default function ProfilePage() {
           if (data.success && data.discount) {
             setDiscountInfo(data.discount);
           }
+          if (data.hasEverUsedRetentionDiscount) {
+            setHasEverUsedRetentionDiscount(true);
+          }
         }
       } catch (error) {
         console.error('Error fetching discount info:', error);
       }
     };
-    
+
     fetchDiscountInfo();
   }, [hasActiveSubscription, activeSubscriptionId]);
 
@@ -1405,9 +1462,9 @@ export default function ProfilePage() {
             let planDisplayName = 'Free Plan';
             
             if (eligibilityData.plan === 'weekly') {
-              planDisplayName = 'Short-Term Job Hunt';
+              planDisplayName = 'Weekly Pro';
             } else if (eligibilityData.plan === 'monthly') {
-              planDisplayName = 'Long-Term Job Hunt';
+              planDisplayName = 'Monthly Pro';
             } else if (eligibilityData.plan === 'one-time') {
               planDisplayName = 'One-Time Download';
             } else {
@@ -1496,14 +1553,17 @@ export default function ProfilePage() {
       
       if (data.success) {
         toast.success('Great! We\'ve applied a 30% discount to your subscription.');
-        
+
         // Update subscription details with discount info
         setSubscriptionDetails(prev => ({
           ...prev,
           hasDiscount: true,
           discountPercent: 30
         }));
-        
+
+        // Mark as used so the offer never appears again this session
+        setHasEverUsedRetentionDiscount(true);
+
         // Close all modals
         setShowDiscountOffer(false);
         setShowCancelFeedback(false);
@@ -1564,21 +1624,107 @@ export default function ProfilePage() {
           }
         `}</style>
         
-        <div style={{ 
-          maxWidth: '800px', 
-          margin: '80px auto', 
-          padding: '40px', 
-          boxShadow: 'var(--shadow-md)', 
+        <div style={{
+          maxWidth: '800px',
+          margin: isSmallScreen ? '20px auto' : '60px auto',
+          padding: isSmallScreen ? '20px 16px' : '40px',
+          boxShadow: 'var(--shadow-md)',
           borderRadius: '12px',
           background: 'white'
         }}>
-          <h1 style={{ 
-            fontSize: '28px', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             marginBottom: '30px',
-            textAlign: 'center'
+            flexWrap: 'wrap',
+            gap: '12px'
           }}>
-            Your Profile
-          </h1>
+            <h1 style={{
+              fontSize: '28px',
+              margin: 0
+            }}>
+              Your Profile
+            </h1>
+
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              alignItems: 'center'
+            }}>
+              {isAdmin && (
+                <a href="/admin" style={{
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  border: '1px solid rgba(146, 64, 14, 0.25)',
+                  fontWeight: '500',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                  Admin
+                </a>
+              )}
+
+              <a href="/subscription" onClick={handlePricingNavigation} style={{
+                textDecoration: 'none',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                background: '#f0fdfa',
+                color: '#0d9488',
+                border: '1px solid rgba(13, 148, 136, 0.25)',
+                fontWeight: '500',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+                Pricing
+              </a>
+
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  color: '#718096',
+                  border: '1px solid #e2e8f0',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  fontFamily: "var(--font-figtree), 'Inter', sans-serif",
+                  fontSize: '14px'
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Sign Out
+              </button>
+            </div>
+          </div>
           
           {/* <div style={{ 
             display: 'flex', 
@@ -1717,8 +1863,8 @@ export default function ProfilePage() {
                 )}
                   
                   {/* Only show cancel button for weekly/monthly plans that aren't already canceled */}
-                  {hasActiveSubscription && 
-                   (subscriptionDetails.planName === 'Short-Term Job Hunt' || subscriptionDetails.planName === 'Long-Term Job Hunt') &&
+                  {hasActiveSubscription &&
+                   (subscriptionDetails.planName === 'Weekly Pro' || subscriptionDetails.planName === 'Monthly Pro') &&
                    !subscriptionDetails.isCanceled && (
                     <div style={{ marginTop: '4px' }}>
                       <button
@@ -2223,18 +2369,26 @@ export default function ProfilePage() {
                           </button>
                           
                           {/* Modified: Always show download/buy plan button regardless of subscription status */}
-                          <a 
-                            href={hasActiveSubscription && eligibleResumeIds.includes(resume.id) ? `/api/resume/direct-download?id=${resume.id}` : '#'} 
+                          <a
+                            href={hasActiveSubscription && eligibleResumeIds.includes(resume.id) ? `/api/resume/direct-download?id=${resume.id}` : '#'}
                             onClick={(e) => {
                               if (!hasActiveSubscription || !eligibleResumeIds.includes(resume.id)) {
                                 e.preventDefault();
-                                toast.error('You need to purchase a plan to download this resume');
-                                router.push(`/subscription?action=download&resumeId=${resume.id}`);
+                                showPaywall('download');
                                 return;
                               }
-                              
+
                               e.preventDefault();
                               handleDownloadClick(resume.id);
+
+                              // direct-download API handles eligibility check + record-download internally
+                              // After triggering download, update state so button flips to "Buy Plan" for free users
+                              if (isFreeDownload) {
+                                setIsFreeDownload(false);
+                                setHasActiveSubscription(false);
+                                setEligibleResumeIds([]);
+                              }
+
                               window.location.href = `/api/resume/direct-download?id=${resume.id}`;
                             }}
                             style={{
@@ -2525,12 +2679,12 @@ export default function ProfilePage() {
                 ))}
               </div>
               
-              {hasActiveSubscription && userResumes.length > 0 && (
+              {userResumes.length > 0 && (
                 <div style={{
                   marginTop: '30px',
                   textAlign: 'center'
                 }}>
-                  <Link href="/" style={{
+                  <a href="/resume-builder" onClick={handleCreateNewResume} style={{
                     textDecoration: 'none',
                     padding: '12px 24px',
                     background: 'var(--primary-blue)',
@@ -2542,6 +2696,7 @@ export default function ProfilePage() {
                     gap: '10px',
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                     transition: 'all 0.2s ease',
+                    cursor: 'pointer'
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
@@ -2556,87 +2711,13 @@ export default function ProfilePage() {
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                     Create New Resume
-                  </Link>
+                  </a>
                 </div>
               )}
             </div>
           )}
           
-          {/* Move utility buttons to header area */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end',
-            gap: '12px', 
-            marginTop: '20px',
-            marginBottom: '30px',
-            flexWrap: 'wrap',
-            padding: '0 20px'
-          }}>
-            <a href="/subscription" onClick={handlePricingNavigation} className="btn btn-primary" style={{ 
-              textDecoration: 'none',
-              padding: '10px 20px',
-              borderRadius: '6px',
-              background: '#f8f9fa',
-              color: 'var(--primary-blue)',
-              border: '1px solid var(--primary-blue)',
-              fontWeight: '500',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s ease',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(26, 115, 232, 0.05)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = '#f8f9fa';
-            }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                <line x1="1" y1="10" x2="23" y2="10"></line>
-              </svg>
-              Pricing
-            </a>
-            
-            <button 
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="btn btn-outline"
-              style={{ 
-                padding: '10px 20px',
-                borderRadius: '6px',
-                background: 'transparent',
-                color: 'var(--text-medium)',
-                border: '1px solid #dee2e6',
-                fontWeight: '500',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-                fontFamily: "var(--font-figtree), 'Inter', sans-serif",
-                fontSize: '14px'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(229, 62, 62, 0.08)';
-                e.currentTarget.style.color = '#e53e3e';
-                e.currentTarget.style.borderColor = 'rgba(229, 62, 62, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--text-medium)';
-                e.currentTarget.style.borderColor = '#dee2e6';
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-              Sign Out
-            </button>
-          </div>
+          {/* Pricing & Sign Out buttons moved to header area above */}
           
           {/* Show admin tools if user is admin */}
           {isAdmin && (
@@ -2932,8 +3013,8 @@ export default function ProfilePage() {
                         }}
                         onClick={() => {
                           setCancelReason(option.id);
-                          // If they select price-related reason, show discount offer
-                          if (option.id === 'too-expensive') {
+                          // Show discount offer only if: price reason selected AND never used before AND no active discount
+                          if (option.id === 'too-expensive' && !hasEverUsedRetentionDiscount && !discountInfo) {
                             setShowDiscountOffer(true);
                           } else {
                             setShowDiscountOffer(false);

@@ -315,8 +315,11 @@ export default async function handler(req, res) {
       // No subscription found, but we can still record the download in user metadata
       // This is a fallback for users who might have planType set directly
       console.log('No subscription found, checking user planType');
-      
-      // We already have the user from above, no need to fetch again
+
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id }
+      });
+
       if (user && user.planType === 'one-time') {
         console.log('User has one-time plan type, recording download');
         
@@ -379,13 +382,26 @@ export default async function handler(req, res) {
           }
         }
       } else {
-        // For users without a one-time plan, check if they have a free plan
+        // For free-tier users, check if they can use their free download
         if (!user?.planType || user.planType === 'free') {
-          console.log('⛔ User has no active subscription or has a free plan - rejecting download');
+          if (!user.freeDownloadsUsed || user.freeDownloadsUsed < 1) {
+            console.log('🆓 Recording free download for user:', session.user.id);
+            await prisma.user.update({
+              where: { id: session.user.id },
+              data: { freeDownloadsUsed: { increment: 1 } }
+            });
+            return res.status(200).json({
+              success: true,
+              message: 'Free download recorded',
+              isFreeDownload: true
+            });
+          }
+
+          console.log('⛔ User has already used their free download - rejecting');
           return res.status(403).json({
             success: false,
-            error: 'No active subscription',
-            message: 'You need an active subscription to download a resume'
+            error: 'free_download_limit_reached',
+            message: 'You\'ve used your free download. Upgrade for unlimited downloads.'
           });
         }
         

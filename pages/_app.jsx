@@ -8,6 +8,7 @@ import { ResumeServiceProvider } from '../lib/contexts/ResumeServiceContext';
 import { Toaster } from 'react-hot-toast';
 import React from 'react';
 import ResumeSelectionProvider from '../components/common/ResumeSelectionProvider';
+import { PaywallProvider } from '../components/common/PaywallModal';
 import StructuredData from '../components/common/StructuredData';
 import Head from 'next/head';
 import Script from 'next/script';
@@ -98,6 +99,7 @@ export default function MyApp({ Component, pageProps }) {
       <ErrorBoundary>
         <ResumeServiceProvider>
           <ResumeSelectionProvider>
+          <PaywallProvider>
             <Head>
               {/* Default meta tags that can be overridden by individual pages */}
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -115,6 +117,9 @@ export default function MyApp({ Component, pageProps }) {
           </div>
           
           <style jsx global>{`
+            :root {
+              --font-figtree: ${figtree.style.fontFamily};
+            }
             .app-wrapper {
               display: flex;
               flex-direction: column;
@@ -162,6 +167,7 @@ export default function MyApp({ Component, pageProps }) {
               })(window, document, "clarity", "script", "u9wvv8gym2");
             `}
           </Script>
+          </PaywallProvider>
           </ResumeSelectionProvider>
         </ResumeServiceProvider>
       </ErrorBoundary>

@@ -172,7 +172,28 @@ export default async function handler(req, res) {
     // Create a new resume
     else {
       console.log(`📊 API: Creating new resume for user ${userId}`);
-      
+
+      // Check resume creation limit for free-tier users
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const hasActiveSubscription = await prisma.userSubscription.findFirst({
+        where: { userId, status: 'active', currentPeriodEnd: { gte: new Date() } }
+      });
+      const hasPaidPlan = user?.planType && user.planType !== 'free' &&
+        user.planExpirationDate && new Date(user.planExpirationDate) > new Date();
+
+      if (!hasActiveSubscription && !hasPaidPlan) {
+        const resumeCount = await prisma.resumeData.count({ where: { userId } });
+        if (resumeCount >= 1) {
+          return res.status(403).json({
+            success: false,
+            error: 'resume_limit_reached',
+            message: 'Free plan allows 1 resume. Upgrade for unlimited.',
+            resumeCount,
+            limit: 1
+          });
+        }
+      }
+
       // Create a new resume
       const newResume = await prisma.resumeData.create({
         data: {

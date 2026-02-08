@@ -7,50 +7,41 @@ async function main() {
   console.log('Database URL:', process.env.DATABASE_URL ? 'Found' : 'Not found');
 
   // Default subscription plans
+  // Note: One-time plan removed - we now only offer weekly and monthly subscriptions
+  // See lib/constants/pricing.js for the source of truth on pricing strategy
   const plans = [
     {
-      id: 'one-time',
-      name: 'One-Time Download',
-      description: 'Make a single resume and download it once',
-      price: 6.99,
-      interval: 'one-time',
-      isPopular: false,
-      isActive: true,
-      features: [
-        'One professional resume download',
-        'ATS-optimized format',
-        'All professional templates',
-        'One time payment- No renewal!'
-      ]
-    },
-    {
-      id: 'weekly',
-      name: 'Short-Term Job Hunt',
-      description: 'Ideal for short-term job search',
-      price: 4.99,
-      interval: 'weekly',
+      id: 'monthly',
+      name: 'Monthly Pro',
+      description: 'Best value for extended job search',
+      price: 19.99,
+      interval: 'monthly',
       isPopular: true,
       isActive: true,
       features: [
         'Unlimited resume downloads',
         'Create multiple versions',
         'All premium templates',
-        'Best for short-term job search'
+        'AI-powered improvements',
+        'Job targeting & tailoring',
+        'Save 37% vs weekly'
       ]
     },
     {
-      id: 'monthly',
-      name: 'Long-Term Job Hunt',
-      description: 'Ideal for long-term job seekers',
-      price: 13.99,
-      interval: 'monthly',
+      id: 'weekly',
+      name: 'Weekly Pro',
+      description: 'Perfect for active job seekers on short-term search',
+      price: 7.99,
+      interval: 'weekly',
       isPopular: false,
       isActive: true,
       features: [
         'Unlimited resume downloads',
-        'Tailor for multiple jobs',
+        'Create multiple versions',
         'All premium templates',
-        'Best for long-term job search'
+        'AI-powered improvements',
+        'Job targeting & tailoring',
+        'Save 37% vs weekly'
       ]
     }
   ];
@@ -88,6 +79,24 @@ async function main() {
     } catch (error) {
       console.error(`Error processing plan ${plan.name}:`, error);
     }
+  }
+
+  // Mark any legacy one-time plans as inactive
+  // (we're no longer offering one-time purchases, but existing subscribers keep access)
+  try {
+    const oneTimePlan = await prisma.subscriptionPlan.findUnique({
+      where: { id: 'one-time' }
+    });
+    if (oneTimePlan && oneTimePlan.isActive) {
+      await prisma.subscriptionPlan.update({
+        where: { id: 'one-time' },
+        data: { isActive: false }
+      });
+      console.log('Marked legacy one-time plan as inactive');
+    }
+  } catch (e) {
+    // Plan might not exist, that's fine
+    console.log('No legacy one-time plan found (this is expected for new installs)');
   }
 
   console.log('Subscription plans seeded successfully!');

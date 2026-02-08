@@ -16,6 +16,7 @@ export default function SubscriptionPage({ dbPlans }) {
   // New state for active subscription
   const [activeSubscription, setActiveSubscription] = useState(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [activeDiscount, setActiveDiscount] = useState(null);
   
   // Check if user is here to download a resume
   const isPendingDownload = action === 'download';
@@ -51,6 +52,25 @@ export default function SubscriptionPage({ dbPlans }) {
     fetchActiveSubscription();
   }, [status, session]);
   
+  // Fetch discount info for the active subscription
+  useEffect(() => {
+    const fetchDiscount = async () => {
+      if (!activeSubscription?.id) return;
+      try {
+        const response = await fetch(`/api/subscription/get-discount?subscriptionId=${activeSubscription.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.discount) {
+            setActiveDiscount(data.discount);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching discount info:', error);
+      }
+    };
+    fetchDiscount();
+  }, [activeSubscription]);
+
   // Auto-select the popular plan when plans are loaded
   useEffect(() => {
     if (plans && plans.length > 0) {
@@ -62,53 +82,42 @@ export default function SubscriptionPage({ dbPlans }) {
   }, [plans]);
   
   // If no plans were provided by SSR, use these default plans
+  // Note: One-time plan removed - we only offer weekly and monthly subscriptions
   useEffect(() => {
     if (!dbPlans || dbPlans.length === 0) {
       setPlans([
         {
-          id: 'one-time',
-          name: 'One-Time Download',
-          price: '$6.99',
-          interval: 'one-time',
-          description: 'Make a single resume and download it once',
-          features: [
-            'One professional resume download',
-            'ATS-optimized format',
-            'All professional templates',
-            'One time payment- No renewal!'
-          ],
-          popular: false,
-          color: '#1a73e8'
-        },
-        {
-          id: 'weekly',
-          name: 'Short-Term Job Hunt',
-          price: '$4.99',
-          interval: 'weekly',
-          description: 'Ideal for short-term job search',
+          id: 'monthly',
+          name: 'Monthly Pro',
+          price: '$19.99',
+          interval: 'monthly',
+          description: 'Best value for extended job search',
           features: [
             'Unlimited resume downloads',
             'Create multiple versions',
             'All premium templates',
-            'Best for short-term job search'
+            'AI-powered improvements',
+            'Job targeting & tailoring',
+            'Save 37% vs weekly'
           ],
           popular: true,
-          color: '#34a853'
+          color: '#0d9488'
         },
         {
-          id: 'monthly',
-          name: 'Long-Term Job Hunt',
-          price: '$13.99',
-          interval: 'monthly',
-          description: 'Ideal for long-term job seekers',
+          id: 'weekly',
+          name: 'Weekly Pro',
+          price: '$7.99',
+          interval: 'weekly',
+          description: 'Perfect for active job seekers on short-term search',
           features: [
             'Unlimited resume downloads',
-            'Tailor for multiple jobs',
+            'Create multiple versions',
             'All premium templates',
-            'Best for long-term job search'
+            'AI-powered improvements',
+            'Job targeting & tailoring'
           ],
           popular: false,
-          color: '#6c5ce7'
+          color: '#34a853'
         }
       ]);
     }
@@ -382,11 +391,6 @@ export default function SubscriptionPage({ dbPlans }) {
             marginBottom: '40px'
           }}>
             {plans.map(plan => {
-              // Skip one-time plan if user has active recurring plan
-              if (hasActiveRecurringPlan && plan.id === 'one-time') {
-                return null;
-              }
-              
               // Determine the plan status for UI display
               const isCurrentActivePlan = isCurrentPlan(plan.id);
               const isUpgrade = isPlanUpgrade(plan.id);
@@ -426,10 +430,10 @@ export default function SubscriptionPage({ dbPlans }) {
                     padding: '5px 12px',
                     borderRadius: '20px'
                   }}>
-                    Popular
+                    Best value
                   </div>
                 )}
-                  
+
                   {isCurrentActivePlan && (
                     <div style={{
                       position: 'absolute',
@@ -490,20 +494,64 @@ export default function SubscriptionPage({ dbPlans }) {
                 </h3>
                 
                 <div style={{ marginBottom: '20px' }}>
-                  <span style={{ 
-                    fontSize: '36px', 
-                    fontWeight: 'bold',
-                    color: 'var(--text-dark)'
-                  }}>
-                    {typeof plan.price === 'number' ? `$${plan.price.toFixed(2)}` : plan.price}
-                  </span>
-                  {plan.interval !== 'one-time' && (
-                    <span style={{ 
-                      fontSize: '16px',
-                      color: 'var(--text-medium)'
-                    }}>
-                      /{plan.interval}
-                    </span>
+                  {isCurrentActivePlan && activeDiscount ? (
+                    <>
+                      <span style={{
+                        fontSize: '22px',
+                        fontWeight: '500',
+                        color: '#999',
+                        textDecoration: 'line-through',
+                        marginRight: '10px'
+                      }}>
+                        {typeof plan.price === 'number' ? `$${plan.price.toFixed(2)}` : plan.price}
+                      </span>
+                      <span style={{
+                        fontSize: '36px',
+                        fontWeight: 'bold',
+                        color: '#27ae60'
+                      }}>
+                        ${activeDiscount.discountedPrice.toFixed(2)}
+                      </span>
+                      {plan.interval !== 'one-time' && (
+                        <span style={{
+                          fontSize: '16px',
+                          color: 'var(--text-medium)'
+                        }}>
+                          /{plan.interval}
+                        </span>
+                      )}
+                      <div style={{
+                        display: 'inline-block',
+                        marginLeft: '8px',
+                        background: 'rgba(39, 174, 96, 0.1)',
+                        color: '#27ae60',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        verticalAlign: 'super'
+                      }}>
+                        {activeDiscount.discountPercent}% OFF
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{
+                        fontSize: '36px',
+                        fontWeight: 'bold',
+                        color: 'var(--text-dark)'
+                      }}>
+                        {typeof plan.price === 'number' ? `$${plan.price.toFixed(2)}` : plan.price}
+                      </span>
+                      {plan.interval !== 'one-time' && (
+                        <span style={{
+                          fontSize: '16px',
+                          color: 'var(--text-medium)'
+                        }}>
+                          /{plan.interval}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
                 
@@ -591,7 +639,7 @@ export default function SubscriptionPage({ dbPlans }) {
             textAlign: 'center',
             marginTop: '30px'
           }}>
-            {hasActiveRecurringPlan && selectedPlan && (
+            {hasActiveRecurringPlan && selectedPlan && (isPlanUpgrade(selectedPlan) || isPlanDowngrade(selectedPlan)) && (
               <div style={{
                 maxWidth: '600px',
                 margin: '0 auto 25px',
@@ -602,11 +650,11 @@ export default function SubscriptionPage({ dbPlans }) {
               }}>
                 <div style={{
                   padding: '14px 20px',
-                  background: isPlanUpgrade(selectedPlan) 
-                    ? 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))' 
+                  background: isPlanUpgrade(selectedPlan)
+                    ? 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))'
                     : 'linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(230, 126, 34, 0.1))',
-                  borderBottom: isPlanUpgrade(selectedPlan) 
-                    ? '1px solid rgba(52, 168, 83, 0.15)' 
+                  borderBottom: isPlanUpgrade(selectedPlan)
+                    ? '1px solid rgba(52, 168, 83, 0.15)'
                     : '1px solid rgba(243, 156, 18, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
@@ -644,7 +692,7 @@ export default function SubscriptionPage({ dbPlans }) {
                     {isPlanUpgrade(selectedPlan) ? 'You\'re upgrading from Weekly to Monthly plan' : 'You\'re downgrading from Monthly to Weekly plan'}
                   </h4>
                 </div>
-                
+
                 <div style={{
                   padding: '16px 20px',
                   background: 'white'
@@ -657,24 +705,44 @@ export default function SubscriptionPage({ dbPlans }) {
                   }}>
                     <strong>What happens next:</strong>
                   </p>
-                  
-                  <ul style={{
-                    margin: '0 0 0 20px',
-                    padding: 0,
-                    fontSize: '14px',
-                    lineHeight: '1.6',
-                    color: '#4a5568'
-                  }}>
-                    <li style={{ marginBottom: '8px' }}>
-                      Your current plan will be canceled immediately
-                    </li>
-                    <li style={{ marginBottom: '8px' }}>
-                      You'll be charged now for the new {isPlanUpgrade(selectedPlan) ? 'Monthly' : 'Weekly'} plan
-                    </li>
-                    <li>
-                      Your billing cycle will reset to today
-                    </li>
-                  </ul>
+
+                  {isPlanUpgrade(selectedPlan) ? (
+                    <ul style={{
+                      margin: '0 0 0 20px',
+                      padding: 0,
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      color: '#4a5568'
+                    }}>
+                      <li style={{ marginBottom: '8px' }}>
+                        Your Monthly plan starts immediately
+                      </li>
+                      <li style={{ marginBottom: '8px' }}>
+                        You'll only pay the prorated difference for the rest of this billing cycle
+                      </li>
+                      <li>
+                        Save 37% compared to renewing weekly
+                      </li>
+                    </ul>
+                  ) : (
+                    <ul style={{
+                      margin: '0 0 0 20px',
+                      padding: 0,
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      color: '#4a5568'
+                    }}>
+                      <li style={{ marginBottom: '8px' }}>
+                        You'll keep Monthly access until {activeSubscription ? formatDate(activeSubscription.currentPeriodEnd) : 'the end of your billing period'}
+                      </li>
+                      <li style={{ marginBottom: '8px' }}>
+                        Your Weekly plan begins after that
+                      </li>
+                      <li>
+                        You can upgrade back to Monthly anytime
+                      </li>
+                    </ul>
+                  )}
                 </div>
               </div>
             )}
@@ -779,11 +847,10 @@ export async function getServerSideProps() {
       where: { isActive: true },
     });
     
-    // Define the specific order we want (one-time, weekly, monthly)
+    // Define the specific order we want (monthly first — best value)
     const orderMap = {
-      'one-time': 1,
-      'weekly': 2,
-      'monthly': 3
+      'monthly': 1,
+      'weekly': 2
     };
     
     // Transform the data for the client
@@ -795,8 +862,7 @@ export async function getServerSideProps() {
       description: plan.description,
       features: plan.features,
       popular: plan.isPopular,
-      color: plan.interval === 'one-time' ? '#1a73e8' : 
-             plan.interval === 'weekly' ? '#34a853' : '#6c5ce7',
+      color: plan.interval === 'monthly' ? '#0d9488' : '#34a853',
       order: orderMap[plan.interval] || 999 // Default high value for unknown intervals
     }));
     

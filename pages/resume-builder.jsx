@@ -7,6 +7,7 @@ import Meta from '../components/common/Meta';
 import Image from 'next/image';
 import StickyHeader from '../components/common/StickyHeader';
 import ResumeStructuredData from '../components/common/ResumeStructuredData';
+import { usePaywall } from '../components/common/PaywallModal';
 
 /**
  * Resume Builder Landing Page
@@ -26,6 +27,7 @@ const ResumeBuilderPage = () => {
   const [activeProcessTab, setActiveProcessTab] = useState('build');
   const [activeDemoTab, setActiveDemoTab] = useState('build');
   const { data: _session, status } = useSession();
+  const { showPaywall } = usePaywall();
   
   // Add state for tracking scroll position
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -99,8 +101,21 @@ const ResumeBuilderPage = () => {
     try {
       // If user is authenticated, create a new blank resume in the database
       if (status === 'authenticated') {
+        // Check if user has reached their resume creation limit
+        try {
+          const eligibilityRes = await fetch('/api/resume/check-creation-eligibility');
+          const eligibilityData = await eligibilityRes.json();
+          if (!eligibilityData.eligible) {
+            if (toastId) toast.dismiss(toastId);
+            showPaywall('resume_creation');
+            return;
+          }
+        } catch (e) {
+          console.error('Error checking creation eligibility:', e);
+        }
+
         console.log('Creating new blank resume in database for authenticated user');
-        
+
         // Set a flag to prevent multiple resume creations
         localStorage.setItem('creating_new_resume', 'true');
         localStorage.setItem('starting_new_resume', 'true');
@@ -141,11 +156,13 @@ const ResumeBuilderPage = () => {
           }),
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to create new resume');
-        }
-        
         const result = await response.json();
+
+        if (!response.ok || result.error === 'resume_limit_reached') {
+          if (toastId) toast.dismiss(toastId);
+          showPaywall('resume_creation');
+          return;
+        }
         
         if (result.success && result.resumeId) {
           console.log('Successfully created new resume with ID:', result.resumeId);

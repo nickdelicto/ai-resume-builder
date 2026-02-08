@@ -274,12 +274,23 @@ export default async function handler(req, res) {
       }
     }
 
-    // If no active subscription, they are not eligible
-    console.log('⛔ User has no active subscription or valid plan - returning NOT eligible');
+    // Check if user is eligible for a free download (1 free download for free-tier users)
+    if (!user.freeDownloadsUsed || user.freeDownloadsUsed < 1) {
+      console.log('🆓 User eligible for free download (used:', user.freeDownloadsUsed || 0, ')');
+      return res.status(200).json({
+        eligible: true,
+        plan: 'free',
+        isFreeDownload: true,
+        message: 'You have 1 free download available'
+      });
+    }
+
+    // If no active subscription and free download used, they are not eligible
+    console.log('⛔ User has no active subscription and free download used - returning NOT eligible');
     return res.status(200).json({
       eligible: false,
-      error: 'No active subscription',
-      message: 'You need an active subscription to download a resume'
+      error: 'free_download_used',
+      message: 'You\'ve used your free download. Upgrade for unlimited downloads.'
     });
   } catch (error) {
     console.error('Error checking download eligibility:', error);

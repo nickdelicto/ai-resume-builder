@@ -42,6 +42,7 @@ model User {
   isNewUser          Boolean                @default(true)
   planType           String                 @default("free")
   planExpirationDate DateTime?
+  freeDownloadsUsed  Int                    @default(0)
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   accounts           Account[]
