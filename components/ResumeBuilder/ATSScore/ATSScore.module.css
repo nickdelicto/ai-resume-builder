@@ -1,0 +1,393 @@
+/* ==========================================================================
+   ATS Score - Elegant Mobile-First Design
+   Simple, scannable checklist for busy nurses
+   ========================================================================== */
+
+/* ===== Base Panel ===== */
+.panel {
+  padding: 20px 16px;
+  overflow-y: auto;
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Explainer - What is ATS ===== */
+.explainer {
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.explainerText {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
+
+.explainerText strong {
+  color: #1a73e8;
+}
+
+/* ===== Score Section - Compact ===== */
+.scoreSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  margin-bottom: 16px;
+}
+
+.scoreCircle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 5px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.3s ease;
+}
+
+.scoreNumber {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.scoreMax {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.scoreLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.scoreBadge {
+  font-size: 1.1rem;
+}
+
+/* ===== Quick Win - Highlighted Action ===== */
+.quickWin {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #fcd34d;
+}
+
+.quickWinHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.quickWinIcon {
+  font-size: 1.1rem;
+}
+
+.quickWinTitle {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quickWinPoints {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #065f46;
+  background: #d1fae5;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.quickWinText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #78350f;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* ===== Checklist Categories ===== */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.categoryGroup {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.categoryGroup:has(.categoryItems) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Category Header - Tappable */
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+  min-height: 48px; /* Touch target */
+}
+
+.categoryHeader:hover {
+  background: #f9fafb;
+}
+
+.categoryHeader:active {
+  background: #f3f4f6;
+}
+
+.categoryComplete {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.categoryComplete:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.categoryIcon {
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
+}
+
+.categoryLabel {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.categoryProgress {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+.categoryComplete .categoryProgress {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.categoryArrow {
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.categoryArrow.expanded {
+  transform: rotate(90deg);
+}
+
+/* Category Items - Checklist */
+.categoryItems {
+  padding: 4px 0 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 20px;
+  transition: background 0.15s ease;
+}
+
+.checkItem:hover {
+  background: #fafafa;
+}
+
+.checkIcon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.checkItem.checked .checkIcon {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.checkLabel {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.35;
+}
+
+.checkItem.checked .checkLabel {
+  color: #9ca3af;
+  text-decoration: line-through;
+  text-decoration-color: #d1d5db;
+}
+
+.checkPoints {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* ===== Progress Summary ===== */
+.progressSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.progressBar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.progressText {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Mobile Responsiveness
+   ========================================================================== */
+
+/* Tablets and larger */
+@media (min-width: 640px) {
+  .panel {
+    padding: 24px;
+  }
+
+  .scoreCircle {
+    width: 110px;
+    height: 110px;
+    border-width: 6px;
+  }
+
+  .scoreNumber {
+    font-size: 2.5rem;
+  }
+
+  .quickWin {
+    padding: 16px 18px;
+  }
+
+  .categoryHeader {
+    padding: 16px 18px;
+  }
+
+  .checkItem {
+    padding: 12px 18px 12px 24px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .scoreCircle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .scoreNumber {
+    font-size: 2.75rem;
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .scoreCircle,
+  .scoreNumber,
+  .categoryArrow,
+  .progressFill {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Touch Devices
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .categoryHeader {
+    min-height: 52px;
+  }
+
+  .categoryHeader:hover {
+    background: transparent;
+  }
+
+  .categoryHeader:active {
+    background: #f3f4f6;
+  }
+
+  .categoryComplete:hover {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+
+  .categoryComplete:active {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  }
+
+  .checkItem {
+    min-height: 44px;
+  }
+
+  .checkItem:hover {
+    background: transparent;
+  }
+}
