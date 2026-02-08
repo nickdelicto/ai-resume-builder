@@ -1,0 +1,598 @@
+/* ==========================================================================
+   Licenses Section - Healthcare-Focused Mobile-First Design
+   Built for tired nurses on phone breaks - tap, don't type!
+   Touch targets: 44px minimum | Large text | Clear visual hierarchy
+   ========================================================================== */
+
+/* ===== Type Selector - Tap to Select License Type ===== */
+.typeSelector {
+  margin-bottom: 28px;
+}
+
+.typeSelectorLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin-bottom: 14px;
+}
+
+/* Grid layout for license type buttons - 2x2 on mobile */
+.typeButtons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.typeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4e5968;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  /* Prevent text selection on tap */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.typeButton:hover {
+  border-color: #93c5fd;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+}
+
+.typeButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.1);
+}
+
+.typeButtonActive {
+  border-color: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.35);
+}
+
+.typeButtonActive:hover {
+  background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.4);
+}
+
+/* More dropdown - spans full width on mobile */
+.typeDropdown {
+  grid-column: 1 / -1;
+  min-height: 52px;
+  padding: 14px 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4e5968;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234e5968' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+.typeDropdown:hover {
+  border-color: #93c5fd;
+  background-color: #fafbfc;
+}
+
+.typeDropdown:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15);
+}
+
+/* ===== License List ===== */
+.licenseList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* ===== License Card - Clean, Spacious Design ===== */
+.licenseCard {
+  background: #ffffff;
+  border: 2px solid #e1e4e8;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle accent on left edge */
+.licenseCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #1a73e8 0%, #6c5ce7 100%);
+  border-radius: 18px 0 0 18px;
+}
+
+.licenseCard:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Dragging state */
+.draggingCard {
+  opacity: 0.5;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* License card header */
+.licenseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Drag handle — only draggable area */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px;
+  cursor: grab;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dragHandle:hover {
+  opacity: 1;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragIcon {
+  font-size: 1rem;
+  color: #8c9aad;
+}
+
+.licenseType {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a73e8;
+}
+
+/* Badge for license number */
+.licenseType::before {
+  content: "🏥";
+  font-size: 1.2rem;
+}
+
+/* Remove button - large touch target */
+.removeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #fef2f2;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.removeButton:hover {
+  background: #fee2e2;
+  transform: scale(1.05);
+}
+
+.removeButton:active {
+  transform: scale(0.95);
+}
+
+/* ===== License Fields - Stacked on Mobile ===== */
+.licenseFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4e5968;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Large, touch-friendly inputs */
+.input,
+.select {
+  width: 100%;
+  min-height: 54px;
+  padding: 16px;
+  border: 2px solid #e1e4e8;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #1d2129;
+  background: #fafbfc;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234e5968' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 48px;
+  cursor: pointer;
+}
+
+.input:hover,
+.select:hover {
+  border-color: #c4d9f7;
+  background: #ffffff;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.input::placeholder {
+  color: #a0aab8;
+}
+
+/* ===== Compact Badge ===== */
+.compactBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid #6ee7b7;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  color: #047857;
+  font-weight: 600;
+}
+
+.compactIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #10b981;
+  border-radius: 50%;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* ===== Add License Button - Big, Friendly, Tappable ===== */
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 60px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border: 2px dashed #93c5fd;
+  border-radius: 16px;
+  color: #1a73e8;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addButton:hover {
+  background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  border-color: #1a73e8;
+  border-style: solid;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.2);
+}
+
+.addButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.15);
+}
+
+/* ===== NLC Info - Helpful Collapsible ===== */
+.nlcInfo {
+  margin-top: 28px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.nlcToggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nlcToggle:hover {
+  background: rgba(252, 211, 77, 0.2);
+}
+
+.nlcIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.nlcArrow {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #b45309;
+  transition: transform 0.2s ease;
+}
+
+.nlcContent {
+  padding: 0 18px 18px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #78350f;
+  animation: slideUp 0.3s ease-out;
+}
+
+.nlcContent p {
+  margin: 0 0 14px;
+}
+
+.nlcContent p:last-child {
+  margin-bottom: 0;
+}
+
+.nlcContent strong {
+  color: #92400e;
+}
+
+/* ==========================================================================
+   Mobile Responsiveness - Phone-First Design
+   ========================================================================== */
+
+/* Base styles already mobile-friendly above - these enhance for larger screens */
+
+/* Tablet and up */
+@media (min-width: 640px) {
+  .typeButtons {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .typeDropdown {
+    grid-column: auto;
+    max-width: 200px;
+  }
+
+  .licenseFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .licenseCard {
+    padding: 24px;
+  }
+
+  .addButton {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .typeButton {
+    min-height: 48px;
+    padding: 12px 20px;
+  }
+
+  .typeButton:hover {
+    transform: translateY(-3px);
+  }
+
+  .licenseFields {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .input,
+  .select {
+    min-height: 50px;
+    padding: 14px 16px;
+  }
+
+  .addButton {
+    min-height: 54px;
+  }
+}
+
+/* Small phones (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .typeSelector {
+    margin-bottom: 24px;
+  }
+
+  .typeButtons {
+    gap: 10px;
+  }
+
+  .typeButton {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .licenseCard {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .licenseType {
+    font-size: 1rem;
+  }
+
+  .input,
+  .select {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  .addButton {
+    min-height: 54px;
+    padding: 16px;
+    font-size: 1rem;
+  }
+
+  .nlcToggle {
+    min-height: 52px;
+    padding: 14px 16px;
+  }
+}
+
+/* ===== Touch Feedback - Better UX on Mobile ===== */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices, rely on active states */
+  .typeButton:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .typeButtonActive:hover {
+    transform: none;
+  }
+
+  .addButton:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Enhanced active states for touch */
+  .typeButton:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  }
+
+  .typeButtonActive:active {
+    transform: scale(0.98);
+  }
+
+  .addButton:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  }
+
+  .removeButton:hover {
+    transform: none;
+  }
+
+  .removeButton:active {
+    transform: scale(0.9);
+  }
+}
+
+/* ===== Safe Area Support for Notched Phones ===== */
+@supports (padding: max(0px)) {
+  .licenseCard {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+}
+
+/* ===== Reduced Motion - Accessibility ===== */
+@media (prefers-reduced-motion: reduce) {
+  .typeButton,
+  .addButton,
+  .removeButton,
+  .licenseCard,
+  .input,
+  .select,
+  .compactBadge {
+    transition: none;
+  }
+
+  .nlcContent {
+    animation: none;
+  }
+}
+
+/* ===== Dark Mode Support (if needed later) ===== */
+@media (prefers-color-scheme: dark) {
+  /* Placeholder for future dark mode support */
+}

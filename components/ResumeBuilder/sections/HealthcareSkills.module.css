@@ -1,0 +1,1035 @@
+/* ==========================================================================
+   Healthcare Skills Section - Mobile-First Healthcare Design
+   Built for tired nurses on phone breaks - tap, don't type!
+   Touch targets: 44px minimum | Large text | Clear visual hierarchy
+   ========================================================================== */
+
+/* ===== Main Container ===== */
+.container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e1e4e8;
+  font-family: var(--font-figtree), 'Figtree', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2129;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+}
+
+.description {
+  font-size: 1rem;
+  color: #4e5968;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.badge {
+  background: linear-gradient(135deg, #6c5ce7, #5f4dd0);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(108, 92, 231, 0.25);
+}
+
+/* ===== Max Skills Warning ===== */
+.maxWarning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #f59e0b;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ===== Specialty Selector ===== */
+.specialtySelector {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border: 1.5px solid #93c5fd;
+  border-radius: 14px;
+}
+
+.selectorLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 10px;
+}
+
+.specialtyDropdown {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #93c5fd;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #1d2129;
+  background: white;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.specialtyDropdown:hover {
+  border-color: #60a5fa;
+}
+
+.specialtyDropdown:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+/* ===== Skill Groups ===== */
+.skillGroup {
+  margin-bottom: 24px;
+}
+
+.groupTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d2129;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.groupHint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #34a853;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* ===== EHR Collapsible Toggle ===== */
+.ehrToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.ehrToggle:hover {
+  background: #f0f4f8;
+  border-color: #c4b5fd;
+}
+
+.ehrToggleLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ehrToggleTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.ehrToggleArrow {
+  font-size: 1.1rem;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.ehrToggleArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* ===== EHR Selected Chips ===== */
+.ehrChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.ehrChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+  border: 1.5px solid #a78bfa;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6d28d9;
+}
+
+.ehrChipRemove {
+  background: none;
+  border: none;
+  color: #8b5cf6;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  min-width: 20px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ehrChipRemove:hover {
+  color: #dc2626;
+}
+
+/* ===== EHR Checklist (Expanded) ===== */
+.ehrChecklist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ehrChecklistItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+}
+
+.ehrChecklistItem:hover {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border-color: #c4b5fd;
+}
+
+.ehrChecklistItemSelected {
+  background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+  border-color: #a78bfa;
+}
+
+.ehrChecklistItemSelected:hover {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border-color: #8b5cf6;
+}
+
+.ehrChecklistCheckbox {
+  width: 20px;
+  height: 20px;
+  accent-color: #7c3aed;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ehrChecklistInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ehrChecklistName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.ehrChecklistDesc {
+  font-size: 0.75rem;
+  color: #8a94a6;
+  font-weight: 400;
+}
+
+/* ===== Skills Grid ===== */
+.skillsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.skillItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8f9fc;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.skillItem:hover {
+  background: #f0f7ff;
+  border-color: #c4d9f7;
+  transform: translateY(-1px);
+}
+
+.skillItemSelected {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+}
+
+.skillItemSelected:hover {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.skillCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.skillName {
+  font-size: 0.9rem;
+  color: #4e5968;
+  font-weight: 500;
+  display: inline;
+  line-height: 1.4;
+}
+
+.skillItemSelected .skillName {
+  color: #047857;
+  font-weight: 600;
+}
+
+/* ===== Skill Tooltip ===== */
+.tooltipTrigger {
+  position: relative;
+  display: inline;
+  margin-left: 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tooltipIcon {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  vertical-align: middle;
+  transition: color 0.15s ease;
+}
+
+.tooltipTrigger:hover .tooltipIcon {
+  color: #6b7280;
+}
+
+.tooltipContent {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-style: normal;
+  white-space: nowrap;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  pointer-events: none;
+  animation: tooltipFadeIn 0.15s ease-out;
+}
+
+.tooltipContent::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1f2937;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ===== Select Specialty Hint ===== */
+.selectSpecialtyHint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fbbf24;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+/* ===== Custom Skills Section ===== */
+.customSkillSection {
+  margin-bottom: 24px;
+}
+
+.customSkillsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.customSkillTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+  border: 1.5px solid #93c5fd;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a73e8;
+}
+
+.removeSkillButton {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.removeSkillButton:hover {
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+.customSkillInput {
+  display: flex;
+  gap: 10px;
+}
+
+.input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1.5px solid #e1e4e8;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1d2129;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.input:hover {
+  border-color: #c9cdd4;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
+}
+
+.input::placeholder {
+  color: #8a94a6;
+}
+
+.addButton {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1a73e8, #1557b0);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+}
+
+.addButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1557b0, #0d47a1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
+}
+
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== AI Suggest Button (matches purple generate buttons) ===== */
+.aiSuggestButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #5b4cdb 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.35);
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 24px;
+}
+
+.aiSuggestButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5b4cdb 0%, #4a3dc9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45);
+}
+
+.aiSuggestButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(108, 92, 231, 0.3);
+}
+
+.aiSuggestButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.aiSuggestButtonMaxed {
+  background: #d1d5db;
+  box-shadow: none;
+  cursor: default;
+}
+
+.aiSuggestButtonMaxed:hover {
+  background: #d1d5db;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Prerequisite Warning (matches Experience/Summary warning style) ===== */
+.prereqWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1.5px solid #fca5a5;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  margin-top: -8px;
+  line-height: 1.5;
+  animation: tooltipFadeIn 0.3s ease-out;
+}
+
+.prereqIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.prereqText {
+  font-size: 0.95rem;
+  color: #991b1b;
+  line-height: 1.5;
+}
+
+.prereqText strong {
+  color: #7f1d1d;
+}
+
+.sectionLink {
+  color: #1a73e8;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sectionLink:hover {
+  color: #1557b0;
+}
+
+.aiIcon {
+  font-size: 1.1rem;
+}
+
+.aiSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== AI Suggestions Panel ===== */
+.aiSuggestionsPanel {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 12px;
+}
+
+.aiSuggestionsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #047857;
+  margin-bottom: 12px;
+}
+
+.aiSuggestionsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aiSuggestionItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aiSuggestionAdd {
+  padding: 8px 14px;
+  min-height: 40px;
+  background: #ffffff;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #047857;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aiSuggestionAdd:hover {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #34d399;
+}
+
+.aiSuggestionDismiss {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiSuggestionDismiss:hover {
+  color: #dc2626;
+}
+
+/* ===== Summary ===== */
+.summary {
+  margin-top: 24px;
+  padding: 18px;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f7ff 100%);
+  border: 1.5px solid #e1e4e8;
+  border-radius: 14px;
+}
+
+.summaryTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d2129;
+  margin: 0 0 14px 0;
+}
+
+.summaryContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summarySection {
+  display: flex;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.summaryLabel {
+  font-weight: 600;
+  color: #8a94a6;
+  min-width: 70px;
+}
+
+.summaryValue {
+  color: #4e5968;
+}
+
+/* ===== Pro Tip ===== */
+.proTip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 14px;
+  margin-top: 24px;
+}
+
+.proTipIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.proTipText {
+  font-size: 0.95rem;
+  color: #78350f;
+  line-height: 1.6;
+}
+
+.proTipText strong {
+  color: #92400e;
+}
+
+/* ==========================================================================
+   Mobile Responsiveness (640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .specialtySelector {
+    padding: 16px;
+  }
+
+  .skillsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .skillItem {
+    padding: 10px 12px;
+  }
+
+  .customSkillInput {
+    flex-direction: column;
+  }
+
+  .addButton {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  .groupTitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .groupHint {
+    margin-top: 4px;
+  }
+
+  .summary {
+    padding: 14px;
+  }
+
+  .tooltipContent {
+    left: 0;
+    transform: translateX(0);
+    max-width: 200px;
+    white-space: normal;
+  }
+
+  .tooltipContent::after {
+    left: 16px;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Desktop Breakpoint (1024px+)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .ehrChecklist {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .skillsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Small phones */
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .specialtyDropdown {
+    min-height: 52px;
+    padding: 14px 16px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  .ehrToggle {
+    padding: 12px 14px;
+  }
+
+  .ehrChecklistItem {
+    min-height: 48px;
+    padding: 12px 14px;
+  }
+
+  .ehrChecklistCheckbox {
+    width: 22px;
+    height: 22px;
+  }
+
+  .skillItem {
+    min-height: 48px;
+    padding: 12px 14px;
+  }
+
+  .input {
+    min-height: 50px;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .addButton {
+    min-height: 50px;
+  }
+
+  .customSkillTag {
+    padding: 10px 14px;
+  }
+
+  .skillCheckbox {
+    width: 22px;
+    height: 22px;
+  }
+
+  .aiSuggestButton {
+    min-height: 54px;
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Touch Device Enhancements
+   ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .ehrToggle:hover {
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .ehrToggle:active {
+    background: #f0f4f8;
+  }
+
+  .ehrChecklistItem:hover {
+    transform: none;
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .ehrChecklistItem:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  }
+
+  .ehrChecklistItemSelected:hover {
+    transform: none;
+  }
+
+  .ehrChecklistItemSelected:active {
+    transform: scale(0.98);
+  }
+
+  .skillItem:hover {
+    transform: none;
+    background: #f8f9fc;
+    border-color: #e1e4e8;
+  }
+
+  .skillItem:active {
+    transform: scale(0.98);
+    background: #f0f7ff;
+  }
+
+  .skillItemSelected:hover {
+    transform: none;
+  }
+
+  .skillItemSelected:active {
+    transform: scale(0.98);
+  }
+
+  .addButton:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+  }
+
+  .addButton:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .removeSkillButton:hover {
+    transform: none;
+  }
+
+  .removeSkillButton:active {
+    transform: scale(1.1);
+    color: #dc2626;
+  }
+
+  .tooltipTrigger:hover .tooltipIcon {
+    color: #9ca3af;
+  }
+
+  .aiSuggestButton:hover:not(:disabled) {
+    transform: none;
+    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.35);
+  }
+
+  .aiSuggestButton:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .aiSuggestionAdd:hover {
+    background: #ffffff;
+    border-color: #6ee7b7;
+  }
+
+  .aiSuggestionAdd:active {
+    transform: scale(0.97);
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+}
+
+/* ==========================================================================
+   Safe Area Support for Notched Phones
+   ========================================================================== */
+@supports (padding: max(0px)) {
+  .specialtySelector {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+
+  .summary {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .ehrToggle,
+  .ehrChecklistItem,
+  .skillItem,
+  .specialtyDropdown,
+  .input,
+  .addButton,
+  .removeSkillButton,
+  .customSkillTag,
+  .aiSuggestButton,
+  .aiSuggestionAdd,
+  .ehrToggleArrow {
+    transition: none;
+  }
+
+  .aiSpinner {
+    animation: none;
+  }
+
+  .tooltipContent {
+    animation: none;
+  }
+
+  .prereqWarning {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Dark Mode Placeholder
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode support */
+}
