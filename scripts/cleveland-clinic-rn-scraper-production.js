@@ -1784,8 +1784,12 @@ if (require.main === module) {
       } else {
         console.error('❌ Scraping failed:', result.error);
       }
+      process.exit(result.success ? 0 : 1);
     })
-    .catch(console.error);
+    .catch(error => {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = ClevelandClinicRNScraper;

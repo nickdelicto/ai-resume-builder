@@ -568,6 +568,8 @@ async function scrapeJobs() {
     console.error('Fatal error:', e);
     process.exit(1);
   }
+
+  process.exit(0);
 }
 
 // Run the scraper

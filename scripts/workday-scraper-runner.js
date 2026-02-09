@@ -177,10 +177,14 @@ async function main() {
 
 // Run if called directly
 if (require.main === module) {
-  main().catch(error => {
-    console.error('❌ Fatal error:', error);
-    process.exit(1);
-  });
+  main()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('❌ Fatal error:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = { runScraperForEmployer, runAllScrapers };

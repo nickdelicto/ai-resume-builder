@@ -1782,6 +1782,13 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
 
 module.exports = NYCHealthHospitalsRNScraper;
