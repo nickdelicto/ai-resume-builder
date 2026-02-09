@@ -620,7 +620,7 @@ async function scrapeMGBJobs() {
         const transformed = transformJob(listing, detail);
 
         // Validate required fields
-        if (!transformed.title || !transformed.externalId) {
+        if (!transformed.title || !transformed.sourceJobId) {
           console.log(`   ⚠️  Skipped: Missing required fields for "${listing.title}"`);
           errorCount++;
           continue;
