@@ -80,7 +80,7 @@ const worker = new Worker(
   },
   {
     connection: connection,
-    concurrency: 2,
+    concurrency: 3,
     // Long-running scrapers (Cleveland Clinic, Hartford) can take 90+ minutes
     // Default lock is 30s which causes false "stalled" failures
     // Set to 2 hours to handle even the slowest scrapers
