@@ -51,7 +51,7 @@ async function submitToIndexNow(url) {
     host: new URL(SITE_URL).hostname,
     key: INDEXNOW_KEY,
     keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
-    url: url,
+    urlList: [url],
   };
 
   const response = await fetch(INDEXNOW_API_URL, {
