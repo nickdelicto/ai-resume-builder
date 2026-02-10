@@ -1,10 +1,11 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "../../../lib/prisma";
+import { FREE_RESUME_LIMIT } from "../../../lib/constants/pricing";
 
 /**
  * API endpoint to check if a user is eligible to create a new resume
- * Free users are limited to 1 resume; Pro users get unlimited
+ * Free users are limited to 5 resumes; Pro users get unlimited
  */
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
 
     // Free tier: check resume count
     const resumeCount = await prisma.resumeData.count({ where: { userId } });
-    const limit = 1;
+    const limit = FREE_RESUME_LIMIT;
 
     if (resumeCount >= limit) {
       return res.status(200).json({

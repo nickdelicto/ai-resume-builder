@@ -43,8 +43,8 @@ const TRIGGER_CONTENT = {
     subtext: 'Upgrade to Pro for unlimited PDF downloads. Create tailored resumes for every job application.'
   },
   resume_creation: {
-    heading: 'Need another resume?',
-    subtext: 'Free accounts include 1 resume. Go Pro to create tailored versions for different positions.'
+    heading: "You've reached your resume limit",
+    subtext: 'Free accounts include 5 resumes. Go Pro for unlimited resumes and downloads.'
   }
 };
 

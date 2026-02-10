@@ -1,8 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "../../../lib/prisma";
-// Kept for potential future use
-// import { v4 as uuidv4 } from 'uuid';
+import { FREE_RESUME_LIMIT } from "../../../lib/constants/pricing";
 
 /**
  * API endpoint to save a resume to the database
@@ -49,7 +48,28 @@ export default async function handler(req, res) {
       
       if (!existingResume) {
         console.log(`📊 API: Resume ${resumeId} not found or doesn't belong to user ${userId}`);
-        
+
+        // Check free-tier limit before creating from import fallback
+        const importUser = await prisma.user.findUnique({ where: { id: userId } });
+        const importHasSubscription = await prisma.userSubscription.findFirst({
+          where: { userId, status: 'active', currentPeriodEnd: { gte: new Date() } }
+        });
+        const importHasPaidPlan = importUser?.planType && importUser.planType !== 'free' &&
+          importUser.planExpirationDate && new Date(importUser.planExpirationDate) > new Date();
+
+        if (!importHasSubscription && !importHasPaidPlan) {
+          const importResumeCount = await prisma.resumeData.count({ where: { userId } });
+          if (importResumeCount >= FREE_RESUME_LIMIT) {
+            return res.status(403).json({
+              success: false,
+              error: 'resume_limit_reached',
+              message: `Free plan allows ${FREE_RESUME_LIMIT} resumes. Upgrade for unlimited.`,
+              resumeCount: importResumeCount,
+              limit: FREE_RESUME_LIMIT
+            });
+          }
+        }
+
         // For imports, if the resume doesn't exist, create a new one instead of failing
         const newResume = await prisma.resumeData.create({
           data: {
@@ -59,7 +79,7 @@ export default async function handler(req, res) {
             userId: userId
           }
         });
-        
+
         return res.status(200).json({
           success: true,
           message: 'New resume created from import',
@@ -183,13 +203,13 @@ export default async function handler(req, res) {
 
       if (!hasActiveSubscription && !hasPaidPlan) {
         const resumeCount = await prisma.resumeData.count({ where: { userId } });
-        if (resumeCount >= 1) {
+        if (resumeCount >= FREE_RESUME_LIMIT) {
           return res.status(403).json({
             success: false,
             error: 'resume_limit_reached',
-            message: 'Free plan allows 1 resume. Upgrade for unlimited.',
+            message: `Free plan allows ${FREE_RESUME_LIMIT} resumes. Upgrade for unlimited.`,
             resumeCount,
-            limit: 1
+            limit: FREE_RESUME_LIMIT
           });
         }
       }
