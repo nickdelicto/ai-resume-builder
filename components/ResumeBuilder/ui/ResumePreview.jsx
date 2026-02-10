@@ -116,6 +116,13 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     };
   }, [resumeData, isPdfCapture]);
 
+  // Ensure URLs have a protocol prefix so they don't resolve as relative paths
+  const normalizeUrl = (url) => {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    return `https://${url}`;
+  };
+
   // Helper function for rendering bulleted text
   const renderBulletedText = (text) => {
     if (!text) return null;
@@ -185,14 +192,16 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
   const { personalInfo, summary, experience, education, skills, additional, licenses, certifications, healthcareSkills } = resumeData;
 
   // Template-aware colors for inline styles in healthcare sections
-  // ATS template: pure black everywhere. Others: muted grays for visual hierarchy.
-  const isAts = template === 'ats';
-  const colors = {
-    muted: isAts ? '#000' : '#6b7280',
-    separator: isAts ? '#000' : '#d1d5db',
-    accent: isAts ? '#000' : '#059669',
-    reference: isAts ? '#000' : '#6b7280',
+  // Each template gets accent colors matching its design palette.
+  const templateColors = {
+    ats:          { muted: '#000',    separator: '#000',    accent: '#000',    reference: '#000' },
+    professional: { muted: '#666',    separator: '#dee2e6', accent: '#1c7ed6', reference: '#666' },
+    modern:       { muted: '#666',    separator: '#ccc',    accent: '#0d9488', reference: '#666' },
+    minimalist:   { muted: '#888',    separator: '#ddd',    accent: '#333',    reference: '#888' },
+    creative:     { muted: '#6b7280', separator: '#d1d5db', accent: '#059669', reference: '#6b7280' },
+    executive:    { muted: '#6b7280', separator: '#d1d5db', accent: '#059669', reference: '#6b7280' },
   };
+  const colors = templateColors[template] || templateColors.professional;
   
   // Render header with personal info
   const renderHeader = () => {
@@ -200,30 +209,22 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
     
     switch(template) {
       case 'modern':
-        // Build contact items array for separator logic
-        const modernContactItems = [];
-        if (personalInfo.email) modernContactItems.push(personalInfo.email);
-        if (personalInfo.phone) modernContactItems.push(personalInfo.phone);
-        if (personalInfo.location) modernContactItems.push(personalInfo.location);
-        if (personalInfo.linkedin) modernContactItems.push(
-          <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
-        );
-        if (personalInfo.website) modernContactItems.push(
-          <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" key="portfolio">Portfolio</a>
-        );
-
+        // Split header: name left, contact stacked right
         return (
           <div className={`${styles.header} ${templateStyles.header}`}>
-            <h1 className={`${styles.name} ${templateStyles.name}`}>{personalInfo.name || 'Your Name'}</h1>
-            <div className={`${styles.contactInfo} ${templateStyles.contactInfo}`}>
-              {modernContactItems.map((item, idx) => (
-                <span key={idx}>
-                  {item}
-                  {idx < modernContactItems.length - 1 && (
-                    <span className={`${styles.separator} ${templateStyles.separator}`}>•</span>
-                  )}
-                </span>
-              ))}
+            <div className={templateStyles.headerRow}>
+              <h1 className={`${styles.name} ${templateStyles.name}`}>{personalInfo.name || 'Your Name'}</h1>
+              <div className={templateStyles.contactStack}>
+                {personalInfo.email && <span>{personalInfo.email}</span>}
+                {personalInfo.phone && <span>{personalInfo.phone}</span>}
+                {personalInfo.location && <span>{personalInfo.location}</span>}
+                {personalInfo.linkedin && (
+                  <a href={normalizeUrl(personalInfo.linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                )}
+                {personalInfo.website && (
+                  <a href={normalizeUrl(personalInfo.website)} target="_blank" rel="noopener noreferrer">Website</a>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -268,18 +269,18 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
               {/* LinkedIn: icon + label, clickable, no underline */}
               {personalInfo.linkedin && (
                 <div className={templateStyles.contactBox}>
-                  <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer">
+                  <a href={normalizeUrl(personalInfo.linkedin)} target="_blank" rel="noopener noreferrer">
                     <span className={templateStyles.contactIcon}>💼</span>
                     <span className={templateStyles.contactLabel}>LinkedIn</span>
                   </a>
                 </div>
               )}
-              {/* Portfolio: icon + label, clickable, no underline */}
+              {/* Website: icon + label, clickable, no underline */}
               {personalInfo.website && (
                 <div className={templateStyles.contactBox}>
-                  <a href={personalInfo.website} target="_blank" rel="noopener noreferrer">
+                  <a href={normalizeUrl(personalInfo.website)} target="_blank" rel="noopener noreferrer">
                     <span className={templateStyles.contactIcon}>🌐</span>
-                    <span className={templateStyles.contactLabel}>Portfolio</span>
+                    <span className={templateStyles.contactLabel}>Website</span>
                   </a>
                 </div>
               )}
@@ -288,6 +289,33 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         );
       
       case 'minimalist':
+        // Centered header with em-dash separators — elegant serif feel
+        const minimalistContactItems = [];
+        if (personalInfo.email) minimalistContactItems.push(personalInfo.email);
+        if (personalInfo.phone) minimalistContactItems.push(personalInfo.phone);
+        if (personalInfo.location) minimalistContactItems.push(personalInfo.location);
+        if (personalInfo.linkedin) minimalistContactItems.push(
+          <a href={normalizeUrl(personalInfo.linkedin)} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
+        );
+        if (personalInfo.website) minimalistContactItems.push(
+          <a href={normalizeUrl(personalInfo.website)} target="_blank" rel="noopener noreferrer" key="website">Website</a>
+        );
+        return (
+          <div className={`${styles.header} ${templateStyles.header}`}>
+            <h1 className={`${styles.name} ${templateStyles.name}`}>{personalInfo.name || 'Your Name'}</h1>
+            <div className={`${styles.contactInfo} ${templateStyles.contactInfo}`}>
+              {minimalistContactItems.map((item, idx) => (
+                <span key={idx}>
+                  {item}
+                  {idx < minimalistContactItems.length - 1 && (
+                    <span className={`${styles.separator} ${templateStyles.separator || ''}`}>—</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+
       case 'executive':
         return (
           <div className={`${styles.header} ${templateStyles.header}`}>
@@ -296,8 +324,8 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
               {personalInfo.email && <span>{personalInfo.email}</span>}
               {personalInfo.phone && <span>{personalInfo.phone}</span>}
               {personalInfo.location && <span>{personalInfo.location}</span>}
-              {personalInfo.linkedin && <span><a href={personalInfo.linkedin}>LinkedIn</a></span>}
-              {personalInfo.website && <span><a href={personalInfo.website}>Portfolio</a></span>}
+              {personalInfo.linkedin && <span><a href={normalizeUrl(personalInfo.linkedin)}>LinkedIn</a></span>}
+              {personalInfo.website && <span><a href={normalizeUrl(personalInfo.website)}>Website</a></span>}
             </div>
           </div>
         );
@@ -309,10 +337,10 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         if (personalInfo.phone) atsContactItems.push(personalInfo.phone);
         if (personalInfo.location) atsContactItems.push(personalInfo.location);
         if (personalInfo.linkedin) atsContactItems.push(
-          <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
+          <a href={normalizeUrl(personalInfo.linkedin)} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
         );
         if (personalInfo.website) atsContactItems.push(
-          <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" key="portfolio">Portfolio</a>
+          <a href={normalizeUrl(personalInfo.website)} target="_blank" rel="noopener noreferrer" key="portfolio">Website</a>
         );
         // Render the contact info line with ' • ' separator, no trailing separator
         // This approach ensures the output matches the preview and PDF exactly
@@ -340,10 +368,10 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
         if (personalInfo.phone) professionalContactItems.push(personalInfo.phone);
         if (personalInfo.location) professionalContactItems.push(personalInfo.location);
         if (personalInfo.linkedin) professionalContactItems.push(
-          <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
+          <a href={normalizeUrl(personalInfo.linkedin)} target="_blank" rel="noopener noreferrer" key="linkedin">LinkedIn</a>
         );
         if (personalInfo.website) professionalContactItems.push(
-          <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" key="portfolio">Portfolio</a>
+          <a href={normalizeUrl(personalInfo.website)} target="_blank" rel="noopener noreferrer" key="portfolio">Website</a>
         );
 
         return (
@@ -439,14 +467,13 @@ const ResumePreview = ({ resumeData, template = 'professional', sectionOrder = n
   // Render skills section
   const renderSkills = () => {
     if (!skills || skills.length === 0) return null;
-    // Minimalist: ATS-friendly, plain text with vertical bars
+    // Minimalist: ATS-friendly, plain text with pipe separators
     if (template === 'minimalist') {
       return (
         <div className={`${styles.section} ${templateStyles.section || ''}`}>
           <h2 className={`${styles.sectionTitle} ${templateStyles.sectionTitle || ''}`}>Skills</h2>
-          {/* ATS-friendly: plain text, vertical bar separated */}
-          <div style={{ fontWeight: 400, fontSize: 15, color: '#222', fontFamily: 'Georgia' }}>
-            {skills.filter(Boolean).join(' | ')}
+          <div style={{ fontWeight: 400, fontSize: '10.5pt', color: '#333', fontFamily: "Georgia, 'Times New Roman', serif", lineHeight: 1.4 }}>
+            {skills.filter(Boolean).join('  |  ')}
           </div>
         </div>
       );

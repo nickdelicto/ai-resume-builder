@@ -265,9 +265,8 @@ export default async function handler(req, res) {
           margin: 0 !important;
         }
         
-        /* Fix text colors */
+        /* Ensure text elements are visible (don't override color — let template CSS apply) */
         h1, h2, h3, h4, h5, h6, p, span, div {
-          color: inherit !important;
           visibility: visible !important;
           opacity: 1 !important;
         }

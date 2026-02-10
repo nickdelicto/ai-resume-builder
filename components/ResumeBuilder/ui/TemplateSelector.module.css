@@ -160,7 +160,7 @@
   left: 0;
   width: 10px;
   height: 100%;
-  background: #4263eb;
+  background: #0d9488;
   border-radius: 0 2px 2px 0;
 }
 
@@ -285,13 +285,13 @@
   background: rgba(28, 126, 214, 0.2);
 }
 
-.modernContent .previewLine, 
+.modernContent .previewLine,
 .modernContent .previewItem {
-  background: rgba(66, 99, 235, 0.1);
+  background: rgba(13, 148, 136, 0.1);
 }
 
 .modernContent .previewSectionTitle {
-  background: rgba(66, 99, 235, 0.2);
+  background: rgba(13, 148, 136, 0.25);
 }
 
 .minimalistContent .previewLine, 

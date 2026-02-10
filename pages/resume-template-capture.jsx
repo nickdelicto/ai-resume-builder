@@ -79,15 +79,19 @@ const ResumeTemplateCapture = () => {
     fetchResumeData();
   }, []);
 
-  // Styles specific to PDF generation - much simpler now!
+  // Styles specific to PDF generation
+  // All templates use system fonts: Calibri (Professional/Modern), Georgia (Minimalist), Arial (ATS)
+  const templateFonts = {
+    ats: `Arial, Helvetica, sans-serif`,
+    professional: `'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`,
+    modern: `'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`,
+    minimalist: `Georgia, 'Times New Roman', serif`,
+    creative: `'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`,
+    executive: `'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`,
+  };
+  const bodyFont = templateFonts[template] || templateFonts.professional;
+
   const pdfCaptureStyles = `
-    /* Import fonts conditionally based on template */
-    ${template !== 'ats' ? `
-      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-      @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
-    ` : ''}
-    
     /* Reset any global font settings */
     html, body {
       margin: 0 !important;
@@ -95,10 +99,7 @@ const ResumeTemplateCapture = () => {
       background: white !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      ${template !== 'ats' ? 
-        `font-family: 'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;` : 
-        `font-family: Arial, Helvetica, sans-serif !important;`
-      }
+      font-family: ${bodyFont};
       height: auto !important;
       min-height: auto !important;
       max-height: none !important;
@@ -153,9 +154,7 @@ const ResumeTemplateCapture = () => {
       min-height: auto !important;
     }
     
-    /* Remove any pseudo-elements that might create the blue rectangle */
-    .resumePreview *::after,
-    .resumePreview *::before,
+    /* Remove header pseudo-elements that create the blue rectangle (Creative/Modern) */
     .header::after,
     .header::before,
     .headerMain::after,

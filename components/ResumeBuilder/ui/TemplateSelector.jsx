@@ -4,27 +4,26 @@ import styles from './TemplateSelector.module.css';
 const templates = [
   {
     id: 'ats',
-    name: 'Hospital-Ready',
-    description: 'Passes screening software used by most hospitals',
-    bestFor: 'Hospital jobs, large health systems',
-    isRecommended: true
+    name: 'Classic',
+    description: 'Pure black and white, built for screening software',
+    bestFor: 'Hospital systems, government, large employers'
   },
   {
     id: 'professional',
     name: 'Professional',
-    description: 'Clean design with subtle blue accents',
-    bestFor: 'Clinics, outpatient, ambulatory care'
+    description: 'Blue accents with clean section dividers',
+    bestFor: 'Clinics, outpatient, private practice'
   },
   {
     id: 'modern',
     name: 'Modern',
-    description: 'Bold header with colorful styling',
+    description: 'Teal palette with left bar headers and split layout',
     bestFor: 'Telehealth, startups, younger facilities'
   },
   {
     id: 'minimalist',
     name: 'Minimalist',
-    description: 'Elegant serif font, refined look',
+    description: 'Refined serif type with understated grayscale',
     bestFor: 'Leadership roles, NP, experienced nurses'
   }
 ];

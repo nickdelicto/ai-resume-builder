@@ -1,27 +1,39 @@
 /* ==========================================================================
    Professional Template
-   Clean design with subtle blue accents - great for clinics and outpatient
+   Clean design with subtle blue accents — great for clinics and outpatient
    Uses Calibri font for broad compatibility
+
+   Font hierarchy:
+     Name:           18pt  bold    #1c7ed6 (blue)
+     Section titles: 12pt  bold    #495057 (dark gray) UPPERCASE
+     Job titles:     11pt  semibold #212529 (near-black)
+     Body/bullets:   10.5pt normal  #333
+     Company/school: 10.5pt semibold #333
+     Dates:          10pt  italic   #495057
+     Location:       10pt  normal   #666
    ========================================================================== */
 
 .resumePreview {
   font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.4;
+  font-size: 10.5pt;
   padding: 0;
 }
 
+/* ---------- Header ---------- */
+
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   border-bottom: 2px solid #1c7ed6;
-  padding-bottom: 15px;
+  padding-bottom: 10px;
 }
 
 .name {
-  font-size: 24px;
+  font-size: 18pt;
   font-weight: 700;
   color: #1c7ed6;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   letter-spacing: 0.5px;
 }
 
@@ -30,7 +42,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0;
-  font-size: 11pt;
+  font-size: 10pt;
   color: #333;
 }
 
@@ -50,7 +62,7 @@
   justify-content: center;
   margin: 0 8px;
   color: #1c7ed6;
-  font-size: 11pt;
+  font-size: 10pt;
   line-height: 1;
 }
 
@@ -58,66 +70,78 @@
   content: none !important;
 }
 
+/* ---------- Sections ---------- */
+
 .section {
-  margin-bottom: 18px;
+  margin-bottom: 4px;
 }
 
 .section:not(:first-child) {
-  margin-top: 24px;
+  margin-top: 12px;
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: 12pt;
   font-weight: 700;
   color: #495057;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   border-bottom: 1px solid #dee2e6;
-  padding-bottom: 5px;
-  margin-bottom: 12px;
+  padding-bottom: 3px;
+  margin-bottom: 8px;
 }
 
+/* ---------- Items (Experience, Education) ---------- */
+
 .item {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .itemHeader {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .itemTitle {
-  font-size: 13pt;
+  font-size: 11pt;
   font-weight: 600;
   color: #212529;
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .itemSubtitle {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
   color: #495057;
-  font-size: 11pt;
+  font-size: 10pt;
 }
 
 .company, .school {
   font-weight: 600;
   color: #333;
-  font-size: 11pt;
+  font-size: 10.5pt;
 }
 
 .location {
   color: #666;
-  font-size: 11pt;
+  font-size: 10pt;
+}
+
+/* Comma separator between company/school and location */
+.location::before {
+  content: ",\00a0";
 }
 
 .dates {
   color: #495057;
   font-style: italic;
+  font-weight: normal;
   font-size: 10pt;
   margin-left: auto;
   white-space: nowrap;
@@ -125,49 +149,56 @@
   text-align: right;
 }
 
+/* ---------- Bullets ---------- */
+
 .bulletPoint {
   position: relative;
   padding-left: 15px;
-  margin: 4px 0;
-  font-size: 11pt;
+  margin: 3px 0;
+  font-size: 10.5pt;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .bullet {
   color: #1c7ed6 !important;
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
+/* ---------- Summary ---------- */
+
 .summary {
-  font-size: 11pt;
+  font-size: 10.5pt;
   color: #333;
-  line-height: 1.5;
-  margin-bottom: 15px;
+  line-height: 1.4;
+  margin-bottom: 0;
 }
+
+/* ---------- Skills (blue pills) ---------- */
 
 .skillsList {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .skill {
   background-color: #e7f5ff;
   color: #1c7ed6;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11pt;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10pt;
   font-weight: 500;
 }
 
-/* Certifications */
+/* ---------- Certifications ---------- */
+
 .certDetails {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11pt;
+  font-size: 10.5pt;
   color: #333;
   margin-bottom: 2px;
 }
@@ -183,24 +214,27 @@
   margin-left: 4px;
 }
 
+/* ---------- Description (education, etc.) ---------- */
+
 .description {
   font-size: 10pt;
   color: #666;
   margin-top: 2px;
 }
 
-/* Languages */
+/* ---------- Languages ---------- */
+
 .languagesList {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 8px;
+  gap: 16px;
+  margin-top: 4px;
 }
 
 .language {
   display: flex;
   align-items: center;
-  font-size: 11pt;
+  font-size: 10.5pt;
 }
 
 .languageName {

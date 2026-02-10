@@ -24,27 +24,27 @@
   /* Professional resume fonts that match standard PDF output */
   font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #333;
-  line-height: 1.5;
-  font-size: 11pt;
+  line-height: 1.4;
+  font-size: 10.5pt;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .name {
-  font-size: 24px;
+  font-size: 18pt;
   font-weight: 700;
   color: #1c7ed6;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   letter-spacing: 0.5px;
 }
 
 .contactInfo {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  font-size: 11pt;
+  gap: 0;
+  font-size: 10pt;
 }
 
 .contactInfo span {
@@ -62,27 +62,31 @@
   justify-content: center;
   margin: 0 8px;
   color: #adb5bd;
-  font-size: 11pt;
+  font-size: 10pt;
   line-height: 1;
 }
 
 .section {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
+}
+
+.section:not(:first-child) {
+  margin-top: 12px;
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: 12pt;
   font-weight: 700;
   color: #495057;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   border-bottom: 1px solid #dee2e6;
-  padding-bottom: 5px;
-  margin-bottom: 12px;
+  padding-bottom: 3px;
+  margin-bottom: 8px;
 }
 
 .item {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .itemHeader {
@@ -90,10 +94,10 @@
 }
 
 .itemTitle {
-  font-size: 13pt;
+  font-size: 11pt;
   font-weight: 600;
   color: #212529;
-  margin: 0 0 2px 0;
+  margin: 0 0 1px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -102,9 +106,11 @@
 
 .itemSubtitle {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 10px;
-  font-size: 11pt;
+  align-items: center;
+  gap: 0;
+  font-size: 10pt;
 }
 
 .company, .school {
@@ -112,11 +118,17 @@
 }
 
 .location {
-  color: #495057;
+  color: #666;
+}
+
+/* Comma separator between company/school and location */
+.location::before {
+  content: ",\00a0";
 }
 
 .dates {
   font-style: italic;
+  font-weight: normal;
   color: #495057;
   font-size: 10pt;
   margin-left: auto; /* Push dates to the right */
@@ -135,6 +147,7 @@
   font-size: 10.5pt;
   margin: 0;
   white-space: pre-line;
+  line-height: 1.4;
 }
 
 .skillsList {
@@ -195,11 +208,11 @@
 
 .bulletPoint {
   position: relative;
-  padding-left: 18px;
-  margin: 4px 0;
-  font-size: 10pt;
-  color: #212529;
-  line-height: 1.5;
+  padding-left: 15px;
+  margin: 3px 0;
+  font-size: 10.5pt;
+  color: #333;
+  line-height: 1.4;
 }
 
 .bullet {

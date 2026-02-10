@@ -1,209 +1,251 @@
+/* ==========================================================================
+   Modern Template
+   Clean, contemporary design with teal accents and left accent bars.
+   Distinctly different from Professional (blue, bottom borders) and ATS (black).
+
+   Visual identity:
+   - Left accent bar on section titles (not bottom border)
+   - Teal palette (#0d9488) — warm, approachable, professional
+   - Outlined skill pills (border only, no background fill)
+   - Pipe separator between company | location
+   - Lighter font weights for an airy, modern feel
+
+   Font hierarchy:
+     Name:           18pt  bold     #0d9488 (teal)
+     Section titles: 11pt  semibold #333 UPPERCASE, left teal bar
+     Job titles:     11pt  semibold #222
+     Body/bullets:   10.5pt normal  #444
+     Company/school: 10.5pt medium  #333
+     Dates:          10pt  italic   #666
+     Location:       10pt  normal   #666
+   ========================================================================== */
+
 .resumePreview {
   font-family: 'Calibri', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  color: #333;
-  line-height: 1.5;
+  color: #444;
+  line-height: 1.4;
+  font-size: 10.5pt;
   padding: 0;
 }
 
+/* ---------- Header (split: name left, contact right) ---------- */
+
 .header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #0d9488;
+}
+
+.headerRow {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-  border-bottom: 3px solid #4263eb;
-  padding-bottom: 15px;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .name {
-  font-size: 26px;
+  font-size: 18pt;
   font-weight: 700;
-  color: #4263eb;
-  margin: 0 0 10px 0;
-  letter-spacing: 0.5px;
+  color: #0d9488;
+  margin: 0;
+  letter-spacing: 0.3px;
 }
 
-.contactContainer {
+.contactStack {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 10pt;
+  color: #444;
+  line-height: 1.4;
 }
 
-.contactInfo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0;
-  font-size: 11pt;
-  color: #333;
-}
-
-.contactInfo span {
-  display: flex;
-  align-items: center;
-}
-
-.contactInfo a {
-  color: #4263eb;
+.contactStack a {
+  color: #0d9488;
   text-decoration: none;
 }
 
-.contactInfo .separator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 8px;
-  color: #4263eb;
-  font-size: 11pt;
-  line-height: 1;
-}
+/* ---------- Sections (left accent bar) ---------- */
 
 .section {
-  margin-bottom: 20px;
+  margin-bottom: 6px;
+}
+
+.section:not(:first-child) {
+  margin-top: 16px;
 }
 
 .sectionTitle {
-  font-size: 16px;
+  font-size: 11pt;
   font-weight: 600;
-  color: #4263eb !important;
+  color: #333;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 2px solid #4263eb;
-  padding-bottom: 5px;
-  margin-bottom: 15px;
+  letter-spacing: 1.5px;
+  border-bottom: none;
+  border-left: 3px solid #0d9488;
+  padding-left: 10px;
+  padding-bottom: 0;
+  margin-bottom: 8px;
+  line-height: 1.3;
 }
 
+/* ---------- Items (Experience, Education) ---------- */
+
 .item {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .itemHeader {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .itemTitle {
-  font-size: 14pt;
+  font-size: 11pt;
   font-weight: 600;
-  color: #212529;
-  margin-bottom: 4px;
+  color: #222;
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  margin-bottom: 1px;
 }
 
+/* Company | Location on same line with pipe separator */
 .itemSubtitle {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: #495057;
-  font-size: 11pt;
-}
-
-.companyLine {
-  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-}
-
-.detailsLine {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  gap: 0;
   color: #666;
-  font-size: 10.5pt;
-  width: 100%;
+  font-size: 10pt;
 }
 
 .company, .school {
   font-weight: 500;
+  color: #333;
+  font-size: 10.5pt;
 }
 
 .location {
-  color: #495057;
+  color: #666;
+  font-size: 10pt;
+}
+
+/* Pipe separator between company and location */
+.location::before {
+  content: "\00a0|\00a0";
+  color: #ccc;
 }
 
 .dates {
-  color: #495057;
+  color: #666;
   font-style: italic;
-  font-size: 11pt;
+  font-weight: normal;
+  font-size: 10pt;
   margin-left: auto;
   white-space: nowrap;
   padding-left: 15px;
+  text-align: right;
 }
+
+/* ---------- Bullets (teal dash accent) ---------- */
 
 .bulletPoint {
   position: relative;
-  padding-left: 20px;
-  margin-bottom: 4px;
-  line-height: 1.5;
-  color: #495057;
+  padding-left: 15px;
+  margin: 3px 0;
+  font-size: 10.5pt;
+  color: #444;
+  line-height: 1.4;
 }
 
 .bullet {
-  color: #4263eb !important;
-  position: absolute;
-  left: 0;
-  top: 0;
+  color: #0d9488 !important;
+  margin-right: 6px;
 }
 
+/* ---------- Summary ---------- */
+
 .summary {
-  color: #495057;
-  line-height: 1.6;
-  margin-bottom: 8px;
+  font-size: 10.5pt;
+  color: #444;
+  line-height: 1.45;
+  margin-bottom: 0;
 }
+
+/* ---------- Skills (outlined pills) ---------- */
 
 .skillsList {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .skill {
-  background-color: #e7f5ff;
-  color: #4263eb;
-  padding: 5px 12px;
-  border-radius: 20px;
+  background-color: transparent;
+  color: #0d9488;
+  border: 1.5px solid #0d9488;
+  padding: 2px 10px;
+  border-radius: 14px;
+  font-size: 10pt;
   font-weight: 500;
-  font-size: 11pt;
 }
+
+/* ---------- Description (education, etc.) ---------- */
+
+.description {
+  font-size: 10pt;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* ---------- Certifications ---------- */
+
+.certDetails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5pt;
+  color: #444;
+  margin-bottom: 2px;
+}
+
+.certIssuer {
+  font-weight: normal;
+  color: #666;
+}
+
+.certDate {
+  font-style: italic;
+  color: #888;
+  margin-left: 4px;
+}
+
+/* ---------- Languages ---------- */
 
 .languagesList {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 16px;
+  margin-top: 4px;
 }
 
 .language {
   display: flex;
   align-items: center;
-  gap: 5px;
-  color: #495057;
+  font-size: 10.5pt;
+  color: #444;
 }
 
 .languageName {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 .languageProficiency {
-  color: #6c757d;
   font-style: italic;
+  color: #888;
+  margin-left: 4px;
 }
-
-.certDetails {
-  display: flex;
-  gap: 8px;
-  color: #495057;
-  font-size: 11pt;
-  margin-top: 2px;
-}
-
-.certIssuer {
-  font-weight: 500;
-}
-
-.certDate {
-  font-style: italic;
-}
-
-/* Additional modern styles... */ 
