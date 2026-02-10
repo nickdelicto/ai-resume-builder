@@ -28,6 +28,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import { useResumeSelection } from '../common/ResumeSelectionProvider';
+import { ALL_CERTIFICATIONS, EHR_SYSTEMS, SKILLS_BY_SPECIALTY, NURSING_SPECIALTIES, NLC_STATES } from '../../lib/constants/healthcareData';
 import { usePaywall } from '../common/PaywallModal';
 
 // Helper function to mark localStorage data for migration to database
@@ -167,7 +168,7 @@ const JobDescriptionModal = ({ isOpen, onClose, currentJobContext, onUpdateJobCo
                 className={styles.formInput}
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                placeholder="e.g. Software Engineer"
+                placeholder="e.g. ICU Registered Nurse"
                 required
               />
             </div>
@@ -259,7 +260,14 @@ const ModernResumeBuilder = ({
   // Add ref to track if a migration has already run in this session
   const hasMigratedRef = useRef(false);
   const templateChangeFromDbLoad = useRef(false);
-  
+  // Track when an import was just processed — prevents the useEffect re-run
+  // (triggered by currentResumeId/importedResumeData changes) from overwriting
+  // enriched smart-matched data with raw DB data
+  const importJustProcessedRef = useRef(false);
+  const creatingResumeRef = useRef(false); // Lock to prevent StrictMode double-create
+  const actionContainerRef = useRef(null);
+  const [showStickyDownload, setShowStickyDownload] = useState(false);
+
   // Job description modal state
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
   const [internalJobContext, setInternalJobContext] = useState(jobContext);
@@ -830,12 +838,27 @@ const ModernResumeBuilder = ({
               description: edu.description || ''
             });
           } else {
+            // Map graduation date: prefer graduationDate, fall back to endDate
+            let gradDate = edu.graduationDate || edu.endDate || '';
+            // If we have a raw date that's not in "Month Year" format, try to parse it
+            if (gradDate && !/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}$/.test(gradDate)) {
+              // Try to extract year from various formats
+              const yearMatch = gradDate.match(/\d{4}/);
+              if (yearMatch) {
+                const monthMatch = gradDate.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
+                const monthMap = { jan: 'January', feb: 'February', mar: 'March', apr: 'April', may: 'May', jun: 'June', jul: 'July', aug: 'August', sep: 'September', oct: 'October', nov: 'November', dec: 'December' };
+                if (monthMatch) {
+                  gradDate = `${monthMap[monthMatch[1].toLowerCase().substring(0, 3)] || 'May'} ${yearMatch[0]}`;
+                } else {
+                  gradDate = `May ${yearMatch[0]}`;
+                }
+              }
+            }
             educationEntries.push({
               degree: edu.degree || '',
               school: edu.school || '',
               location: edu.location || '',
-              startDate: edu.startDate || '',
-              endDate: edu.endDate || '',
+              graduationDate: gradDate,
               description: edu.description || '',
               isCurrentlyStudying: !!edu.isCurrentlyStudying
             });
@@ -939,6 +962,206 @@ const ModernResumeBuilder = ({
         });
       }
       
+      // === SMART MATCHING: Certifications ===
+      // Match parsed certs against builder's known certification list
+      const matchedCertifications = [];
+      const unmatchedCertificates = [];
+
+      mergedCertificates.forEach(cert => {
+        const certName = (cert.name || '').trim();
+        if (!certName) return;
+        const certLower = certName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const match = ALL_CERTIFICATIONS.find(known => {
+          const idMatch = certLower === known.id;
+          const nameMatch = certLower === known.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const fullNameMatch = certLower === known.fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          // Partial: "CCRN-K" contains "CCRN", "BLS (AHA)" contains "BLS"
+          const partialMatch = certLower.includes(known.name.toLowerCase().replace(/[^a-z0-9]/g, ''))
+            || certName.toLowerCase().includes(known.name.toLowerCase());
+          return idMatch || nameMatch || fullNameMatch || partialMatch;
+        });
+
+        if (match && !matchedCertifications.some(m => m.id === match.id)) {
+          matchedCertifications.push({
+            id: match.id,
+            name: match.name,
+            fullName: match.fullName,
+            expirationDate: cert.date || '',
+            issuingBody: cert.issuer || (match.issuingBodies?.[0] || '')
+          });
+        } else if (!match) {
+          unmatchedCertificates.push(cert);
+        }
+      });
+
+      // === SMART MATCHING: EHR Systems ===
+      const matchedEhrSystems = [];
+      const remainingSkills = [];
+
+      skills.forEach(skill => {
+        const skillLower = (typeof skill === 'string' ? skill : '').toLowerCase();
+        const ehrMatch = EHR_SYSTEMS.find(ehr => {
+          const ehrNameLower = ehr.name.toLowerCase();
+          // "Epic" in "Epic Systems", "Cerner" in "Cerner (Oracle Health)"
+          return skillLower.includes(ehrNameLower.split(' ')[0].toLowerCase())
+            || ehrNameLower.toLowerCase().includes(skillLower.split(' ')[0]);
+        });
+
+        if (ehrMatch && !matchedEhrSystems.includes(ehrMatch.id)) {
+          matchedEhrSystems.push(ehrMatch.id);
+        } else {
+          remainingSkills.push(skill);
+        }
+      });
+
+      // === SMART MATCHING: Clinical Skills ===
+      const allKnownSkills = Object.values(SKILLS_BY_SPECIALTY).flat();
+      const matchedClinicalSkills = [];
+      const genericSkills = [];
+
+      remainingSkills.forEach(skill => {
+        const skillLower = (typeof skill === 'string' ? skill : '').toLowerCase().trim();
+        const clinicalMatch = allKnownSkills.find(known =>
+          known.toLowerCase() === skillLower
+          || skillLower.includes(known.toLowerCase())
+          || known.toLowerCase().includes(skillLower)
+        );
+
+        if (clinicalMatch && !matchedClinicalSkills.includes(clinicalMatch)) {
+          matchedClinicalSkills.push(clinicalMatch);
+        } else {
+          genericSkills.push(skill);
+        }
+      });
+
+      // === SMART MATCHING: Specialty Detection ===
+      // Detect nursing specialty from experience titles/descriptions
+      let detectedSpecialty = '';
+      const experienceText = (importedResumeData.experience || [])
+        .map(exp => `${exp.title || ''} ${exp.description || ''}`)
+        .join(' ');
+
+      for (const spec of NURSING_SPECIALTIES) {
+        if (spec.keywords.some(kw => experienceText.toLowerCase().includes(kw.toLowerCase()))) {
+          detectedSpecialty = spec.id;
+          break;
+        }
+      }
+
+      // === SMART MATCHING: Licenses ===
+      const mappedLicenses = [];
+      if (Array.isArray(importedResumeData.licenses)) {
+        importedResumeData.licenses.forEach(lic => {
+          if (!lic || !lic.type) return;
+          const stateCode = (lic.state || '').toUpperCase().trim();
+          mappedLicenses.push({
+            id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            type: lic.type.toLowerCase(),
+            state: stateCode.length === 2 ? stateCode : '',
+            licenseNumber: lic.licenseNumber || '',
+            isCompact: lic.isCompact || (stateCode.length === 2 && NLC_STATES.includes(stateCode)),
+            expirationDate: lic.expirationDate || ''
+          });
+        });
+      }
+
+      // ========== MEMBERSHIPS MATCHING ==========
+      const NURSING_ORGANIZATIONS = [
+        { id: 'ana', name: 'American Nurses Association (ANA)' },
+        { id: 'aacn', name: 'AACN - Critical Care Nurses' },
+        { id: 'aorn', name: 'AORN - Perioperative Nurses' },
+        { id: 'ena', name: 'ENA - Emergency Nurses' },
+        { id: 'oncology', name: 'ONS - Oncology Nursing Society' },
+        { id: 'aann', name: 'AANN - Neuroscience Nurses' },
+        { id: 'awhonn', name: 'AWHONN - Women\'s Health/OB Nurses' },
+        { id: 'apna', name: 'APNA - Psychiatric Nurses' },
+        { id: 'sigma', name: 'Sigma Theta Tau International' }
+      ];
+      const matchedMemberships = [];
+      const rawMemberships = Array.isArray(importedResumeData.additional?.memberships)
+        ? importedResumeData.additional.memberships : [];
+      rawMemberships.forEach(mem => {
+        const memName = typeof mem === 'string' ? mem.trim() : (mem?.name || '').trim();
+        if (!memName) return;
+        const memLower = memName.toLowerCase();
+        // Try to match against known nursing organizations
+        const match = NURSING_ORGANIZATIONS.find(org => {
+          const orgLower = org.name.toLowerCase();
+          const orgAbbrev = org.id.toLowerCase();
+          return memLower.includes(orgAbbrev) || orgLower.includes(memLower)
+            || memLower.includes(orgLower.split(' - ')[0]?.toLowerCase() || '');
+        });
+        if (match && !matchedMemberships.some(m => m.id === match.id)) {
+          matchedMemberships.push({ id: match.id, name: match.name });
+        } else if (!match) {
+          matchedMemberships.push({ id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, name: memName });
+        }
+      });
+
+      // ========== VOLUNTEER MAPPING ==========
+      const mappedVolunteer = [];
+      const rawVolunteer = Array.isArray(importedResumeData.additional?.volunteer)
+        ? importedResumeData.additional.volunteer : [];
+      rawVolunteer.forEach(vol => {
+        if (typeof vol === 'string') {
+          if (vol.trim()) {
+            mappedVolunteer.push({
+              id: `vol-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              organization: vol.trim(),
+              role: ''
+            });
+          }
+        } else if (vol && typeof vol === 'object') {
+          const org = (vol.organization || vol.org || vol.name || '').trim();
+          if (org) {
+            mappedVolunteer.push({
+              id: `vol-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              organization: org,
+              role: (vol.role || vol.position || '').trim()
+            });
+          }
+        }
+      });
+
+      // ========== AWARDS MAPPING ==========
+      const COMMON_AWARDS = [
+        { id: 'daisy', name: 'DAISY Award' },
+        { id: 'employee-month', name: 'Employee of the Month' },
+        { id: 'excellence', name: 'Nursing Excellence Award' },
+        { id: 'preceptor', name: 'Preceptor of the Year' },
+        { id: 'patient-satisfaction', name: 'Patient Satisfaction Award' },
+        { id: 'safety', name: 'Patient Safety Award' }
+      ];
+      const mappedAwards = [];
+      const rawAwards = Array.isArray(importedResumeData.additional?.awards)
+        ? importedResumeData.additional.awards : [];
+      rawAwards.forEach(award => {
+        const awardName = typeof award === 'string' ? award.trim() : (award?.name || '').trim();
+        if (!awardName) return;
+        const awardLower = awardName.toLowerCase();
+        // Try to match against known awards
+        const match = COMMON_AWARDS.find(a => awardLower.includes(a.name.toLowerCase()) || a.name.toLowerCase().includes(awardLower));
+        if (match && !mappedAwards.some(a => a.id === match.id)) {
+          mappedAwards.push({ id: match.id, name: match.name });
+        } else if (!match) {
+          mappedAwards.push({ id: `award-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, name: awardName });
+        }
+      });
+
+      console.log('📊 SMART MATCHING RESULTS:', {
+        matchedCerts: matchedCertifications.length,
+        unmatchedCerts: unmatchedCertificates.length,
+        ehrSystems: matchedEhrSystems.length,
+        clinicalSkills: matchedClinicalSkills.length,
+        genericSkills: genericSkills.length,
+        specialty: detectedSpecialty,
+        licenses: mappedLicenses.length,
+        memberships: matchedMemberships.length,
+        volunteer: mappedVolunteer.length,
+        awards: mappedAwards.length
+      });
+
       // Map the imported data structure to our internal structure
       const mappedData = {
         personalInfo: importedResumeData.personalInfo || {
@@ -949,10 +1172,10 @@ const ModernResumeBuilder = ({
           linkedin: '',
           website: ''
         },
-        summary: typeof importedResumeData.summary === 'string' 
-          ? importedResumeData.summary 
+        summary: typeof importedResumeData.summary === 'string'
+          ? importedResumeData.summary
           : '',
-        experience: Array.isArray(importedResumeData.experience) 
+        experience: Array.isArray(importedResumeData.experience)
           ? importedResumeData.experience.map(exp => ({
               title: exp.title || '',
               company: exp.company || '',
@@ -964,20 +1187,25 @@ const ModernResumeBuilder = ({
             }))
           : [],
         education: educationEntries,
-        skills: skills,
+        licenses: mappedLicenses,
+        certifications: matchedCertifications,
+        skills: genericSkills,
+        healthcareSkills: {
+          ehrSystems: matchedEhrSystems,
+          clinicalSkills: matchedClinicalSkills,
+          specialty: detectedSpecialty,
+          customSkills: []
+        },
         additional: {
-          certifications: mergedCertificates,
-          projects: Array.isArray(importedResumeData.additional?.projects) 
+          certifications: unmatchedCertificates,
+          projects: Array.isArray(importedResumeData.additional?.projects)
             ? importedResumeData.additional.projects
             : [],
           languages: languageEntries,
-          volunteer: Array.isArray(importedResumeData.additional?.volunteer) 
-            ? importedResumeData.additional.volunteer
-            : [],
-          awards: Array.isArray(importedResumeData.additional?.awards) 
-            ? importedResumeData.additional.awards
-            : [],
-          customSections: Array.isArray(importedResumeData.additional?.customSections) 
+          memberships: matchedMemberships,
+          volunteer: mappedVolunteer,
+          awards: mappedAwards,
+          customSections: Array.isArray(importedResumeData.additional?.customSections)
             ? importedResumeData.additional.customSections
             : []
         }
@@ -1089,9 +1317,9 @@ const ModernResumeBuilder = ({
       }
     }
     
-    // Default to ATS template
-    console.log('📊 No template found, defaulting to "ats"');
-    return 'ats';
+    // Default to Professional template
+    console.log('📊 No template found, defaulting to "professional"');
+    return 'professional';
   });
   
   // Track if we initialized from imported data
@@ -1244,9 +1472,23 @@ const ModernResumeBuilder = ({
       previewRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
-  
+
+  // Show sticky download bar when the original button scrolls out of view
+  useEffect(() => {
+    const el = actionContainerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyDownload(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Load resume data from the appropriate source on mount
   useEffect(() => {
+    let isStale = false; // Cleanup guard for StrictMode double-invoke
+
     const fetchResumeData = async () => {
       console.log('📊 DEBUG - FETCH - Starting fetchResumeData with service');
       console.log('📊 DEBUG - FETCH - Service available:', service && service.isAvailable());
@@ -1273,46 +1515,85 @@ const ModernResumeBuilder = ({
       const importNewResumeId = typeof window !== 'undefined' && localStorage.getItem('import_new_resume_id');
       if (importNewResumeId && service) {
         console.log('📊 Found newly imported resume ID in localStorage:', importNewResumeId);
-        
+
         try {
-          // Load the newly imported resume directly
+          // Load the newly imported resume to get meta (title, template) and set resumeId
           const result = await service.loadResume(importNewResumeId);
-          
+
           if (result.success && result.data) {
-            const fetchedData = result.data.resumeData;
             const meta = result.data.meta || {};
-            
-            console.log('📊 Successfully loaded newly imported resume data for ID:', importNewResumeId);
-            
-            // Set the fetched data to state
-            setResumeData(fetchedData);
+
+            console.log('📊 Successfully loaded newly imported resume for ID:', importNewResumeId);
+
+            // CRITICAL: If smart-matched data already exists in state (from importedResumeData
+            // initialization), do NOT overwrite it with raw DB data. The raw DB data was saved
+            // by resume-import.jsx BEFORE smart matching ran, so it lacks healthcareSkills,
+            // matched certifications, clinicalSkills, etc. Instead, keep the enriched state
+            // and let autosave persist it to DB on the next cycle.
+            if (importedResumeData) {
+              console.log('📊 Smart-matched data already in state — preserving enriched data (not overwriting with raw DB data)');
+              // Only update completion status from the already-initialized state
+              updateCompletionStatusFromData(resumeData);
+            } else {
+              // No smart matching ran (e.g., importedResumeData was cleared) — use DB data
+              const fetchedData = result.data.resumeData;
+              setResumeData(fetchedData);
+              updateCompletionStatusFromData(fetchedData);
+            }
+
             setResumeName(meta.title || 'Imported Resume');
-            
+
             // If template is available, set it
             if (meta.template) {
               setTemplateFromDatabase(meta.template);
               console.log('📊 Setting template from imported resume:', meta.template);
             }
-            
-            // Update completion status for imported data
-            updateCompletionStatusFromData(fetchedData);
-            
+
             // Update current resume ID
             setCurrentResumeId(importNewResumeId);
             if (typeof window !== 'undefined') {
               localStorage.setItem('current_resume_id', importNewResumeId);
             }
-            
+
             // Clear import flags after successful load
             localStorage.removeItem('import_pending');
             localStorage.removeItem('import_target_resumeId');
             localStorage.removeItem('import_create_new');
             localStorage.removeItem('imported_resume_data');
             localStorage.removeItem('import_new_resume_id');
-            
+
+            // Mark that import was just processed — when setCurrentResumeId triggers
+            // a useEffect re-run, all localStorage flags will be cleared, so the
+            // currentResumeId loading path would overwrite enriched data with raw DB data.
+            // This ref survives the re-render and tells the next run to skip the DB load.
+            importJustProcessedRef.current = true;
+
+            // Force-save enriched data to DB immediately. The autosave useEffect
+            // skips its first run as "initial load", so the enriched certifications
+            // and healthcareSkills would never persist. Without this force-save,
+            // reloading the page loads the raw DB data (saved before smart matching)
+            // which lacks these fields.
+            if (importedResumeData && serviceIsAuthenticated) {
+              try {
+                const forceSaveResult = await saveResumeData(
+                  resumeData,
+                  serviceIsAuthenticated,
+                  selectedTemplate,
+                  importNewResumeId,
+                  meta.title || 'Imported Resume',
+                  true // forceUpdate
+                );
+                if (forceSaveResult.success) {
+                  console.log('📊 Force-saved enriched import data to DB (certifications + healthcareSkills preserved)');
+                }
+              } catch (saveError) {
+                console.error('📊 Failed to force-save enriched data:', saveError);
+              }
+            }
+
             // Show success message
-            toast.success('Resume imported successfully!');
-            
+            toast.success('Resume imported successfully!', { id: 'import-toast' });
+
             return;
           }
         } catch (error) {
@@ -1323,8 +1604,17 @@ const ModernResumeBuilder = ({
       // If we have a resume service and ID, try to load it
       if (service && currentResumeId) {
         try {
+          // Guard: If an import was just processed in a previous run of this useEffect,
+          // skip the DB load entirely. The enriched smart-matched data is already in state
+          // and autosave will persist it to DB shortly.
+          if (importJustProcessedRef.current) {
+            console.log('📊 Import just processed — skipping DB load to preserve enriched data');
+            importJustProcessedRef.current = false;
+            return;
+          }
+
           console.log('📊 Loading resume data with service, ID:', currentResumeId);
-          
+
           // IMPORTANT: Check if there's an import pending before loading from DB
           const importPending = typeof window !== 'undefined' && localStorage.getItem('import_pending') === 'true';
           const importTargetResumeId = localStorage.getItem('import_target_resumeId');
@@ -1344,42 +1634,61 @@ const ModernResumeBuilder = ({
             const exists = await service.checkResumeExists(currentResumeId);
             if (!exists) {
               console.log('📊 Resume does not exist in database:', currentResumeId);
-              
+
+              // StrictMode guard: if this effect was already cleaned up, abort
+              if (isStale) {
+                console.log('📊 Stale effect — skipping resume-not-found handling');
+                return;
+              }
+
               // Clear invalid resume ID from localStorage
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('current_resume_id');
                 localStorage.removeItem('editing_resume_id');
                 localStorage.removeItem('editing_existing_resume');
-                
-                // Show error toast
-                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.');
+
+                // Show error toast (use stable ID to deduplicate)
+                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.', { id: 'resume-not-found' });
               }
-              
+
               // Set default template data
               setResumeData(defaultTemplate);
               setResumeName('My Resume');
               setCompletedSections({});
-              
-              // If authenticated, create a new resume
-              if (serviceIsAuthenticated) {
+
+              // If authenticated, create a new resume (with lock to prevent double-create)
+              if (serviceIsAuthenticated && !creatingResumeRef.current) {
+                creatingResumeRef.current = true;
                 console.log('📊 Creating new resume to replace missing one');
-                const saveResult = await service.saveResume(defaultTemplate, {
-                  title: 'My Resume',
-                  template: 'ats'
-                });
-                
-                if (saveResult.success && saveResult.data?.resumeId) {
-                  // Update IDs
-                  setCurrentResumeId(saveResult.data.resumeId);
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('current_resume_id', saveResult.data.resumeId);
+                try {
+                  const saveResult = await service.saveResume(defaultTemplate, {
+                    title: 'My Resume',
+                    template: 'ats'
+                  });
+
+                  if (isStale) {
+                    console.log('📊 Stale after create — skipping state updates');
+                    return;
                   }
-                  
-                  console.log('📊 Created new resume with ID:', saveResult.data.resumeId);
-                  toast.success('Created a new resume for you');
+
+                  if (saveResult.success && saveResult.data?.resumeId) {
+                    // Update IDs
+                    setCurrentResumeId(saveResult.data.resumeId);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('current_resume_id', saveResult.data.resumeId);
+                    }
+
+                    console.log('📊 Created new resume with ID:', saveResult.data.resumeId);
+                    // Delay success toast so it slides in after the error toast, not on top
+                    setTimeout(() => {
+                      toast.success('Created a new resume for you', { id: 'resume-created' });
+                    }, 600);
+                  }
+                } finally {
+                  creatingResumeRef.current = false;
                 }
               }
-              
+
               return;
             }
           }
@@ -1426,7 +1735,8 @@ const ModernResumeBuilder = ({
             return;
           } else {
             console.error('📊 Failed to load resume with service:', result.error);
-            
+            if (isStale) return;
+
             // Handle different error conditions
             if (result.error && result.error.includes('not found')) {
               // Clear invalid resume ID from localStorage
@@ -1434,12 +1744,12 @@ const ModernResumeBuilder = ({
                 localStorage.removeItem('current_resume_id');
                 localStorage.removeItem('editing_resume_id');
                 localStorage.removeItem('editing_existing_resume');
-                
-                // Show error toast
-                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.');
+
+                // Show error toast (deduplicated with same ID as primary handler)
+                toast.error('The resume you were trying to edit no longer exists. Starting with a new resume.', { id: 'resume-not-found' });
               }
             } else {
-              toast.error('Failed to load resume. Starting with a new one.');
+              toast.error('Failed to load resume. Starting with a new one.', { id: 'resume-load-failed' });
             }
             
             // Fall back to localStorage or default template
@@ -1477,6 +1787,8 @@ const ModernResumeBuilder = ({
     };
     
     fetchResumeData();
+
+    return () => { isStale = true; }; // StrictMode cleanup — second invoke becomes a no-op
   }, [service, isDbService, initialData, importedResumeData, currentResumeId, contextResumeId, serviceIsAuthenticated, updateContextResumeId]);
 
   // Add a helper function to update completion status from data
@@ -1643,6 +1955,20 @@ const ModernResumeBuilder = ({
       const autoSaveTimeout = setTimeout(async () => {
         // Skip if already saving or navigating away
         if (isSaving || isNavigatingAway) return;
+
+        // SAFETY: Clear stale import flags before autosave. The import flow
+        // handles its own save in resume-import.jsx — autosave must NEVER
+        // create new resumes via import_create_new. If these flags somehow
+        // persist (race condition, incomplete import), nuke them here.
+        if (typeof window !== 'undefined') {
+          const staleImportPending = localStorage.getItem('import_pending') === 'true';
+          const staleImportCreateNew = localStorage.getItem('import_create_new') === 'true';
+          if (staleImportPending || staleImportCreateNew) {
+            console.warn('📊 Auto-save: clearing stale import flags to prevent duplicate resume creation');
+            localStorage.removeItem('import_pending');
+            localStorage.removeItem('import_create_new');
+          }
+        }
         
         try {
           setIsSaving(true);
@@ -1651,8 +1977,17 @@ const ModernResumeBuilder = ({
           
           // If we're in editing mode, ensure we're using the correct resumeId
           const saveId = isEditingExistingResume ? editingResumeId : currentResumeId;
-          
-          console.log('📊 Starting auto-save with resumeId:', saveId, 'template:', selectedTemplate, 
+
+          // GUARD: Autosave must ONLY update existing resumes, never create new ones.
+          // Creation is handled by the data loading useEffect or the import flow.
+          if (!saveId) {
+            console.log('📊 Auto-save skipped — no resumeId yet (waiting for creation)');
+            setIsSaving(false);
+            setShowAutoSaveIndicator(false);
+            return;
+          }
+
+          console.log('📊 Starting auto-save with resumeId:', saveId, 'template:', selectedTemplate,
                      isEditingExistingResume ? '(EDITING MODE)' : '');
           
           // Save using our service
@@ -2116,7 +2451,7 @@ const ModernResumeBuilder = ({
         console.log('📊 IMPORT: Priority save to database for imported data, isDbOnlyMode:', isDbOnlyMode());
         
         // Show toast for import status
-        toast.loading('Saving imported resume data...', { id: 'import-save-toast' });
+        toast.loading('Saving imported resume data...', { id: 'import-toast' });
         
         // Immediate save to database to override existing resume
         saveResumeData(
@@ -2151,34 +2486,34 @@ const ModernResumeBuilder = ({
                 
                 const verifyResult = await response.json();
                 
-                if (verifyResult.success && verifyResult.resume) {
+                if (verifyResult.resume) {
                   console.log('📊 IMPORT: Verification successful, data saved correctly');
-                  
+
                   // Important: Clear import flags AFTER successful verification
-            localStorage.removeItem('import_pending');
-            localStorage.removeItem('import_target_resumeId');
+                  localStorage.removeItem('import_pending');
+                  localStorage.removeItem('import_target_resumeId');
                   localStorage.removeItem('import_create_new');
-            localStorage.removeItem('imported_resume_data');
-            localStorage.removeItem('imported_resume_override');
+                  localStorage.removeItem('imported_resume_data');
+                  localStorage.removeItem('imported_resume_override');
                   localStorage.removeItem('import_save_successful');
                   localStorage.removeItem('import_saved_resume_id');
-                  
+
                   // Update UI with verified data from database
                   setResumeData(verifyResult.resume.data);
                   updateCompletionStatusFromData(verifyResult.resume.data);
-                  
+
                   // Show success message
-                  toast.success('Resume imported successfully!', { id: 'import-save-toast' });
-                  
+                  toast.success('Resume imported successfully!', { id: 'import-toast' });
+
                   // Force a refresh from the database to ensure we have the latest data
                   setForceDbRefresh(true);
                 } else {
                   console.error('📊 IMPORT: Verification failed, data may not be saved correctly');
-                  toast.error('Import verification failed. Please try again.', { id: 'import-save-toast' });
+                  toast.error('Import verification failed. Please try again.', { id: 'import-toast' });
                 }
               } catch (error) {
                 console.error('📊 IMPORT: Error verifying import:', error);
-                toast.error('Error verifying import. Please try again.', { id: 'import-save-toast' });
+                toast.error('Error verifying import. Please try again.', { id: 'import-toast' });
               }
             };
             
@@ -2186,15 +2521,15 @@ const ModernResumeBuilder = ({
             setTimeout(verifyImportSave, 500);
           } else {
             console.error('📊 IMPORT: Failed to save imported data to database:', result?.error);
-            toast.error('Failed to save imported resume. Please try again.', { id: 'import-save-toast' });
+            toast.error('Failed to save imported resume. Please try again.', { id: 'import-toast' });
           }
         }).catch(error => {
           console.error('📊 IMPORT: Error saving imported data:', error);
-          toast.error('Error saving imported resume. Please try again.', { id: 'import-save-toast' });
+          toast.error('Error saving imported resume. Please try again.', { id: 'import-toast' });
         });
       } else {
         // For non-db users, just show a success message and clear the import flags
-        toast.success('Resume imported successfully!');
+        toast.success('Resume imported successfully!', { id: 'import-toast' });
         localStorage.removeItem('imported_resume_data');
         localStorage.removeItem('imported_resume_override');
         localStorage.removeItem('import_pending');
@@ -2635,7 +2970,7 @@ const ModernResumeBuilder = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          template: selectedTemplate || 'ats', // Default to ATS-Friendly if not set
+          template: selectedTemplate || 'professional', // Default to Professional if not set
           resumeData,
           sectionOrder: resumeRenderOrder, // Render order pins Summary as #2
           resumeId: resumeIdForDownload,
@@ -3203,8 +3538,8 @@ const ModernResumeBuilder = ({
                     updateCompletionStatusFromData(importedData);
                     
                     // Show success message
-                    toast.success('Resume imported successfully!');
-                    
+                    toast.success('Resume imported successfully!', { id: 'import-toast' });
+
                     // Set force refresh flag to ensure we have the latest data
                     setForceDbRefresh(true);
                     
@@ -3218,7 +3553,7 @@ const ModernResumeBuilder = ({
                         const verifyResponse = await fetch(`/api/resume/get?id=${currentResumeId}`);
                         if (verifyResponse.ok) {
                           const verifyResult = await verifyResponse.json();
-                          if (verifyResult.success) {
+                          if (verifyResult.resume) {
                             console.log('📊 Import verification successful');
                             
                             // Compare the imported data with the data in the database
@@ -3505,10 +3840,11 @@ const ModernResumeBuilder = ({
         )}
         
         {/* Floating View Preview Button */}
-        <button 
+        <button
           className={`${styles.viewPreviewButton} ${previewUpdated ? styles.previewUpdated : ''}`}
           onClick={scrollToPreview}
           aria-label="View resume preview"
+          style={showStickyDownload && calculateProgress() >= 50 ? { bottom: '80px' } : undefined}
         >
           <span className={styles.viewPreviewIcon}>👁️</span>
           <span>View Preview</span>
@@ -3516,89 +3852,88 @@ const ModernResumeBuilder = ({
         </button>
         
         <div className={styles.builderColumn}>
+          <a href="/profile" className={styles.backToProfile}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Profile
+          </a>
           <h1 className={styles.builderTitle}>
             {internalJobContext ? 'Tailor Your Resume' : 'Build Your Resume'}
           </h1>
-          
-          {/* Job Targeting Indicator with Edit Button */}
+
+          {/* Compact Job Tailoring Banner — one block replaces banner + card + import */}
           {internalJobContext && (
-            <div className={styles.jobTargetingContainer}>
-              <div className={styles.jobTargetingIndicator}>
-                <div className={styles.jobTargetIcon}>🎯</div>
-                <div className={styles.jobTargetInfo}>
-                  <span className={styles.jobTargetLabel}>Optimizing for:</span>
-                  <span className={styles.jobTargetTitle}>{internalJobContext.jobTitle || 'Target Position'}</span>
+            <div className={styles.tailoringBanner}>
+              {/* Top row: job target + edit link */}
+              <div className={styles.tailoringBannerTop}>
+                <div className={styles.tailoringJobBadge}>
+                  <span className={styles.tailoringJobIcon}>🎯</span>
+                  <span className={styles.tailoringJobTitle}>{internalJobContext.jobTitle || 'Target Position'}</span>
                 </div>
+                <button
+                  className={styles.tailoringEditBtn}
+                  onClick={() => setIsJobDescriptionModalOpen(true)}
+                  aria-label="Change job description"
+                >
+                  Edit Job
+                </button>
               </div>
-              
-              <button 
-                className={styles.changeJobButton}
-                onClick={() => setIsJobDescriptionModalOpen(true)}
-                aria-label="Change job description"
-              >
-                <span className={styles.changeJobIcon}>✏️</span>
-                Change Job Description
-              </button>
-            </div>
-          )}
-          
-          {/* Centralized Resume Tailoring Card */}
-          {internalJobContext && (
-            <div className={styles.tailoringCard}>
-              <div className={styles.tailoringCardHeader}>
-                <h3 className={styles.tailoringCardTitle}>
-                  <span className={styles.tailoringCardIcon}>✨</span>
-                  Tailor Resume to This Job in One Click
-                </h3>
-              </div>
-              {/* <p className={styles.tailoringCardDescription}>
-                Let's get down to business! We'll optimize your resume for {internalJobContext.jobTitle || 'this position'} by enhancing your summary, 
-                experience, and skills.
-              </p> */}
+
+              {/* Tailor button */}
               <button
                 className={styles.tailorAllButton}
                 onClick={handleTailorAllClick}
                 disabled={isTailoring || !resumeData.experience || resumeData.experience.length === 0}
-                title={!resumeData.experience || resumeData.experience.length === 0 ? 
-                  "Please add at least one work experience before tailoring your resume" : 
+                title={!resumeData.experience || resumeData.experience.length === 0 ?
+                  "Add at least one work experience first" :
                   "Tailor your resume to the job description"}
               >
                 {isTailoring ? (
                   <>
                     <FaSpinner className={styles.spinnerIcon} />
-                    Tailoring your resume...
+                    Tailoring...
                   </>
                 ) : (
                   <>
                     <span className={styles.tailorAllButtonIcon}>⚡</span>
-                    Tailor Now!
+                    Customize in One Click
                   </>
                 )}
               </button>
-              
-              {isTailoring ? (
-                <p className={styles.tailoringCardNote} style={{ marginTop: '15px' }}>
-                  AI is analyzing your resume and the job description to optimize your content...
-                </p>
-              ) : (
-                <p className={styles.tailoringCardNote}>
-                  {!resumeData.experience || resumeData.experience.length === 0 ? 
-                    "Please add at least one work experience before tailoring your resume." :
-                    "This will update your Summary, Experience, and Skills sections based on the job description."}
-                </p>
-              )}
+
+              {/* Status note + import link */}
+              <div className={styles.tailoringBannerFooter}>
+                {isTailoring ? (
+                  <span className={styles.tailoringNote}>Optimizing your summary, experience, and skills...</span>
+                ) : !resumeData.experience || resumeData.experience.length === 0 ? (
+                  <span className={styles.tailoringNote}>Add experience below first, then customize</span>
+                ) : (
+                  <span className={styles.tailoringNote}>Updates summary & experience only</span>
+                )}
+                <a
+                  href={`/resume-import?job=${encodeURIComponent(JSON.stringify(internalJobContext))}&job_targeting=true`}
+                  className={styles.tailoringImportLink}
+                  onClick={() => {
+                    localStorage.setItem('import_pending', 'true');
+                    localStorage.setItem('import_create_new', 'true');
+                  }}
+                >
+                  Wrong resume? Import a different one
+                </a>
+              </div>
             </div>
           )}
-          
+
           {/* Only show ProgressBar when not in job tailoring mode */}
           {!internalJobContext && (
-            <ProgressBar 
-              progress={calculateProgress()} 
+            <ProgressBar
+              progress={calculateProgress()}
               completedSections={Object.values(completedSections).filter(Boolean).length}
               totalSections={orderedSections.length}
             />
           )}
-          
+
           {/* Import Resume - only show when no sections completed yet */}
           {!internalJobContext && calculateProgress() === 0 && (
             <div className={styles.importButtonContainer}>
@@ -3616,25 +3951,6 @@ const ModernResumeBuilder = ({
               <p className={styles.importDescription}>
                 Have an existing resume? Import it to save time!
               </p>
-            </div>
-          )}
-          
-          {/* Add compact import resume link for job tailoring mode */}
-          {internalJobContext && (
-            <div className={styles.compactImportContainer}>
-              <a 
-                href={`/resume-import?job=${encodeURIComponent(JSON.stringify(internalJobContext))}&job_targeting=true`} 
-                className={styles.compactImportLink}
-                onClick={() => {
-                  // Set flags to indicate this is an import operation that should create a new resume
-                  localStorage.setItem('import_pending', 'true');
-                  localStorage.setItem('import_create_new', 'true');
-                  console.log('📊 Setting import flags for creating a new resume with job targeting');
-                }}
-              >
-                <span className={styles.compactImportIcon}>📄</span>
-                Import new resume for this job
-              </a>
             </div>
           )}
           
@@ -3755,7 +4071,7 @@ const ModernResumeBuilder = ({
           )}
         </div>
         
-        <div className={styles.actionContainer}>
+        <div className={styles.actionContainer} ref={actionContainerRef}>
           {subscriptionDetails.planName === 'One-Time Download' && currentResumeId && eligibleResumeIds.includes(currentResumeId) && (
             <div className={styles.purchasedBadgeContainer}>
               <span className={styles.purchasedBadge}>
@@ -3795,6 +4111,40 @@ const ModernResumeBuilder = ({
           </button>
         </div>
       </div>
+
+      {/* Sticky download bar — visible when original button is scrolled out of view and progress ≥ 50% */}
+      {showStickyDownload && calculateProgress() >= 50 && (
+        <div className={styles.stickyDownloadBar}>
+          <button
+            className={`${styles.downloadButton} ${(!isEligibleForDownload || (subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? styles.buyPlanButton : ''}`}
+            onClick={handleDownloadPDF}
+            disabled={isDownloading || isCheckingEligibility}
+            style={{
+              background: (isEligibleForDownload && !(subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId)))
+                ? 'linear-gradient(135deg, var(--secondary-green), #28b485)'
+                : 'linear-gradient(135deg, #f39c12, #f5b041)',
+              boxShadow: 'none'
+            }}
+          >
+            {isDownloading ? (
+              <>
+                <FaSpinner className={styles.spinnerIcon} />
+                Preparing PDF...
+              </>
+            ) : isCheckingEligibility ? (
+              <>
+                <FaSpinner className={styles.spinnerIcon} />
+                Checking...
+              </>
+            ) : (
+              <>
+                <FaDownload className={styles.downloadIcon} />
+                {(isEligibleForDownload && !(subscriptionDetails.planName === 'One-Time Download' && currentResumeId && !eligibleResumeIds.includes(currentResumeId))) ? 'Download Resume' : 'Buy Plan'}
+              </>
+            )}
+          </button>
+        </div>
+      )}
       </ResumeProvider>
     </DndProvider>
   );
