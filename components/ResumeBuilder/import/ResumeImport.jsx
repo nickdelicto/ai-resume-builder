@@ -82,7 +82,7 @@ const ResumeImport = ({ onComplete }) => {
 
     try {
       // Verify file object
-      console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+      // console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
       
       // Create a FormData object to send the file
       const formData = new FormData();
@@ -93,8 +93,7 @@ const ResumeImport = ({ onComplete }) => {
       formData.append('fileExtension', fileExtension);
       
       // Debug formData contents
-      console.log('FormData contains file:', formData.has('file'));
-      console.log('File extension:', fileExtension);
+      // console.log('FormData contains file:', formData.has('file'));
 
       // Upload the file to our API endpoint
       const response = await fetch('/api/parse-resume', {
@@ -108,7 +107,7 @@ const ResumeImport = ({ onComplete }) => {
       
       // Process server response
       const result = await response.json();
-      console.log('API response status:', response.status, 'API response data:', result);
+      // console.log('API response status:', response.status);
       
       // Check if the request was successful
       if (!response.ok) {
@@ -117,19 +116,10 @@ const ResumeImport = ({ onComplete }) => {
         const errorCode = result.code || response.status;
         const errorType = result.type || 'unknown';
         
-        console.log('Error details extracted from API:', {
-          message: errorMessage,
-          code: errorCode,
-          type: errorType,
-          details: result.details || null
-        });
+        // Error details logged for debugging
         
         // Special handling for extraction_incomplete error type
-        if (errorType === 'extraction_incomplete') {
-          console.log('Detected extraction_incomplete error type - handling specifically');
-        }
-        
-              // Create a more detailed error object - preserve original error message for specific error types
+        // Create a more detailed error object - preserve original error message for specific error types
       let finalErrorMessage = errorMessage;
       // Don't override format_error with generic server error
       if (errorType === 'format_error' || errorType === 'extraction_incomplete') {
@@ -147,13 +137,9 @@ const ResumeImport = ({ onComplete }) => {
         };
       }
 
-      // Switch to parsing animation after a short delay
+      // Brief parsing animation then show success
+      setCurrentStep('parsing');
       setTimeout(() => {
-        setCurrentStep('parsing');
-        
-        // After "AI processing" visualization, show success
-      setTimeout(() => {
-        // Check if data is present and has expected structure
         if (!result.data) {
           throw {
             message: 'No data returned from the server',
@@ -161,22 +147,17 @@ const ResumeImport = ({ onComplete }) => {
             fileName: file.name
           };
         }
-        
-        // Note: 'skills' removed - soft skills implied for nurses, clinical skills in healthcareSkills
+
         const requiredSections = ['personalInfo', 'experience', 'education'];
         const missingSections = requiredSections.filter(section => !result.data[section]);
-        
         if (missingSections.length > 0) {
-          console.warn('Warning: Some sections are missing from parsed data:', missingSections);
+          console.warn('Missing sections from parsed data:', missingSections);
         }
-        
-        // Update state with the parsed data
-        console.log('Parsed data received:', result.data ? 'Yes' : 'No');
+
         setParsedData(result.data);
         setIsLoading(false);
         setCurrentStep('success');
-      }, 2500);
-      }, 500);
+      }, 800);
       
     } catch (error) {
       console.error('Error parsing resume:', error);
@@ -186,7 +167,7 @@ const ResumeImport = ({ onComplete }) => {
       let errorMessage = '';
       let errorType = error.type || 'unknown';
       
-      console.log('Processing error with type:', errorType, 'and code:', error.code);
+      // Processing error for display
       
       // Check for specific error types first, regardless of status code
       if (error.type === 'file_format') {
@@ -226,12 +207,6 @@ const ResumeImport = ({ onComplete }) => {
   const handleContinue = () => {
     if (parsedData && onComplete) {
       // Log structure and content of parsed data
-      console.log('📊 ResumeImport - Data being passed to parent component:', parsedData);
-      console.log('📊 ResumeImport - personalInfo:', parsedData.personalInfo);
-      console.log('📊 ResumeImport - experience entries:', parsedData.experience?.length || 0);
-      console.log('📊 ResumeImport - education entries:', parsedData.education?.length || 0);
-      console.log('📊 ResumeImport - skills count:', parsedData.skills?.length || 0);
-      
       onComplete(parsedData);
     }
   };
@@ -278,8 +253,9 @@ const ResumeImport = ({ onComplete }) => {
   
   // Render upload area
   const renderUploadArea = () => (
-    <div 
+    <div
       className={`${styles.uploadArea} ${isDragging ? styles.dragActive : ''}`}
+      onClick={onButtonClick}
       onDragEnter={handleDrag}
       onDragOver={handleDrag}
       onDragLeave={handleDrag}
@@ -305,12 +281,12 @@ const ResumeImport = ({ onComplete }) => {
       </div>
       
       <div className={styles.uploadText}>
-        <h3 className={styles.uploadTitle}>Drag & Drop Your Resume</h3>
-        <p>Upload your existing resume and we will extract all the important information</p>
-        <button 
-          type="button" 
+        <h3 className={styles.uploadTitle}>Upload Your Resume</h3>
+        <p>We'll extract your nursing experience, certifications, and clinical skills automatically</p>
+        <button
+          type="button"
           className={styles.browseButton}
-          onClick={onButtonClick}
+          onClick={(e) => { e.stopPropagation(); onButtonClick(); }}
         >
           Browse Files
         </button>
@@ -354,9 +330,9 @@ const ResumeImport = ({ onComplete }) => {
             <div className={styles.processingNode}></div>
           </div>
           <div className={styles.processingText}>
-            <p>Extracting skills...</p>
-            <p>Identifying experience...</p>
-            <p>Formatting education details...</p>
+            <p>Reading your experience...</p>
+            <p>Finding licenses &amp; certifications...</p>
+            <p>Extracting clinical skills...</p>
           </div>
         </div>
       )}
@@ -370,7 +346,7 @@ const ResumeImport = ({ onComplete }) => {
     let errorTitle = 'Something went wrong';
     
     if (typeof error === 'object') {
-      console.log('Rendering error of type:', error.type, 'Full error object:', error);
+      // Render error based on type
       
       if (error.type === 'file_format') {
         errorTitle = 'Unsupported File Format';
@@ -451,266 +427,131 @@ const ResumeImport = ({ onComplete }) => {
   // Render success state
   const renderSuccess = () => {
     // Calculate completeness percentage based on required fields
-    const calculateCompleteness = () => {
-      let score = 0;
-      let total = 0;
-      
-      // Check personal info fields
-      const personalInfoFields = ['name', 'email', 'phone', 'location'];
-      personalInfoFields.forEach(field => {
-        total++;
-        if (parsedData?.personalInfo?.[field]) score++;
-      });
-      
-      // Check for experience entries
-      total += 2; // We'll count experience as 2 points of importance
-      if (parsedData?.experience?.length > 0) {
-        score += 1;
-        // Bonus point if we have good experience details
-        if (parsedData.experience.some(exp => exp.title && exp.company && exp.description)) {
-          score += 1;
-        }
-      }
-      
-      // Check for education entries
-      total++;
-      if (parsedData?.education?.length > 0) score++;
-      
-      // Check for skills
-      total++;
-      if (parsedData?.skills?.length >= 3) score++;
-      
-      // Check for certifications and languages (additional point)
-      total++;
-      if ((parsedData?.additional?.certifications?.length > 0) || 
-          (parsedData?.additional?.languages?.length > 0)) {
-        score++;
-      }
-      
-      return Math.round((score / total) * 100);
-    };
-    
-    const completenessScore = calculateCompleteness();
-    
-    // Function to render completeness indicator
-    const renderCompletenessIndicator = () => {
-      let statusText = '';
-      
-      if (completenessScore >= 90) {
-        statusText = 'Excellent! We found nearly all information from your resume.';
-      } else if (completenessScore >= 70) {
-        statusText = 'Great! Most of your resume details were successfully extracted.';
-      } else if (completenessScore >= 50) {
-        statusText = 'Good start! We found some information from your resume.';
-      } else {
-        statusText = 'We extracted some basic information. You\'ll need to add more details.';
-      }
-      
-      return (
-        <div className={styles.completenessIndicator}>
-          <div className={styles.completenessScore}>
-            <div 
-              className={styles.scoreRing} 
-              style={{ '--score': completenessScore }}
-            >
-              <div className={styles.scoreValue}>
-                {completenessScore}<small>%</small>
-              </div>
-            </div>
-          </div>
-          <div className={styles.completenessText}>
-            {statusText}
-          </div>
-        </div>
-      );
-    };
-    
-    // Format list items with proper styling
-    const formatList = (items, limit = 3) => {
-      if (!items || items.length === 0) {
-        return <span className={styles.noDataMessage}>No data extracted</span>;
-      }
-      
-      const displayItems = items.slice(0, limit);
-      const remainingCount = Math.max(0, items.length - limit);
-      
-      return (
-        <div>
-          {displayItems.map((item, index) => (
-            <div key={index} className={styles.dataListItem}>
-              {typeof item === 'string' ? item : 'Item ' + (index + 1)}
-            </div>
-          ))}
-          {remainingCount > 0 && (
-            <div className={styles.dataListItem}>
-              And {remainingCount} more...
-            </div>
-          )}
-        </div>
-      );
-    };
-    
-    // Format language skills specifically
-    const formatLanguages = (languages, limit = 3) => {
-      if (!languages || languages.length === 0) return null;
-      
-      const displayItems = languages.slice(0, limit);
-      const remainingCount = Math.max(0, languages.length - limit);
-      
-      return (
-        <div>
-          {displayItems.map((lang, index) => (
-            <div key={index} className={styles.dataListItem}>
-              {typeof lang === 'string' ? lang : 
-               lang.language ? `${lang.language}${lang.proficiency ? ` (${lang.proficiency})` : ''}` : 
-               'Language ' + (index + 1)}
-            </div>
-          ))}
-          {remainingCount > 0 && (
-            <div className={styles.dataListItem}>
-              And {remainingCount} more languages...
-            </div>
-          )}
-        </div>
-      );
-    };
-    
-    // Format certifications specifically
-    const formatCertifications = (certifications, limit = 2) => {
-      if (!certifications || certifications.length === 0) return null;
-      
-      const displayItems = certifications.slice(0, limit);
-      const remainingCount = Math.max(0, certifications.length - limit);
-      
-      return (
-        <div>
-          {displayItems.map((cert, index) => (
-            <div key={index} className={styles.dataListItem}>
-              {typeof cert === 'string' ? cert : 
-               cert.name ? cert.name : 
-               'Certification ' + (index + 1)}
-            </div>
-          ))}
-          {remainingCount > 0 && (
-            <div className={styles.dataListItem}>
-              And {remainingCount} more certifications...
-            </div>
-          )}
-        </div>
-      );
-    };
-    
+    // Gather stats for compact display
+    const name = parsedData?.personalInfo?.name;
+    const email = parsedData?.personalInfo?.email;
+    const phone = parsedData?.personalInfo?.phone;
+
+    const jobCount = parsedData?.experience?.length || 0;
+    const jobTitles = (parsedData?.experience || [])
+      .map(exp => exp.title || '')
+      .filter(Boolean)
+      .slice(0, 3);
+
+    const eduEntries = (parsedData?.education || []).slice(0, 2);
+
+    const skillCount = parsedData?.skills?.length || 0;
+
+    const certNames = (parsedData?.additional?.certifications || [])
+      .map(c => typeof c === 'string' ? c : c.name || '')
+      .filter(Boolean);
+
+    // Collect missing critical fields
+    const missing = [];
+    if (!name) missing.push('name');
+    if (!email) missing.push('email');
+    if (!phone) missing.push('phone number');
+
     return (
       <div className={styles.successContainer}>
         <div className={styles.successIcon}>✓</div>
-        <h2 className={styles.successTitle}>Resume Successfully Imported!</h2>
-        <p className={styles.successMessage}>
-          We've extracted the following information from your resume. 
-          {/* Continue below to build & enhance your professional resume. */}
-        </p>
-        
-        {renderCompletenessIndicator()}
-        
-        <div className={styles.dataPreview}>
-          <div className={styles.dataSection}>
-            <h4>Personal Information</h4>
-            <p>
-              {parsedData?.personalInfo?.name ? (
-                <strong>{parsedData.personalInfo.name}</strong>
-              ) : (
-                <span style={{ color: '#dc3545' }}>No name found</span>
-              )}
-              <br />
-              {parsedData?.personalInfo?.email ? (
-                parsedData.personalInfo.email
-              ) : (
-                <span style={{ color: '#dc3545' }}>No email found</span>
-              )}
-              {parsedData?.personalInfo?.phone && <span> • {parsedData.personalInfo.phone}</span>}
-              {parsedData?.personalInfo?.location && <span> • {parsedData.personalInfo.location}</span>}
-            </p>
-            {(!parsedData?.personalInfo?.name || !parsedData?.personalInfo?.email) && (
-              <p style={{ fontSize: '13px', color: '#dc3545', marginTop: '10px' }}>
-                <strong>Note:</strong> Some essential contact information is missing. 
-              </p>
-            )}
+        <h2 className={styles.successTitle}>Resume Imported</h2>
+
+        {/* Identity confirmation */}
+        {(name || email) && (
+          <div className={styles.identityRow}>
+            {name && <span className={styles.identityName}>{name}</span>}
+            {name && email && <span className={styles.identitySep}>&bull;</span>}
+            {email && <span className={styles.identityDetail}>{email}</span>}
           </div>
-          
-          <div className={styles.dataSection}>
-            <h4>Professional Experience</h4>
-            {parsedData?.experience && parsedData.experience.length > 0 ? (
-              <>
-                <p>
-                  <strong>{parsedData.experience.length}</strong> job entries found
-                </p>
-                {formatList(parsedData.experience.map(exp => 
-                  `${exp.title || 'Position'} at ${exp.company || 'Company'}`
-                ))}
-              </>
-            ) : (
-              <p style={{ color: '#dc3545' }}>No experience data found</p>
-            )}
-          </div>
-          
-          <div className={styles.dataSection}>
-            <h4>Education</h4>
-            {parsedData?.education && parsedData.education.length > 0 ? (
-              <>
-                <p>
-                  <strong>{parsedData.education.length}</strong> education entries found
-                </p>
-                {formatList(parsedData.education.map(edu => 
-                  `${edu.degree || edu.studyField || 'Degree'} from ${edu.school || 'Institution'}`
-                ))}
-              </>
-            ) : (
-              <p style={{ color: '#dc3545' }}>No education data found</p>
-            )}
-          </div>
-          
-          <div className={styles.dataSection}>
-            <h4>Skills & Additional Information</h4>
-            {parsedData?.skills && parsedData.skills.length > 0 ? (
-              <>
-                <p>
-                  <strong>{parsedData.skills.length}</strong> skills identified
-                </p>
-                {formatList(parsedData.skills)}
-              </>
-            ) : (
-              <p style={{ color: '#dc3545' }}>No skills found</p>
-            )}
-            
-            {parsedData?.additional && (
-              <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                {parsedData.additional.languages && parsedData.additional.languages.length > 0 && (
-                  <>
-                    <p style={{ marginBottom: '5px' }}><strong>Languages:</strong></p>
-                    {formatLanguages(parsedData.additional.languages)}
-                  </>
-                )}
-                
-                {parsedData.additional.certifications && parsedData.additional.certifications.length > 0 && (
-                  <>
-                    <p style={{ marginBottom: '5px', marginTop: '10px' }}><strong>Certifications:</strong></p>
-                    {formatCertifications(parsedData.additional.certifications)}
-                  </>
-                )}
+        )}
+
+        {/* What we found — compact list */}
+        <div className={styles.foundList}>
+          {/* Experience */}
+          {jobCount > 0 && (
+            <div className={styles.foundRow}>
+              <div className={styles.foundLabel}>Experience</div>
+              <div className={styles.foundValue}>
+                {jobTitles.join(' \u00B7 ')}
+                {jobCount > 3 && <span className={styles.foundExtra}> +{jobCount - 3} more</span>}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Education */}
+          {eduEntries.length > 0 && (
+            <div className={styles.foundRow}>
+              <div className={styles.foundLabel}>Education</div>
+              <div className={styles.foundValue}>
+                {eduEntries.map((edu, i) => (
+                  <span key={i}>
+                    {i > 0 && ' \u00B7 '}
+                    {edu.degree || edu.studyField || 'Degree'}
+                    {edu.school && <span className={styles.foundSchool}> — {edu.school}</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Certifications — highlighted for nurses */}
+          {certNames.length > 0 && (
+            <div className={styles.foundRow}>
+              <div className={styles.foundLabel}>Certifications</div>
+              <div className={styles.foundValue}>
+                <div className={styles.certChips}>
+                  {certNames.slice(0, 5).map((cert, i) => (
+                    <span key={i} className={styles.certChip}>{cert}</span>
+                  ))}
+                  {certNames.length > 5 && (
+                    <span className={styles.foundExtra}>+{certNames.length - 5} more</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Skills */}
+          {skillCount > 0 && (
+            <div className={styles.foundRow}>
+              <div className={styles.foundLabel}>Skills</div>
+              <div className={styles.foundValue}>{skillCount} identified</div>
+            </div>
+          )}
+
+          {/* Nothing found — edge case */}
+          {jobCount === 0 && eduEntries.length === 0 && certNames.length === 0 && skillCount === 0 && (
+            <div className={styles.foundRow}>
+              <div className={styles.foundValue} style={{ color: '#9ca3af' }}>
+                We couldn&apos;t extract much — you can add everything manually
+              </div>
+            </div>
+          )}
         </div>
-        
-        <button 
-          className={styles.continueButton}
-          onClick={handleContinue}
-        >
-          Continue to Resume Builder
-          <svg width="20" height="16" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{marginLeft: "10px", position: "relative", top: "1px"}}>
+
+        {/* Missing fields note */}
+        {missing.length > 0 && (
+          <p className={styles.missingNote}>
+            {missing.length === 1
+              ? `No ${missing[0]} found`
+              : `Missing: ${missing.join(', ')}`}
+            {' \u2014 '} easy to add in the builder
+          </p>
+        )}
+
+        {/* CTA */}
+        <button className={styles.continueButton} onClick={handleContinue}>
+          Continue to Builder
+          <svg width="18" height="14" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1 8H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M16 2L23 8L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
+
+        <p className={styles.reassurance}>
+          Everything is editable - Fix anything that doesn&apos;t look right
+        </p>
       </div>
     );
   };
@@ -718,9 +559,9 @@ const ResumeImport = ({ onComplete }) => {
   return (
     <div className={styles.importContainer}>
       <div className={styles.importHeader}>
-        <h2 className={styles.importTitle}>Import Your Existing Resume</h2>
+        <h2 className={styles.importTitle}>Import Your Resume</h2>
         <p className={styles.importDescription}>
-          Upload your resume and we will automatically extract your information to jumpstart your new professional resume
+          We'll extract your experience, licenses, certifications, and skills... in seconds!
         </p>
       </div>
       

@@ -56,27 +56,27 @@ const ImportFlow = ({ onComplete }) => {
       });
     }
     
-    console.log('📊 ImportFlow - Preprocessed data descriptions for better bullet formatting');
+    // console.log('📊 ImportFlow - Preprocessed data descriptions for better bullet formatting');
     return processedData;
   };
 
   // When we have the parsed resume data from the import component
   const handleImportComplete = (data) => {
-    console.log('📊 ImportFlow - Received data from ResumeImport:', data);
-    console.log('📊 ImportFlow - Data structure check:', {
-      hasPersonalInfo: !!data.personalInfo,
-      personalInfoKeys: Object.keys(data.personalInfo || {}),
-      experienceCount: data.experience?.length || 0,
-      educationCount: data.education?.length || 0,
-      skillsCount: data.skills?.length || 0
-    });
+    // console.log('📊 ImportFlow - Received data from ResumeImport:', data);
+    // console.log('📊 ImportFlow - Data structure check:', {
+    //   hasPersonalInfo: !!data.personalInfo,
+    //   personalInfoKeys: Object.keys(data.personalInfo || {}),
+    //   experienceCount: data.experience?.length || 0,
+    //   educationCount: data.education?.length || 0,
+    //   skillsCount: data.skills?.length || 0
+    // });
     
     // Preprocess the data to ensure proper bullet point formatting
     const processedData = preprocessResumeData(data);
     
     // Skip confirmation step and directly call onComplete
     if (onComplete) {
-      console.log('📊 ImportFlow - Passing processed data directly to parent, skipping confirmation');
+      // console.log('📊 ImportFlow - Passing processed data directly to parent, skipping confirmation');
       onComplete(processedData);
     }
   };
