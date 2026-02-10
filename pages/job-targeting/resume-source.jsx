@@ -116,168 +116,282 @@ const ResumeSourcePage = () => {
     <>
       <Meta
         title="Choose Resume Source | IntelliResume"
-        description="Choose to create a new resume or import an existing one to tailor for your target job position."
+        description="Choose to create a new nursing resume or import an existing one to tailor for your target job position."
         canonicalUrl="https://intelliresume.net/job-targeting/resume-source"
-        keywords="resume source, create resume, import resume, job targeting, resume tailoring"
+        keywords="resume source, create nursing resume, import resume, job targeting, resume tailoring"
       />
-      
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: '40px 20px',
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '40px'
-        }}>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#1c7ed6',
-            marginBottom: '15px'
-          }}>
-            Choose Your Starting Point
-          </h1>
-          <p style={{
-            fontSize: '18px',
-            color: '#495057',
-            maxWidth: '600px',
-            margin: '0 auto',
-            lineHeight: '1.6'
-          }}>
-            We&apos;ll optimize your resume for: <strong>{jobContext?.title || 'Target Position'}</strong>
-          </p>
+
+      <div className="rs-page">
+        {/* Header */}
+        <div className="rs-header">
+          <h1 className="rs-title">How do you want to start?</h1>
+          {jobContext?.title && (
+            <div className="rs-job-badge">
+              Tailoring for: <strong>{jobContext.title}</strong>
+            </div>
+          )}
         </div>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px',
-          marginTop: '30px'
-        }}>
-          {/* Build from Scratch Option */}
-          <div 
+
+        {/* Steps indicator — step 2 active */}
+        <div className="rs-steps">
+          <div className="rs-step rs-step-done">
+            <span className="rs-step-num">&#10003;</span>
+            <span className="rs-step-label">Paste posting</span>
+          </div>
+          <div className="rs-step-divider" />
+          <div className="rs-step rs-step-active">
+            <span className="rs-step-num">2</span>
+            <span className="rs-step-label">Choose resume</span>
+          </div>
+          <div className="rs-step-divider" />
+          <div className="rs-step">
+            <span className="rs-step-num">3</span>
+            <span className="rs-step-label">Get tailored results</span>
+          </div>
+        </div>
+
+        {/* Source cards */}
+        <div className="rs-cards">
+          {/* Build from Scratch */}
+          <div
+            className="rs-card"
             onClick={() => handleSourceSelection('new')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '30px 25px',
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              border: '1px solid #e9ecef',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.borderColor = '#1c7ed6';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
-              e.currentTarget.style.borderColor = '#e9ecef';
-            }}
           >
-            <div style={{
-              width: '70px',
-              height: '70px',
-              backgroundColor: '#e7f5ff',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4L12 20" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M4 12L20 12" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <div className="rs-card-icon rs-card-icon-new">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4L12 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4 12L20 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <h3 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              color: '#343a40',
-              marginBottom: '10px'
-            }}>
-              Create New Resume
-            </h3>
-            <p style={{
-              color: '#6c757d',
-              fontSize: '15px',
-              lineHeight: '1.5'
-            }}>
-              Start fresh with a new resume tailored for this specific job.
-            </p>
+            <div className="rs-card-text">
+              <h3 className="rs-card-title">Start Fresh</h3>
+              <p className="rs-card-desc">
+                Build a new resume from scratch, guided step by step with your nursing experience
+              </p>
+            </div>
+            <svg className="rs-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 6L15 12L9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
 
-          {/* Import Resume Option */}
-          <div 
+          {/* Import existing */}
+          <div
+            className="rs-card"
             onClick={() => handleSourceSelection('import')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '30px 25px',
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              border: '1px solid #e9ecef',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.borderColor = '#1c7ed6';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
-              e.currentTarget.style.borderColor = '#e9ecef';
-            }}
           >
-            <div style={{
-              width: '70px',
-              height: '70px',
-              backgroundColor: '#e7f5ff',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 16L4 17C4 18.6569 5.34315 20 7 20L17 20C18.6569 20 20 18.6569 20 17L20 16" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 8L12 4L8 8" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 4L12 16" stroke="#1c7ed6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <div className="rs-card-icon rs-card-icon-import">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 16L4 17C4 18.6569 5.34315 20 7 20L17 20C18.6569 20 20 18.6569 20 17L20 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 8L12 4L8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 4L12 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <h3 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              color: '#343a40',
-              marginBottom: '10px'
-            }}>
-              Import Existing Resume
-            </h3>
-            <p style={{
-              color: '#6c757d',
-              fontSize: '15px',
-              lineHeight: '1.5'
-            }}>
-              Upload your existing resume and we&apos;ll optimize it for this job.
-            </p>
+            <div className="rs-card-text">
+              <h3 className="rs-card-title">Upload Existing Resume</h3>
+              <p className="rs-card-desc">
+                Upload a PDF or DOCX and we&apos;ll extract your experience, then tailor it for this job
+              </p>
+            </div>
+            <svg className="rs-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 6L15 12L9 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .rs-page {
+          max-width: 680px;
+          margin: 0 auto;
+          padding: 24px 16px 40px;
+          font-family: var(--font-figtree), Figtree, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+        }
+
+        .rs-header {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .rs-title {
+          font-size: 26px;
+          font-weight: 700;
+          color: #1c7ed6;
+          margin: 0 0 12px;
+          line-height: 1.2;
+        }
+
+        .rs-job-badge {
+          display: inline-block;
+          padding: 6px 14px;
+          background: #f0f7ff;
+          border: 1px solid #dbeafe;
+          border-radius: 20px;
+          font-size: 14px;
+          color: #374151;
+        }
+
+        .rs-job-badge strong {
+          color: #1c7ed6;
+        }
+
+        /* Steps indicator */
+        .rs-steps {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          margin-bottom: 28px;
+          padding: 14px 16px;
+          background: #f0f7ff;
+          border-radius: 12px;
+          border: 1px solid #dbeafe;
+        }
+
+        .rs-step {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          opacity: 0.4;
+        }
+
+        .rs-step-active {
+          opacity: 1;
+        }
+
+        .rs-step-done {
+          opacity: 0.7;
+        }
+
+        .rs-step-num {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #1c7ed6;
+          color: white;
+          font-size: 12px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .rs-step-done .rs-step-num {
+          background: #16a34a;
+        }
+
+        .rs-step-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #374151;
+          white-space: nowrap;
+        }
+
+        .rs-step-divider {
+          width: 20px;
+          height: 1px;
+          background: #93c5fd;
+          margin: 0 8px;
+          flex-shrink: 0;
+        }
+
+        /* Source cards — horizontal layout with icon + text + arrow */
+        .rs-cards {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .rs-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          background: white;
+          border-radius: 14px;
+          border: 1.5px solid #e5e7eb;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          -webkit-tap-highlight-color: transparent;
+          min-height: 80px;
+        }
+
+        .rs-card:hover {
+          border-color: #3b82f6;
+          box-shadow: 0 4px 16px rgba(59, 130, 246, 0.12);
+          transform: translateY(-2px);
+        }
+
+        .rs-card:active {
+          transform: scale(0.98);
+          border-color: #3b82f6;
+          background: #f8fbff;
+        }
+
+        .rs-card-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .rs-card-icon-new {
+          background: #eff6ff;
+          color: #3b82f6;
+        }
+
+        .rs-card-icon-import {
+          background: #f0fdf4;
+          color: #16a34a;
+        }
+
+        .rs-card-text {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .rs-card-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 0 0 4px;
+        }
+
+        .rs-card-desc {
+          font-size: 13px;
+          color: #6b7280;
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .rs-card-arrow {
+          color: #9ca3af;
+          flex-shrink: 0;
+          transition: transform 0.15s ease;
+        }
+
+        .rs-card:hover .rs-card-arrow {
+          color: #3b82f6;
+          transform: translateX(2px);
+        }
+
+        /* Tablet+ */
+        @media (min-width: 640px) {
+          .rs-page {
+            padding: 40px 20px;
+          }
+          .rs-title {
+            font-size: 32px;
+          }
+          .rs-card {
+            padding: 24px;
+          }
+        }
+      `}</style>
     </>
   );
 };
