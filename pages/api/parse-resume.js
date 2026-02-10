@@ -206,53 +206,50 @@ async function parseResumeWithAI(file, fileName, filePath, fileExt) {
     
     // The prompt that instructs the model what to extract
     const prompt = `
-You are an expert resume parser. Your task is to extract structured information from a resume.
+You are an expert resume parser specializing in healthcare and nursing resumes. Your task is to extract structured information from a resume.
 
 The text was extracted from a ${fileExt.replace('.', '')} file using ${extractionMethod}.
 
-Please extract the following information from this resume text:
+Extract the following information:
 
 1. Personal Information:
-   - Name
-   - Email
-   - Phone
-   - Location
+   - Name, Email, Phone, Location
    - LinkedIn URL (if present)
-   - Personal website (if present)
+   - Personal website or portfolio (if present)
 
 2. Professional Summary/Objective (if present)
 
 3. Work Experience:
-   - For each position:
-     - Job title
-     - Company name
-     - Location
-     - Dates (start and end)
-     - Description/responsibilities/achievements
+   - For each position: Job title, Company/Facility name, Location, Dates (start and end), Description/responsibilities/achievements
+   - NURSING CONTEXT: Preserve any clinical details mentioned — patient ratios, unit types (ICU, ER, Med-Surg, L&D, NICU, etc.), shift types (Day, Night, Rotating), facility types (Level I Trauma, Magnet, Teaching Hospital), and EHR systems (Epic, Cerner, Meditech, etc.)
 
 4. Education:
-   - IMPORTANT: Include ONLY formal education (degrees, diplomas) from colleges and universities
-   - Do NOT include certificates, courses, bootcamps, or training programs here
-   - For each education entry:
-     - Degree (e.g., Bachelor's, Master's, Ph.D.)
-     - Institution (university/college name)
-     - Location
-     - Dates
-     - GPA, honors, or relevant coursework (if present)
+   - ONLY formal degrees from colleges and universities
+   - Recognize nursing degrees: ADN (Associate Degree in Nursing), BSN (Bachelor of Science in Nursing), MSN (Master of Science in Nursing), DNP (Doctor of Nursing Practice), PhD in Nursing
+   - Do NOT include certifications, courses, bootcamps, or training programs here
 
-5. Skills:
-   - List all technical and professional skills
-   - Do NOT include language skills here (e.g., "Fluent in Spanish", "German")
-   - Focus on job-related abilities, tools, technologies, and competencies
+5. Nursing Licenses:
+   - Extract ALL nursing licenses mentioned (RN, APRN, LPN, LVN)
+   - Look for state of licensure (e.g., "RN License - New York", "Compact RN License", "California RN #12345")
+   - Detect compact/multistate licenses (NLC)
+   - Extract license numbers if present
+   - Common patterns: "Licensed Registered Nurse", "State of [X] RN License", "Multistate Compact License"
 
-6. Additional Information:
-   - Certifications (IMPORTANT: Put ALL certificates, courses, training programs, bootcamps here)
-   - Languages (IMPORTANT: Put ALL language skills here, including proficiency levels if mentioned)
-   - Projects
-   - Volunteer work
-   - Awards/achievements
+6. Skills:
+   - Include clinical and professional skills
+   - Do NOT include language skills (e.g., "Fluent in Spanish")
+   - NURSING CONTEXT: Look for clinical competencies like medication administration, IV therapy, wound care, patient assessment, ventilator management, telemetry monitoring, triage, discharge planning, care coordination, patient education
+   - Include EHR/EMR systems (Epic, Cerner, Meditech, CPSI, Allscripts) as skills
+   - Include nursing-specific tools and procedures
 
-Format the response as a valid JSON object with the following structure:
+7. Additional Information:
+   - Certifications: Put ALL professional certifications here. For nursing, look for: BLS (Basic Life Support), ACLS (Advanced Cardiovascular Life Support), PALS (Pediatric Advanced Life Support), NRP (Neonatal Resuscitation Program), TNCC (Trauma Nursing Core Course), CCRN, CEN, OCN, and any specialty certifications. Also include non-nursing certs, courses, bootcamps, training programs.
+   - Languages: ALL language skills with proficiency levels. Default to "Fluent" if not stated.
+   - Professional Memberships: Extract ALL professional organization memberships. For nursing, look for: ANA (American Nurses Association), AACN (American Association of Critical-Care Nurses), AORN, ENA, ONS, AWHONN, APNA, Sigma Theta Tau, and any specialty nursing organizations.
+   - Volunteer work: Extract ALL volunteer experiences with organization name and role/position.
+   - Awards/achievements: Extract ALL awards, honors, and recognitions.
+
+Format the response as a valid JSON object with this structure:
 {
   "personalInfo": {
     "name": "",
@@ -278,9 +275,17 @@ Format the response as a valid JSON object with the following structure:
       "degree": "",
       "school": "",
       "location": "",
-      "startDate": "",
-      "endDate": "",
+      "graduationDate": "",
       "description": ""
+    }
+  ],
+  "licenses": [
+    {
+      "type": "rn",
+      "state": "",
+      "licenseNumber": "",
+      "isCompact": false,
+      "expirationDate": ""
     }
   ],
   "skills": [],
@@ -293,26 +298,44 @@ Format the response as a valid JSON object with the following structure:
         "description": ""
       }
     ],
-    "projects": [],
     "languages": [
       {
         "language": "",
         "proficiency": ""
       }
     ],
-    "volunteer": [],
-    "awards": []
+    "memberships": [
+      {
+        "name": ""
+      }
+    ],
+    "volunteer": [
+      {
+        "organization": "",
+        "role": ""
+      }
+    ],
+    "awards": [
+      {
+        "name": ""
+      }
+    ]
   }
 }
 
 IMPORTANT GUIDELINES:
-- For Education: Include ONLY formal degrees from academic institutions (universities/colleges)
-- For Certifications: Include ALL professional certificates, courses, bootcamps, and training programs
-- For Languages: Extract ALL language skills and set proficiency to "Fluent" if not explicitly stated
-- For Skills: Include technical, professional, and soft skills BUT NOT languages
+- Education: ONLY formal degrees (ADN, BSN, MSN, DNP, PhD, Bachelor's, Master's, etc.). graduationDate must be in "Month Year" format (e.g., "May 2020", "December 2018"). Use full month names (January, February, March, April, May, June, July, August, September, October, November, December). If only a year is given, use "May" as default month.
+- Licenses: type must be one of: "rn", "aprn", "lpn", "lvn". State should be the 2-letter US state code (e.g., "NY", "CA", "TX"). Set isCompact to true if "compact", "multistate", or "NLC" is mentioned. Return an empty array if no licenses found.
+- Certifications: ALL professional certificates — especially nursing certs (BLS, ACLS, PALS, NRP, TNCC, CCRN, CEN, etc.), courses, bootcamps, training programs
+- Languages: Extract ALL language skills, default proficiency to "Fluent" if not stated
+- Skills: Clinical and professional skills, EHR systems, nursing tools — NOT languages
+- Experience descriptions: Preserve exact clinical details, metrics, and nursing terminology from the original text. Do not paraphrase or lose specificity.
+- Memberships: Extract ALL professional organization memberships. Return empty array if none found.
+- Volunteer: Extract ALL volunteer experiences with organization name and role. Return empty array if none found.
+- Awards: Extract ALL awards, honors, and recognitions with the award name. Return empty array if none found.
 - Leave fields empty if the information is not in the document
 - Do not make up information or use placeholders
-- Ensure valid JSON format with properly structured arrays and objects
+- Ensure valid JSON format
 `;
 
     // Create the request to OpenAI with a text-based approach
