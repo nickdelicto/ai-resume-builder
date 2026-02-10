@@ -35,7 +35,19 @@ export default function AuthGuard({ children }) {
           
           if (migrationResult.success) {
             if (migrationResult.code === 'MIGRATION_SUCCESS') {
-              toast.success('Your resume has been synced to your account! ⚠️ If you do not see it, REFRESH/RELOAD page.', { id: migrationToastIdRef.current, duration: 10000 });
+              toast.success('Resume synced to your account!', {
+                id: migrationToastIdRef.current,
+                duration: 6000,
+                style: {
+                  background: '#fff',
+                  border: '1px solid #34a853',
+                  padding: '14px 18px',
+                  color: '#1d2129',
+                  fontWeight: '500',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                },
+                iconTheme: { primary: '#34a853', secondary: '#fff' }
+              });
             } else if (migrationResult.code === 'NO_DATA_TO_MIGRATE') {
               toast.dismiss(migrationToastIdRef.current);
             } else {

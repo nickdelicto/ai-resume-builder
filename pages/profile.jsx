@@ -403,16 +403,26 @@ export default function ProfilePage() {
     }
   }, [countdown, isRedirecting, showRedirectMessage]);
 
-  // Re-fetch resumes when migration completes
+  // Re-fetch resumes when migration completes (payment flow)
   useEffect(() => {
     if (migrationCompleted && status === 'authenticated' && session?.user?.id) {
       console.log('📊 Migration completed, re-fetching resume list');
-      // Add a small delay to ensure the database has been updated
       setTimeout(() => {
         fetchUserResumes();
       }, 500);
     }
   }, [migrationCompleted, status, session]);
+
+  // Re-fetch resumes when auth migration finishes (sign-in flow)
+  useEffect(() => {
+    const handleMigrationComplete = () => {
+      console.log('📊 migration-complete event received, re-fetching resume list');
+      fetchUserResumes();
+    };
+
+    window.addEventListener('migration-complete', handleMigrationComplete);
+    return () => window.removeEventListener('migration-complete', handleMigrationComplete);
+  }, []);
 
   // Check admin status when authenticated
   useEffect(() => {

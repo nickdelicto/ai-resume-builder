@@ -68,15 +68,18 @@ export function useAuthMigration() {
             
             if (migrationResult.success) {
               if (migrationResult.code === 'MIGRATION_SUCCESS') {
-                toast.success('Your resume has been synced to your account! ⚠️ If you do not see it, REFRESH/RELOAD page.', { 
-                  id: migrationToastIdRef.current, 
-                  duration: 10000,
+                toast.success('Resume synced to your account!', {
+                  id: migrationToastIdRef.current,
+                  duration: 6000,
                   style: {
-                    background: 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))',
-                    border: '1px solid rgba(52, 168, 83, 0.2)',
-                    padding: '16px',
-                    color: '#34a853'
-                  }
+                    background: '#fff',
+                    border: '1px solid #34a853',
+                    padding: '14px 18px',
+                    color: '#1d2129',
+                    fontWeight: '500',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                  },
+                  iconTheme: { primary: '#34a853', secondary: '#fff' }
                 });
               }
             } else if (migrationResult.code !== 'ALREADY_DB_ONLY') {
@@ -109,15 +112,18 @@ export function useAuthMigration() {
             
             if (migrationResult.success && migrationResult.code === 'MIGRATION_SUCCESS') {
               hasMigratedRef.current = true;
-              toast.success('Your resume has been synced to your account!', { 
-                id: migrationToastIdRef.current, 
+              toast.success('Resume synced to your account!', {
+                id: migrationToastIdRef.current,
                 duration: 6000,
                 style: {
-                  background: 'linear-gradient(135deg, rgba(52, 168, 83, 0.1), rgba(46, 204, 113, 0.1))',
-                  border: '1px solid rgba(52, 168, 83, 0.2)',
-                  padding: '16px',
-                  color: '#34a853'
-                }
+                  background: '#fff',
+                  border: '1px solid #34a853',
+                  padding: '14px 18px',
+                  color: '#1d2129',
+                  fontWeight: '500',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                },
+                iconTheme: { primary: '#34a853', secondary: '#fff' }
               });
             }
           } else {
