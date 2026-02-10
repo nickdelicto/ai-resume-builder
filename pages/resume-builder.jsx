@@ -220,9 +220,9 @@ const ResumeBuilderPage = () => {
     <>
       {/* Resume-specific SEO meta tags */}
       <Meta
-        title="AI Resume Builder | Create ATS-Optimized Resumes | IntelliResume Health"
-        description="Build a professional resume from scratch, improve your existing resume, or tailor your resume to a specific job with our intelligent AI. Free to start - no signup required."
-        keywords="AI resume builder, professional resume, ATS resume, job application, resume tailoring, resume builder free, create resume online"
+        title="Nursing Resume Builder | Create ATS-Friendly RN Resumes | IntelliResume"
+        description="Build a professional nursing resume in minutes. AI-powered resume builder designed for Registered Nurses with clinical skills, certifications, and license sections. Free to start."
+        keywords="nursing resume builder, RN resume, nurse resume, healthcare resume, ATS nursing resume, registered nurse resume, clinical resume builder, nursing resume template"
         canonicalUrl="https://intelliresume.net/resume-builder"
         ogImage="/og-image.png"
       />

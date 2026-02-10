@@ -3,15 +3,15 @@ import React from 'react';
 /**
  * ResumeStructuredData - JSON-LD schema markup specifically for resume builder pages
  * Use this component on resume builder pages instead of the main StructuredData
- * Provides machine-readable data for search engines about the AI resume builder tool
+ * Provides machine-readable data for search engines about the nursing resume builder tool
  */
 
 const ResumeStructuredData = () => {
-  // SoftwareApplication schema - Describes the AI resume builder as a web application
+  // SoftwareApplication schema - Describes the nursing resume builder as a web application
   const softwareSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "IntelliResume AI Resume Builder",
+    "name": "IntelliResume Nursing Resume Builder",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
     "offers": {
@@ -20,21 +20,16 @@ const ResumeStructuredData = () => {
       "priceCurrency": "USD",
       "description": "Free to start - no signup required"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "reviewCount": "150",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
-    "description": "AI-powered resume builder that creates professional, ATS-optimized resumes. Build from scratch, improve existing resumes, or tailor your resume to specific job descriptions.",
+    "description": "AI-powered nursing resume builder designed for Registered Nurses. Build ATS-optimized resumes with clinical skills, certifications, licenses, and healthcare experience sections.",
     "url": "https://intelliresume.net/resume-builder",
     "screenshot": "https://intelliresume.net/og-image.png",
     "featureList": [
-      "AI-powered content generation",
-      "ATS-optimized formatting", 
-      "Professional templates",
-      "One-click job tailoring",
+      "Nursing-specific resume templates",
+      "Clinical skills and certifications sections",
+      "AI-powered experience bullet generation",
+      "ATS-optimized formatting for healthcare",
+      "One-click job tailoring for RN positions",
+      "License and compact state tracking",
       "PDF export",
       "Resume parsing and import"
     ],
@@ -45,100 +40,49 @@ const ResumeStructuredData = () => {
     }
   };
 
-  // Product schema - For rich results showing the resume builder as a product
-  const productSchema = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "IntelliResume AI Resume Builder",
-    "description": "Intelligent AI-powered resume builder that creates professional, ATS-optimized resumes tailored for your target jobs.",
-    "brand": {
-      "@type": "Brand",
-      "name": "IntelliResume Health"
-    },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD",
-      "availability": "https://schema.org/InStock",
-      "priceValidUntil": "2026-12-31",
-      "description": "Free tier available - start building without signup"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "reviewCount": "150"
-    },
-    "review": [
-      {
-        "@type": "Review",
-        "reviewRating": {
-          "@type": "Rating",
-          "ratingValue": "5"
-        },
-        "author": {
-          "@type": "Person",
-          "name": "Sarah K."
-        },
-        "reviewBody": "The AI suggestions made my resume so much stronger. Got callbacks within a week!"
-      },
-      {
-        "@type": "Review",
-        "reviewRating": {
-          "@type": "Rating",
-          "ratingValue": "5"
-        },
-        "author": {
-          "@type": "Person",
-          "name": "Mike T."
-        },
-        "reviewBody": "Love how easy it is to tailor my resume for different positions. Huge time saver."
-      }
-    ]
-  };
-
-  // FAQ schema - Questions about the resume builder specifically
+  // FAQ schema - Nursing resume builder specific questions
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "Is the AI resume builder really free?",
+        "name": "Is the nursing resume builder really free?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes! You can start building your resume immediately with no signup or credit card required. Preview your resume for free. Premium features like unlimited downloads are available via subscription."
+          "text": "Yes! You can build up to 5 nursing resumes for free with no signup required. Preview your resume and download one PDF free. Premium features like unlimited downloads are available via subscription."
         }
       },
       {
         "@type": "Question",
-        "name": "How does the AI help write my resume?",
+        "name": "How does the AI help write my nursing resume?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our AI analyzes your input and generates professional, impactful content for your experience, skills, and summary sections. It helps overcome writer's block by suggesting action verbs, quantifiable achievements, and industry-specific keywords."
+          "text": "Our AI generates professional nursing experience bullets using clinical action verbs and healthcare terminology. It suggests content based on your specialty, unit type, patient ratios, and certifications — while only using metrics you actually provide."
         }
       },
       {
         "@type": "Question",
-        "name": "Will my resume pass ATS systems?",
+        "name": "Will my nursing resume pass ATS systems?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Absolutely. Our templates are specifically designed to be ATS-friendly with proper formatting, standard section headers, and clean structure that applicant tracking systems can parse correctly."
+          "text": "Yes. Our templates use ATS-friendly formatting with standard section headers (Licenses, Certifications, Clinical Skills) that healthcare applicant tracking systems parse correctly. We use system fonts like Arial and Calibri for maximum compatibility."
         }
       },
       {
         "@type": "Question",
-        "name": "Can I tailor my resume to specific job descriptions?",
+        "name": "Can I tailor my nursing resume to specific job descriptions?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes! Our one-click tailoring feature analyzes job descriptions and optimizes your resume content to match requirements, incorporating relevant keywords and highlighting matching skills and experience."
+          "text": "Yes! Our one-click tailoring feature analyzes RN job descriptions and optimizes your resume content to match requirements, incorporating relevant clinical keywords, certifications, and skills that the position requires."
         }
       },
       {
         "@type": "Question",
-        "name": "Can I import my existing resume?",
+        "name": "What nursing-specific sections are included?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. Upload your existing resume in PDF, Word, or text format. Our AI will extract your information and populate the builder, letting you enhance and improve your existing content."
+          "text": "Our builder includes dedicated sections for nursing licenses (with state and compact status), clinical certifications (BLS, ACLS, PALS, and 40+ more), EHR systems, clinical skills organized by specialty, and experience templates with unit type, shift, and patient ratio fields."
         }
       }
     ]
@@ -152,10 +96,6 @@ const ResumeStructuredData = () => {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <script
-        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
     </>
@@ -163,4 +103,3 @@ const ResumeStructuredData = () => {
 };
 
 export default ResumeStructuredData;
-

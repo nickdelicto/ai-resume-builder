@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Meta from '../components/common/Meta';
 import ResumeStructuredData from '../components/common/ResumeStructuredData';
+import { usePaywall } from '../components/common/PaywallModal';
 
 // Dynamically import ImportFlow with SSR disabled
 const ImportFlow = dynamic(
@@ -29,10 +31,10 @@ const LoadingFallback = () => {
   return (
     <>
       <Meta
-        title="Import Your Existing Resume | IntelliResume"
-        description="Upload your existing resume and let our AI enhance it. We'll analyze your resume and suggest improvements to make it ATS-friendly."
+        title="Import Your Nursing Resume | IntelliResume"
+        description="Upload your existing nursing resume and let our AI enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
         canonicalUrl="https://intelliresume.net/resume-import"
-        keywords="resume import, upload resume, improve resume, enhance resume, AI resume analysis"
+        keywords="import nursing resume, upload RN resume, improve nurse resume, enhance healthcare resume, nursing resume analysis"
       />
     <div style={{
       display: 'flex',
@@ -41,7 +43,7 @@ const LoadingFallback = () => {
       height: '100vh',
       width: '100%',
       backgroundColor: '#f8f9fc',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Helvetica Neue, sans-serif'
+      fontFamily: 'var(--font-figtree), Figtree, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif'
     }}>
       <div style={{
         textAlign: 'center',
@@ -76,7 +78,7 @@ const LoadingFallback = () => {
           position: 'relative',
           zIndex: 1
         }}>
-          {jobTitle ? 'Resume Import for Job Tailoring' : 'Preparing Resume Import'}
+          {jobTitle ? 'Importing Resume for Job Tailoring' : 'Preparing Your Import'}
         </h2>
         
         <p style={{
@@ -87,9 +89,9 @@ const LoadingFallback = () => {
           position: 'relative',
           zIndex: 1
         }}>
-          {jobTitle 
-            ? `We'll optimize your imported resume for the "${jobTitle}" position` 
-            : 'Please wait while we initialize our AI-powered resume analyzer...'}
+          {jobTitle
+            ? `We'll tailor your resume for the "${jobTitle}" position`
+            : 'Setting things up...'}
         </p>
         
         <div style={{
@@ -137,6 +139,10 @@ const LoadingFallback = () => {
 
 const ResumeImportPage = () => {
   const router = useRouter();
+  const { status } = useSession();
+  const { showPaywall } = usePaywall();
+  const [isEligible, setIsEligible] = useState(true);
+  const [isCheckingEligibility, setIsCheckingEligibility] = useState(true);
   
   // Enhanced function to clear resume data while preserving job targeting context when appropriate
   const clearResumeDataUnlessJobTargeting = () => {
@@ -160,29 +166,29 @@ const ResumeImportPage = () => {
       const isJobTargeting = hasJobTargetingFlag || hasJobParam || isJobTargetingSource || 
                              (hasExistingJobContext && router.query.preserve_job_context === 'true');
       
-      console.log('📊 ResumeImportPage - Job targeting detection:', {
-        hasJobTargetingFlag,
-        hasJobParam,
-        isJobTargetingSource,
-        hasExistingJobContext,
-        preserveRequested: router.query.preserve_job_context === 'true',
-        isJobTargeting
-      });
+      // console.log('📊 ResumeImportPage - Job targeting detection:', {
+      //   hasJobTargetingFlag,
+      //   hasJobParam,
+      //   isJobTargetingSource,
+      //   hasExistingJobContext,
+      //   preserveRequested: router.query.preserve_job_context === 'true',
+      //   isJobTargeting
+      // });
       
       if (!isJobTargeting) {
         // Clear job context if not in job targeting flow
-        console.log('📊 ResumeImportPage - Not in job targeting flow, clearing all data for fresh import');
+        // console.log('📊 ResumeImportPage - Not in job targeting flow, clearing all data for fresh import');
         localStorage.removeItem('job_targeting_context');
         localStorage.removeItem('job_targeting_active');
       } else {
-        console.log('📊 ResumeImportPage - In job targeting flow, preserving job context data');
+        // console.log('📊 ResumeImportPage - In job targeting flow, preserving job context data');
         // If we have job param in URL but no local storage, save it
         if (hasJobParam && !hasExistingJobContext) {
           try {
             const jobContext = JSON.parse(decodeURIComponent(router.query.job));
             localStorage.setItem('job_targeting_context', JSON.stringify(jobContext));
             localStorage.setItem('job_targeting_active', 'true');
-            console.log('📊 ResumeImportPage - Saved job context from URL parameter');
+            // console.log('📊 ResumeImportPage - Saved job context from URL parameter');
           } catch (error) {
             console.error('📊 ResumeImportPage - Error storing job context from URL:', error);
           }
@@ -196,7 +202,7 @@ const ResumeImportPage = () => {
       localStorage.removeItem('imported_resume_data');
       localStorage.removeItem('selected_resume_template');
       
-      console.log('📊 ResumeImportPage - Reset resume-specific data for fresh import');
+      // console.log('📊 ResumeImportPage - Reset resume-specific data for fresh import');
     } catch (error) {
       console.error('📊 ResumeImportPage - Error clearing resume data:', error);
     }
@@ -205,33 +211,45 @@ const ResumeImportPage = () => {
   // Extract job context from URL parameters and set up the page when component mounts
   useEffect(() => {
     if (router.isReady) {
-      console.log('📊 ResumeImportPage - Router ready, URL parameters:', router.query);
-      
       // First clear existing resume data (but maintain job context if needed)
       clearResumeDataUnlessJobTargeting();
-      
+
       // Handle job context passed in URL parameter
       if (router.query.job) {
         try {
-          // Parse the job context from URL parameter
           const jobContext = JSON.parse(decodeURIComponent(router.query.job));
-          console.log('📊 ResumeImportPage - Detected job context in URL:', {
-            title: jobContext.title || jobContext.jobTitle,
-            hasDescription: !!jobContext.description
-          });
-          
-          // Store job context in localStorage for use after import completion
           localStorage.setItem('job_targeting_context', JSON.stringify(jobContext));
           localStorage.setItem('job_targeting_active', 'true');
         } catch (error) {
           console.error('📊 ResumeImportPage - Error parsing job context from URL:', error);
         }
       }
+
+      // Check creation eligibility for authenticated users
+      if (status === 'authenticated') {
+        fetch('/api/resume/check-creation-eligibility')
+          .then(res => res.json())
+          .then(data => {
+            if (!data.eligible && data.error === 'resume_limit_reached') {
+              setIsEligible(false);
+              showPaywall('resume_creation');
+            }
+            setIsCheckingEligibility(false);
+          })
+          .catch(() => {
+            // Fail open — backend enforces the real guard at save time
+            setIsCheckingEligibility(false);
+          });
+      } else if (status === 'unauthenticated') {
+        // Unauthenticated users skip the check; backend enforces at save time
+        setIsCheckingEligibility(false);
+      }
+      // While status === 'loading', keep isCheckingEligibility true
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.query, status]);
 
   const handleImportComplete = async (data) => {
-    console.log('📊 ResumeImportPage - Received import data, storing in localStorage:', data);
+    // console.log('📊 ResumeImportPage - Received import data, storing in localStorage:', data);
     
     // Check for required fields and data structure
     const dataValidation = {
@@ -241,14 +259,14 @@ const ResumeImportPage = () => {
       educationArray: Array.isArray(data.education),
       skillsArray: Array.isArray(data.skills)
     };
-    console.log('📊 ResumeImportPage - Data validation:', dataValidation);
+    // console.log('📊 ResumeImportPage - Data validation:', dataValidation);
     
     try {
       // Store the data in localStorage temporarily
       localStorage.setItem('imported_resume_data', JSON.stringify(data));
       localStorage.setItem('import_pending', 'true');
       localStorage.setItem('import_create_new', 'true'); // Always create new resume
-      console.log('📊 ResumeImportPage - Data successfully stored in localStorage');
+      // console.log('📊 ResumeImportPage - Data successfully stored in localStorage');
       
       // For authenticated users, directly save the resume to the database
       let newResumeId = null;
@@ -275,7 +293,7 @@ const ResumeImportPage = () => {
           if (validateResponse.ok) {
             const validationResult = await validateResponse.json();
             if (!validationResult.isValid && validationResult.suggestedName) {
-              console.log('📊 ResumeImportPage - Duplicate name detected, using suggested name:', validationResult.suggestedName);
+              // console.log('📊 ResumeImportPage - Duplicate name detected, using suggested name:', validationResult.suggestedName);
               finalTitle = validationResult.suggestedName;
             }
           }
@@ -284,7 +302,7 @@ const ResumeImportPage = () => {
           // Continue with the base title if validation fails
         }
         
-        console.log('📊 ResumeImportPage - Using final title for import:', finalTitle);
+        // console.log('📊 ResumeImportPage - Using final title for import:', finalTitle);
         
         // Make a direct API call to save the resume
         const response = await fetch('/api/resume/save', {
@@ -294,7 +312,7 @@ const ResumeImportPage = () => {
           },
           body: JSON.stringify({
             resumeData: data,
-            template: 'ats',
+            template: 'professional',
             title: finalTitle,
             isImport: true
           }),
@@ -303,12 +321,18 @@ const ResumeImportPage = () => {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.resumeId) {
-            console.log('📊 ResumeImportPage - Successfully created new resume in database:', result.resumeId);
+            // console.log('📊 ResumeImportPage - Successfully created new resume in database:', result.resumeId);
             newResumeId = result.resumeId;
-            
+
             // Store the new resume ID in localStorage
             localStorage.setItem('import_new_resume_id', result.resumeId);
             localStorage.setItem('current_resume_id', result.resumeId);
+
+            // CRITICAL: Clear creation flags — resume already exists in DB.
+            // Without this, the builder's saveResumeData sees these flags,
+            // forces resumeId=null, and creates a SECOND resume.
+            localStorage.removeItem('import_create_new');
+            localStorage.removeItem('import_pending');
           } else {
             console.error('📊 ResumeImportPage - API returned success: false or missing resumeId:', result);
           }
@@ -343,9 +367,9 @@ const ResumeImportPage = () => {
           : '/new-resume-builder?source=import&import=true';
       }
       
-      console.log('📊 ResumeImportPage - Redirecting to:', redirectUrl, 
-                 'with new resumeId:', newResumeId,
-                 'job targeting:', isJobTargetingFlow);
+      // console.log('📊 ResumeImportPage - Redirecting to:', redirectUrl,
+      //            'with new resumeId:', newResumeId,
+      //            'job targeting:', isJobTargetingFlow);
       
       window.location.href = redirectUrl;
     } catch (error) {
@@ -353,18 +377,37 @@ const ResumeImportPage = () => {
     }
   };
 
+  // Show loading fallback while checking eligibility
+  if (isCheckingEligibility) {
+    return <LoadingFallback />;
+  }
+
+  // If not eligible, render nothing — PaywallModal is already visible via showPaywall
+  if (!isEligible) {
+    return (
+      <>
+        <Meta
+          title="Import Your Nursing Resume | IntelliResume"
+          description="Upload your existing nursing resume and let us enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
+          canonicalUrl="https://intelliresume.net/resume-import"
+          keywords="import nursing resume, upload RN resume, improve nurse resume, enhance healthcare resume, nursing resume analysis"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Meta
-        title="Import Your Existing Resume | IntelliResume"
-        description="Upload your existing resume and let our AI enhance it. We'll analyze your resume and suggest improvements to make it ATS-friendly."
+        title="Import Your Nursing Resume | IntelliResume"
+        description="Upload your existing nursing resume and let our AI enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
         canonicalUrl="https://intelliresume.net/resume-import"
-        keywords="resume import, upload resume, improve resume, enhance resume, AI resume analysis"
+        keywords="import nursing resume, upload RN resume, improve nurse resume, enhance healthcare resume, nursing resume analysis"
       />
-      
+
       {/* Resume-specific structured data for SEO */}
       <ResumeStructuredData />
-      
+
       <ImportFlow onComplete={handleImportComplete} />
     </>
   );
