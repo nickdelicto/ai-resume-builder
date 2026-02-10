@@ -143,7 +143,7 @@ export default function MyApp({ Component, pageProps }) {
               }
           `}</style>
           
-          <Toaster position="bottom-center" />
+          <Toaster position="bottom-center" gutter={12} reverseOrder={false} />
 
           {/* Deferred Analytics - loads after page is interactive */}
           <Script

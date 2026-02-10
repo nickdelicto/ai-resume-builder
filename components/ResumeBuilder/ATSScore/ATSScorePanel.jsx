@@ -105,7 +105,7 @@ export default function ATSScorePanel({ resumeData, jobContext, onMilestone }) {
         <div className={styles.quickWin}>
           <div className={styles.quickWinHeader}>
             <span className={styles.quickWinIcon}>⚡</span>
-            <span className={styles.quickWinTitle}>Quick Win</span>
+            <span className={styles.quickWinTitle}>Next Step</span>
             <span className={styles.quickWinPoints}>+{quickWin.points} pts</span>
           </div>
           <p className={styles.quickWinText}>{quickWin.suggestion}</p>

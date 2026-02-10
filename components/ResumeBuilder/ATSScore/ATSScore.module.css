@@ -79,13 +79,13 @@
   font-size: 1.1rem;
 }
 
-/* ===== Quick Win - Highlighted Action ===== */
+/* ===== Next Step - Highlighted Action ===== */
 .quickWin {
   padding: 14px 16px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-radius: 12px;
   margin-bottom: 16px;
-  border: 1px solid #fcd34d;
+  border: 1px solid #93c5fd;
 }
 
 .quickWinHeader {
@@ -103,7 +103,7 @@
   flex: 1;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #92400e;
+  color: #1e40af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -120,7 +120,7 @@
 .quickWinText {
   margin: 0;
   font-size: 0.9rem;
-  color: #78350f;
+  color: #1e3a5f;
   line-height: 1.4;
   font-weight: 500;
 }

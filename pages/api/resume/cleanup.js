@@ -18,8 +18,11 @@ export default async function handler(req, res) {
     }
 
     // For security, this cleanup operation can only be run by admin users
-    // Check if the user is an admin (you should customize this check based on your user model)
-    const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+    const adminEmails = (process.env.ADMIN_EMAIL || '')
+      .split(/[;,]/)
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin = adminEmails.includes(session.user.email.toLowerCase());
     
     if (!isAdmin) {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
