@@ -104,6 +104,29 @@ export default function ProfilePage() {
   // State for mobile tooltips
   const [activeTooltip, setActiveTooltip] = useState(null);
   
+  // Post-auth loading animation (3.5s nursing animation, then force-fetch resumes)
+  const [showPostAuthLoading, setShowPostAuthLoading] = useState(false);
+  const postAuthCheckDone = useRef(false);
+
+  useEffect(() => {
+    if (status === 'authenticated' && !postAuthCheckDone.current) {
+      postAuthCheckDone.current = true;
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('profile_loaded')) {
+        sessionStorage.setItem('profile_loaded', 'true');
+        setShowPostAuthLoading(true);
+      }
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (!showPostAuthLoading) return;
+    const timer = setTimeout(() => {
+      setShowPostAuthLoading(false);
+      fetchUserResumes();
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [showPostAuthLoading]);
+
   const { navigateToPricing } = useResumeSelection();
   const { showPaywall } = usePaywall();
 
@@ -120,7 +143,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error checking creation eligibility:', err);
     }
-    router.push('/resume-builder');
+    router.push('/nursing-resume-builder');
   };
 
   // Handle pricing navigation
@@ -1106,7 +1129,7 @@ export default function ProfilePage() {
             <p style={{ margin: '0 0 15px 0', fontSize: '15px' }}>
               No resumes found. Create your first resume now!
             </p>
-            <Link href="/resume-builder" style={{
+            <Link href="/nursing-resume-builder" style={{
               textDecoration: 'none',
               padding: '8px 16px',
               background: '#1a73e8',
@@ -1134,7 +1157,7 @@ export default function ProfilePage() {
           gap: '15px',
           flexWrap: 'wrap'
         }}>
-          <a href="/resume-builder" onClick={handleCreateNewResume} style={{
+          <a href="/nursing-resume-builder" onClick={handleCreateNewResume} style={{
             textDecoration: 'none',
             padding: '8px 16px',
             background: 'transparent',
@@ -1588,6 +1611,157 @@ export default function ProfilePage() {
     }
   };
   
+  // Show nursing loading animation after sign-in (3.5s)
+  if (showPostAuthLoading) {
+    return (
+      <div className="container">
+        <Meta title="Your Profile | IntelliResume" description="Manage your nursing resumes and account settings" />
+        <style jsx>{`
+          @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.12); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.08); }
+            60% { transform: scale(1); }
+          }
+          @keyframes pulseRing {
+            0% { transform: scale(0.85); opacity: 0.5; }
+            100% { transform: scale(1.6); opacity: 0; }
+          }
+          @keyframes progressFill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+          @keyframes ecgDraw {
+            0% { stroke-dashoffset: 300; }
+            100% { stroke-dashoffset: 0; }
+          }
+          @keyframes msgInOut {
+            0% { opacity: 0; transform: translateY(6px); }
+            12% { opacity: 1; transform: translateY(0); }
+            88% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-6px); }
+          }
+          @keyframes msgIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            20% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+        <div style={{
+          maxWidth: '440px',
+          margin: '90px auto',
+          padding: '44px 28px',
+          textAlign: 'center',
+          background: 'white',
+          borderRadius: '20px',
+          boxShadow: '0 8px 40px rgba(26, 115, 232, 0.12)',
+          border: '1px solid #e0e7ff'
+        }}>
+          {/* Stethoscope icon with pulse rings */}
+          <div style={{ position: 'relative', width: '88px', height: '88px', margin: '0 auto 20px' }}>
+            <div style={{
+              position: 'absolute', inset: '0',
+              borderRadius: '50%',
+              border: '2px solid rgba(26, 115, 232, 0.25)',
+              animation: 'pulseRing 1.8s ease-out infinite'
+            }} />
+            <div style={{
+              position: 'absolute', inset: '0',
+              borderRadius: '50%',
+              border: '2px solid rgba(79, 70, 229, 0.15)',
+              animation: 'pulseRing 1.8s ease-out 0.5s infinite'
+            }} />
+            <div style={{
+              width: '88px', height: '88px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #eff6ff, #e0e7ff)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              animation: 'pulseIcon 1.6s ease-in-out infinite',
+              position: 'relative', zIndex: 1
+            }}>
+              {/* Stethoscope SVG */}
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 2v6a6 6 0 0 0 12 0V2" stroke="url(#brandGrad)" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M4 2h4M16 2h4" stroke="url(#brandGrad)" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="18" cy="16" r="2" stroke="url(#brandGrad)" strokeWidth="2"/>
+                <path d="M18 14v-2a4 4 0 0 0-4-4" stroke="url(#brandGrad)" strokeWidth="2" strokeLinecap="round"/>
+                <defs>
+                  <linearGradient id="brandGrad" x1="4" y1="2" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#1a73e8"/>
+                    <stop offset="1" stopColor="#4f46e5"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+
+          {/* Brand name */}
+          <p style={{
+            fontSize: '13px', fontWeight: 700, letterSpacing: '0.04em',
+            textTransform: 'uppercase', margin: '0 0 16px',
+            background: 'linear-gradient(135deg, #1a73e8, #4f46e5)',
+            WebkitBackgroundClip: 'text', backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>IntelliResume</p>
+
+          {/* ECG line */}
+          <div style={{ width: '180px', height: '32px', margin: '0 auto 16px', overflow: 'hidden' }}>
+            <svg width="180" height="32" viewBox="0 0 180 32">
+              <polyline
+                points="0,16 40,16 50,16 55,4 60,28 65,12 70,20 75,16 180,16"
+                fill="none" stroke="url(#ecgGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{ strokeDasharray: 300, animation: 'ecgDraw 2s ease-in-out infinite' }}
+              />
+              <defs>
+                <linearGradient id="ecgGrad" x1="0" y1="16" x2="180" y2="16" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#1a73e8"/>
+                  <stop offset="1" stopColor="#6366f1"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Rotating messages */}
+          <div style={{ height: '44px', position: 'relative', marginBottom: '20px' }}>
+            <p style={{
+              position: 'absolute', width: '100%', left: 0, margin: 0,
+              fontSize: '15px', fontWeight: 600, color: '#374151', lineHeight: 1.4,
+              animation: 'msgInOut 1.1s ease forwards'
+            }}>Preparing your profile...</p>
+            <p style={{
+              position: 'absolute', width: '100%', left: 0, margin: 0,
+              fontSize: '15px', fontWeight: 600, lineHeight: 1.4,
+              background: 'linear-gradient(135deg, #1a73e8, #4f46e5)',
+              WebkitBackgroundClip: 'text', backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: 'msgInOut 1.1s ease 1.15s both'
+            }}>You make a difference every shift</p>
+            <p style={{
+              position: 'absolute', width: '100%', left: 0, margin: 0,
+              fontSize: '15px', fontWeight: 600, color: '#374151', lineHeight: 1.4,
+              animation: 'msgIn 1.2s ease 2.3s both'
+            }}>Loading your nursing career...</p>
+          </div>
+
+          {/* Progress bar — brand gradient */}
+          <div style={{
+            width: '100%', height: '4px',
+            background: '#e5e7eb', borderRadius: '2px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #1a73e8, #4f46e5, #6366f1)',
+              borderRadius: '2px',
+              animation: 'progressFill 3.5s ease-out forwards'
+            }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading state while checking authentication
   if (status === 'loading' || isTransferring) {
     return (
@@ -2694,7 +2868,7 @@ export default function ProfilePage() {
                   marginTop: '30px',
                   textAlign: 'center'
                 }}>
-                  <a href="/resume-builder" onClick={handleCreateNewResume} style={{
+                  <a href="/nursing-resume-builder" onClick={handleCreateNewResume} style={{
                     textDecoration: 'none',
                     padding: '12px 24px',
                     background: 'var(--primary-blue)',

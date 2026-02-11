@@ -200,7 +200,7 @@ const NewResumeBuilderPage = () => {
   return (
     <>
       <Head>
-        <title>Nursing Resume Builder | Build Your RN Resume | IntelliResume</title>
+        <title>Nursing Resume Builder | Build Your RN Resume Today</title>
         <meta name="description" content="Build a professional nursing resume with AI-powered suggestions for clinical skills, certifications, and experience. Designed for Registered Nurses." />
         <link rel="canonical" href="https://intelliresume.net/resume-builder" />
       </Head>

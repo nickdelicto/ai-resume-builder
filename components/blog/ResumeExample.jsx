@@ -62,7 +62,7 @@ const ResumeExample = ({
           )}
           
           <AnimatedButton 
-            href="/resume-builder" 
+            href="/nursing-resume-builder"
             text="Create Your Resume" 
             style={{ fontSize: '0.9375rem', padding: '0.75rem 1.5rem' }}
           />

@@ -39,7 +39,7 @@ module.exports = {
     }
     
     // Special priority for the canonical entry points
-    if (path === '/new-resume-builder' || path === '/resume-import' || path === '/job-targeting') {
+    if (path === '/new-resume-builder' || path === '/resume-import' || path === '/job-targeting' || path === '/nursing-resume-builder') {
       return {
         loc: path,
         changefreq: 'weekly',

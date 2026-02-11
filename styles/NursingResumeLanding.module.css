@@ -1,0 +1,2044 @@
+/* ══════════════════════════════════════════════════════════
+   Nursing Resume Builder – "Calm Clinical" Design
+   Scrubs-inspired teal, warm neutrals, breathing room
+   ══════════════════════════════════════════════════════════ */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes crossFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.07; }
+  50%      { transform: translateY(-18px) rotate(15deg); opacity: 0.12; }
+}
+
+@keyframes crossFloatAlt {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.05; }
+  50%      { transform: translateY(-14px) rotate(-10deg); opacity: 0.10; }
+}
+
+@keyframes pulseFade {
+  0%, 100% { opacity: 0.06; }
+  50%      { opacity: 0.10; }
+}
+
+/* ── Hero Background Decorations ─────────────────────── */
+
+.heroSection {
+  position: relative;
+  overflow: hidden;
+  padding: 80px 20px 100px;
+  background: linear-gradient(180deg, #f0fdfa 0%, #f9fafb 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Dot grid overlay */
+.heroDotGrid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(13, 148, 136, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Blurred orbs */
+.heroOrb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.heroOrb1 {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.12) 0%, transparent 70%);
+  top: -80px;
+  right: -60px;
+  filter: blur(50px);
+}
+
+.heroOrb2 {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(153, 246, 228, 0.18) 0%, transparent 70%);
+  bottom: 40px;
+  left: -80px;
+  filter: blur(50px);
+}
+
+.heroOrb3 {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.08) 0%, transparent 70%);
+  top: 40%;
+  left: 60%;
+  filter: blur(40px);
+}
+
+/* Floating healthcare crosses */
+.heroCross {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  color: #0d9488;
+  opacity: 0.07;
+}
+
+.heroCross1 {
+  top: 18%;
+  left: 8%;
+  animation: crossFloat 16s ease-in-out infinite;
+}
+
+.heroCross2 {
+  top: 30%;
+  right: 10%;
+  animation: crossFloatAlt 20s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+.heroCross3 {
+  bottom: 28%;
+  left: 15%;
+  animation: crossFloatAlt 18s ease-in-out infinite;
+  animation-delay: -8s;
+}
+
+.heroCross4 {
+  top: 12%;
+  right: 22%;
+  animation: crossFloat 22s ease-in-out infinite;
+  animation-delay: -6s;
+}
+
+.heroCross5 {
+  bottom: 22%;
+  right: 8%;
+  animation: crossFloat 19s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+/* Pulse / heartbeat line */
+.heroPulseLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: pulseFade 6s ease-in-out infinite;
+}
+
+/* Wave divider at bottom of hero */
+.heroWave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  line-height: 0;
+  z-index: 1;
+}
+
+/* ── Section Backgrounds (break monotony) ────────────── */
+
+.featuresSection {
+  position: relative;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, #f0fdfa 0%, #f5fffe 100%);
+}
+
+/* Very faint cross pattern baked into the features bg */
+.featuresBgPattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(rgba(13, 148, 136, 0.04) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+}
+
+.templateSection {
+  position: relative;
+  padding: 60px 20px;
+  background: white;
+}
+
+.stepsSection {
+  position: relative;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, #f8fffe 0%, #f9fafb 100%);
+}
+
+.specialtySection {
+  position: relative;
+  padding: 64px 20px;
+  background: linear-gradient(180deg, #fffefb 0%, #fefefe 100%);
+}
+
+/* Reusable wave divider between sections */
+.sectionWave {
+  position: relative;
+  line-height: 0;
+  margin-top: -1px; /* prevent subpixel gap */
+}
+
+/* ── Builder Demo Mockup ─────────────────────────────── */
+
+.builderDemoSection {
+  padding: 56px 20px 64px;
+  background: #f9fafb;
+}
+
+.builderFrame {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.05);
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.builderChrome {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  background: linear-gradient(180deg, #e8ecf0, #dee2e6);
+  border-bottom: 1px solid #cdd1d6;
+}
+
+.builderDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.builderDotClose {
+  background: #ff5f57;
+  box-shadow: inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.builderDotMinimize {
+  background: #febc2e;
+  box-shadow: inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.builderDotExpand {
+  background: #28c840;
+  box-shadow: inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.builderChromeUrl {
+  flex: 1;
+  margin-left: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.builderHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.builderHeaderTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.builderProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.builderProgressTrack {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.builderProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #34a853, #10b981);
+  border-radius: 4px;
+}
+
+.builderImport {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.builderBody {
+  display: flex;
+  min-height: 480px;
+}
+
+.builderSidebar {
+  width: 190px;
+  flex-shrink: 0;
+  padding: 16px 0;
+  border-right: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.builderSidebarLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 16px 10px;
+}
+
+.builderSidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.builderSidebarItem:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.builderSidebarActive {
+  color: #1a73e8;
+  font-weight: 600;
+  background: linear-gradient(90deg, rgba(26, 115, 232, 0.08), transparent);
+  border-left-color: #1a73e8;
+}
+
+.builderSidebarDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.builderSidebarDotDone {
+  border-color: #34a853;
+  background: #34a853;
+}
+
+.builderSidebarDotDone::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.builderSidebarDotActive {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.builderMain {
+  flex: 1;
+  padding: 24px 28px;
+  overflow: hidden;
+}
+
+/* Mockup content sections */
+.mockupSection {
+  animation: fadeIn 0.2s ease;
+}
+
+.mockupSectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockupSectionSub {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.mockupFieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mockupLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.mockupInput {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  font-family: inherit;
+}
+
+.mockupExpCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.mockupExpHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.mockupExpCompany {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.mockupExpDates {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.mockupExpTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mockupTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.mockupExpBullets {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.mockupLicenseCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.mockupLicenseTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mockupLicenseState {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.mockupLicenseBadges {
+  display: flex;
+  gap: 8px;
+}
+
+.mockupBadgeCompact {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: #f0fdfa;
+  color: #0d9488;
+  border: 1px solid #99f6e4;
+}
+
+.mockupBadgeExp {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fde68a;
+}
+
+.mockupPillWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mockupPill {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: white;
+  color: #64748b;
+  border: 1.5px solid #e2e8f0;
+}
+
+.mockupPillSelected {
+  background: #eff6ff;
+  color: #1a73e8;
+  border-color: #93c5fd;
+  font-weight: 600;
+}
+
+.mockupCount {
+  font-size: 13px;
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+.mockupSubHeading {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.mockupTextarea {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.7;
+  font-family: inherit;
+}
+
+.mockupAdditionalRow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Mockup: Card Headers & Fields ────────────────────── */
+
+.mockupCardHeader {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mockupField {
+  min-width: 0;
+}
+
+.mockupInputFilled {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.mockupOptionalBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mockupCompletionBadge {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Mockup: Tab Navigation (Experience) ──────────────── */
+
+.mockupTabBar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 14px;
+  border-bottom: 2px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.mockupTab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: default;
+}
+
+.mockupTabActive {
+  color: #1a73e8;
+  border-bottom-color: #1a73e8;
+}
+
+.mockupTabAdd {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* ── Mockup: AI Button ────────────────────────────────── */
+
+.mockupAiButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #7c3aed, #6c5ce7);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: default;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── Mockup: Add Buttons (Licenses) ───────────────────── */
+
+.mockupAddBtnRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mockupAddBtn {
+  padding: 9px 16px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: default;
+  transition: border-color 0.15s ease;
+}
+
+.mockupCompactInfo {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f0fdfa;
+  border-radius: 8px;
+  color: #0d9488;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mockupInfoHint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Mockup: Count Badge (inline) ─────────────────────── */
+
+.mockupCountBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  background: #eff6ff;
+  color: #1a73e8;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 100px;
+  margin-left: 6px;
+}
+
+/* ── Mockup: Certification Cards ──────────────────────── */
+
+.mockupCertGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mockupCertCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  text-align: center;
+  font-size: 12px;
+  color: #475569;
+  cursor: default;
+}
+
+.mockupCertSelected {
+  border-color: #1a73e8;
+  background: #eff6ff;
+}
+
+.mockupCertCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #1a73e8;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mockupCertEmpty {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+.mockupCertFull {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.mockupCertExp {
+  font-size: 10px;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* ── Mockup: Select Dropdown ──────────────────────────── */
+
+.mockupSelect {
+  padding: 10px 14px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  position: relative;
+}
+
+.mockupSelect::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+/* ── Mockup: Degree Quick-Select Grid ─────────────────── */
+
+.mockupDegreeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* ── Mockup: Summary Template Cards ───────────────────── */
+
+.mockupTemplateGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mockupMiniTemplate {
+  padding: 10px 8px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.mockupMiniTemplateActive {
+  border-color: #1a73e8;
+  background: #eff6ff;
+  color: #1a73e8;
+}
+
+.mockupForYou {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  background: #1a73e8;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 3px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mockupCharCount {
+  text-align: right;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+/* ── Mockup: Collapsible Cards (Additional) ───────────── */
+
+.mockupCollapseCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  background: white;
+}
+
+.mockupCollapseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  cursor: default;
+  background: #fafbfc;
+}
+
+.mockupCollapseOpen {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mockupCollapseBody {
+  padding: 12px 14px;
+}
+
+.mockupChevron {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* ── Interactive Resume Preview ───────────────────────── */
+
+.previewSection {
+  padding: 56px 20px 64px;
+  background: #f9fafb;
+}
+
+.previewToggleRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.previewToggleBtn {
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-height: 40px;
+}
+
+.previewToggleBtn:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+.previewToggleActive {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: white;
+}
+
+.previewToggleActive:hover {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: white;
+}
+
+.previewFrame {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  max-height: 750px;
+  position: relative;
+}
+
+/* Fade-out at bottom so it doesn't look cut off */
+.previewFrame::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(transparent, white);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.previewScaler {
+  transform: scale(0.8);
+  transform-origin: top center;
+  pointer-events: none;
+}
+
+.previewLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+
+.landingPage {
+  font-family: var(--font-figtree), ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #475569;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography ───────────────────────────────────────── */
+
+.heroHeading {
+  font-weight: 800;
+  font-size: 40px;
+  color: #0f4f4a;
+  margin-bottom: 18px;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.sectionHeading {
+  font-weight: 700;
+  font-size: 30px;
+  color: #1e293b;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.sectionSubtext {
+  font-size: 17px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.bodyText {
+  font-size: 16px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+/* ── Primary CTA ─────────────────────────────────────── */
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-decoration: none;
+  text-align: center;
+}
+
+.primaryButton:hover {
+  background-color: #0f766e;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.3);
+}
+
+/* ── Secondary link (not a big button) ───────────────── */
+
+.secondaryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #0d9488;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.secondaryLink:hover {
+  color: #0f766e;
+  text-decoration: underline;
+}
+
+/* ── Trust badge ─────────────────────────────────────── */
+
+.trustBadge {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ── Comparison Table (replaces feature cards) ───────── */
+
+.comparisonCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.comparisonHeader {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  padding: 14px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.comparisonHeaderLabel {
+  /* empty — feature column */
+}
+
+.comparisonHeaderGeneric,
+.comparisonHeaderOurs {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.comparisonHeaderGeneric {
+  color: #94a3b8;
+}
+
+.comparisonHeaderOurs {
+  color: #0d9488;
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: start;
+  gap: 12px;
+}
+
+.comparisonRow:last-child {
+  border-bottom: none;
+}
+
+.comparisonFeature {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.comparisonGeneric {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.comparisonX {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.comparisonOurs {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
+  color: #0f4f4a;
+  font-weight: 500;
+}
+
+.comparisonCheck {
+  color: #0d9488;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+/* ── Stat Badges ─────────────────────────────────────── */
+
+.statRow {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.statBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 22px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  min-width: 100px;
+}
+
+.statNumber {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0d9488;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* ── Template Cards (2-col grid, horizontal layout) ──── */
+
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.templateCard {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: row;
+  min-height: 120px;
+}
+
+.templateCard:hover {
+  border-color: #0d9488;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.1);
+}
+
+.templatePreview {
+  width: 100px;
+  flex-shrink: 0;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f8fafc;
+  border-right: 1px solid #f1f5f9;
+}
+
+.templateInfo {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.templateName {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.templateBestFor {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* ── Steps (2x2 card grid) ───────────────────────────── */
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.stepCard {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0d9488;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stepTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.stepDescription {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.5;
+  padding-left: 46px;
+}
+
+/* ── Specialty Pills ─────────────────────────────────── */
+
+.specialtyWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.specialtyPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 100px;
+  border: 1.5px solid #99f6e4;
+  background: white;
+  color: #0f4f4a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.specialtyPill:hover {
+  background: #f0fdfa;
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+/* ── FAQ (minimal, no outer box) ─────────────────────── */
+
+.faqList {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.faqItem {
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.faqItem:first-child {
+  border-top: 1px solid #f1f5f9;
+}
+
+.faqItem:hover {
+  background-color: #f8faf9;
+}
+
+.faqQuestion {
+  padding: 20px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.faqQuestionText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.faqChevron {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  color: #94a3b8;
+}
+
+.faqChevronOpen {
+  transform: rotate(180deg);
+  color: #0d9488;
+}
+
+.faqAnswer {
+  padding: 0 4px 20px;
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.7;
+  animation: fadeIn 0.25s ease;
+}
+
+/* ── Job Board Cross-link ────────────────────────────── */
+
+.jobLinkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.jobLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.jobLink:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ══════════════════════════════════════════════════════════
+   Responsive
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .heroSection {
+    padding: 60px 20px 80px;
+  }
+
+  .heroCross3,
+  .heroCross4,
+  .heroCross5 {
+    display: none;
+  }
+
+  .heroPulseLine {
+    display: none;
+  }
+
+  .builderDemoSection {
+    padding: 44px 16px 52px;
+  }
+
+  .builderSidebar {
+    width: 150px;
+    padding: 12px 0;
+  }
+
+  .builderSidebarItem {
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+
+  .builderSidebarDot {
+    width: 16px;
+    height: 16px;
+  }
+
+  .builderSidebarDotDone::after {
+    font-size: 9px;
+  }
+
+  .builderMain {
+    padding: 18px;
+  }
+
+  .builderHeaderTitle {
+    font-size: 16px;
+  }
+
+  .builderHeader {
+    padding: 12px 16px;
+  }
+
+  .mockupFieldRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .mockupSectionTitle {
+    font-size: 16px;
+  }
+
+  .mockupExpBullets {
+    font-size: 12px;
+  }
+
+  .builderBody {
+    min-height: 380px;
+  }
+
+  /* New mockup elements — tablet */
+  .mockupCertGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .mockupTemplateGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .mockupMiniTemplate {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .mockupTabBar {
+    margin-bottom: 12px;
+  }
+
+  .mockupTab, .mockupTabAdd {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .mockupCollapseHeader {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .mockupCollapseBody {
+    padding: 10px 12px;
+  }
+
+  .previewSection {
+    padding: 44px 16px 52px;
+  }
+
+  .previewScaler {
+    transform: scale(0.65);
+  }
+
+  .previewFrame {
+    max-height: 560px;
+  }
+
+  .previewToggleBtn {
+    padding: 7px 16px;
+    font-size: 13px;
+  }
+
+  .featuresSection,
+  .stepsSection {
+    padding: 48px 20px;
+  }
+
+  .specialtySection {
+    padding: 52px 20px;
+  }
+
+  .sectionWave svg {
+    height: 20px;
+  }
+
+  .heroHeading {
+    font-size: 32px;
+  }
+
+  .sectionHeading {
+    font-size: 26px;
+  }
+
+  /* Comparison: stack rows on mobile */
+  .comparisonHeader {
+    display: none;
+  }
+
+  .comparisonRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 16px;
+  }
+
+  .comparisonGeneric {
+    background: #fef2f2;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .comparisonOurs {
+    background: #f0fdfa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .statRow {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .statBadge {
+    padding: 12px 16px;
+    min-width: 80px;
+  }
+
+  .statNumber {
+    font-size: 22px;
+  }
+
+  .statLabel {
+    font-size: 12px;
+  }
+
+  .templateGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stepDescription {
+    padding-left: 0;
+  }
+
+  .jobLinkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .faqQuestion {
+    padding: 18px 2px;
+  }
+
+  .faqAnswer {
+    padding: 0 2px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroSection {
+    padding: 52px 20px 70px;
+  }
+
+  .heroCross1,
+  .heroCross2 {
+    display: none;
+  }
+
+  .heroDotGrid {
+    background-size: 22px 22px;
+  }
+
+  .builderDemoSection {
+    padding: 36px 12px 44px;
+  }
+
+  .builderSidebar {
+    width: 110px;
+  }
+
+  .builderSidebarLabel {
+    font-size: 10px;
+    padding: 0 10px 8px;
+  }
+
+  .builderSidebarItem {
+    font-size: 12px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .builderSidebarDot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .builderSidebarDotDone::after {
+    font-size: 8px;
+  }
+
+  .builderDot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .builderChromeUrl {
+    display: none;
+  }
+
+  .builderMain {
+    padding: 12px;
+  }
+
+  .builderBody {
+    min-height: 340px;
+  }
+
+  .builderHeaderTitle {
+    font-size: 15px;
+  }
+
+  .builderImport {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .mockupSectionTitle {
+    font-size: 15px;
+  }
+
+  .mockupSectionSub {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mockupInput {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .mockupPill {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .mockupExpBullets {
+    font-size: 12px;
+  }
+
+  .mockupExpCard {
+    padding: 12px;
+  }
+
+  .mockupLicenseCard {
+    padding: 12px;
+  }
+
+  /* New mockup elements — mobile */
+  .mockupCardHeader {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  .mockupCertGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .mockupCertCard {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .mockupCertCheck {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .mockupCertEmpty {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mockupCertFull {
+    font-size: 9px;
+  }
+
+  .mockupCertExp {
+    font-size: 9px;
+  }
+
+  .mockupTemplateGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .mockupMiniTemplate {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .mockupForYou {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+
+  .mockupTabBar {
+    margin-bottom: 10px;
+  }
+
+  .mockupTab, .mockupTabAdd {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .mockupAiButton {
+    padding: 11px 14px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .mockupCountBadge {
+    font-size: 10px;
+    padding: 1px 7px;
+  }
+
+  .mockupAddBtnRow {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .mockupAddBtn {
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+
+  .mockupCompactInfo {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .mockupInfoHint {
+    font-size: 11px;
+  }
+
+  .mockupSelect {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .mockupCharCount {
+    font-size: 11px;
+  }
+
+  .mockupCompletionBadge {
+    padding: 8px 12px;
+    font-size: 11px;
+    margin-top: 10px;
+  }
+
+  .mockupCollapseCard {
+    margin-bottom: 6px;
+  }
+
+  .mockupCollapseHeader {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .mockupCollapseBody {
+    padding: 8px 10px;
+  }
+
+  .mockupTextarea {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .mockupSubHeading {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .mockupLabel {
+    font-size: 11px;
+  }
+
+  .mockupOptionalBadge {
+    font-size: 9px;
+  }
+
+  .mockupExpTags {
+    gap: 4px;
+  }
+
+  .mockupTag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .mockupDegreeGrid {
+    gap: 6px;
+  }
+
+  .previewSection {
+    padding: 36px 12px 44px;
+  }
+
+  .previewScaler {
+    transform: scale(0.52);
+  }
+
+  .previewFrame {
+    max-height: 420px;
+    border-radius: 12px;
+  }
+
+  .previewToggleRow {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .previewToggleBtn {
+    padding: 6px 14px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+
+  .featuresSection,
+  .stepsSection {
+    padding: 40px 16px;
+  }
+
+  .specialtySection {
+    padding: 44px 16px;
+  }
+
+  .sectionWave svg {
+    height: 16px;
+  }
+
+  .featuresBgPattern {
+    display: none;
+  }
+
+  .heroHeading {
+    font-size: 28px;
+  }
+
+  .sectionHeading {
+    font-size: 23px;
+  }
+
+  .primaryButton {
+    width: 100%;
+    padding: 16px 24px;
+  }
+
+  /* Comparison: tighter on small screens */
+  .comparisonRow {
+    padding: 14px 12px;
+  }
+
+  .comparisonFeature {
+    font-size: 14px;
+  }
+
+  .statRow {
+    gap: 8px;
+  }
+
+  .statBadge {
+    padding: 10px 14px;
+    min-width: 70px;
+  }
+
+  .statNumber {
+    font-size: 20px;
+  }
+
+  .templateGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .templatePreview {
+    width: 80px;
+    padding: 12px 10px;
+  }
+
+  .templateInfo {
+    padding: 14px 16px;
+  }
+
+  .templateName {
+    font-size: 16px;
+  }
+
+  .templateBestFor {
+    font-size: 13px;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stepCard {
+    padding: 16px;
+  }
+
+  .stepNumber {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .stepTitle {
+    font-size: 15px;
+  }
+
+  .stepDescription {
+    font-size: 14px;
+    padding-left: 0;
+  }
+
+  .specialtyPill {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .faqQuestionText {
+    font-size: 15px;
+  }
+}

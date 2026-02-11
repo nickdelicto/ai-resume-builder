@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 const StickyHeader = () => {
   const router = useRouter();
 
-  const handleFindJobsClick = () => {
-    router.push('/jobs/nursing');
+  const handleBuildResumeClick = () => {
+    router.push('/nursing-resume-builder');
   };
 
   return (
@@ -29,7 +29,7 @@ const StickyHeader = () => {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        background: 'linear-gradient(135deg, #1a73e8 15%, #4f46e5 70%, #6366f1 95%)',
+        background: 'linear-gradient(135deg, #0d9488 15%, #12b886 70%, #14b8a6 95%)',
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
@@ -42,7 +42,7 @@ const StickyHeader = () => {
         alignItems: 'center',
       }}>
         <button
-          onClick={handleFindJobsClick}
+          onClick={handleBuildResumeClick}
           className="animated-button"
           style={{
             padding: '12px 24px',
@@ -55,7 +55,7 @@ const StickyHeader = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'linear-gradient(-45deg, #12b886, #1a73e8, #f59f00, #12b886)',
+            background: 'linear-gradient(-45deg, #12b886, #0d9488, #f59f00, #12b886)',
             backgroundSize: '300% 300%',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
@@ -71,7 +71,7 @@ const StickyHeader = () => {
             e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
           }}
         >
-          🔥 Find RN Jobs
+          Build Your Resume
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>

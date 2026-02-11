@@ -17,7 +17,7 @@ const CategoryCTA = () => {
           Tailored to your industry, ATS-optimized, and designed to get you hired.
         </p>
         <AnimatedButton 
-          href="/resume-builder" 
+          href="/nursing-resume-builder"
           text="Build Your Resume Now"
         />
       </div>

@@ -22,7 +22,7 @@ const EmptyState = () => {
           Browse Other Categories
         </Link>
         <AnimatedButton 
-          href="/resume-builder" 
+          href="/nursing-resume-builder"
           text="Build Your Resume" 
         />
       </div>

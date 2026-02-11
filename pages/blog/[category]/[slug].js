@@ -245,7 +245,7 @@ export default function BlogPost({ post, relatedPosts, mdxSource, occupationData
                   <h3 className={styles.sidebarCtaTitle}>Create Your Resume Now</h3>
                   <p className={styles.sidebarCtaText}>Build a professional {occupationData.title} resume with our AI-powered resume builder.</p>
                   <AnimatedButton 
-                    href="/resume-builder" 
+                    href="/nursing-resume-builder"
                     text="Build Your Resume" 
                     style={{ width: '100%', marginTop: '1rem' }}
                   />
@@ -281,7 +281,7 @@ export default function BlogPost({ post, relatedPosts, mdxSource, occupationData
                     Tailored to your experience and designed to help you land interviews.
                   </p>
                   <AnimatedButton 
-                    href="/resume-builder" 
+                    href="/nursing-resume-builder"
                     text="Build Your Resume Now" 
                   />
                 </div>
@@ -329,7 +329,7 @@ export default function BlogPost({ post, relatedPosts, mdxSource, occupationData
               Tailored to your industry, ATS-optimized, and designed to get you hired.
             </p>
             <AnimatedButton 
-              href="/resume-builder" 
+              href="/nursing-resume-builder"
               text="Build Your Resume Now" 
             />
           </div>

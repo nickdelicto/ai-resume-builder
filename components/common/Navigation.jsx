@@ -76,7 +76,7 @@ const Navigation = () => {
       
       if (success) {
         toast.success('Ready to create a new resume', { id: toastId });
-        router.push('/resume-builder');
+        router.push('/nursing-resume-builder');
       } else {
         toast.error('Failed to prepare for new resume', { id: toastId });
       }
@@ -529,9 +529,9 @@ const Navigation = () => {
               onMouseEnter={() => setActiveDropdown('resume')}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <Link 
-                href="/resume-builder"
-                style={navDropdownStyle(activeDropdown === 'resume' || router.pathname === '/resume-builder')}
+              <Link
+                href="/nursing-resume-builder"
+                style={navDropdownStyle(activeDropdown === 'resume' || router.pathname === '/nursing-resume-builder')}
                 className="nav-dropdown-trigger"
               >
                 <span>🚀 Resume Builder</span>

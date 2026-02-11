@@ -388,7 +388,7 @@ export default function AboutPage() {
             It worked well. People used it. But then the focus expanded.
           </p>
           <p>
-            <Link href="/resume-builder" className="resume-link">The resume builder is still here</Link> if you need it - quick, simple, and effective.
+            <Link href="/nursing-resume-builder" className="resume-link">The resume builder is still here</Link> if you need it - quick, simple, and effective.
           </p>
         </section>
 
@@ -494,7 +494,7 @@ export default function AboutPage() {
               <Link href="/jobs/nursing" className="cta-button">
                 Browse Nursing Jobs
               </Link>
-              <Link href="/resume-builder" className="cta-button cta-button-secondary">
+              <Link href="/nursing-resume-builder" className="cta-button cta-button-secondary">
                 Build Your Resume
               </Link>
             </div>

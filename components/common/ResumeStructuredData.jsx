@@ -21,7 +21,7 @@ const ResumeStructuredData = () => {
       "description": "Free to start - no signup required"
     },
     "description": "AI-powered nursing resume builder designed for Registered Nurses. Build ATS-optimized resumes with clinical skills, certifications, licenses, and healthcare experience sections.",
-    "url": "https://intelliresume.net/resume-builder",
+    "url": "https://intelliresume.net/nursing-resume-builder",
     "screenshot": "https://intelliresume.net/og-image.png",
     "featureList": [
       "Nursing-specific resume templates",

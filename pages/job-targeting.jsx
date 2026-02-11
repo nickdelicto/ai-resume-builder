@@ -177,7 +177,7 @@ const JobTargetingPage = () => {
   return (
     <>
       <Meta
-        title="Tailor Your Resume to a Job | IntelliResume"
+        title="Tailor Your Resume to a Job"
         description="Optimize your nursing resume for a specific job posting. Our AI analyzes the job description and tailors your clinical experience to match."
         canonicalUrl="https://intelliresume.net/job-targeting"
         keywords="nursing resume tailoring, RN job application, ATS optimization, job targeting, resume matching, nurse resume"

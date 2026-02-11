@@ -30,6 +30,7 @@ export async function getServerSideProps({ res }) {
     '/privacy',
     '/terms',
     '/resume-builder',
+    '/nursing-resume-builder',
     '/blog',
     '/blog/resume-examples',
     '/blog/career-guides',
