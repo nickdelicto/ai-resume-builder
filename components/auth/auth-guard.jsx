@@ -35,18 +35,17 @@ export default function AuthGuard({ children }) {
           
           if (migrationResult.success) {
             if (migrationResult.code === 'MIGRATION_SUCCESS') {
-              toast.success('Resume synced to your account!', {
+              toast.success("Resume synced! If you don't see it, refresh the page.", {
                 id: migrationToastIdRef.current,
                 duration: 6000,
                 style: {
-                  background: '#fff',
-                  border: '1px solid #34a853',
+                  background: '#14532d',
                   padding: '14px 18px',
-                  color: '#1d2129',
+                  color: '#fff',
                   fontWeight: '500',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.18)'
                 },
-                iconTheme: { primary: '#34a853', secondary: '#fff' }
+                iconTheme: { primary: '#4ade80', secondary: '#14532d' }
               });
             } else if (migrationResult.code === 'NO_DATA_TO_MIGRATE') {
               toast.dismiss(migrationToastIdRef.current);

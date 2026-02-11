@@ -152,7 +152,7 @@ const JobDescriptionModal = ({ isOpen, onClose, currentJobContext, onUpdateJobCo
     <div className={styles.modalOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
-          <h2>Change Job Description</h2>
+          <h2>{currentJobContext ? 'Change Job Description' : 'Target a Specific Job'}</h2>
           <button className={styles.modalCloseButton} onClick={onClose} aria-label="Close modal">
             <FaTimes />
           </button>
@@ -196,9 +196,9 @@ const JobDescriptionModal = ({ isOpen, onClose, currentJobContext, onUpdateJobCo
             <div className={styles.modalInfo}>
               <FaInfoCircle className={styles.infoIcon} />
               <p>
-                Changing the job description will update the tailoring recommendations for your resume. 
-                Your current resume data will be preserved, but you may want to review each section to 
-                ensure it aligns with the new job requirements.
+                {currentJobContext
+                  ? 'Changing the job description will update the tailoring recommendations for your resume. Your current resume data will be preserved.'
+                  : 'Paste the job posting and we\'ll help you customize your summary, experience, and skills to match what they\'re looking for.'}
               </p>
             </div>
           </div>
@@ -220,7 +220,7 @@ const JobDescriptionModal = ({ isOpen, onClose, currentJobContext, onUpdateJobCo
               ) : (
                 <>
                   <FaLightbulb className={styles.analyzeIcon} />
-                  Update Job Context
+                  {currentJobContext ? 'Update Job Context' : 'Start Customizing'}
                 </>
               )}
             </button>
@@ -3404,11 +3404,11 @@ const ModernResumeBuilder = ({
           hasMigratedRef.current = true;
         } else if (migrationResult.error) {
           // Show a more specific error message
-          toast.error(`Unable to sync your resume data. Try to refresh/reload the page. If the problem persists, please contact me. Error: ${migrationResult.error}`, { id: 'migration-toast' });
+          toast.error('Resume not synced. Delete a resume or upgrade your plan, then try again.', { id: 'migration-toast', duration: 8000, style: { background: '#78350f', color: '#fff', fontWeight: '500', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }, iconTheme: { primary: '#fbbf24', secondary: '#78350f' } });
         }
       } catch (error) {
         console.error('📊 Error during migration:', error);
-        toast.error(`Unable to sync your resume data. Error: ${error.message || 'Unknown error'}`, { id: 'migration-toast' });
+        toast.error('Resume not synced. Delete a resume or upgrade your plan, then try again.', { id: 'migration-toast', duration: 8000, style: { background: '#78350f', color: '#fff', fontWeight: '500', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }, iconTheme: { primary: '#fbbf24', secondary: '#78350f' } });
         
         // Store the error for debugging
         if (typeof window !== 'undefined') {
@@ -3859,8 +3859,24 @@ const ModernResumeBuilder = ({
             Profile
           </a>
           <h1 className={styles.builderTitle}>
-            {internalJobContext ? 'Tailor Your Resume' : 'Build Your Resume'}
+            {internalJobContext ? 'Tailor Your Nursing Resume' : 'Build Your Nursing Resume'}
           </h1>
+
+          {/* Job targeting entry point — only when not in tailoring mode */}
+          {!internalJobContext && (
+            <div className={styles.jobTargetRow}>
+              <button
+                className={styles.jobTargetPrompt}
+                onClick={() => setIsJobDescriptionModalOpen(true)}
+              >
+                <span className={styles.jobTargetText}>🎯 Applying to a specific job?</span>
+                <span className={styles.jobTargetAction}>Customize</span>
+                <svg className={styles.jobTargetArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {/* Compact Job Tailoring Banner — one block replaces banner + card + import */}
           {internalJobContext && (

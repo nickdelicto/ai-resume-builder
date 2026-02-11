@@ -563,6 +563,53 @@
   }
 }
 
+/* ===== Job Target Prompt (entry point when no job context) ===== */
+.jobTargetRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.jobTargetPrompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 36px;
+}
+
+.jobTargetPrompt:hover {
+  background: linear-gradient(135deg, #f0f7ff 0%, #f5f3ff 100%);
+}
+
+.jobTargetPrompt:active {
+  background: linear-gradient(135deg, #e8f0fe 0%, #ede9fe 100%);
+}
+
+.jobTargetText {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.jobTargetAction {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.jobTargetArrow {
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
 /* ===== Compact Tailoring Banner (replaces old multi-block layout) ===== */
 .tailoringBanner {
   margin-bottom: 20px;
