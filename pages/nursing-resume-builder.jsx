@@ -153,12 +153,12 @@ const FAQ_DATA = [
 ];
 
 const JOB_LINKS = [
-  { label: 'ICU RN Jobs', href: '/jobs/nursing/icu' },
-  { label: 'ER RN Jobs', href: '/jobs/nursing/er' },
-  { label: 'Med-Surg RN Jobs', href: '/jobs/nursing/med-surg' },
-  { label: 'L&D RN Jobs', href: '/jobs/nursing/labor-delivery' },
-  { label: 'NICU RN Jobs', href: '/jobs/nursing/nicu' },
-  { label: 'Telemetry RN Jobs', href: '/jobs/nursing/telemetry' },
+  { label: 'ICU RN Jobs', href: '/jobs/nursing/specialty/icu' },
+  { label: 'ER RN Jobs', href: '/jobs/nursing/specialty/er' },
+  { label: 'Med-Surg RN Jobs', href: '/jobs/nursing/specialty/med-surg' },
+  { label: 'L&D RN Jobs', href: '/jobs/nursing/specialty/labor-delivery' },
+  { label: 'NICU RN Jobs', href: '/jobs/nursing/specialty/nicu' },
+  { label: 'Telemetry RN Jobs', href: '/jobs/nursing/specialty/telemetry' },
 ];
 
 const BUILDER_SECTIONS = [
