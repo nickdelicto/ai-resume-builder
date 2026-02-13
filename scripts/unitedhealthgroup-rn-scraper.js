@@ -170,6 +170,32 @@ function parseSalary(salaryStr) {
 }
 
 /**
+ * Extract salary from job description HTML when header field is missing
+ * UHG sometimes embeds pay in highlights/description like "$28.03 - $54.95 per hour"
+ */
+function parseSalaryFromDescription(html) {
+  if (!html) return null;
+
+  // Strip HTML tags for cleaner matching
+  const text = html.replace(/<[^>]+>/g, ' ');
+
+  // Match patterns like "$28.03 - $54.95 per hour" or "$70,200 - $137,800 per year"
+  const match = text.match(/\$([\d,.]+)\s*[-–—to]+\s*\$([\d,.]+)\s*per\s*(hour|year)/i);
+  if (match) {
+    return parseSalary(`$${match[1]}-$${match[2]}/${match[3]}`);
+  }
+
+  // Match "$XX.XX/hr" or "$XX/hour" style
+  const match2 = text.match(/\$([\d,.]+)\s*[-–—to]+\s*\$([\d,.]+)\s*\/(hr|hour|year|yr)/i);
+  if (match2) {
+    const type = match2[3].startsWith('y') ? 'year' : 'hour';
+    return parseSalary(`$${match2[1]}-$${match2[2]}/${type}`);
+  }
+
+  return null;
+}
+
+/**
  * Transform API job to our format
  */
 function transformJob(apiJob) {
@@ -181,8 +207,8 @@ function transformJob(apiJob) {
   const citySlug = city.toLowerCase().replace(/\s+/g, '-');
   const stateSlug = state.toLowerCase();
 
-  // Parse salary info
-  const salary = parseSalary(job.salary);
+  // Parse salary info - try header field first, fall back to description
+  const salary = parseSalary(job.salary) || parseSalaryFromDescription(job.description);
 
   // Clean description for work arrangement detection
   const description = cleanDescription(job.description);

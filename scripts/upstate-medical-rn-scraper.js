@@ -65,7 +65,7 @@ class UpstateMedicalRNScraper {
 
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
 
     try {
@@ -156,7 +156,13 @@ class UpstateMedicalRNScraper {
       const pageUrl = this.searchUrl.replace('page=1', `page=${currentPage}`);
       console.log(`   Page ${currentPage}: ${pageUrl.substring(0, 80)}...`);
 
-      await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+      try {
+        await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+      } catch (navError) {
+        console.log(`   ⚠️  Page ${currentPage} navigation failed: ${navError.message}`);
+        console.log(`   Continuing with ${allUrls.size} jobs collected so far`);
+        break;
+      }
       await new Promise(r => setTimeout(r, 2000));
 
       // Extract job URLs from page
