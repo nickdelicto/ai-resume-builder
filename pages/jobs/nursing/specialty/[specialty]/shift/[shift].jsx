@@ -7,6 +7,7 @@ import { fetchSpecialtyShiftJobs } from '../../../../../../lib/services/jobPageD
 import { generateSpecialtyShiftPageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
+import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -274,33 +275,15 @@ export default function SpecialtyShiftPage({
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-              <div className="mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No {specialty} {shiftType} RN Jobs Currently Available
-              </h2>
-              <p className="text-gray-600 mb-6">
-                New positions are added regularly. Check back soon or explore other options.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href={`/jobs/nursing/specialty/${specialtySlug}`}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                >
-                  View All {specialty} Jobs
-                </Link>
-                <Link
-                  href={`/jobs/nursing/shift/${shiftSlug}`}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
-                >
-                  View All {shiftType} Jobs
-                </Link>
-              </div>
-            </div>
+            <SoftZeroContent
+              title={`No ${shiftType} ${specialty} RN Jobs Right Now`}
+              description={`${shiftType} ${specialty} nursing positions are updated daily.`}
+              alternatives={[
+                { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
+                { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
+                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+              ]}
+            />
           )}
 
           {/* Pagination */}

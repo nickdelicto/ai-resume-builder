@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
+import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
 import { fetchStateShiftJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateStateShiftPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
@@ -290,25 +291,15 @@ export default function StateShiftPage({
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-              <div className="mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No {shiftType} RN Jobs in {stateFullName}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                New positions are added regularly. Check back soon or explore other shifts.
-              </p>
-              <Link
-                href={`/jobs/nursing/${stateCode.toLowerCase()}`}
-                className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-              >
-                Browse All {stateFullName} RN Jobs
-              </Link>
-            </div>
+            <SoftZeroContent
+              title={`No ${shiftType} RN Jobs in ${stateFullName} Right Now`}
+              description={`${shiftType} nursing positions in ${stateFullName} are updated daily.`}
+              alternatives={[
+                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
+                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+              ]}
+            />
           )}
 
           {/* Pagination */}

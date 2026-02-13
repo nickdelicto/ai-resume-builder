@@ -8,6 +8,7 @@ import { generateStateSpecialtyExperienceLevelPageMetaTags } from '../../../../.
 import { isExperienceLevel, getExperienceLevelDescription } from '../../../../../../../lib/constants/experienceLevels';
 import { specialtyToSlug } from '../../../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../../../lib/utils/jobCardUtils';
+import SoftZeroContent from '../../../../../../../components/jobs/SoftZeroContent';
 const { getEmployerLogoPath } = require('../../../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -287,33 +288,15 @@ export default function StateSpecialtyExperienceLevelPage({
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-              <div className="mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No {experienceLevel} {specialty} RN Jobs in {stateFullName}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                New positions are added regularly. Check back soon or explore other options.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}`}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold"
-                >
-                  View All {specialty} Jobs in {stateFullName}
-                </Link>
-                <Link
-                  href={`/jobs/nursing/${stateCode.toLowerCase()}/experience/${levelSlug}`}
-                  className="inline-flex items-center justify-center px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
-                >
-                  View All {experienceLevel} Jobs in {stateFullName}
-                </Link>
-              </div>
-            </div>
+            <SoftZeroContent
+              title={`No ${experienceLevel} ${specialty} RN Jobs in ${stateFullName} Right Now`}
+              description={`${experienceLevel} ${specialty} positions in ${stateFullName} are updated daily.`}
+              alternatives={[
+                { label: `View All ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}` },
+                { label: `View All ${experienceLevel} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/experience/${levelSlug}` },
+                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+              ]}
+            />
           )}
 
           {/* Pagination */}

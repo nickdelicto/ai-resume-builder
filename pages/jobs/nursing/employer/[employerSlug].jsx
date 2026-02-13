@@ -82,28 +82,8 @@ export default function EmployerJobPage({
         ogImage: 'https://intelliresume.net/og-image-jobs.png'
       };
 
-  // Error state (no jobs found)
-  if (jobs.length === 0 && !pagination) {
-    return (
-      <>
-        <Head>
-          <title>Error | IntelliResume Health</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">No Jobs Found</h1>
-            <p className="text-gray-600 mb-6">No jobs found for this employer.</p>
-            <Link
-              href="/jobs/nursing"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Browse All Jobs
-            </Link>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Soft zero state: employer exists but has 0 active jobs right now
+  const isSoftZero = pagination?.total === 0 || (jobs.length === 0 && !pagination);
 
   return (
     <>
@@ -338,12 +318,56 @@ export default function EmployerJobPage({
           )}
 
           {/* Job Listings */}
-          {jobs.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found at {employerDisplayName}</h3>
-              <Link href="/jobs/nursing" className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Browse All Jobs
-              </Link>
+          {isSoftZero ? (
+            <div>
+              {/* Soft zero hero message */}
+              <div className="bg-white rounded-xl shadow-sm border border-blue-100 p-8 sm:p-10 text-center mb-8">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                  No RN Jobs at {employerDisplayName} Right Now
+                </h2>
+                <p className="text-gray-600 text-lg max-w-xl mx-auto mb-6">
+                  {employerDisplayName} positions are updated daily. New openings appear as they're posted. <a href="#job-alert-form" className="text-blue-600 hover:text-blue-800 underline font-medium">Sign up for alerts</a> to be first to know.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/jobs/nursing"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    Browse All RN Jobs
+                  </Link>
+                </div>
+              </div>
+
+              {/* Other employers hiring */}
+              {stats?.otherEmployers && stats.otherEmployers.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Other Healthcare Employers Hiring RNs
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.otherEmployers.map((emp, idx) => (
+                      <Link
+                        key={idx}
+                        href={`/jobs/nursing/employer/${emp.employer.slug}`}
+                        className="flex items-center justify-between gap-2 px-4 py-3 bg-orange-50 hover:bg-orange-100 rounded-lg group transition-colors"
+                      >
+                        <span className="text-gray-900 group-hover:text-orange-700 font-medium">{emp.employer.name}</span>
+                        <span className="text-orange-600 font-semibold bg-white px-2 py-0.5 rounded-full text-xs">{emp.count} {emp.count === 1 ? 'job' : 'jobs'}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Job Alert Signup */}
+              <div className="mt-8" id="job-alert-form" data-job-alert-form>
+                <JobAlertSignup />
+              </div>
             </div>
           ) : (
             <>
@@ -503,16 +527,20 @@ export default function EmployerJobPage({
             </div>
           )}
 
-          {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
-            <JobAlertSignup />
-          </div>
+          {/* Job Alert Signup - Before Footer (hidden on soft zero, which has its own) */}
+          {!isSoftZero && (
+            <div className="mt-16" data-job-alert-form>
+              <JobAlertSignup />
+            </div>
+          )}
 
-          {/* Sticky Bottom CTA Banner */}
-          <StickyJobAlertCTA 
-            specialty=""
-            location={`at ${employer.name}`}
-          />
+          {/* Sticky Bottom CTA Banner (hidden on soft zero) */}
+          {!isSoftZero && (
+            <StickyJobAlertCTA
+              specialty=""
+              location={`at ${employer.name}`}
+            />
+          )}
         </div>
       </div>
     </>

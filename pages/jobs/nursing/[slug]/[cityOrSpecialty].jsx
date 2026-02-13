@@ -155,7 +155,9 @@ export default function CityOrSpecialtyPage({
     const jobCountText = pagination?.total ? `${pagination.total} ` : '';
     seoMeta = {
       title: `${jobCountText}${specialtyDisplayName} RN Jobs in ${stateDisplayName}${salaryText}`,
-      description: `Find ${pagination?.total || 0} ${specialtyDisplayName} Registered Nurse jobs in ${stateDisplayName}. Browse positions at top healthcare employers and apply today!`,
+      description: pagination?.total > 0
+        ? `Find ${pagination.total} ${specialtyDisplayName} Registered Nurse jobs in ${stateDisplayName}. Browse positions at top healthcare employers and apply today!`
+        : `${specialtyDisplayName} Registered Nurse jobs in ${stateDisplayName}. Positions updated daily. Browse ${specialtyDisplayName.toLowerCase()} nursing opportunities at top healthcare employers.`,
       keywords: `${specialtyDisplayName.toLowerCase()} rn jobs, ${specialtyDisplayName.toLowerCase()} nursing jobs, ${stateDisplayName.toLowerCase()} ${specialtyDisplayName.toLowerCase()} nurse`,
       canonicalUrl: `https://intelliresume.net/jobs/nursing/${slug?.toLowerCase() || ''}/${cityOrSpecialty?.toLowerCase() || ''}`,
       ogImage: 'https://intelliresume.net/og-image-jobs.png'
@@ -174,32 +176,9 @@ export default function CityOrSpecialtyPage({
     );
   }
 
-  // Error state (no jobs found)
-  if (jobs.length === 0 && !pagination) {
-    return (
-      <>
-        <Head>
-          <title>Error | IntelliResume Health</title>
-        </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
-          <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">No Jobs Found</h1>
-            <p className="text-gray-600 mb-6">
-              {isSpecialtyPage
-                ? `No ${specialtyDisplayName} nursing jobs found in ${stateDisplayName}.`
-                : `No jobs found in ${cityDisplayName}, ${stateDisplayName}.`}
-            </p>
-            <Link
-              href="/jobs/nursing"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Browse All Jobs
-            </Link>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Soft zero state: valid page, but no active jobs right now
+  // Keep the page alive for SEO instead of showing 404
+  const isSoftZero = pagination?.total === 0 || (jobs.length === 0 && !pagination);
 
   return (
     <>
@@ -348,7 +327,7 @@ export default function CityOrSpecialtyPage({
           </div>
 
           {/* Stats Cards */}
-          {stats && (
+          {!isSoftZero && stats && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               {/* City Stats (for specialty pages) or Specialty Stats (for city pages) */}
               {stats.cities && stats.cities.length > 0 && isSpecialtyPage && (
@@ -453,12 +432,150 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Job Listings */}
-          {jobs.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
-              <Link href="/jobs/nursing" className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Browse All Jobs
-              </Link>
+          {isSoftZero ? (
+            <div>
+              {/* Soft zero hero message */}
+              <div className="bg-white rounded-xl shadow-sm border border-blue-100 p-8 sm:p-10 text-center mb-8">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-full mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                  {isSpecialtyPage
+                    ? `No ${specialtyDisplayName} RN Jobs in ${stateDisplayName} Right Now`
+                    : `No RN Jobs in ${cityDisplayName} Right Now`}
+                </h2>
+                <p className="text-gray-600 text-lg max-w-xl mx-auto mb-6">
+                  {isSpecialtyPage
+                    ? <>{specialtyDisplayName} positions in {stateDisplayName} are updated daily. New openings appear as hospitals post them. <a href="#job-alert-form" className="text-blue-600 hover:text-blue-800 underline font-medium">Sign up for alerts</a> to be first to know.</>
+                    : <>Nursing positions in {cityDisplayName} are updated daily. New openings appear as hospitals post them. <a href="#job-alert-form" className="text-blue-600 hover:text-blue-800 underline font-medium">Sign up for alerts</a> to be first to know.</>}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href={`/jobs/nursing/${slug}`}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    View All Jobs in {stateDisplayName}
+                  </Link>
+                  <Link
+                    href="/jobs/nursing"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
+                  >
+                    Browse All RN Jobs
+                  </Link>
+                </div>
+              </div>
+
+              {/* Same specialty in other states (for state+specialty pages) */}
+              {isSpecialtyPage && stats?.sameSpecialtyInOtherStates && stats.sameSpecialtyInOtherStates.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    {specialtyDisplayName} RN Jobs in Other States
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.sameSpecialtyInOtherStates.map((stateData, idx) => {
+                      const stSlug = stateData.state.toLowerCase();
+                      const specSlug = specialtyToSlug(specialtyDisplayName);
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/${stSlug}/${specSlug}`}
+                          className="flex items-center justify-between gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg group transition-colors"
+                        >
+                          <span className="text-gray-900 group-hover:text-blue-700 font-medium">{stateData.stateFullName}</span>
+                          <span className="text-blue-600 font-semibold bg-white px-2 py-0.5 rounded-full text-xs">{stateData.count} {stateData.count === 1 ? 'job' : 'jobs'}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Other specialties in this state (for state+specialty pages) */}
+              {stats?.otherSpecialties && stats.otherSpecialties.length > 0 && isSpecialtyPage && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Other Nursing Specialties Hiring in {stateDisplayName}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.otherSpecialties.slice(0, 12).map((specData, idx) => {
+                      const stSlug = stateCode.toLowerCase();
+                      const specSlug = specialtyToSlug(normalizeSpecialty(specData.specialty));
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/${stSlug}/${specSlug}`}
+                          className="flex items-center justify-between gap-2 px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg group transition-colors"
+                        >
+                          <span className="text-gray-900 group-hover:text-purple-700 font-medium">{specData.specialty}</span>
+                          <span className="text-purple-600 font-semibold bg-white px-2 py-0.5 rounded-full text-xs">{specData.count} {specData.count === 1 ? 'job' : 'jobs'}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Other cities in this state (for city pages with 0 jobs) */}
+              {isCityPage && stats?.otherCitiesInState && stats.otherCitiesInState.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Other {stateDisplayName} Cities Hiring RNs
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.otherCitiesInState.map((cityData, idx) => {
+                      const stSlug = stateCode.toLowerCase();
+                      const ctSlug = cityData.city.toLowerCase().replace(/\s+/g, '-');
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/${stSlug}/${ctSlug}`}
+                          className="flex items-center justify-between gap-2 px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg group transition-colors"
+                        >
+                          <span className="text-gray-900 group-hover:text-green-700 font-medium">{cityData.city}</span>
+                          <span className="text-green-600 font-semibold bg-white px-2 py-0.5 rounded-full text-xs">{cityData.count} {cityData.count === 1 ? 'job' : 'jobs'}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Specialties in this state (for city pages with 0 jobs) */}
+              {isCityPage && stats?.specialtiesInState && stats.specialtiesInState.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Nursing Specialties Hiring in {stateDisplayName}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {stats.specialtiesInState.map((specData, idx) => {
+                      const stSlug = stateCode.toLowerCase();
+                      const specSlug = specialtyToSlug(normalizeSpecialty(specData.specialty));
+                      return (
+                        <Link
+                          key={idx}
+                          href={`/jobs/nursing/${stSlug}/${specSlug}`}
+                          className="flex items-center justify-between gap-2 px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg group transition-colors"
+                        >
+                          <span className="text-gray-900 group-hover:text-purple-700 font-medium">{specData.specialty}</span>
+                          <span className="text-purple-600 font-semibold bg-white px-2 py-0.5 rounded-full text-xs">{specData.count} {specData.count === 1 ? 'job' : 'jobs'}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Job Alert Signup */}
+              <div className="mt-8" id="job-alert-form" data-job-alert-form>
+                <JobAlertSignup
+                  specialty={isSpecialtyPage ? specialtyName : ''}
+                  location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+                  state={stateCode}
+                  city={isSpecialtyPage ? '' : cityName}
+                />
+              </div>
             </div>
           ) : (
             <>
@@ -570,7 +687,7 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Salary Banner (for Specialty Pages) - Gold/Amber theme to differentiate from teal job alerts */}
-          {isSpecialtyPage && (
+          {isSpecialtyPage && !isSoftZero && (
             <div className="mt-12 mb-8">
               <Link
                 href={`/jobs/nursing/${stateCode.toLowerCase()}/${cityOrSpecialty}/salary`}
@@ -602,7 +719,7 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Salary Banner (for City Pages) - Gold/Amber theme to differentiate from teal job alerts */}
-          {!isSpecialtyPage && cityDisplayName && (
+          {!isSpecialtyPage && !isSoftZero && cityDisplayName && (
           <div className="mt-12 mb-8">
             <Link
                 href={`/jobs/nursing/${stateCode.toLowerCase()}/${cityOrSpecialty}/salary`}
@@ -634,7 +751,7 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Footer: Cities with this Specialty (for State + Specialty pages) */}
-          {stats?.cities && stats.cities.length > 0 && isSpecialtyPage && (
+          {!isSoftZero && stats?.cities && stats.cities.length > 0 && isSpecialtyPage && (
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -668,7 +785,7 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Footer: Specialties in this City (for City pages) */}
-          {stats?.specialties && stats.specialties.length > 0 && isCityPage && (
+          {!isSoftZero && stats?.specialties && stats.specialties.length > 0 && isCityPage && (
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -702,7 +819,7 @@ export default function CityOrSpecialtyPage({
           )}
 
           {/* Footer: Browse by Job Type (for both City and State+Specialty pages) */}
-          {stats?.jobTypes && stats.jobTypes.length > 0 && (
+          {!isSoftZero && stats?.jobTypes && stats.jobTypes.length > 0 && (
             <div className="mt-16 pt-8 border-t border-gray-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -759,21 +876,25 @@ export default function CityOrSpecialtyPage({
             </div>
           )}
 
-          {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
-            <JobAlertSignup 
-              specialty={isSpecialtyPage ? specialtyName : ''}
-              location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
-              state={stateCode}
-              city={isSpecialtyPage ? '' : cityName}
-            />
-          </div>
+          {/* Job Alert Signup - Before Footer (hide on soft zero - already shown above) */}
+          {!isSoftZero && (
+            <>
+              <div className="mt-16" data-job-alert-form>
+                <JobAlertSignup
+                  specialty={isSpecialtyPage ? specialtyName : ''}
+                  location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+                  state={stateCode}
+                  city={isSpecialtyPage ? '' : cityName}
+                />
+              </div>
 
-          {/* Sticky Bottom CTA Banner */}
-          <StickyJobAlertCTA 
-            specialty={isSpecialtyPage ? specialtyName : ''}
-            location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
-          />
+              {/* Sticky Bottom CTA Banner */}
+              <StickyJobAlertCTA
+                specialty={isSpecialtyPage ? specialtyName : ''}
+                location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}
+              />
+            </>
+          )}
         </div>
       </div>
     </>

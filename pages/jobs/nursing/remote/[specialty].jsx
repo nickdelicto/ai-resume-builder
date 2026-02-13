@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { formatPayForCard } from '../../../../lib/utils/jobCardUtils';
 import JobAlertSignup from '../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
+import SoftZeroContent from '../../../../components/jobs/SoftZeroContent';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../lib/seo/jobSEO');
@@ -109,18 +110,33 @@ export default function RemoteSpecialtyJobPage({
     return (
       <>
         <Head>
-          <title>Error | IntelliResume Health</title>
+          <title>Remote {specialtyDisplayName} RN Jobs | IntelliResume Health</title>
         </Head>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">No Remote Jobs Found</h1>
-            <p className="text-gray-600 mb-6">No remote jobs found for this specialty.</p>
-            <Link
-              href="/jobs/nursing/remote"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Browse All Remote Jobs
-            </Link>
+        <div className="min-h-screen bg-gradient-to-b from-green-50 to-gray-50 py-8" style={{ fontFamily: "var(--font-figtree), 'Inter', sans-serif" }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/jobs/nursing" className="hover:text-blue-600 transition-colors">All Jobs</Link>
+              <span>/</span>
+              <Link href="/jobs/nursing/remote" className="hover:text-green-600 transition-colors">Remote</Link>
+              <span>/</span>
+              <span className="text-gray-900 font-medium">{specialtyDisplayName}</span>
+            </nav>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Remote {specialtyDisplayName} RN Jobs
+            </h1>
+            <SoftZeroContent
+              title={`No Remote ${specialtyDisplayName} RN Jobs Right Now`}
+              description={`Remote ${specialtyDisplayName} nursing positions are updated daily.`}
+              alternatives={[
+                { label: 'View All Remote RN Jobs', href: '/jobs/nursing/remote' },
+                { label: `View All ${specialtyDisplayName} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug || specialty}` },
+                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+              ]}
+            />
+            <div className="mt-16" data-job-alert-form>
+              <JobAlertSignup specialty={specialtyDisplayName} location="Remote" />
+            </div>
+            <StickyJobAlertCTA specialty={specialtyDisplayName} location="Remote" />
           </div>
         </div>
       </>
@@ -385,12 +401,15 @@ export default function RemoteSpecialtyJobPage({
 
           {/* Job Listings */}
           {jobs.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No remote {specialtyDisplayName} jobs found</h3>
-              <Link href="/jobs/nursing/remote" className="inline-block mt-6 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                Browse All Remote Jobs
-              </Link>
-            </div>
+            <SoftZeroContent
+              title={`No Remote ${specialtyDisplayName} RN Jobs Right Now`}
+              description={`Remote ${specialtyDisplayName} nursing positions are updated daily.`}
+              alternatives={[
+                { label: 'View All Remote RN Jobs', href: '/jobs/nursing/remote' },
+                { label: `View All ${specialtyDisplayName} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug || specialty}` },
+                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+              ]}
+            />
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-8">

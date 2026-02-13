@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
@@ -288,18 +289,15 @@ export default function CitySpecialtyJobTypePage({
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200 mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No {jobType} {specialty} RN Jobs in {city}</h2>
-              <p className="text-gray-600 mb-6">Check back soon or explore other opportunities.</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href={`/jobs/nursing/${slug}/${citySlug}/${specialtySlug}`} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                  View All {specialty} Jobs in {city}
-                </Link>
-                <Link href={`/jobs/nursing/${slug}/${specialtySlug}/${jobTypeSlug}`} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
-                  View {jobType} {specialty} in {stateFullName}
-                </Link>
-              </div>
-            </div>
+            <SoftZeroContent
+              title={`No ${jobType} ${specialty} RN Jobs in ${city} Right Now`}
+              description={`${jobType} ${specialty} positions in ${city} are updated daily.`}
+              alternatives={[
+                { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${slug}/${citySlug}/${specialtySlug}` },
+                { label: `View All ${jobType} Jobs in ${stateFullName}`, href: `/jobs/nursing/${slug}/${specialtySlug}/${jobTypeSlug}` },
+                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${slug}/${citySlug}` },
+              ]}
+            />
           )}
 
           {/* Pagination */}

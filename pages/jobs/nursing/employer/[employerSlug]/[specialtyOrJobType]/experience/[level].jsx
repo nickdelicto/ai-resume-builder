@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../components/common/Meta';
+import SoftZeroContent from '../../../../../../../components/jobs/SoftZeroContent';
 import JobAlertSignup from '../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../components/StickyJobAlertCTA';
 import { fetchEmployerSpecialtyExperienceLevelJobs } from '../../../../../../../lib/services/jobPageData';
@@ -298,18 +299,15 @@ export default function EmployerSpecialtyExperienceLevelPage({
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200 mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No {experienceLevel} {specialty} RN Jobs at {employerName}</h2>
-              <p className="text-gray-600 mb-6">Check back soon or explore other opportunities.</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href={`/jobs/nursing/employer/${employerSlug}/${specialtySlug}`} className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold">
-                  View All {specialty} Jobs at {employerName}
-                </Link>
-                <Link href={`/jobs/nursing/employer/${employerSlug}`} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
-                  View All Jobs at {employerName}
-                </Link>
-              </div>
-            </div>
+            <SoftZeroContent
+              title={`No ${experienceLevel} ${specialty} RN Jobs at ${employerName} Right Now`}
+              description={`${experienceLevel} ${specialty} positions at ${employerName} are updated daily.`}
+              alternatives={[
+                { label: `View All ${specialty} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}` },
+                { label: `View All ${experienceLevel} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/experience/${levelSlug}` },
+                { label: `View All Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}` },
+              ]}
+            />
           )}
 
           {/* Pagination */}
