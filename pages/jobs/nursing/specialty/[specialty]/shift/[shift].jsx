@@ -3,11 +3,12 @@ import Link from 'next/link';
 import Meta from '../../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
-import { fetchSpecialtyShiftJobs } from '../../../../../../lib/services/jobPageData';
+import { fetchSpecialtyShiftJobs, fetchSoftZeroData } from '../../../../../../lib/services/jobPageData';
 import { generateSpecialtyShiftPageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -41,6 +42,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        specialty: result.specialty,
+        shiftSlug: result.shiftSlug,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -52,6 +61,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -71,6 +81,7 @@ export default function SpecialtyShiftPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -275,15 +286,34 @@ export default function SpecialtyShiftPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${shiftType} ${specialty} RN Jobs Right Now`}
-              description={`${shiftType} ${specialty} nursing positions are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
-                { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${shiftType} ${specialty} RN Jobs Right Now`}
+                description={`${shiftType} ${specialty} nursing positions are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
+                  { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherShifts && (
+                <RelatedJobsGrid
+                  title={`Other Shifts for ${specialty} RNs`}
+                  colorScheme="blue"
+                  items={softZeroData.otherShifts
+                    .filter(s => s.slug !== shiftSlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/specialty/${specialtySlug}/shift/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title={`${specialty} ${shiftType} RN Jobs by State`}
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/specialty/${specialtySlug}/shift/${shiftSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -415,7 +445,7 @@ export default function SpecialtyShiftPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} />
           </div>
 

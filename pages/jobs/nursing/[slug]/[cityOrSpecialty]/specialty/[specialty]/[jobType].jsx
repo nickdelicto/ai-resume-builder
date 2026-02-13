@@ -390,7 +390,7 @@ export default function CitySpecialtyJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} state={stateCode} />
           </div>
 

@@ -3,11 +3,12 @@ import Link from 'next/link';
 import Meta from '../../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
-import { fetchEmployerShiftJobs } from '../../../../../../lib/services/jobPageData';
+import { fetchEmployerShiftJobs, fetchSoftZeroData } from '../../../../../../lib/services/jobPageData';
 import { generateEmployerShiftPageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 const { getStateFullName } = require('../../../../../../lib/jobScraperUtils');
 
@@ -42,6 +43,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        employerId: result.employer.id,
+        shiftSlug: result.shiftSlug,
+      });
+    }
+
     return {
       props: {
         employer: JSON.parse(JSON.stringify(result.employer)),
@@ -52,6 +61,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -70,6 +80,7 @@ export default function EmployerShiftPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -281,15 +292,35 @@ export default function EmployerShiftPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${shiftType} RN Jobs at ${employer.name} Right Now`}
-              description={`${shiftType} positions at ${employer.name} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}` },
-                { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${shiftType} RN Jobs at ${employer.name} Right Now`}
+                description={`${shiftType} positions at ${employer.name} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}` },
+                  { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherShifts && (
+                <RelatedJobsGrid
+                  title={`Other Shifts at ${employer.name}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherShifts
+                    .filter(s => s.slug !== shiftSlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/employer/${employer.slug}/shift/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherEmployers && (
+                <RelatedJobsGrid
+                  title="Other Healthcare Employers Hiring RNs"
+                  colorScheme="orange"
+                  items={softZeroData.otherEmployers
+                    .filter(e => e.slug !== employer.slug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/employer/${e.slug}/shift/${shiftSlug}`, count: e.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -421,7 +452,7 @@ export default function EmployerShiftPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

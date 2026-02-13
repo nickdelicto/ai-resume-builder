@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchSpecialtyJobTypeJobs } from '../../../../../lib/services/jobPageData';
+import { fetchSpecialtyJobTypeJobs, fetchSoftZeroData } from '../../../../../lib/services/jobPageData';
 import { generateSpecialtyJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug } from '../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -42,6 +43,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        specialty: result.specialty,
+        jobType: result.jobType,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -53,6 +62,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -72,6 +82,7 @@ export default function SpecialtyJobTypePage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -276,15 +287,34 @@ export default function SpecialtyJobTypePage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${jobType} ${specialty} RN Jobs Right Now`}
-              description={`${jobType} ${specialty} nursing positions are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
-                { label: `View All ${jobType} RN Jobs`, href: `/jobs/nursing/job-type/${jobTypeSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${jobType} ${specialty} RN Jobs Right Now`}
+                description={`${jobType} ${specialty} nursing positions are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
+                  { label: `View All ${jobType} RN Jobs`, href: `/jobs/nursing/job-type/${jobTypeSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherJobTypes && (
+                <RelatedJobsGrid
+                  title={`Other Job Types for ${specialty} RNs`}
+                  colorScheme="blue"
+                  items={softZeroData.otherJobTypes
+                    .filter(jt => jt.slug !== jobTypeSlug)
+                    .map(jt => ({ label: jt.label, href: `/jobs/nursing/specialty/${specialtySlug}/${jt.slug}`, count: jt.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title={`${jobType} ${specialty} RN Jobs by State`}
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/specialty/${specialtySlug}/${jobTypeSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -391,7 +421,7 @@ export default function SpecialtyJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} />
           </div>
 

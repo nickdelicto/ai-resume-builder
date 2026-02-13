@@ -2,13 +2,15 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../components/StickyJobAlertCTA';
-import { fetchCitySpecialtySignOnBonusJobs } from '../../../../../../../lib/services/jobPageData';
+import { fetchCitySpecialtySignOnBonusJobs, fetchSoftZeroData } from '../../../../../../../lib/services/jobPageData';
 import { generateCitySpecialtySignOnBonusPageMetaTags } from '../../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../../lib/utils/jobCardUtils';
 const { getEmployerLogoPath } = require('../../../../../../../lib/utils/employerLogos');
+const { getCityDisplayName } = require('../../../../../../../lib/utils/cityDisplayUtils');
 
 export async function getServerSideProps({ params, query }) {
   const { slug: stateCode, cityOrSpecialty: citySlug, specialty: specialtySlug } = params;
@@ -32,6 +34,17 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    // Fetch cross-dimensional stats when no active jobs
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        city: result.city,
+        specialty: result.specialty,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -45,6 +58,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -66,8 +80,12 @@ export default function CitySpecialtySignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
+
+  // SEO-optimized city name for grid titles
+  const cityDisplay = getCityDisplayName(city, stateCode);
 
   return (
     <>
@@ -257,15 +275,35 @@ export default function CitySpecialtySignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${specialty} Sign-On Bonus RN Jobs in ${city} Right Now`}
-              description={`${specialty} sign-on bonus positions in ${city} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
-                { label: `View All Sign-On Bonus Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/sign-on-bonus` },
-                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${specialty} Sign-On Bonus RN Jobs in ${city} Right Now`}
+                description={`${specialty} sign-on bonus positions in ${city} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
+                  { label: `View All Sign-On Bonus Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/sign-on-bonus` },
+                  { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
+                ]}
+              />
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title={`Other Specialties with Sign-On Bonus in ${cityDisplay}`}
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .filter(s => s.slug !== specialtySlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherCities && (
+                <RelatedJobsGrid
+                  title={`${specialty} Sign-On Bonus RN Jobs in Other ${stateFullName} Cities`}
+                  colorScheme="green"
+                  items={softZeroData.otherCities
+                    .filter(c => c.slug !== citySlug)
+                    .map(c => ({ label: c.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${c.slug}/specialty/${specialtySlug}/sign-on-bonus`, count: c.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -352,7 +390,7 @@ export default function CitySpecialtySignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

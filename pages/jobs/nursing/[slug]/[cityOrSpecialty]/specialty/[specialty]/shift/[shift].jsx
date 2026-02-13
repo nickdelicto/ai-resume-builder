@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../../components/StickyJobAlertCTA';
-import { fetchCitySpecialtyShiftJobs } from '../../../../../../../../lib/services/jobPageData';
+import { fetchCitySpecialtyShiftJobs, fetchSoftZeroData } from '../../../../../../../../lib/services/jobPageData';
 import { generateCitySpecialtyShiftPageMetaTags } from '../../../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../../../lib/utils/jobCardUtils';
@@ -46,6 +47,17 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    // Fetch cross-dimensional stats when no active jobs
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        city: result.city,
+        specialty: result.specialty,
+        shiftSlug: result.shiftSlug,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -61,6 +73,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -84,6 +97,7 @@ export default function CitySpecialtyShiftPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -290,15 +304,35 @@ export default function CitySpecialtyShiftPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${specialty} ${shiftType} RN Jobs in ${city} Right Now`}
-              description={`${specialty} ${shiftType} positions in ${city} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
-                { label: `View All ${shiftType} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/shift/${shiftSlug}` },
-                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${specialty} ${shiftType} RN Jobs in ${city} Right Now`}
+                description={`${specialty} ${shiftType} positions in ${city} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
+                  { label: `View All ${shiftType} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/shift/${shiftSlug}` },
+                  { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
+                ]}
+              />
+              {softZeroData?.otherShifts && (
+                <RelatedJobsGrid
+                  title={`Other Shifts for ${specialty} in ${cityDisplay}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherShifts
+                    .filter(s => s.slug !== shiftSlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}/shift/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherCities && (
+                <RelatedJobsGrid
+                  title={`${specialty} ${shiftType} RN Jobs in Other ${stateFullName} Cities`}
+                  colorScheme="green"
+                  items={softZeroData.otherCities
+                    .filter(c => c.slug !== citySlug)
+                    .map(c => ({ label: c.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${c.slug}/specialty/${specialtySlug}/shift/${shiftSlug}`, count: c.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -402,7 +436,7 @@ export default function CitySpecialtyShiftPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} />
           </div>
 

@@ -3,12 +3,14 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchCitySignOnBonusJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
+import { fetchCitySignOnBonusJobs, fetchSoftZeroData, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateCitySignOnBonusPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
+const { getCityDisplayName } = require('../../../../../lib/utils/cityDisplayUtils');
 
 export async function getServerSideProps({ params, query }) {
   const { slug, cityOrSpecialty } = params;
@@ -37,6 +39,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        city: result.city,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         stateCode: result.stateCode,
@@ -48,6 +59,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -67,8 +79,11 @@ export default function CitySignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
+
+  const cityDisplay = getCityDisplayName(city, stateCode);
 
   return (
     <>
@@ -227,15 +242,34 @@ export default function CitySignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No Sign-On Bonus RN Jobs in ${city} Right Now`}
-              description={`Sign-On Bonus positions in ${city} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
-                { label: `View All Sign-On Bonus Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/sign-on-bonus` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No Sign-On Bonus RN Jobs in ${cityDisplay} Right Now`}
+                description={`Sign-On Bonus positions in ${cityDisplay} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs in ${cityDisplay}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
+                  { label: `View All Sign-On Bonus Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/sign-on-bonus` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.specialtiesWithBonus && (
+                <RelatedJobsGrid
+                  title={`Specialties with Sign-On Bonus in ${cityDisplay}`}
+                  colorScheme="purple"
+                  items={softZeroData.specialtiesWithBonus
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherCities && (
+                <RelatedJobsGrid
+                  title={`Sign-On Bonus RN Jobs in Other ${stateFullName} Cities`}
+                  colorScheme="green"
+                  items={softZeroData.otherCities
+                    .filter(c => c.slug !== citySlug)
+                    .map(c => ({ label: c.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${c.slug}/sign-on-bonus`, count: c.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -322,7 +356,7 @@ export default function CitySignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

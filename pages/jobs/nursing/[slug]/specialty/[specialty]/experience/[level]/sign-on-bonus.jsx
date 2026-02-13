@@ -3,11 +3,12 @@ import Link from 'next/link';
 import Meta from '../../../../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../../components/StickyJobAlertCTA';
-import { fetchStateSpecialtyExperienceLevelSignOnBonusJobs } from '../../../../../../../../lib/services/jobPageData';
+import { fetchStateSpecialtyExperienceLevelSignOnBonusJobs, fetchSoftZeroData } from '../../../../../../../../lib/services/jobPageData';
 import { generateStateSpecialtyExperienceLevelSignOnBonusPageMetaTags } from '../../../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -32,6 +33,16 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        specialty: result.specialty,
+        experienceLevel: result.experienceLevel,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -45,6 +56,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -66,6 +78,7 @@ export default function StateSpecialtyExperienceLevelSignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -282,15 +295,35 @@ export default function StateSpecialtyExperienceLevelSignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${experienceLevel} ${specialty} RN Jobs with Sign-On Bonus in ${stateFullName} Right Now`}
-              description={`${experienceLevel} ${specialty} sign-on bonus positions in ${stateFullName} are updated daily.`}
-              alternatives={[
-                { label: `View All ${experienceLevel} ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specialtySlug}/experience/${levelSlug}` },
-                { label: `View All ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}` },
-                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${experienceLevel} ${specialty} RN Jobs with Sign-On Bonus in ${stateFullName} Right Now`}
+                description={`${experienceLevel} ${specialty} sign-on bonus positions in ${stateFullName} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${experienceLevel} ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specialtySlug}/experience/${levelSlug}` },
+                  { label: `View All ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}` },
+                  { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                ]}
+              />
+              {softZeroData?.otherExperienceLevels && (
+                <RelatedJobsGrid
+                  title={`Other ${specialty} Experience Levels with Sign-On Bonus in ${stateFullName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherExperienceLevels
+                    .filter(e => e.slug !== levelSlug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specialtySlug}/experience/${e.slug}/sign-on-bonus`, count: e.count }))}
+                />
+              )}
+              {softZeroData?.otherStates && (
+                <RelatedJobsGrid
+                  title={`${experienceLevel} ${specialty} Sign-On Bonus RN Jobs in Other States`}
+                  colorScheme="green"
+                  items={softZeroData.otherStates
+                    .filter(s => s.slug !== stateCode.toLowerCase())
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/specialty/${specialtySlug}/experience/${levelSlug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -371,7 +404,7 @@ export default function StateSpecialtyExperienceLevelSignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

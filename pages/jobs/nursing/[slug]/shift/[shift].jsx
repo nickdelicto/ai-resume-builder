@@ -4,7 +4,8 @@ import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
-import { fetchStateShiftJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
+import { fetchStateShiftJobs, fetchSoftZeroData, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateStateShiftPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
@@ -47,6 +48,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        shiftSlug: result.shiftSlug,
+      });
+    }
+
     return {
       props: {
         shiftType: result.shiftType,
@@ -58,6 +67,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -77,6 +87,7 @@ export default function StateShiftPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -291,15 +302,35 @@ export default function StateShiftPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${shiftType} RN Jobs in ${stateFullName} Right Now`}
-              description={`${shiftType} nursing positions in ${stateFullName} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
-                { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${shiftType} RN Jobs in ${stateFullName} Right Now`}
+                description={`${shiftType} nursing positions in ${stateFullName} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                  { label: `View All ${shiftType} RN Jobs`, href: `/jobs/nursing/shift/${shiftSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherShifts && (
+                <RelatedJobsGrid
+                  title={`Other Shifts Hiring in ${stateFullName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherShifts
+                    .filter(s => s.slug !== shiftSlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/shift/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherStates && (
+                <RelatedJobsGrid
+                  title={`${shiftType} RN Jobs in Other States`}
+                  colorScheme="green"
+                  items={softZeroData.otherStates
+                    .filter(s => s.slug !== stateCode.toLowerCase())
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/shift/${shiftSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -434,7 +465,7 @@ export default function StateShiftPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup state={stateCode} />
           </div>
 

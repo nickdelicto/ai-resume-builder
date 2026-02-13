@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchStateExperienceLevelJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
+import { fetchStateExperienceLevelJobs, fetchSoftZeroData, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateStateExperienceLevelPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { specialtyToSlug, normalizeSpecialty } from '../../../../../lib/constants/specialties';
 import { isExperienceLevel, getExperienceLevelDescription } from '../../../../../lib/constants/experienceLevels';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -42,6 +43,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        experienceLevel: result.experienceLevel,
+      });
+    }
+
     return {
       props: {
         stateCode: result.stateCode,
@@ -53,6 +62,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -72,6 +82,7 @@ export default function StateExperienceLevelPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -316,15 +327,35 @@ export default function StateExperienceLevelPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${experienceLevel} RN Jobs in ${stateFullName} Right Now`}
-              description={`${experienceLevel} nursing positions in ${stateFullName} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
-                { label: `View All ${experienceLevel} RN Jobs`, href: `/jobs/nursing/experience/${levelSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${experienceLevel} RN Jobs in ${stateFullName} Right Now`}
+                description={`${experienceLevel} nursing positions in ${stateFullName} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                  { label: `View All ${experienceLevel} RN Jobs`, href: `/jobs/nursing/experience/${levelSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherExperienceLevels && (
+                <RelatedJobsGrid
+                  title={`Other Experience Levels in ${stateFullName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherExperienceLevels
+                    .filter(e => e.slug !== levelSlug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/experience/${e.slug}`, count: e.count }))}
+                />
+              )}
+              {softZeroData?.otherStates && (
+                <RelatedJobsGrid
+                  title={`${experienceLevel} RN Jobs in Other States`}
+                  colorScheme="green"
+                  items={softZeroData.otherStates
+                    .filter(s => s.slug !== stateCode.toLowerCase())
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/experience/${levelSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -437,7 +468,7 @@ export default function StateExperienceLevelPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup state={stateCode} />
           </div>
 

@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchExperienceLevelSignOnBonusJobs } from '../../../../../lib/services/jobPageData';
+import { fetchExperienceLevelSignOnBonusJobs, fetchSoftZeroData } from '../../../../../lib/services/jobPageData';
 import { generateExperienceLevelSignOnBonusPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { experienceLevelToDisplay } from '../../../../../lib/constants/experienceLevels';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -29,6 +30,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        experienceLevel: result.experienceLevel,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         experienceLevel: result.experienceLevel,
@@ -38,6 +47,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -55,6 +65,7 @@ export default function ExperienceLevelSignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -273,15 +284,34 @@ export default function ExperienceLevelSignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${experienceLevel} Sign-On Bonus RN Jobs Right Now`}
-              description={`${experienceLevel} nursing positions with sign-on bonuses are updated daily.`}
-              alternatives={[
-                { label: `View All ${experienceLevel} RN Jobs`, href: `/jobs/nursing/experience/${levelSlug}` },
-                { label: 'View All Sign-On Bonus RN Jobs', href: '/jobs/nursing/sign-on-bonus' },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${experienceLevel} Sign-On Bonus RN Jobs Right Now`}
+                description={`${experienceLevel} nursing positions with sign-on bonuses are updated daily.`}
+                alternatives={[
+                  { label: `View All ${experienceLevel} RN Jobs`, href: `/jobs/nursing/experience/${levelSlug}` },
+                  { label: 'View All Sign-On Bonus RN Jobs', href: '/jobs/nursing/sign-on-bonus' },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherExperienceLevels && (
+                <RelatedJobsGrid
+                  title="Other Experience Levels with Sign-On Bonus"
+                  colorScheme="blue"
+                  items={softZeroData.otherExperienceLevels
+                    .filter(el => el.slug !== levelSlug)
+                    .map(el => ({ label: el.label, href: `/jobs/nursing/experience/${el.slug}/sign-on-bonus`, count: el.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title={`${experienceLevel} Sign-On Bonus RN Jobs by State`}
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/experience/${levelSlug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -396,7 +426,7 @@ export default function ExperienceLevelSignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

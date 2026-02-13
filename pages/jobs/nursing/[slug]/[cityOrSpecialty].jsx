@@ -879,7 +879,7 @@ export default function CityOrSpecialtyPage({
           {/* Job Alert Signup - Before Footer (hide on soft zero - already shown above) */}
           {!isSoftZero && (
             <>
-              <div className="mt-16" data-job-alert-form>
+              <div className="mt-16" id="job-alert-form" data-job-alert-form>
                 <JobAlertSignup
                   specialty={isSpecialtyPage ? specialtyName : ''}
                   location={isSpecialtyPage ? stateDisplayName : `${cityName}, ${stateCode}`}

@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../components/StickyJobAlertCTA';
-import { fetchEmployerSpecialtyShiftJobs } from '../../../../../../../lib/services/jobPageData';
+import { fetchEmployerSpecialtyShiftJobs, fetchSoftZeroData } from '../../../../../../../lib/services/jobPageData';
 import { generateEmployerSpecialtyShiftPageMetaTags } from '../../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../../lib/utils/jobCardUtils';
@@ -44,6 +45,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        employerId: result.employer.id,
+        specialty: result.specialty,
+        shiftSlug: result.shiftSlug,
+      });
+    }
+
     return {
       props: {
         employer: JSON.parse(JSON.stringify(result.employer)),
@@ -56,6 +66,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -76,6 +87,7 @@ export default function EmployerSpecialtyShiftPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -279,15 +291,35 @@ export default function EmployerSpecialtyShiftPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${specialty} ${shiftType} RN Jobs at ${employer.name} Right Now`}
-              description={`${specialty} ${shiftType} positions at ${employer.name} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}/${specialtySlug}` },
-                { label: `View All ${shiftType} Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}/shift/${shiftSlug}` },
-                { label: `View All Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${specialty} ${shiftType} RN Jobs at ${employer.name} Right Now`}
+                description={`${specialty} ${shiftType} positions at ${employer.name} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}/${specialtySlug}` },
+                  { label: `View All ${shiftType} Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}/shift/${shiftSlug}` },
+                  { label: `View All Jobs at ${employer.name}`, href: `/jobs/nursing/employer/${employer.slug}` },
+                ]}
+              />
+              {softZeroData?.otherShifts && (
+                <RelatedJobsGrid
+                  title={`Other ${specialty} Shifts at ${employer.name}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherShifts
+                    .filter(s => s.slug !== shiftSlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/employer/${employer.slug}/${specialtySlug}/shift/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherEmployers && (
+                <RelatedJobsGrid
+                  title={`Other Employers Hiring ${specialty} RNs`}
+                  colorScheme="orange"
+                  items={softZeroData.otherEmployers
+                    .filter(e => e.slug !== employer.slug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/employer/${e.slug}/${specialtySlug}/shift/${shiftSlug}`, count: e.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -394,7 +426,7 @@ export default function EmployerSpecialtyShiftPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} />
           </div>
 

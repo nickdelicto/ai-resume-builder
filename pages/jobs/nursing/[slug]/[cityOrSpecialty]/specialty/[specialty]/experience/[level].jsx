@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../../components/StickyJobAlertCTA';
-import { fetchCitySpecialtyExperienceLevelJobs } from '../../../../../../../../lib/services/jobPageData';
+import { fetchCitySpecialtyExperienceLevelJobs, fetchSoftZeroData } from '../../../../../../../../lib/services/jobPageData';
 import { generateCitySpecialtyExperienceLevelPageMetaTags } from '../../../../../../../../lib/seo/jobSEO';
 import { isValidSpecialtySlug } from '../../../../../../../../lib/constants/specialties';
 import { isExperienceLevel, experienceLevelToSlug, getExperienceLevelDescription } from '../../../../../../../../lib/constants/experienceLevels';
@@ -58,6 +59,17 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    // Fetch cross-dimensional stats when no active jobs
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        city: result.city,
+        specialty: result.specialty,
+        experienceLevel: result.experienceLevel,
+      });
+    }
+
     return {
       props: {
         stateCode: result.stateCode,
@@ -74,6 +86,7 @@ export async function getServerSideProps({ params, query }) {
         currentPage: result.currentPage,
         maxHourlyRate: result.maxHourlyRate,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -98,6 +111,7 @@ export default function CitySpecialtyExperienceLevelPage({
   currentPage,
   maxHourlyRate,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -282,15 +296,35 @@ export default function CitySpecialtyExperienceLevelPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${experienceLevel} ${specialty} RN Jobs in ${city} Right Now`}
-              description={`${experienceLevel} ${specialty} positions in ${city} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
-                { label: `View All ${experienceLevel} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/experience/${levelSlug}` },
-                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${experienceLevel} ${specialty} RN Jobs in ${city} Right Now`}
+                description={`${experienceLevel} ${specialty} positions in ${city} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}` },
+                  { label: `View All ${experienceLevel} Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/experience/${levelSlug}` },
+                  { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
+                ]}
+              />
+              {softZeroData?.otherExperienceLevels && (
+                <RelatedJobsGrid
+                  title={`Other Experience Levels for ${specialty} in ${cityDisplay}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherExperienceLevels
+                    .filter(exp => exp.slug !== levelSlug)
+                    .map(exp => ({ label: exp.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/specialty/${specialtySlug}/experience/${exp.slug}`, count: exp.count }))}
+                />
+              )}
+              {softZeroData?.otherCities && (
+                <RelatedJobsGrid
+                  title={`${experienceLevel} ${specialty} RN Jobs in Other ${stateFullName} Cities`}
+                  colorScheme="green"
+                  items={softZeroData.otherCities
+                    .filter(c => c.slug !== citySlug)
+                    .map(c => ({ label: c.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${c.slug}/specialty/${specialtySlug}/experience/${levelSlug}`, count: c.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -419,7 +453,7 @@ export default function CitySpecialtyExperienceLevelPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} state={stateCode} />
           </div>
 

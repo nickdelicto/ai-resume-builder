@@ -6,11 +6,12 @@ import { formatPayForCard } from '../../../../lib/utils/jobCardUtils';
 import JobAlertSignup from '../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../components/StickyJobAlertCTA';
 import SoftZeroContent from '../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../components/jobs/RelatedJobsGrid';
 
 // Import SEO utilities and state helpers (CommonJS module)
 const seoUtils = require('../../../../lib/seo/jobSEO');
 const { getStateFullName } = require('../../../../lib/jobScraperUtils');
-const { fetchRemoteSpecialtyJobs } = require('../../../../lib/services/jobPageData');
+const { fetchRemoteSpecialtyJobs, fetchSoftZeroData } = require('../../../../lib/services/jobPageData');
 const { specialtyToSlug } = require('../../../../lib/constants/specialties');
 const { jobTypeToSlug, jobTypeToDisplay } = require('../../../../lib/constants/jobTypes');
 const { getEmployerLogoPath } = require('../../../../lib/utils/employerLogos');
@@ -58,6 +59,14 @@ export async function getServerSideProps({ params, query }) {
       };
     }
 
+    let softZeroData = null;
+    if (result.pagination?.total === 0 || result.jobs.length === 0) {
+      softZeroData = await fetchSoftZeroData({
+        specialty: result.specialty,
+        remote: true,
+      });
+    }
+
     return {
       props: {
         specialtyName: result.specialty,
@@ -65,7 +74,8 @@ export async function getServerSideProps({ params, query }) {
         jobs: result.jobs,
         pagination: result.pagination,
         maxHourlyRate: result.maxHourlyRate,
-        stats: result.statistics
+        stats: result.statistics,
+        softZeroData
       }
     };
   } catch (error) {
@@ -82,7 +92,8 @@ export default function RemoteSpecialtyJobPage({
   jobs = [],
   pagination = null,
   maxHourlyRate,
-  stats = null
+  stats = null,
+  softZeroData = null
 }) {
   const router = useRouter();
   const { specialty } = router.query || {};
@@ -133,7 +144,23 @@ export default function RemoteSpecialtyJobPage({
                 { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
               ]}
             />
-            <div className="mt-16" data-job-alert-form>
+            {softZeroData?.otherSpecialties && (
+              <RelatedJobsGrid
+                title="Other Remote Specialties"
+                colorScheme="purple"
+                items={softZeroData.otherSpecialties
+                  .map(s => ({ label: s.label, href: `/jobs/nursing/remote/${s.slug}`, count: s.count }))}
+              />
+            )}
+            {softZeroData?.topStates && (
+              <RelatedJobsGrid
+                title="Remote RN Jobs by State"
+                colorScheme="green"
+                items={softZeroData.topStates
+                  .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/remote`, count: s.count }))}
+              />
+            )}
+            <div className="mt-16" id="job-alert-form" data-job-alert-form>
               <JobAlertSignup specialty={specialtyDisplayName} location="Remote" />
             </div>
             <StickyJobAlertCTA specialty={specialtyDisplayName} location="Remote" />
@@ -401,15 +428,33 @@ export default function RemoteSpecialtyJobPage({
 
           {/* Job Listings */}
           {jobs.length === 0 ? (
-            <SoftZeroContent
-              title={`No Remote ${specialtyDisplayName} RN Jobs Right Now`}
-              description={`Remote ${specialtyDisplayName} nursing positions are updated daily.`}
-              alternatives={[
-                { label: 'View All Remote RN Jobs', href: '/jobs/nursing/remote' },
-                { label: `View All ${specialtyDisplayName} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug || specialty}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No Remote ${specialtyDisplayName} RN Jobs Right Now`}
+                description={`Remote ${specialtyDisplayName} nursing positions are updated daily.`}
+                alternatives={[
+                  { label: 'View All Remote RN Jobs', href: '/jobs/nursing/remote' },
+                  { label: `View All ${specialtyDisplayName} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug || specialty}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title="Other Remote Specialties"
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/remote/${s.slug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title="Remote RN Jobs by State"
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/remote`, count: s.count }))}
+                />
+              )}
+            </>
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-8">
@@ -608,7 +653,7 @@ export default function RemoteSpecialtyJobPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup
               specialty={specialtyDisplayName}
               location="Remote"

@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
-import { fetchStateSpecialtyJobTypeJobs } from '../../../../../../lib/services/jobPageData';
+import { fetchStateSpecialtyJobTypeJobs, fetchSoftZeroData } from '../../../../../../lib/services/jobPageData';
 import { generateStateSpecialtyJobTypePageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug } from '../../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -44,6 +45,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        specialty: result.specialty,
+        jobType: result.jobType,
+      });
+    }
+
     return {
       props: {
         stateCode: result.stateCode,
@@ -57,6 +67,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -78,6 +89,7 @@ export default function StateSpecialtyJobTypePage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -289,15 +301,43 @@ export default function StateSpecialtyJobTypePage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${jobType} ${specialty} RN Jobs in ${stateFullName} Right Now`}
-              description={`${jobType} ${specialty} positions in ${stateFullName} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}` },
-                { label: `View All ${jobType} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/job-type/${jobTypeSlug}` },
-                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${jobType} ${specialty} RN Jobs in ${stateFullName} Right Now`}
+                description={`${jobType} ${specialty} positions in ${stateFullName} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${specialtySlug}` },
+                  { label: `View All ${jobType} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/job-type/${jobTypeSlug}` },
+                  { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                ]}
+              />
+              {softZeroData?.otherJobTypes && (
+                <RelatedJobsGrid
+                  title={`Other Job Types for ${specialty} RNs in ${stateFullName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherJobTypes
+                    .filter(jt => jt.slug !== jobTypeSlug)
+                    .map(jt => ({ label: jt.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/specialty/${specialtySlug}/${jt.slug}`, count: jt.count }))}
+                />
+              )}
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title={`Other ${jobType} RN Specialties in ${stateFullName}`}
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/specialty/${s.slug}/${jobTypeSlug}`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherStates && (
+                <RelatedJobsGrid
+                  title={`${jobType} ${specialty} RN Jobs in Other States`}
+                  colorScheme="green"
+                  items={softZeroData.otherStates
+                    .filter(s => s.slug !== stateCode.toLowerCase())
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/specialty/${specialtySlug}/${jobTypeSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -429,7 +469,7 @@ export default function StateSpecialtyJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} state={stateCode} />
           </div>
 

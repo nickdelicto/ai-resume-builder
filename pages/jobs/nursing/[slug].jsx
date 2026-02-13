@@ -929,7 +929,7 @@ export default function JobDetailPage({
                 )}
 
             {/* Job Alert Signup - Before Footer */}
-            <div className="mt-16" data-job-alert-form>
+            <div className="mt-16" id="job-alert-form" data-job-alert-form>
               <JobAlertSignup
                 location="Remote"
               />
@@ -1445,7 +1445,7 @@ export default function JobDetailPage({
             )}
 
             {/* Job Alert Signup - Before Footer */}
-            <div className="mt-16" data-job-alert-form>
+            <div className="mt-16" id="job-alert-form" data-job-alert-form>
               <JobAlertSignup 
                 location={stateDisplayName}
                 state={stateCode}
@@ -2004,7 +2004,7 @@ export default function JobDetailPage({
           )}
 
           {/* Job Alert Signup - After Related Jobs */}
-          <div className="mt-8" data-job-alert-form>
+          <div className="mt-8" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup
               specialty={job.specialty}
               location={job.workArrangement === 'remote' ? `Remote${job.state ? ` (${job.state})` : ''}` : `${job.city}, ${job.state}`}

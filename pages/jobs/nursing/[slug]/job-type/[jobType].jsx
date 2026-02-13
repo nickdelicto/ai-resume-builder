@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchStateJobTypeJobs, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
+import { fetchStateJobTypeJobs, fetchSoftZeroData, detectStateFromSlug } from '../../../../../lib/services/jobPageData';
 import { generateStateJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug, normalizeSpecialty } from '../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -48,6 +49,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        jobType: result.jobType,
+      });
+    }
+
     return {
       props: {
         stateCode: result.stateCode,
@@ -59,6 +68,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -78,6 +88,7 @@ export default function StateJobTypePage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -288,15 +299,35 @@ export default function StateJobTypePage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${jobType} RN Jobs in ${stateFullName} Right Now`}
-              description={`${jobType} nursing positions in ${stateFullName} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
-                { label: `View All ${jobType} RN Jobs`, href: `/jobs/nursing/job-type/${jobTypeSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${jobType} RN Jobs in ${stateFullName} Right Now`}
+                description={`${jobType} nursing positions in ${stateFullName} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}` },
+                  { label: `View All ${jobType} RN Jobs`, href: `/jobs/nursing/job-type/${jobTypeSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherJobTypes && (
+                <RelatedJobsGrid
+                  title={`Other Job Types in ${stateFullName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherJobTypes
+                    .filter(jt => jt.slug !== jobTypeSlug)
+                    .map(jt => ({ label: jt.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/job-type/${jt.slug}`, count: jt.count }))}
+                />
+              )}
+              {softZeroData?.otherStates && (
+                <RelatedJobsGrid
+                  title={`${jobType} RN Jobs in Other States`}
+                  colorScheme="green"
+                  items={softZeroData.otherStates
+                    .filter(s => s.slug !== stateCode.toLowerCase())
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/job-type/${jobTypeSlug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -409,7 +440,7 @@ export default function StateJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup state={stateCode} />
           </div>
 

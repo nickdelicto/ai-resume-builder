@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchRemoteSpecialtyJobTypeJobs } from '../../../../../lib/services/jobPageData';
+import { fetchRemoteSpecialtyJobTypeJobs, fetchSoftZeroData } from '../../../../../lib/services/jobPageData';
 import { generateRemoteSpecialtyJobTypePageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug } from '../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -42,6 +43,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        specialty: result.specialty,
+        jobType: result.jobType,
+        remote: true,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -53,6 +63,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -72,6 +83,7 @@ export default function RemoteSpecialtyJobTypePage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -291,15 +303,34 @@ export default function RemoteSpecialtyJobTypePage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${jobType} Remote ${specialty} RN Jobs Right Now`}
-              description={`${jobType} remote ${specialty} nursing positions are updated daily.`}
-              alternatives={[
-                { label: `View All Remote ${specialty} RN Jobs`, href: `/jobs/nursing/remote/${specialtySlug}` },
-                { label: `View All ${jobType} ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}/${jobTypeSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${jobType} Remote ${specialty} RN Jobs Right Now`}
+                description={`${jobType} remote ${specialty} nursing positions are updated daily.`}
+                alternatives={[
+                  { label: `View All Remote ${specialty} RN Jobs`, href: `/jobs/nursing/remote/${specialtySlug}` },
+                  { label: `View All ${jobType} ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}/${jobTypeSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherJobTypes && (
+                <RelatedJobsGrid
+                  title="Other Remote Job Types"
+                  colorScheme="blue"
+                  items={softZeroData.otherJobTypes
+                    .filter(jt => jt.slug !== jobTypeSlug)
+                    .map(jt => ({ label: jt.label, href: `/jobs/nursing/remote/${specialtySlug}/${jt.slug}`, count: jt.count }))}
+                />
+              )}
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title="Other Remote Specialties"
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/remote/${s.slug}`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -406,7 +437,7 @@ export default function RemoteSpecialtyJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} location="Remote" />
           </div>
 

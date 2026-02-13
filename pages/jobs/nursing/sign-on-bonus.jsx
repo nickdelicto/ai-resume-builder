@@ -3,11 +3,12 @@ import Link from 'next/link';
 import Meta from '../../../components/common/Meta';
 import JobAlertSignup from '../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../components/StickyJobAlertCTA';
-import { fetchSignOnBonusJobs } from '../../../lib/services/jobPageData';
+import { fetchSignOnBonusJobs, fetchSoftZeroData } from '../../../lib/services/jobPageData';
 import { generateSignOnBonusPageMetaTags } from '../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ query }) {
@@ -25,6 +26,13 @@ export async function getServerSideProps({ query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         jobs: result.jobs,
@@ -32,6 +40,7 @@ export async function getServerSideProps({ query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -47,6 +56,7 @@ export default function SignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -263,15 +273,33 @@ export default function SignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title="No Sign-On Bonus RN Jobs Right Now"
-              description="Sign-on bonus nursing positions are updated daily."
-              alternatives={[
-                { label: 'View Full-Time RN Jobs', href: '/jobs/nursing/job-type/full-time' },
-                { label: 'View Night Shift RN Jobs', href: '/jobs/nursing/shift/night' },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title="No Sign-On Bonus RN Jobs Right Now"
+                description="Sign-on bonus nursing positions are updated daily."
+                alternatives={[
+                  { label: 'View Full-Time RN Jobs', href: '/jobs/nursing/job-type/full-time' },
+                  { label: 'View Night Shift RN Jobs', href: '/jobs/nursing/shift/night' },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.specialtiesWithBonus && (
+                <RelatedJobsGrid
+                  title="Specialties with Sign-On Bonus"
+                  colorScheme="purple"
+                  items={softZeroData.specialtiesWithBonus
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/specialty/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title="Sign-On Bonus RN Jobs by State"
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -386,7 +414,7 @@ export default function SignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

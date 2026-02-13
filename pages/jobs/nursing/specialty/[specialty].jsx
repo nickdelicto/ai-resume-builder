@@ -618,7 +618,7 @@ export default function SpecialtyJobPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup 
               specialty={specialtyDisplayName}
             />

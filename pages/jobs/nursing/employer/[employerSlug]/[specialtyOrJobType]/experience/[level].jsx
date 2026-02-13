@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../../components/StickyJobAlertCTA';
-import { fetchEmployerSpecialtyExperienceLevelJobs } from '../../../../../../../lib/services/jobPageData';
+import { fetchEmployerSpecialtyExperienceLevelJobs, fetchSoftZeroData } from '../../../../../../../lib/services/jobPageData';
 import { generateEmployerSpecialtyExperienceLevelPageMetaTags } from '../../../../../../../lib/seo/jobSEO';
 import { isValidSpecialtySlug } from '../../../../../../../lib/constants/specialties';
 import { isExperienceLevel, experienceLevelToSlug, getExperienceLevelDescription } from '../../../../../../../lib/constants/experienceLevels';
@@ -56,6 +57,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        employerId: result.employer.id,
+        specialty: result.specialty,
+        experienceLevel: result.experienceLevel,
+      });
+    }
+
     return {
       props: {
         employer: JSON.parse(JSON.stringify(result.employer)),
@@ -69,6 +79,7 @@ export async function getServerSideProps({ params, query }) {
         currentPage: result.currentPage,
         maxHourlyRate: result.maxHourlyRate,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -90,6 +101,7 @@ export default function EmployerSpecialtyExperienceLevelPage({
   currentPage,
   maxHourlyRate,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -299,15 +311,35 @@ export default function EmployerSpecialtyExperienceLevelPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${experienceLevel} ${specialty} RN Jobs at ${employerName} Right Now`}
-              description={`${experienceLevel} ${specialty} positions at ${employerName} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}` },
-                { label: `View All ${experienceLevel} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/experience/${levelSlug}` },
-                { label: `View All Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${experienceLevel} ${specialty} RN Jobs at ${employerName} Right Now`}
+                description={`${experienceLevel} ${specialty} positions at ${employerName} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}` },
+                  { label: `View All ${experienceLevel} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/experience/${levelSlug}` },
+                  { label: `View All Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}` },
+                ]}
+              />
+              {softZeroData?.otherExperienceLevels && (
+                <RelatedJobsGrid
+                  title={`Other ${specialty} Experience Levels at ${employerName}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherExperienceLevels
+                    .filter(el => el.slug !== levelSlug)
+                    .map(el => ({ label: el.label, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}/experience/${el.slug}`, count: el.count }))}
+                />
+              )}
+              {softZeroData?.otherEmployers && (
+                <RelatedJobsGrid
+                  title={`Other Employers Hiring ${specialty} RNs`}
+                  colorScheme="orange"
+                  items={softZeroData.otherEmployers
+                    .filter(e => e.slug !== employerSlug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/employer/${e.slug}/${specialtySlug}/experience/${levelSlug}`, count: e.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -397,7 +429,7 @@ export default function EmployerSpecialtyExperienceLevelPage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup specialty={specialty} />
           </div>
 

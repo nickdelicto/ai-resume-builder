@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import Meta from '../../../../../../components/common/Meta';
 import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../components/jobs/RelatedJobsGrid';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
-import { fetchEmployerSpecialtySignOnBonusJobs } from '../../../../../../lib/services/jobPageData';
+import { fetchEmployerSpecialtySignOnBonusJobs, fetchSoftZeroData } from '../../../../../../lib/services/jobPageData';
 import { generateEmployerSpecialtySignOnBonusPageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
@@ -22,25 +23,35 @@ export async function getServerSideProps({ params, query }) {
     }
 
     const seoMeta = generateEmployerSpecialtySignOnBonusPageMetaTags(
-      result.employerName,
-      result.employerSlug,
+      result.employer.name,
+      result.employer.slug,
       result.specialty,
       result.specialtySlug,
       result.totalJobs,
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        employerId: result.employer.id,
+        specialty: result.specialty,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
         specialtySlug: result.specialtySlug,
-        employerName: result.employerName,
-        employerSlug: result.employerSlug,
+        employerName: result.employer.name,
+        employerSlug: result.employer.slug,
         jobs: JSON.parse(JSON.stringify(result.jobs)),
         totalJobs: result.totalJobs,
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -60,6 +71,7 @@ export default function EmployerSpecialtySignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -142,7 +154,7 @@ export default function EmployerSpecialtySignOnBonusPage({
                     {stats.states.slice(0, 5).map((s, idx) => (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/${s.stateCode.toLowerCase()}/specialty/${specialtySlug}/sign-on-bonus`}
+                        href={`/jobs/nursing/${s.state.toLowerCase()}/specialty/${specialtySlug}/sign-on-bonus`}
                         className="flex justify-between items-center group hover:text-blue-600 transition-colors py-1"
                       >
                         <span className="text-gray-900 group-hover:text-blue-600 font-medium">{s.state}</span>
@@ -168,10 +180,10 @@ export default function EmployerSpecialtySignOnBonusPage({
                     {stats.cities.slice(0, 5).map((c, idx) => (
                       <Link
                         key={idx}
-                        href={`/jobs/nursing/${c.stateCode.toLowerCase()}/${c.slug}/specialty/${specialtySlug}/sign-on-bonus`}
+                        href={`/jobs/nursing/${c.state.toLowerCase()}/${c.slug}/specialty/${specialtySlug}/sign-on-bonus`}
                         className="flex justify-between items-center group hover:text-purple-600 transition-colors py-1"
                       >
-                        <span className="text-gray-900 group-hover:text-purple-600 font-medium">{c.city}, {c.stateCode}</span>
+                        <span className="text-gray-900 group-hover:text-purple-600 font-medium">{c.city}, {c.state}</span>
                         <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full text-xs">{c.count}</span>
                       </Link>
                     ))}
@@ -284,15 +296,35 @@ export default function EmployerSpecialtySignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${specialty} Sign-On Bonus RN Jobs at ${employerName} Right Now`}
-              description={`${specialty} sign-on bonus positions at ${employerName} are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}` },
-                { label: `View All Sign-On Bonus Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/sign-on-bonus` },
-                { label: `View All Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}` },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${specialty} Sign-On Bonus RN Jobs at ${employerName} Right Now`}
+                description={`${specialty} sign-on bonus positions at ${employerName} are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/${specialtySlug}` },
+                  { label: `View All Sign-On Bonus Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}/sign-on-bonus` },
+                  { label: `View All Jobs at ${employerName}`, href: `/jobs/nursing/employer/${employerSlug}` },
+                ]}
+              />
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title={`Other Specialties with Sign-On Bonus at ${employerName}`}
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .filter(s => s.slug !== specialtySlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/employer/${employerSlug}/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.otherEmployers && (
+                <RelatedJobsGrid
+                  title="Other Employers with Sign-On Bonus"
+                  colorScheme="orange"
+                  items={softZeroData.otherEmployers
+                    .filter(e => e.slug !== employerSlug)
+                    .map(e => ({ label: e.label, href: `/jobs/nursing/employer/${e.slug}/${specialtySlug}/sign-on-bonus`, count: e.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -338,7 +370,7 @@ export default function EmployerSpecialtySignOnBonusPage({
                   {stats.states.map((s, idx) => (
                     <Link
                       key={idx}
-                      href={`/jobs/nursing/${s.stateCode.toLowerCase()}/specialty/${specialtySlug}/sign-on-bonus`}
+                      href={`/jobs/nursing/${s.state.toLowerCase()}/specialty/${specialtySlug}/sign-on-bonus`}
                       className="flex items-center justify-between gap-2 mb-3 break-inside-avoid group hover:text-blue-600 transition-colors"
                     >
                       <span className="text-gray-900 group-hover:text-blue-600 font-medium text-sm">{s.state}</span>
@@ -379,7 +411,7 @@ export default function EmployerSpecialtySignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 

@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Meta from '../../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../../components/StickyJobAlertCTA';
-import { fetchCityJobTypeJobs, detectStateFromSlug } from '../../../../../../lib/services/jobPageData';
+import { fetchCityJobTypeJobs, fetchSoftZeroData, detectStateFromSlug } from '../../../../../../lib/services/jobPageData';
 import { generateCityJobTypePageMetaTags } from '../../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../../lib/utils/experienceLevelUtils';
 import { specialtyToSlug, normalizeSpecialty } from '../../../../../../lib/constants/specialties';
 import { formatSalaryForCard } from '../../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../../lib/utils/employerLogos');
 const { getCityDisplayName } = require('../../../../../../lib/utils/cityDisplayUtils');
 
@@ -50,6 +51,15 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        state: result.stateCode,
+        city: result.city,
+        jobType: result.jobType,
+      });
+    }
+
     return {
       props: {
         city: result.city,
@@ -63,6 +73,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -84,6 +95,7 @@ export default function CityJobTypePage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -299,15 +311,35 @@ export default function CityJobTypePage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${jobType} RN Jobs in ${city} Right Now`}
-              description={`${jobType} positions in ${city} are updated daily.`}
-              alternatives={[
-                { label: `View All Jobs in ${city}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
-                { label: `View All ${jobType} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/job-type/${jobTypeSlug}` },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${jobType} RN Jobs in ${cityDisplay} Right Now`}
+                description={`${jobType} positions in ${cityDisplay} are updated daily.`}
+                alternatives={[
+                  { label: `View All Jobs in ${cityDisplay}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}` },
+                  { label: `View All ${jobType} Jobs in ${stateFullName}`, href: `/jobs/nursing/${stateCode.toLowerCase()}/job-type/${jobTypeSlug}` },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherJobTypes && (
+                <RelatedJobsGrid
+                  title={`Other Job Types in ${cityDisplay}`}
+                  colorScheme="blue"
+                  items={softZeroData.otherJobTypes
+                    .filter(jt => jt.slug !== jobTypeSlug)
+                    .map(jt => ({ label: jt.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${citySlug}/job-type/${jt.slug}`, count: jt.count }))}
+                />
+              )}
+              {softZeroData?.otherCities && (
+                <RelatedJobsGrid
+                  title={`${jobType} RN Jobs in Other ${stateFullName} Cities`}
+                  colorScheme="green"
+                  items={softZeroData.otherCities
+                    .filter(c => c.slug !== citySlug)
+                    .map(c => ({ label: c.label, href: `/jobs/nursing/${stateCode.toLowerCase()}/${c.slug}/job-type/${jobTypeSlug}`, count: c.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -389,7 +421,7 @@ export default function CityJobTypePage({
           )}
 
           {/* Job Alert Signup */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup state={stateCode} city={city} />
           </div>
 

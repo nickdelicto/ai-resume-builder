@@ -529,7 +529,7 @@ export default function EmployerJobPage({
 
           {/* Job Alert Signup - Before Footer (hidden on soft zero, which has its own) */}
           {!isSoftZero && (
-            <div className="mt-16" data-job-alert-form>
+            <div className="mt-16" id="job-alert-form" data-job-alert-form>
               <JobAlertSignup />
             </div>
           )}

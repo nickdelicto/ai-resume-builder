@@ -3,11 +3,12 @@ import Link from 'next/link';
 import Meta from '../../../../../components/common/Meta';
 import JobAlertSignup from '../../../../../components/JobAlertSignup';
 import StickyJobAlertCTA from '../../../../../components/StickyJobAlertCTA';
-import { fetchSpecialtySignOnBonusJobs } from '../../../../../lib/services/jobPageData';
+import { fetchSpecialtySignOnBonusJobs, fetchSoftZeroData } from '../../../../../lib/services/jobPageData';
 import { generateSpecialtySignOnBonusPageMetaTags } from '../../../../../lib/seo/jobSEO';
 import { normalizeExperienceLevel } from '../../../../../lib/utils/experienceLevelUtils';
 import { formatSalaryForCard } from '../../../../../lib/utils/jobCardUtils';
 import SoftZeroContent from '../../../../../components/jobs/SoftZeroContent';
+import RelatedJobsGrid from '../../../../../components/jobs/RelatedJobsGrid';
 const { getEmployerLogoPath } = require('../../../../../lib/utils/employerLogos');
 
 export async function getServerSideProps({ params, query }) {
@@ -28,6 +29,14 @@ export async function getServerSideProps({ params, query }) {
       result.maxHourlyRate
     );
 
+    let softZeroData = null;
+    if (result.totalJobs === 0) {
+      softZeroData = await fetchSoftZeroData({
+        specialty: result.specialty,
+        signOnBonus: true,
+      });
+    }
+
     return {
       props: {
         specialty: result.specialty,
@@ -37,6 +46,7 @@ export async function getServerSideProps({ params, query }) {
         totalPages: result.totalPages,
         currentPage: result.currentPage,
         stats: result.stats,
+        softZeroData,
         seoMeta
       }
     };
@@ -54,6 +64,7 @@ export default function SpecialtySignOnBonusPage({
   totalPages,
   currentPage,
   stats,
+  softZeroData,
   seoMeta
 }) {
 
@@ -270,15 +281,34 @@ export default function SpecialtySignOnBonusPage({
               })}
             </div>
           ) : (
-            <SoftZeroContent
-              title={`No ${specialty} Sign-On Bonus RN Jobs Right Now`}
-              description={`${specialty} nursing positions with sign-on bonuses are updated daily.`}
-              alternatives={[
-                { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
-                { label: 'View All Sign-On Bonus RN Jobs', href: '/jobs/nursing/sign-on-bonus' },
-                { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
-              ]}
-            />
+            <>
+              <SoftZeroContent
+                title={`No ${specialty} Sign-On Bonus RN Jobs Right Now`}
+                description={`${specialty} nursing positions with sign-on bonuses are updated daily.`}
+                alternatives={[
+                  { label: `View All ${specialty} RN Jobs`, href: `/jobs/nursing/specialty/${specialtySlug}` },
+                  { label: 'View All Sign-On Bonus RN Jobs', href: '/jobs/nursing/sign-on-bonus' },
+                  { label: 'Browse All RN Jobs', href: '/jobs/nursing' },
+                ]}
+              />
+              {softZeroData?.otherSpecialties && (
+                <RelatedJobsGrid
+                  title="Other Specialties with Sign-On Bonus"
+                  colorScheme="purple"
+                  items={softZeroData.otherSpecialties
+                    .filter(s => s.slug !== specialtySlug)
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/specialty/${s.slug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+              {softZeroData?.topStates && (
+                <RelatedJobsGrid
+                  title={`${specialty} Sign-On Bonus RN Jobs by State`}
+                  colorScheme="green"
+                  items={softZeroData.topStates
+                    .map(s => ({ label: s.label, href: `/jobs/nursing/${s.slug}/specialty/${specialtySlug}/sign-on-bonus`, count: s.count }))}
+                />
+              )}
+            </>
           )}
 
           {/* Pagination */}
@@ -365,7 +395,7 @@ export default function SpecialtySignOnBonusPage({
           )}
 
           {/* Job Alert Signup - Before Footer */}
-          <div className="mt-16" data-job-alert-form>
+          <div className="mt-16" id="job-alert-form" data-job-alert-form>
             <JobAlertSignup />
           </div>
 
