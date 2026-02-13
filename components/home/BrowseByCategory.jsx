@@ -100,8 +100,8 @@ const BrowseByCategory = ({ initialStats }) => {
 
   if (!stats) return null;
 
-  // Get top specialties (show 10 initially)
-  const topSpecialties = stats.specialties?.slice(0, showMoreSpecialties ? 20 : 10) || [];
+  // Show 10 initially, all when expanded
+  const topSpecialties = showMoreSpecialties ? (stats.specialties || []) : (stats.specialties?.slice(0, 10) || []);
   const remainingSpecialties = (stats.specialties?.length || 0) - 10;
 
   // Get job types
