@@ -67,12 +67,21 @@ function extractSalaryFromDescription(description) {
 
   // Fallback: look for any 💰 dollar amount in Highlights
   if (!salaryMin) {
-    const highlightsMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$([\d,.]+)/i);
-    if (highlightsMatch) {
-      const value = parseFloat(highlightsMatch[1].replace(/,/g, ''));
-      salaryMin = value;
-      salaryMax = value;
-      salaryType = value > 500 ? 'annual' : 'hourly';
+    // Try range first: "$70,000 - $85,000" or "$30.50 - $49.49"
+    const highlightsRangeMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$([\d,.]+)\s*[-–—to]+\s*\$?([\d,.]+)/i);
+    if (highlightsRangeMatch) {
+      salaryMin = parseFloat(highlightsRangeMatch[1].replace(/,/g, ''));
+      salaryMax = parseFloat(highlightsRangeMatch[2].replace(/,/g, ''));
+      salaryType = salaryMin > 500 ? 'annual' : 'hourly';
+    } else {
+      // Single value fallback
+      const highlightsMatch = description.match(/## 📋 Highlights[\s\S]*?💰.*?\$([\d,.]+)/i);
+      if (highlightsMatch) {
+        const value = parseFloat(highlightsMatch[1].replace(/,/g, ''));
+        salaryMin = value;
+        salaryMax = value;
+        salaryType = value > 500 ? 'annual' : 'hourly';
+      }
     }
   }
 
