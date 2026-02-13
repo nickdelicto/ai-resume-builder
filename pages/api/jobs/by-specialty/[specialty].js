@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { consolidateSpecialties } from '../../../../lib/constants/specialties';
 
 const prisma = new PrismaClient();
 
@@ -162,7 +163,7 @@ export default async function handler(req, res) {
             employer: e.employer,
             count: e._count.id
           })),
-          allSpecialties: allSpecialties.map(s => ({ specialty: s.specialty, count: s._count.id }))
+          allSpecialties: consolidateSpecialties(allSpecialties)
         }
       }
     });

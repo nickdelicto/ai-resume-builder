@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { getStateFullName } = require('../../../lib/jobScraperUtils');
 const { shiftTypeToDisplay, shiftTypeToSlug, SHIFT_TYPES } = require('../../../lib/constants/shiftTypes');
+const { consolidateSpecialties } = require('../../../lib/constants/specialties');
 
 const prisma = new PrismaClient();
 
@@ -168,58 +169,11 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .sort((a, b) => b.count - a.count); // Sort by count descending
 
-    // Format specialties and merge case-insensitive duplicates
-    const specialtiesMap = new Map();
-    const nursingAcronyms = ['ICU', 'NICU', 'ER', 'OR', 'PACU', 'PCU', 'CCU', 'CVICU', 'MICU', 'SICU', 'PICU'];
-    
-    specialties.forEach(s => {
-      const specialtyValue = s.specialty; // Raw DB value
-      
-      // Handle legacy "All Specialties" tags - convert to "General Nursing"
-      // (New jobs use "Float Pool" or "General Nursing", but old DB entries might have "All Specialties")
-      if (specialtyValue && specialtyValue.toLowerCase() === 'all specialties') {
-        // Treat legacy "All Specialties" as "General Nursing"
-        const displayName = 'General Nursing';
-        if (specialtiesMap.has(displayName)) {
-          specialtiesMap.get(displayName).count += s._count.id;
-        } else {
-          specialtiesMap.set(displayName, {
-            name: displayName,
-            count: s._count.id,
-            slug: displayName.toLowerCase().replace(/\s+/g, '-')
-          });
-        }
-        return; // Skip normal processing
-      }
-      
-      // Replace hyphens with spaces BEFORE processing (Med-Surg → Med Surg)
-      // Then normalize to Title Case, but keep common nursing acronyms in ALL CAPS
-      const normalizedValue = specialtyValue.replace(/-/g, ' ');
-      const displayName = normalizedValue
-        .split(' ')
-        .map(word => {
-          const upperWord = word.toUpperCase();
-          // Keep nursing acronyms in all caps
-          if (nursingAcronyms.includes(upperWord)) {
-            return upperWord;
-          }
-          // Title case for everything else
-          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        })
-        .join(' ');
-      
-      // Merge duplicates by displayName (case-insensitive)
-      if (specialtiesMap.has(displayName)) {
-        specialtiesMap.get(displayName).count += s._count.id;
-      } else {
-        specialtiesMap.set(displayName, {
-          name: displayName,
-      count: s._count.id,
-          slug: displayName.toLowerCase().replace(/\s+/g, '-')
-        });
-      }
-    });
-    const specialtiesFormatted = Array.from(specialtiesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    // Consolidate specialties using canonical normalization
+    // Maps non-canonical DB values (e.g., "Care Coordination" → "Case Management", "Operating Room" → "OR")
+    const specialtiesFormatted = consolidateSpecialties(specialties)
+      .map(s => ({ name: s.specialty, count: s.count, slug: s.slug }))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     // Format job types with proper capitalization and merge duplicates (PRN, Per Diem in caps)
     const jobTypesMap = new Map();
