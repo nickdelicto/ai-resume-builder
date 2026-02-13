@@ -15,6 +15,8 @@
  *   node scripts/backfill-salary-from-highlights.js --save             # Save to DB
  *   node scripts/backfill-salary-from-highlights.js --employer=upstate-medical-university
  *   node scripts/backfill-salary-from-highlights.js --employer=upstate-medical-university --save
+ *   node scripts/backfill-salary-from-highlights.js --fix-same         # Fix jobs where min===max (broken fallback)
+ *   node scripts/backfill-salary-from-highlights.js --fix-same --save  # Fix and save
  */
 
 const { PrismaClient } = require('@prisma/client');
@@ -111,36 +113,57 @@ function extractSalaryFromDescription(description) {
 async function main() {
   const args = process.argv.slice(2);
   const save = args.includes('--save');
+  const fixSame = args.includes('--fix-same');
   const employerArg = args.find(a => a.startsWith('--employer='));
   const employerSlug = employerArg ? employerArg.split('=')[1] : null;
 
   console.log('💰 Salary Backfill from Formatted Descriptions\n');
   console.log(`Mode: ${save ? '✅ SAVE (will update DB)' : '🧪 DRY RUN (no changes)'}`);
+  console.log(`Fix same: ${fixSame ? '✅ Re-check jobs where salaryMin === salaryMax' : 'NO (only null salary jobs)'}`);
   console.log(`Employer: ${employerSlug || 'ALL'}\n`);
 
-  // Find jobs with formatted descriptions but no salary data
-  const where = {
-    salaryMin: null,
-    salaryMax: null,
-    classifiedAt: { not: null },
-    description: { contains: '## 📋 Highlights' }
-  };
+  let where;
+
+  if (fixSame) {
+    // Find jobs where min === max (potential broken single-value fallback matches)
+    // Re-extract to see if the description actually has a range
+    where = {
+      salaryMin: { not: null },
+      classifiedAt: { not: null },
+      description: { contains: '## 📋 Highlights' }
+    };
+  } else {
+    // Find jobs with formatted descriptions but no salary data
+    where = {
+      salaryMin: null,
+      salaryMax: null,
+      classifiedAt: { not: null },
+      description: { contains: '## 📋 Highlights' }
+    };
+  }
 
   if (employerSlug) {
     where.employer = { slug: employerSlug };
   }
 
-  const jobs = await prisma.nursingJob.findMany({
+  let jobs = await prisma.nursingJob.findMany({
     where,
     select: {
       id: true,
       title: true,
       description: true,
+      salaryMin: true,
+      salaryMax: true,
       employer: { select: { slug: true, name: true } }
     }
   });
 
-  console.log(`Found ${jobs.length} classified jobs with highlights but no salary data\n`);
+  // For --fix-same, only keep jobs where salaryMin === salaryMax
+  if (fixSame) {
+    jobs = jobs.filter(j => j.salaryMin === j.salaryMax);
+  }
+
+  console.log(`Found ${jobs.length} ${fixSame ? 'jobs where salaryMin === salaryMax' : 'classified jobs with highlights but no salary data'}\n`);
 
   let extracted = 0;
   let skipped = 0;
@@ -150,12 +173,19 @@ async function main() {
     const salary = extractSalaryFromDescription(job.description);
 
     if (salary) {
+      // For --fix-same, only update if we found a real range (min !== max)
+      if (fixSame && Math.round(salary.salaryMin) === Math.round(salary.salaryMax)) {
+        skipped++; // Legit single rate (e.g. per-diem $84.55/hr), skip
+        continue;
+      }
+
       extracted++;
       const empSlug = job.employer?.slug || 'unknown';
       byEmployer[empSlug] = (byEmployer[empSlug] || 0) + 1;
 
+      const oldRange = fixSame ? ` (was $${job.salaryMin}-$${job.salaryMax})` : '';
       console.log(`  ✅ ${job.title}`);
-      console.log(`     $${salary.salaryMin}-$${salary.salaryMax}/${salary.salaryType} (${empSlug})`);
+      console.log(`     $${salary.salaryMin}-$${salary.salaryMax}/${salary.salaryType}${oldRange} (${empSlug})`);
 
       if (save) {
         await prisma.nursingJob.update({
