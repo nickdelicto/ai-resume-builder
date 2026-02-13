@@ -107,6 +107,9 @@ function mentionsRN(job) {
   const title = (job.title || '').toLowerCase();
   const description = (job.description || '').toLowerCase();
 
+  // Filter out test/dummy job postings
+  if (/do not apply|test only/i.test(title)) return false;
+
   // Check for RN mentions (word boundary to avoid false matches like "learning")
   const rnPattern = /\brn\b|registered nurse/i;
 
@@ -183,6 +186,12 @@ function parseSalaryFromDescription(html) {
   const match = text.match(/\$([\d,.]+)\s*[-–—to]+\s*\$([\d,.]+)\s*per\s*(hour|year)/i);
   if (match) {
     return parseSalary(`$${match[1]}-$${match[2]}/${match[3]}`);
+  }
+
+  // Match "$58,800 to $105,000 annually" style
+  const matchAnnual = text.match(/\$([\d,.]+)\s*[-–—to]+\s*\$([\d,.]+)\s*annually/i);
+  if (matchAnnual) {
+    return parseSalary(`$${matchAnnual[1]}-$${matchAnnual[2]}/year`);
   }
 
   // Match "$XX.XX/hr" or "$XX/hour" style

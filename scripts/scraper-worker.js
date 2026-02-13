@@ -141,6 +141,21 @@ worker.on('error', function(err) {
   console.error('Worker error:', err);
 });
 
+// Graceful shutdown: release job locks so they don't become ghosts
+process.on('SIGTERM', async () => {
+  console.log('\n⚠️  SIGTERM received, closing worker gracefully...');
+  await worker.close();
+  console.log('✅ Worker closed, job locks released.');
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('\n⚠️  SIGINT received, closing worker gracefully...');
+  await worker.close();
+  console.log('✅ Worker closed, job locks released.');
+  process.exit(0);
+});
+
 console.log('Scraper worker started, waiting for jobs...');
 console.log('   Queue: scraper-jobs');
 console.log('   Concurrency: 3');
