@@ -3,153 +3,119 @@
 /**
  * Migration Script: Normalize Specialty Values in Database
  *
- * Fixes existing jobs that have old specialty names
- * (e.g., "Step Down" → "Stepdown", "L&D" → "Labor & Delivery")
- *
- * This is a one-time migration to clean up existing data.
- * Future jobs will be automatically normalized by the classifier.
+ * Uses normalizeSpecialty() to dynamically find and fix ALL non-canonical
+ * specialty values (e.g., "Operating Room" → "OR", "Cardiac Care" → "Cardiac").
  *
  * Usage:
  *   node scripts/migrate-specialties.js [--dry-run]
  */
 
-// Load environment variables from .env file
 require('dotenv').config();
 
 const { PrismaClient } = require('@prisma/client');
+const { SPECIALTIES, normalizeSpecialty } = require('../lib/constants/specialties');
 
 const prisma = new PrismaClient();
 
-// Parse command line arguments
 const args = process.argv.slice(2);
 const isDryRun = args.includes('--dry-run');
 
-// Specialty mappings: old values → new canonical values
-const SPECIALTY_MIGRATIONS = {
-  'Step Down': 'Stepdown',
-  'Progressive Care': 'Stepdown',
-  'L&D': 'Labor & Delivery',
-  'Psychiatric': 'Mental Health',
-  'Rehab': 'Rehabilitation',
-  'Cardiac Care': 'Cardiac',
-  'Travel': 'General Nursing'
-};
-
-console.log('🔧 Specialty Migration Starting...\n');
-console.log(`Mode: ${isDryRun ? '🧪 DRY RUN (no changes will be made)' : '✅ LIVE (will update database)'}\n`);
+console.log('Specialty Migration Starting...\n');
+console.log(`Mode: ${isDryRun ? 'DRY RUN (no changes will be made)' : 'LIVE (will update database)'}\n`);
 
 async function main() {
   try {
-    // Fetch all jobs with old specialty values
-    const oldSpecialties = Object.keys(SPECIALTY_MIGRATIONS);
+    // Step 1: Get all distinct specialty values from the database
+    console.log('Fetching all distinct specialty values...');
+    const distinctSpecialties = await prisma.nursingJob.groupBy({
+      by: ['specialty'],
+      where: { specialty: { not: null } },
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } }
+    });
 
-    console.log('📊 Fetching jobs with old specialty values...');
-    const jobs = await prisma.nursingJob.findMany({
-      where: {
-        specialty: { in: oldSpecialties }
-      },
-      select: {
-        id: true,
-        title: true,
-        specialty: true,
-        isActive: true
+    console.log(`   Found ${distinctSpecialties.length} distinct specialty values\n`);
+
+    // Step 2: Find non-canonical values using normalizeSpecialty()
+    const migrations = {};
+    distinctSpecialties.forEach(({ specialty, _count }) => {
+      const canonical = normalizeSpecialty(specialty);
+      // Flag if: normalized differently OR not in canonical SPECIALTIES list
+      if (canonical !== specialty && SPECIALTIES.includes(canonical)) {
+        migrations[specialty] = { canonical, count: _count.id };
+      } else if (!SPECIALTIES.includes(specialty)) {
+        console.log(`   WARNING: "${specialty}" (${_count.id} jobs) - not in canonical list and no alias found`);
       }
     });
 
-    console.log(`   Found ${jobs.length} jobs needing migration\n`);
+    const migrationEntries = Object.entries(migrations);
 
-    if (jobs.length === 0) {
-      console.log('✅ No jobs to migrate - all specialties are already normalized!');
+    if (migrationEntries.length === 0) {
+      console.log('\nAll specialties are already normalized!');
       return;
     }
 
-    // Group changes by transformation
-    const groupedChanges = {};
-    jobs.forEach(job => {
-      const oldVal = job.specialty;
-      const newVal = SPECIALTY_MIGRATIONS[oldVal];
-      const key = `${oldVal} → ${newVal}`;
-      if (!groupedChanges[key]) {
-        groupedChanges[key] = [];
-      }
-      groupedChanges[key].push(job);
+    console.log(`\nFound ${migrationEntries.length} non-canonical values to fix:\n`);
+    let totalJobs = 0;
+    migrationEntries.forEach(([oldVal, { canonical, count }]) => {
+      console.log(`   "${oldVal}" -> "${canonical}" (${count} jobs)`);
+      totalJobs += count;
     });
-
-    console.log('🔄 Changes to be made:\n');
-    Object.entries(groupedChanges).forEach(([transformation, items]) => {
-      console.log(`   ${transformation}: ${items.length} jobs`);
-    });
-    console.log('');
-
-    // Show sample changes (first 10)
-    console.log('📝 Sample changes (first 10):\n');
-    jobs.slice(0, 10).forEach((job, idx) => {
-      const status = job.isActive ? '🟢 Active' : '🔴 Inactive';
-      const newVal = SPECIALTY_MIGRATIONS[job.specialty];
-      console.log(`   ${idx + 1}. [${status}] "${job.specialty}" → "${newVal}"`);
-      console.log(`      ${job.title.substring(0, 60)}${job.title.length > 60 ? '...' : ''}`);
-    });
-    console.log('');
+    console.log(`\n   Total jobs to update: ${totalJobs}\n`);
 
     if (isDryRun) {
-      console.log('🧪 DRY RUN - No changes made to database');
+      console.log('DRY RUN - No changes made to database');
       console.log('\nTo apply these changes, run:');
       console.log('   node scripts/migrate-specialties.js\n');
       return;
     }
 
-    // Apply changes using updateMany for efficiency
-    console.log('💾 Applying changes to database...\n');
+    // Step 3: Apply changes using updateMany for efficiency
+    console.log('Applying changes to database...\n');
     let totalUpdated = 0;
 
-    for (const [oldVal, newVal] of Object.entries(SPECIALTY_MIGRATIONS)) {
+    for (const [oldVal, { canonical }] of migrationEntries) {
       const result = await prisma.nursingJob.updateMany({
         where: { specialty: oldVal },
-        data: { specialty: newVal }
+        data: { specialty: canonical }
       });
 
       if (result.count > 0) {
-        console.log(`   ${oldVal} → ${newVal}: ${result.count} jobs updated`);
+        console.log(`   "${oldVal}" -> "${canonical}": ${result.count} jobs updated`);
         totalUpdated += result.count;
       }
     }
 
-    console.log('');
-    console.log('✅ Migration complete!');
-    console.log(`   Successfully updated: ${totalUpdated} jobs`);
-    console.log('');
+    console.log(`\nMigration complete! Updated ${totalUpdated} jobs\n`);
 
-    // Show final distribution
-    console.log('📊 Final Specialty Distribution (top 15):\n');
+    // Step 4: Show final distribution
+    console.log('Final Specialty Distribution (top 20):\n');
     const distribution = await prisma.nursingJob.groupBy({
       by: ['specialty'],
-      where: {
-        specialty: { not: null },
-        isActive: true
-      },
+      where: { specialty: { not: null }, isActive: true },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
-      take: 15
+      take: 20
     });
 
     const total = distribution.reduce((sum, d) => sum + d._count.id, 0);
     distribution.forEach(d => {
       const name = d.specialty || 'Not Specified';
       const count = d._count.id;
-      const percentage = ((count / total) * 100).toFixed(1);
-      console.log(`   ${name.padEnd(20)} ${count.toString().padStart(4)} jobs  (${percentage}%)`);
+      const pct = ((count / total) * 100).toFixed(1);
+      const valid = SPECIALTIES.includes(d.specialty) ? '' : ' [NOT CANONICAL]';
+      console.log(`   ${name.padEnd(22)} ${count.toString().padStart(4)} jobs  (${pct}%)${valid}`);
     });
     console.log(`\n   Total Active Jobs: ${total}`);
 
   } catch (error) {
-    console.error(`\n❌ Migration failed: ${error.message}`);
+    console.error(`\nMigration failed: ${error.message}`);
     throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-// Run migration
 main().catch(error => {
   console.error(error);
   process.exit(1);

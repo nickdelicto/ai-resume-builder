@@ -274,9 +274,10 @@ EXAMPLES:
 ${employerInstructions}
 
 **Task 2: Assign the MOST ACCURATE specialty (REQUIRED - never return null)**
-Choose ONE from this list: ${SPECIALTIES.join(', ')}
+Choose ONE from this EXACT list (use the EXACT spelling shown — do NOT paraphrase, abbreviate, or invent alternatives):
+${SPECIALTIES.map(s => `"${s}"`).join(', ')}
 
-CRITICAL: You MUST always assign a specialty. Never return null for specialty.
+CRITICAL: You MUST return one of the exact strings listed above. Do NOT return variations like "Cardiac Care" (use "Cardiac"), "Operating Room" (use "OR"), "Emergency" (use "ER"), "Critical Care" (use "ICU"), or "Psychiatric" (use "Mental Health"). If unsure, use "General Nursing".
 
 Guidelines:
 - If job clearly specifies a unit/specialty, use that specific specialty (ICU, ER, OR, etc.)
@@ -563,12 +564,13 @@ ${employerInstructions}
    - "MSN required", "Master's degree required" → postgraduate_degree
    - If not specified, default to "associate_degree" (minimum for RN licensure)
 
-**Specialty Options (REQUIRED - always pick one):** ${SPECIALTIES.join(', ')}
+**Specialty Options (REQUIRED - use EXACT spelling from this list, do NOT paraphrase):**
+${SPECIALTIES.map(s => `"${s}"`).join(', ')}
 
 Return ONLY valid JSON:
 {
   "isStaffRN": true or false,
-  "specialty": "from list above (REQUIRED, never null)",
+  "specialty": "EXACT string from Specialty Options list above (REQUIRED, never null)",
   "jobType": "Full Time" | "Part Time" | "Per Diem" | "Contract" | "Travel" | null,
   "shiftType": "days" | "nights" | "evenings" | "variable" | "rotating" | null,
   "experienceLevel": "New Grad" | "Experienced" | "Leadership" | null,
@@ -805,6 +807,12 @@ async function classifyJob(job) {
     // Handles LLM variations like "Step Down", "L&D", "Psychiatric", etc.
     if (result.specialty) {
       result.specialty = normalizeSpecialty(result.specialty);
+      // Guard: if normalizeSpecialty returned a value not in the canonical list,
+      // the LLM invented a specialty. Fall back to General Nursing.
+      if (!SPECIALTIES.includes(result.specialty)) {
+        console.log(`      WARNING: LLM returned non-canonical specialty "${result.specialty}", falling back to General Nursing`);
+        result.specialty = 'General Nursing';
+      }
     }
     
     const returnObj = {
