@@ -300,3 +300,66 @@ enum EducationLevel {
   professional_certificate
   postgraduate_degree
 }
+
+// Google Search Console monitoring tables
+model GscPageMetric {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  page        String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, page])
+  @@index([date])
+  @@index([page])
+}
+
+model GscQueryMetric {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  query       String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, query])
+  @@index([date])
+  @@index([query])
+}
+
+model GscAlert {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @db.Date
+  severity      String
+  category      String
+  title         String
+  description   String
+  metric        String?
+  entityType    String?
+  entity        String?
+  currentValue  Float?
+  previousValue Float?
+  changePercent Float?
+  createdAt     DateTime @default(now())
+
+  @@index([date])
+  @@index([severity])
+}
+
+model GscSiteSummary {
+  id               Int      @id @default(autoincrement())
+  date             DateTime @db.Date @unique
+  totalClicks      Int      @default(0)
+  totalImpressions Int      @default(0)
+  avgCtr           Float    @default(0)
+  avgPosition      Float    @default(0)
+  totalPages       Int      @default(0)
+  totalQueries     Int      @default(0)
+  aiSummary        String?
+  createdAt        DateTime @default(now())
+}

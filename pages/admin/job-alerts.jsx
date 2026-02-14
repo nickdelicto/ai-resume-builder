@@ -123,7 +123,7 @@ export default function JobAlertsAdminPage() {
         <title>Job Alerts Admin | IntelliResume</title>
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl">
+        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
           {/* Header */}
           <div className="mb-6">
             <Link

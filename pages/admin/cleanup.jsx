@@ -116,7 +116,7 @@ export default function CleanupPage() {
       <Head>
         <title>Admin - Resume Cleanup</title>
       </Head>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <h1 className="text-2xl font-bold mb-6">Resume Cleanup Tool</h1>
         <p className="mb-4 text-gray-700">
           This tool helps clean up duplicate resumes by keeping only the most recent versions for each user.

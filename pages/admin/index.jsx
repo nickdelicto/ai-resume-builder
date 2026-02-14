@@ -228,7 +228,7 @@ export default function AdminDashboard() {
         <title>Admin Dashboard | IntelliResume</title>
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
           {/* Header */}
           <div className="mb-6">
             <Link href="/profile" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-3">
@@ -569,6 +569,16 @@ function ToolsTab() {
         </div>
         <h3 className="font-semibold text-gray-900 mb-1">Job Alerts (Full View)</h3>
         <p className="text-sm text-gray-500">Detailed view of all job alert subscriptions</p>
+      </Link>
+
+      <Link href="/admin/seo" className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow group">
+        <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
+          <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <h3 className="font-semibold text-gray-900 mb-1">SEO Monitor</h3>
+        <p className="text-sm text-gray-500">Google Search Console performance, alerts, and AI analysis</p>
       </Link>
     </div>
   );
