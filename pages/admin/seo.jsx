@@ -62,9 +62,11 @@ export default function SeoMonitor() {
   const chatSectionRef = useRef(null);
   const chatContainerRef = useRef(null);
 
-  // Pagination state for top pages/queries (10 per page)
+  // Pagination and sort state for top pages/queries (10 per page)
   const [pagesPage, setPagesPage] = useState(0);
   const [queriesPage, setQueriesPage] = useState(0);
+  const [pagesSort, setPagesSort] = useState('clicks');
+  const [queriesSort, setQueriesSort] = useState('clicks');
   const PAGE_SIZE = 10;
 
   // Trend chart period
@@ -141,6 +143,23 @@ export default function SeoMonitor() {
     }
     finally { setRegenerating(false); }
   };
+
+  // Sorted top pages and queries (client-side sort)
+  const sortedPages = useMemo(() => {
+    if (!data?.topPages) return [];
+    return [...data.topPages].sort((a, b) => {
+      if (pagesSort === 'position') return a.position - b.position;
+      return b[pagesSort] - a[pagesSort];
+    });
+  }, [data?.topPages, pagesSort]);
+
+  const sortedQueries = useMemo(() => {
+    if (!data?.topQueries) return [];
+    return [...data.topQueries].sort((a, b) => {
+      if (queriesSort === 'position') return a.position - b.position;
+      return b[queriesSort] - a[queriesSort];
+    });
+  }, [data?.topQueries, queriesSort]);
 
   useEffect(() => {
     // Scroll within the chat container only — don't scroll the whole page
@@ -397,10 +416,17 @@ export default function SeoMonitor() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-semibold text-gray-900">Top Pages</h3>
-                    <span className="text-xs text-gray-400">{data.topPages?.length || 0} total</span>
+                    <div className="flex gap-1">
+                      {[['clicks', 'Clicks'], ['impressions', 'Impr'], ['position', 'Pos']].map(([key, label]) => (
+                        <button key={key} onClick={() => { setPagesSort(key); setPagesPage(0); }}
+                          className={`text-xs px-2 py-0.5 rounded ${pagesSort === key ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
+                          {label}{pagesSort === key ? ' ↓' : ''}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    {data.topPages?.slice(pagesPage * PAGE_SIZE, (pagesPage + 1) * PAGE_SIZE).map((p, i) => (
+                    {sortedPages.slice(pagesPage * PAGE_SIZE, (pagesPage + 1) * PAGE_SIZE).map((p, i) => (
                       <div key={i} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                         <a href={p.page} target="_blank" rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 hover:underline truncate pr-2 flex-1" title={p.page}>
@@ -408,23 +434,23 @@ export default function SeoMonitor() {
                           {p.page.length > 35 ? p.page.slice(0, 35) + '...' : p.page}
                         </a>
                         <div className="flex gap-3 text-xs flex-shrink-0">
-                          <span className="text-blue-600 font-medium">{p.clicks}c</span>
-                          <span className="text-purple-600">{p.impressions}i</span>
-                          <span className="text-amber-600">p{p.position.toFixed(1)}</span>
+                          <span className={`${pagesSort === 'clicks' ? 'font-semibold' : ''} text-blue-600`}>{p.clicks}c</span>
+                          <span className={`${pagesSort === 'impressions' ? 'font-semibold' : ''} text-purple-600`}>{p.impressions}i</span>
+                          <span className={`${pagesSort === 'position' ? 'font-semibold' : ''} text-amber-600`}>p{p.position.toFixed(1)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  {(data.topPages?.length || 0) > PAGE_SIZE && (
+                  {sortedPages.length > PAGE_SIZE && (
                     <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
                       <button onClick={() => setPagesPage(p => Math.max(0, p - 1))} disabled={pagesPage === 0}
                         className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
                         Prev
                       </button>
                       <span className="text-xs text-gray-400">
-                        {pagesPage * PAGE_SIZE + 1}-{Math.min((pagesPage + 1) * PAGE_SIZE, data.topPages.length)} of {data.topPages.length}
+                        {pagesPage * PAGE_SIZE + 1}-{Math.min((pagesPage + 1) * PAGE_SIZE, sortedPages.length)} of {sortedPages.length}
                       </span>
-                      <button onClick={() => setPagesPage(p => p + 1)} disabled={(pagesPage + 1) * PAGE_SIZE >= (data.topPages?.length || 0)}
+                      <button onClick={() => setPagesPage(p => p + 1)} disabled={(pagesPage + 1) * PAGE_SIZE >= sortedPages.length}
                         className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
                         Next
                       </button>
@@ -435,33 +461,40 @@ export default function SeoMonitor() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-semibold text-gray-900">Top Queries</h3>
-                    <span className="text-xs text-gray-400">{data.topQueries?.length || 0} total</span>
+                    <div className="flex gap-1">
+                      {[['clicks', 'Clicks'], ['impressions', 'Impr'], ['position', 'Pos']].map(([key, label]) => (
+                        <button key={key} onClick={() => { setQueriesSort(key); setQueriesPage(0); }}
+                          className={`text-xs px-2 py-0.5 rounded ${queriesSort === key ? 'bg-purple-100 text-purple-700 font-medium' : 'text-gray-400 hover:text-gray-600'}`}>
+                          {label}{queriesSort === key ? ' ↓' : ''}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    {data.topQueries?.slice(queriesPage * PAGE_SIZE, (queriesPage + 1) * PAGE_SIZE).map((q, i) => (
+                    {sortedQueries.slice(queriesPage * PAGE_SIZE, (queriesPage + 1) * PAGE_SIZE).map((q, i) => (
                       <div key={i} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                         <span className="text-gray-600 truncate pr-2 flex-1" title={q.query}>
                           <span className="text-gray-400 mr-1">{queriesPage * PAGE_SIZE + i + 1}.</span>
                           &ldquo;{q.query.length > 30 ? q.query.slice(0, 30) + '...' : q.query}&rdquo;
                         </span>
                         <div className="flex gap-3 text-xs flex-shrink-0">
-                          <span className="text-blue-600 font-medium">{q.clicks}c</span>
-                          <span className="text-purple-600">{q.impressions}i</span>
-                          <span className="text-amber-600">p{q.position.toFixed(1)}</span>
+                          <span className={`${queriesSort === 'clicks' ? 'font-semibold' : ''} text-blue-600`}>{q.clicks}c</span>
+                          <span className={`${queriesSort === 'impressions' ? 'font-semibold' : ''} text-purple-600`}>{q.impressions}i</span>
+                          <span className={`${queriesSort === 'position' ? 'font-semibold' : ''} text-amber-600`}>p{q.position.toFixed(1)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  {(data.topQueries?.length || 0) > PAGE_SIZE && (
+                  {sortedQueries.length > PAGE_SIZE && (
                     <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
                       <button onClick={() => setQueriesPage(p => Math.max(0, p - 1))} disabled={queriesPage === 0}
                         className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
                         Prev
                       </button>
                       <span className="text-xs text-gray-400">
-                        {queriesPage * PAGE_SIZE + 1}-{Math.min((queriesPage + 1) * PAGE_SIZE, data.topQueries.length)} of {data.topQueries.length}
+                        {queriesPage * PAGE_SIZE + 1}-{Math.min((queriesPage + 1) * PAGE_SIZE, sortedQueries.length)} of {sortedQueries.length}
                       </span>
-                      <button onClick={() => setQueriesPage(p => p + 1)} disabled={(queriesPage + 1) * PAGE_SIZE >= (data.topQueries?.length || 0)}
+                      <button onClick={() => setQueriesPage(p => p + 1)} disabled={(queriesPage + 1) * PAGE_SIZE >= sortedQueries.length}
                         className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
                         Next
                       </button>

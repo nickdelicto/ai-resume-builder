@@ -88,12 +88,15 @@ function buildReportEmail(dateStr, aiReport, alerts, summary, topPages, topQueri
     <!-- Top Pages -->
     <div style="padding: 0 20px 16px;">
       <h3 style="margin: 0 0 10px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Top Pages</h3>
-      ${topPages.slice(0, 20).map((p, i) => `
+      ${topPages.slice(0, 20).map((p, i) => {
+        const displayPath = p.page.replace(/^https?:\/\/[^/]+/, '') || '/';
+        const truncated = displayPath.length > 50 ? displayPath.slice(0, 50) + '...' : displayPath;
+        return `
         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
-          <span style="color: #374151;">${i + 1}. ${p.page.length > 45 ? p.page.slice(0, 45) + '...' : p.page}</span>
-          <span style="color: #2563eb; font-weight: 600; white-space: nowrap; margin-left: 8px;">${p.clicks} clicks</span>
-        </div>
-      `).join('')}
+          <a href="${p.page}" style="color: #2563eb; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${i + 1}. ${truncated}</a>
+          <span style="color: #374151; font-weight: 600; white-space: nowrap; margin-left: 8px;">${p.clicks} clicks</span>
+        </div>`;
+      }).join('')}
     </div>
 
     <!-- Top Queries -->
