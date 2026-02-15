@@ -8,7 +8,7 @@
  *   node scripts/pull-gsc-data.js --backfill=16 # Backfill last 16 days
  *   node scripts/pull-gsc-data.js --test        # Test API connection only
  *
- * Cron: 0 11 * * * (6:00 AM EST daily on production VPS)
+ * Cron: 0 23 * * * (6:00 PM EST daily on production VPS)
  */
 
 require('dotenv').config();
@@ -19,7 +19,8 @@ const gscService = require('../lib/services/gscService');
 const prisma = new PrismaClient();
 
 const DATA_DELAY_DAYS = 3;
-const URL_INSPECTION_BUDGET = 50;
+const URL_INSPECTION_BUDGET = 500;
+const INSPECTION_FRESHNESS_DAYS = 7;
 
 async function pullDataForDate(dateStr) {
   // Check if data already exists
@@ -31,25 +32,28 @@ async function pullDataForDate(dateStr) {
     return { skipped: true, pageCount: 0, queryCount: 0 };
   }
 
-  // Fetch page metrics
-  console.log(`  Fetching page metrics for ${dateStr}...`);
-  const pageRows = await gscService.getSearchAnalytics({
-    startDate: dateStr,
-    endDate: dateStr,
-    dimensions: ['page'],
-    rowLimit: 5000,
-  });
+  // Fetch all dimensions in parallel
+  console.log(`  Fetching page, query, device, and page+query metrics for ${dateStr}...`);
+  const [pageRows, queryRows, deviceRows, pageQueryRows] = await Promise.all([
+    gscService.getSearchAnalytics({
+      startDate: dateStr, endDate: dateStr,
+      dimensions: ['page'], rowLimit: 5000,
+    }),
+    gscService.getSearchAnalytics({
+      startDate: dateStr, endDate: dateStr,
+      dimensions: ['query'], rowLimit: 5000,
+    }),
+    gscService.getSearchAnalytics({
+      startDate: dateStr, endDate: dateStr,
+      dimensions: ['device'], rowLimit: 10,
+    }),
+    gscService.getSearchAnalytics({
+      startDate: dateStr, endDate: dateStr,
+      dimensions: ['page', 'query'], rowLimit: 2000,
+    }),
+  ]);
 
-  // Fetch query metrics
-  console.log(`  Fetching query metrics for ${dateStr}...`);
-  const queryRows = await gscService.getSearchAnalytics({
-    startDate: dateStr,
-    endDate: dateStr,
-    dimensions: ['query'],
-    rowLimit: 5000,
-  });
-
-  // Save page metrics in batches
+  // Save page metrics
   let savedPages = 0;
   for (const row of pageRows) {
     let pagePath;
@@ -81,7 +85,7 @@ async function pullDataForDate(dateStr) {
     savedPages++;
   }
 
-  // Save query metrics in batches
+  // Save query metrics
   let savedQueries = 0;
   for (const row of queryRows) {
     await prisma.gscQueryMetric.upsert({
@@ -106,6 +110,70 @@ async function pullDataForDate(dateStr) {
     savedQueries++;
   }
 
+  // Save device metrics (only 3 rows: DESKTOP, MOBILE, TABLET)
+  for (const row of deviceRows) {
+    await prisma.gscDeviceMetric.upsert({
+      where: {
+        date_device: { date: new Date(dateStr), device: row.keys[0] },
+      },
+      update: {
+        clicks: row.clicks,
+        impressions: row.impressions,
+        ctr: row.ctr,
+        position: row.position,
+      },
+      create: {
+        date: new Date(dateStr),
+        device: row.keys[0],
+        clicks: row.clicks,
+        impressions: row.impressions,
+        ctr: row.ctr,
+        position: row.position,
+      },
+    });
+  }
+
+  // Save page+query metrics in batches
+  let savedPageQueries = 0;
+  const PQ_BATCH_SIZE = 100;
+  for (let i = 0; i < pageQueryRows.length; i += PQ_BATCH_SIZE) {
+    const batch = pageQueryRows.slice(i, i + PQ_BATCH_SIZE);
+    await prisma.$transaction(
+      batch.map(row => {
+        let pagePath;
+        try { pagePath = new URL(row.keys[0]).pathname; }
+        catch { pagePath = row.keys[0]; }
+        const query = row.keys[1];
+
+        return prisma.gscPageQueryMetric.upsert({
+          where: {
+            date_page_query: { date: new Date(dateStr), page: pagePath, query },
+          },
+          update: {
+            clicks: row.clicks,
+            impressions: row.impressions,
+            ctr: row.ctr,
+            position: row.position,
+          },
+          create: {
+            date: new Date(dateStr),
+            page: pagePath,
+            query,
+            clicks: row.clicks,
+            impressions: row.impressions,
+            ctr: row.ctr,
+            position: row.position,
+          },
+        });
+      })
+    );
+    savedPageQueries += batch.length;
+  }
+
+  // Compute device breakdown for site summary
+  const mobileRow = deviceRows.find(r => r.keys[0] === 'MOBILE');
+  const desktopRow = deviceRows.find(r => r.keys[0] === 'DESKTOP');
+
   // Compute and save site summary
   const totalClicks = pageRows.reduce((s, r) => s + r.clicks, 0);
   const totalImpressions = pageRows.reduce((s, r) => s + r.impressions, 0);
@@ -123,6 +191,10 @@ async function pullDataForDate(dateStr) {
       avgPosition,
       totalPages: pageRows.length,
       totalQueries: queryRows.length,
+      mobileClicks: mobileRow?.clicks || null,
+      mobileImpressions: mobileRow?.impressions || null,
+      desktopClicks: desktopRow?.clicks || null,
+      desktopImpressions: desktopRow?.impressions || null,
     },
     create: {
       date: new Date(dateStr),
@@ -132,10 +204,15 @@ async function pullDataForDate(dateStr) {
       avgPosition,
       totalPages: pageRows.length,
       totalQueries: queryRows.length,
+      mobileClicks: mobileRow?.clicks || null,
+      mobileImpressions: mobileRow?.impressions || null,
+      desktopClicks: desktopRow?.clicks || null,
+      desktopImpressions: desktopRow?.impressions || null,
     },
   });
 
-  console.log(`  Saved: ${savedPages} pages, ${savedQueries} queries | clicks: ${totalClicks}, impressions: ${totalImpressions}`);
+  console.log(`  Saved: ${savedPages} pages, ${savedQueries} queries, ${deviceRows.length} devices, ${savedPageQueries} page+query pairs`);
+  console.log(`  Clicks: ${totalClicks} | Impressions: ${totalImpressions} | Mobile: ${mobileRow?.clicks || 0}c / Desktop: ${desktopRow?.clicks || 0}c`);
   return { skipped: false, pageCount: savedPages, queryCount: savedQueries };
 }
 
@@ -335,43 +412,164 @@ async function detectAlerts(dateStr) {
   return alerts.length;
 }
 
-async function inspectImportantPages(dateStr) {
+async function pullSitemapStatus(dateStr) {
+  console.log('  Fetching sitemap status...');
+  try {
+    const sitemaps = await gscService.getSitemapStatus();
+
+    for (const sitemap of sitemaps) {
+      await prisma.gscSitemapStatus.upsert({
+        where: {
+          date_path: { date: new Date(dateStr), path: sitemap.path },
+        },
+        update: {
+          lastDownloaded: sitemap.lastDownloaded ? new Date(sitemap.lastDownloaded) : null,
+          lastSubmitted: sitemap.lastSubmitted ? new Date(sitemap.lastSubmitted) : null,
+          isPending: sitemap.isPending,
+          errors: sitemap.errors,
+          warnings: sitemap.warnings,
+          contents: sitemap.contents,
+        },
+        create: {
+          date: new Date(dateStr),
+          path: sitemap.path,
+          lastDownloaded: sitemap.lastDownloaded ? new Date(sitemap.lastDownloaded) : null,
+          lastSubmitted: sitemap.lastSubmitted ? new Date(sitemap.lastSubmitted) : null,
+          isPending: sitemap.isPending,
+          errors: sitemap.errors,
+          warnings: sitemap.warnings,
+          contents: sitemap.contents,
+        },
+      });
+    }
+
+    console.log(`  Saved ${sitemaps.length} sitemap status records`);
+  } catch (error) {
+    console.error('  Sitemap status fetch failed:', error.message);
+  }
+}
+
+async function inspectPagesWithRotation(dateStr) {
   const targetDate = new Date(dateStr);
+  const freshnessDate = new Date(targetDate);
+  freshnessDate.setDate(freshnessDate.getDate() - INSPECTION_FRESHNESS_DAYS);
   const threeDaysAgo = new Date(targetDate);
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-  // Get top-traffic pages
-  const topPages = await prisma.gscPageMetric.findMany({
-    where: {
-      date: { gte: threeDaysAgo },
-      clicks: { gte: 1 },
-    },
-    orderBy: { clicks: 'desc' },
-    take: URL_INSPECTION_BUDGET,
+  // 1. All known pages ever seen in GSC
+  const allPages = await prisma.gscPageMetric.findMany({
+    select: { page: true },
     distinct: ['page'],
   });
+  const allPageSet = new Set(allPages.map(p => p.page));
 
-  if (topPages.length === 0) {
+  // 2. Pages already inspected in the freshness window
+  const recentInspections = await prisma.gscUrlInspection.findMany({
+    where: { inspectedAt: { gte: freshnessDate } },
+    select: { page: true },
+    distinct: ['page'],
+  });
+  const recentSet = new Set(recentInspections.map(p => p.page));
+
+  // 3. Pages needing inspection
+  const uninspected = [...allPageSet].filter(p => !recentSet.has(p));
+
+  let candidates;
+  if (uninspected.length === 0) {
+    // All pages recently inspected — pick oldest inspected ones
+    const oldest = await prisma.gscUrlInspection.findMany({
+      select: { page: true },
+      distinct: ['page'],
+      orderBy: { inspectedAt: 'asc' },
+      take: URL_INSPECTION_BUDGET,
+    });
+    candidates = oldest.map(p => p.page);
+    console.log(`  All ${allPageSet.size} pages inspected within ${INSPECTION_FRESHNESS_DAYS}d, re-checking ${candidates.length} oldest`);
+  } else {
+    // Prioritize: pages with recent traffic first, then rest alphabetically
+    const recentTraffic = await prisma.gscPageMetric.findMany({
+      where: { date: { gte: threeDaysAgo }, clicks: { gte: 1 } },
+      select: { page: true },
+      distinct: ['page'],
+    });
+    const trafficSet = new Set(recentTraffic.map(p => p.page));
+
+    const withTraffic = uninspected.filter(p => trafficSet.has(p)).sort();
+    const withoutTraffic = uninspected.filter(p => !trafficSet.has(p)).sort();
+    candidates = [...withTraffic, ...withoutTraffic];
+    console.log(`  ${uninspected.length} pages need inspection (${withTraffic.length} with recent traffic)`);
+  }
+
+  const pagesToInspect = candidates.slice(0, URL_INSPECTION_BUDGET);
+  if (pagesToInspect.length === 0) {
     console.log('  No pages to inspect.');
     return;
   }
 
   const baseUrl = 'https://intelliresume.net';
-  const urls = topPages.map(p => `${baseUrl}${p.page}`);
+  const urls = pagesToInspect.map(p => `${baseUrl}${p}`);
 
   console.log(`  Inspecting ${urls.length} pages...`);
   const results = await gscService.getIndexingStatus(urls);
 
   let issueCount = 0;
+  let savedCount = 0;
   for (const result of results) {
-    if (result.verdict && result.verdict !== 'PASS' && result.verdict !== 'ERROR') {
+    if (result.verdict === 'ERROR') continue;
+
+    let pagePath;
+    try { pagePath = new URL(result.url).pathname; }
+    catch { pagePath = result.url; }
+
+    // Save full inspection result
+    await prisma.gscUrlInspection.upsert({
+      where: {
+        page_inspectedAt: { page: pagePath, inspectedAt: targetDate },
+      },
+      update: {
+        verdict: result.verdict,
+        coverageState: result.coverageState,
+        indexingState: result.indexingState,
+        crawledAs: result.crawledAs,
+        lastCrawlTime: result.lastCrawlTime ? new Date(result.lastCrawlTime) : null,
+        pageFetchState: result.pageFetchState,
+        robotsTxtState: result.robotsTxtState,
+        userCanonical: result.userCanonical,
+        googleCanonical: result.googleCanonical,
+        referringUrls: result.referringUrls,
+        sitemap: result.sitemap,
+        richResultsVerdict: result.richResultsVerdict,
+        richResultsTypes: result.richResultsTypes,
+        richResultsIssues: result.richResultsIssues?.length > 0 ? result.richResultsIssues : undefined,
+        mobileUsabilityVerdict: result.mobileUsabilityVerdict,
+        mobileUsabilityIssues: result.mobileUsabilityIssues?.length > 0 ? result.mobileUsabilityIssues : undefined,
+      },
+      create: {
+        page: pagePath,
+        inspectedAt: targetDate,
+        verdict: result.verdict,
+        coverageState: result.coverageState,
+        indexingState: result.indexingState,
+        crawledAs: result.crawledAs,
+        lastCrawlTime: result.lastCrawlTime ? new Date(result.lastCrawlTime) : null,
+        pageFetchState: result.pageFetchState,
+        robotsTxtState: result.robotsTxtState,
+        userCanonical: result.userCanonical,
+        googleCanonical: result.googleCanonical,
+        referringUrls: result.referringUrls,
+        sitemap: result.sitemap,
+        richResultsVerdict: result.richResultsVerdict,
+        richResultsTypes: result.richResultsTypes,
+        richResultsIssues: result.richResultsIssues?.length > 0 ? result.richResultsIssues : undefined,
+        mobileUsabilityVerdict: result.mobileUsabilityVerdict,
+        mobileUsabilityIssues: result.mobileUsabilityIssues?.length > 0 ? result.mobileUsabilityIssues : undefined,
+      },
+    });
+    savedCount++;
+
+    // Still create GscAlert for failures (backward compat with dashboard)
+    if (result.verdict !== 'PASS' && result.verdict !== 'UNKNOWN') {
       issueCount++;
-      let pagePath;
-      try {
-        pagePath = new URL(result.url).pathname;
-      } catch {
-        pagePath = result.url;
-      }
       await prisma.gscAlert.create({
         data: {
           date: targetDate,
@@ -386,7 +584,7 @@ async function inspectImportantPages(dateStr) {
     }
   }
 
-  console.log(`  URL inspection: ${results.length} checked, ${issueCount} issues found`);
+  console.log(`  URL inspection: ${savedCount} saved, ${issueCount} issues found`);
 }
 
 async function main() {
@@ -436,12 +634,16 @@ async function main() {
     const result = await pullDataForDate(dateStr);
 
     if (!result.skipped) {
-      console.log('\nRunning alert detection...');
-      await detectAlerts(dateStr);
+      // Alert detection and sitemap status can run in parallel
+      console.log('\nRunning alert detection and sitemap status...');
+      await Promise.all([
+        detectAlerts(dateStr),
+        pullSitemapStatus(dateStr),
+      ]);
 
       if (!skipInspection) {
-        console.log('\nRunning URL inspection...');
-        await inspectImportantPages(dateStr);
+        console.log('\nRunning URL inspection (rotation)...');
+        await inspectPagesWithRotation(dateStr);
       }
     }
   }

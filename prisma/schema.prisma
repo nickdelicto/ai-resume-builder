@@ -352,14 +352,93 @@ model GscAlert {
 }
 
 model GscSiteSummary {
-  id               Int      @id @default(autoincrement())
-  date             DateTime @db.Date @unique
-  totalClicks      Int      @default(0)
-  totalImpressions Int      @default(0)
-  avgCtr           Float    @default(0)
-  avgPosition      Float    @default(0)
-  totalPages       Int      @default(0)
-  totalQueries     Int      @default(0)
-  aiSummary        String?
-  createdAt        DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  date               DateTime @db.Date @unique
+  totalClicks        Int      @default(0)
+  totalImpressions   Int      @default(0)
+  avgCtr             Float    @default(0)
+  avgPosition        Float    @default(0)
+  totalPages         Int      @default(0)
+  totalQueries       Int      @default(0)
+  mobileClicks       Int?
+  mobileImpressions  Int?
+  desktopClicks      Int?
+  desktopImpressions Int?
+  aiSummary          String?
+  createdAt          DateTime @default(now())
+}
+
+model GscUrlInspection {
+  id                     Int      @id @default(autoincrement())
+  page                   String
+  inspectedAt            DateTime @db.Date
+  verdict                String
+  coverageState          String?
+  indexingState           String?
+  crawledAs              String?
+  lastCrawlTime          DateTime?
+  pageFetchState         String?
+  robotsTxtState         String?
+  userCanonical          String?
+  googleCanonical        String?
+  referringUrls          String[]
+  sitemap                String?
+  richResultsVerdict     String?
+  richResultsTypes       String[]
+  richResultsIssues      Json?
+  mobileUsabilityVerdict String?
+  mobileUsabilityIssues  Json?
+  createdAt              DateTime @default(now())
+
+  @@unique([page, inspectedAt])
+  @@index([inspectedAt])
+  @@index([page])
+  @@index([verdict])
+}
+
+model GscSitemapStatus {
+  id             Int       @id @default(autoincrement())
+  date           DateTime  @db.Date
+  path           String
+  lastDownloaded DateTime?
+  lastSubmitted  DateTime?
+  isPending      Boolean   @default(false)
+  errors         Int       @default(0)
+  warnings       Int       @default(0)
+  contents       Json?
+  createdAt      DateTime  @default(now())
+
+  @@unique([date, path])
+  @@index([date])
+}
+
+model GscDeviceMetric {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  device      String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, device])
+  @@index([date])
+}
+
+model GscPageQueryMetric {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  page        String
+  query       String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Float    @default(0)
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, page, query])
+  @@index([date])
+  @@index([page])
+  @@index([query])
 }
