@@ -2,6 +2,7 @@
 // The functionality remains the same but is now accessed at /sitemap-generator
 
 import { getAllPostPaths } from '../lib/blog/api';
+import { getAvailableCareerGuides } from '../lib/constants/specialtyCareerData';
 
 /**
  * Generates a sitemap XML for the website
@@ -61,6 +62,18 @@ export async function getServerSideProps({ res }) {
       <loc>${baseUrl}/blog/${params.category}/${params.slug}</loc>
       <lastmod>${new Date().toISOString()}</lastmod>
       <changefreq>weekly</changefreq>
+      <priority>0.7</priority>
+    </url>
+  `;
+    })
+    .join('')}
+  ${getAvailableCareerGuides()
+    .map((slug) => {
+      return `
+    <url>
+      <loc>${baseUrl}/blog/career-guides/${slug}</loc>
+      <lastmod>${new Date().toISOString()}</lastmod>
+      <changefreq>monthly</changefreq>
       <priority>0.7</priority>
     </url>
   `;

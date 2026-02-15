@@ -1,4 +1,5 @@
 import { getAllPosts, getCategories } from '../lib/blog/api';
+import { getAvailableCareerGuides } from '../lib/constants/specialtyCareerData';
 
 const BlogSitemap = () => {
   return null;
@@ -72,6 +73,16 @@ async function generateSitemap(baseUrl) {
       xml += `  </url>\n`;
     });
     
+    // Add career guide pages (programmatic, from specialtyCareerData)
+    const careerGuideSlugs = getAvailableCareerGuides();
+    careerGuideSlugs.forEach(slug => {
+      xml += `  <url>\n`;
+      xml += `    <loc>${escapeXml(`${baseUrl}/blog/career-guides/${slug}`)}</loc>\n`;
+      xml += `    <changefreq>monthly</changefreq>\n`;
+      xml += `    <priority>0.7</priority>\n`;
+      xml += `  </url>\n`;
+    });
+
     // Add blog posts
     allPosts.forEach(post => {
       const lastmod = post.updatedDate || post.publishedDate;
