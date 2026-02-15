@@ -35,6 +35,7 @@ const LoadingFallback = () => {
         description="Upload your existing nursing resume and let our AI enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
         canonicalUrl="https://intelliresume.net/resume-import"
         keywords="improve nursing resume, enhance RN resume, import nurse resume, enhance healthcare resume, nursing resume analysis"
+        ogImage="/og-image-resume.png"
       />
     <div style={{
       display: 'flex',
@@ -391,6 +392,7 @@ const ResumeImportPage = () => {
           description="Upload your existing nursing resume and let us enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
           canonicalUrl="https://intelliresume.net/resume-import"
           keywords="import nursing resume, upload RN resume, improve nurse resume, enhance healthcare resume, nursing resume analysis"
+          ogImage="/og-image-resume.png"
         />
       </>
     );
@@ -403,6 +405,7 @@ const ResumeImportPage = () => {
         description="Upload your existing nursing resume and let our AI enhance it. We'll analyze your RN resume and suggest improvements for clinical skills, certifications, and ATS compatibility."
         canonicalUrl="https://intelliresume.net/resume-import"
         keywords="import nursing resume, upload RN resume, improve nurse resume, enhance healthcare resume, nursing resume analysis"
+        ogImage="/og-image-resume.png"
       />
 
       {/* Resume-specific structured data for SEO */}

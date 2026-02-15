@@ -638,7 +638,7 @@ const NursingResumeBuilderPage = () => {
         description="Build a professional nursing resume in minutes. Dedicated sections for licenses, certifications, clinical skills, and EHR systems. Free to start."
         keywords="nursing resume builder, nurse resume builder, RN resume builder, nursing resume template, healthcare resume, registered nurse resume, ATS nursing resume, free nursing resume builder"
         canonicalUrl="https://intelliresume.net/nursing-resume-builder"
-        ogImage="/og-image.png"
+        ogImage="/og-image-resume.png"
       />
       <NursingStructuredData />
       {showStickyHeader && <StickyHeader />}

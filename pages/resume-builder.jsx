@@ -224,7 +224,7 @@ const ResumeBuilderPage = () => {
         description="Build, improve, or tailor your resume with AI. Smart resume builder with ATS-friendly templates, clinical skills sections, and one-click PDF downloads. Free to start."
         keywords="AI resume builder, resume builder, ATS resume, resume templates, build resume online, tailor resume, improve resume"
         canonicalUrl="https://intelliresume.net/resume-builder"
-        ogImage="/og-image.png"
+        ogImage="/og-image-resume.png"
       />
       
       {/* Resume-specific structured data (SoftwareApplication, Product, FAQ schemas) */}

@@ -203,6 +203,10 @@ const NewResumeBuilderPage = () => {
         <title>Nursing Resume Builder | Build Your RN Resume Today</title>
         <meta name="description" content="Build a professional nursing resume with AI-powered suggestions for clinical skills, certifications, and experience. Designed for Registered Nurses." />
         <link rel="canonical" href="https://intelliresume.net/resume-builder" />
+        <meta property="og:image" content="https://intelliresume.net/og-image-resume.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:image" content="https://intelliresume.net/og-image-resume.png" />
       </Head>
       
       {/* Resume-specific structured data for SEO */}

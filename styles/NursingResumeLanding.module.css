@@ -1038,15 +1038,15 @@
 }
 
 .sectionSubtext {
-  font-size: 17px;
+  font-size: 18px;
   color: #64748b;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .bodyText {
-  font-size: 16px;
+  font-size: 17px;
   color: #475569;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 /* ── Primary CTA ─────────────────────────────────────── */
@@ -1283,9 +1283,9 @@
 }
 
 .templateBestFor {
-  font-size: 14px;
+  font-size: 15px;
   color: #64748b;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
 /* ── Steps (2x2 card grid) ───────────────────────────── */
@@ -1332,9 +1332,9 @@
 }
 
 .stepDescription {
-  font-size: 15px;
+  font-size: 16px;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.6;
   padding-left: 46px;
 }
 
@@ -1400,7 +1400,7 @@
 }
 
 .faqQuestionText {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: #1e293b;
   line-height: 1.4;
@@ -1419,9 +1419,9 @@
 
 .faqAnswer {
   padding: 0 4px 20px;
-  font-size: 15px;
+  font-size: 16px;
   color: #64748b;
-  line-height: 1.7;
+  line-height: 1.75;
   animation: fadeIn 0.25s ease;
 }
 
