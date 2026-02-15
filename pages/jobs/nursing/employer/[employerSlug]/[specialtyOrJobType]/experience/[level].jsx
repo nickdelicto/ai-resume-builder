@@ -171,6 +171,37 @@ export default function EmployerSpecialtyExperienceLevelPage({
             )}
           </div>
 
+          {/* New Grad Resume Guide Banner */}
+          {levelSlug === 'new-grad' && (
+            <Link
+              href="/new-grad-nursing-resume"
+              className="group block bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-xl p-4 sm:p-5 mb-8 hover:border-amber-400 hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded-lg flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-0.5">Resume Guide</div>
+                  <div className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">
+                    New Grad Nurse Resume: Step-by-Step Guide & Free Template
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-500 mt-0.5 hidden sm:block">
+                    Build a professional new grad nurse resume with clinical rotations, certifications, and ATS-friendly formatting
+                  </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </Link>
+          )}
+
           {/* Stats Cards */}
           {stats && (stats.states?.length > 0 || stats.cities?.length > 0) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
