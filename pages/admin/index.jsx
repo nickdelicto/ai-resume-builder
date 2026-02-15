@@ -577,8 +577,18 @@ function ToolsTab() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         </div>
-        <h3 className="font-semibold text-gray-900 mb-1">SEO Monitor</h3>
+        <h3 className="font-semibold text-gray-900 mb-1">Google SEO Monitor</h3>
         <p className="text-sm text-gray-500">Google Search Console performance, alerts, and AI analysis</p>
+      </Link>
+
+      <Link href="/admin/bing" className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow group">
+        <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-100 transition-colors">
+          <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h3 className="font-semibold text-gray-900 mb-1">Bing SEO Monitor</h3>
+        <p className="text-sm text-gray-500">Bing search performance — clicks, impressions, and rankings</p>
       </Link>
     </div>
   );
