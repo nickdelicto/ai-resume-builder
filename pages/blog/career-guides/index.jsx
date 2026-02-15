@@ -67,6 +67,27 @@ export default function CareerGuidesIndex({ guides }) {
           ))}
         </div>
 
+        {/* New Grad Resume Guide Banner */}
+        <Link href="/new-grad-nursing-resume" className="resume-banner">
+          <div className="resume-banner-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div className="resume-banner-text">
+            <span className="resume-banner-tag">Resume Guide</span>
+            <h3>New Grad Nurse Resume: Step-by-Step Guide & Free Template</h3>
+            <p>Build a professional nursing resume even with zero paid experience. Covers clinical rotations, certifications, and ATS-friendly formatting.</p>
+          </div>
+          <svg className="resume-banner-arrow" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </Link>
+
         {/* More Coming */}
         <div className="more-coming">
           <p>More specialty guides coming soon — ER, L&D, Med-Surg, OR, and more.</p>
@@ -210,6 +231,83 @@ export default function CareerGuidesIndex({ guides }) {
           .dot {
             margin: 0 8px;
             color: #d1d5db;
+          }
+
+          .resume-banner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 32px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
+            border: 1px solid #99f6e4;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+          }
+
+          .resume-banner:hover {
+            border-color: #0d9488;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);
+          }
+
+          .resume-banner-icon {
+            width: 44px;
+            height: 44px;
+            background: #0d9488;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+          }
+
+          .resume-banner-text {
+            flex: 1;
+            min-width: 0;
+          }
+
+          .resume-banner-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0d9488;
+            margin-bottom: 4px;
+          }
+
+          .resume-banner-text h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 4px;
+            line-height: 1.4;
+          }
+
+          .resume-banner-text p {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.5;
+          }
+
+          .resume-banner-arrow {
+            color: #0d9488;
+            flex-shrink: 0;
+          }
+
+          @media (max-width: 640px) {
+            .resume-banner {
+              padding: 16px;
+            }
+            .resume-banner-icon {
+              display: none;
+            }
+            .resume-banner-text p {
+              display: none;
+            }
           }
 
           .more-coming {

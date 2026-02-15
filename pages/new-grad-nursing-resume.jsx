@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import Meta from '../components/common/Meta';
+import StickyHeader from '../components/common/StickyHeader';
 import styles from '../styles/NewGradResumeLanding.module.css';
 
 const ResumePreview = dynamic(
@@ -277,7 +278,16 @@ const NewGradNurseResumePage = () => {
   const [openFaq, setOpenFaq] = useState(null);
   const [activeBuilderSection, setActiveBuilderSection] = useState('personal');
   const [previewTemplate, setPreviewTemplate] = useState('ats');
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
   const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyHeader(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const renderBuilderSection = () => {
     switch (activeBuilderSection) {
@@ -600,6 +610,7 @@ const NewGradNurseResumePage = () => {
         ogImage="/og-image-resume.png"
       />
       <StructuredData />
+      {showStickyHeader && <StickyHeader />}
 
       <div className={styles.page}>
 

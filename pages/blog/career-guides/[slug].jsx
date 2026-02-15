@@ -647,19 +647,21 @@ export default function CareerGuidePage({
         </section>
 
         {/* Related Career Guides */}
-        {relatedGuides && relatedGuides.length > 0 && (
-          <section className="related-guides-section">
-            <h2>Continue Reading</h2>
-            <div className="related-guides-grid">
-              {relatedGuides.map((guide) => (
-                <Link key={guide.slug} href={`/blog/career-guides/${guide.slug}`} className="related-guide-card">
-                  <span className="guide-tag">Career Guide</span>
-                  <h3>How to Become {/^[aeiou]/i.test(guide.name) ? 'an' : 'a'} {guide.name} Nurse</h3>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="related-guides-section">
+          <h2>Continue Reading</h2>
+          <div className="related-guides-grid">
+            {relatedGuides && relatedGuides.map((guide) => (
+              <Link key={guide.slug} href={`/blog/career-guides/${guide.slug}`} className="related-guide-card">
+                <span className="guide-tag">Career Guide</span>
+                <h3>How to Become {/^[aeiou]/i.test(guide.name) ? 'an' : 'a'} {guide.name} Nurse</h3>
+              </Link>
+            ))}
+            <Link href="/new-grad-nursing-resume" className="related-guide-card">
+              <span className="guide-tag resume-guide-tag">Resume Guide</span>
+              <h3>New Grad Nurse Resume: Step-by-Step Guide & Free Template</h3>
+            </Link>
+          </div>
+        </section>
 
         <style jsx>{`
           .career-guide {
@@ -1695,6 +1697,9 @@ export default function CareerGuidePage({
             margin: 0;
             line-height: 1.4;
             transition: color 0.15s;
+          }
+          .resume-guide-tag {
+            color: #7c3aed;
           }
 
           /* Featured Jobs - Dark Theme Vertical List */
