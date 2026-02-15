@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Dynamic import chart component to avoid SSR issues with recharts
 const TrendChart = dynamic(() => Promise.resolve(TrendChartInner), { ssr: false });
@@ -26,23 +28,32 @@ function TrendChartInner({ data }) {
   );
 }
 
-// Render text with clickable URLs
-function RichText({ text, className }) {
+// Render markdown content with styled components
+function MarkdownContent({ text, accentColor = '#2563eb' }) {
   if (!text) return null;
-  const urlRegex = /(https?:\/\/[^\s,)]+)/g;
-  const parts = text.split(urlRegex);
   return (
-    <span className={className}>
-      {parts.map((part, i) =>
-        urlRegex.test(part) ? (
-          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 break-all" style={{ color: '#6c5ce7' }}>
-            {part}
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        h1: ({ children }) => <h1 className="text-lg font-bold text-gray-900 mt-4 mb-2">{children}</h1>,
+        h2: ({ children }) => <h2 className="text-base font-bold text-gray-900 mt-4 mb-1.5">{children}</h2>,
+        h3: ({ children }) => <h3 className="text-sm font-bold text-gray-800 mt-3 mb-1">{children}</h3>,
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+        li: ({ children }) => <li className="text-gray-700">{children}</li>,
+        strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 break-all" style={{ color: accentColor }}>
+            {children}
           </a>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
-    </span>
+        ),
+        code: ({ children }) => <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-[13px] font-mono">{children}</code>,
+        hr: () => <hr className="my-3 border-gray-200" />,
+      }}
+    >
+      {text}
+    </ReactMarkdown>
   );
 }
 
@@ -286,9 +297,9 @@ export default function SeoMonitor() {
                       {regenerating ? 'Regenerating...' : 'Regenerate'}
                     </button>
                   </div>
-                  <div className="px-6 py-5">
-                    <div className="text-[15px] leading-7 text-gray-800 whitespace-pre-wrap">
-                      <RichText text={data.aiSummary} />
+                  <div className="px-6 py-5" style={{ fontFamily: 'var(--font-figtree), ui-sans-serif, system-ui' }}>
+                    <div className="text-[15px] leading-7 text-gray-800">
+                      <MarkdownContent text={data.aiSummary} accentColor="#6c5ce7" />
                     </div>
                   </div>
                 </div>
@@ -431,7 +442,7 @@ export default function SeoMonitor() {
                         <a href={p.page} target="_blank" rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 hover:underline truncate pr-2 flex-1" title={p.page}>
                           <span className="text-gray-400 mr-1">{pagesPage * PAGE_SIZE + i + 1}.</span>
-                          {p.page.length > 35 ? p.page.slice(0, 35) + '...' : p.page}
+                          {p.page.length > 55 ? p.page.slice(0, 55) + '...' : p.page}
                         </a>
                         <div className="flex gap-3 text-xs flex-shrink-0">
                           <span className={`${pagesSort === 'clicks' ? 'font-semibold' : ''} text-blue-600`}>{p.clicks}c</span>
@@ -475,7 +486,7 @@ export default function SeoMonitor() {
                       <div key={i} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                         <span className="text-gray-600 truncate pr-2 flex-1" title={q.query}>
                           <span className="text-gray-400 mr-1">{queriesPage * PAGE_SIZE + i + 1}.</span>
-                          &ldquo;{q.query.length > 30 ? q.query.slice(0, 30) + '...' : q.query}&rdquo;
+                          &ldquo;{q.query.length > 45 ? q.query.slice(0, 45) + '...' : q.query}&rdquo;
                         </span>
                         <div className="flex gap-3 text-xs flex-shrink-0">
                           <span className={`${queriesSort === 'clicks' ? 'font-semibold' : ''} text-blue-600`}>{q.clicks}c</span>
@@ -513,7 +524,7 @@ export default function SeoMonitor() {
                 </div>
 
                 {/* Chat Messages */}
-                <div ref={chatContainerRef} className="max-h-[600px] overflow-y-auto p-4 space-y-3">
+                <div ref={chatContainerRef} className="max-h-[600px] overflow-y-auto p-4 space-y-3" style={{ fontFamily: 'var(--font-figtree), ui-sans-serif, system-ui' }}>
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
@@ -521,9 +532,9 @@ export default function SeoMonitor() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        <p className="whitespace-pre-wrap">
-                          <RichText text={msg.content} />
-                        </p>
+                        <div>
+                          <MarkdownContent text={msg.content} accentColor={msg.role === 'user' ? '#ffffff' : '#2563eb'} />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -611,6 +622,8 @@ export default function SeoMonitor() {
 
 function AlertsPanel({ alerts, onAnalyze }) {
   const [expanded, setExpanded] = useState(true);
+  const [alertsPage, setAlertsPage] = useState(0);
+  const ALERTS_PAGE_SIZE = 10;
 
   const critical = alerts.filter(a => a.severity === 'critical');
   const warnings = alerts.filter(a => a.severity === 'warning');
@@ -620,6 +633,8 @@ function AlertsPanel({ alerts, onAnalyze }) {
   const dates = [...new Set(alerts.map(a => new Date(a.date).toISOString().split('T')[0]))];
   const latestDate = dates[0];
   const latestAlerts = alerts.filter(a => new Date(a.date).toISOString().split('T')[0] === latestDate);
+  const totalPages = Math.ceil(latestAlerts.length / ALERTS_PAGE_SIZE);
+  const pagedAlerts = latestAlerts.slice(alertsPage * ALERTS_PAGE_SIZE, (alertsPage + 1) * ALERTS_PAGE_SIZE);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -654,7 +669,7 @@ function AlertsPanel({ alerts, onAnalyze }) {
 
       {expanded && (
         <div className="px-4 pb-4 space-y-2">
-          {latestAlerts.map((alert, i) => {
+          {pagedAlerts.map((alert, i) => {
             const colors = {
               critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', dot: 'bg-red-500' },
               warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', dot: 'bg-amber-500' },
@@ -686,6 +701,21 @@ function AlertsPanel({ alerts, onAnalyze }) {
               </div>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+              <button onClick={() => setAlertsPage(p => Math.max(0, p - 1))} disabled={alertsPage === 0}
+                className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
+                Prev
+              </button>
+              <span className="text-xs text-gray-400">
+                {alertsPage * ALERTS_PAGE_SIZE + 1}-{Math.min((alertsPage + 1) * ALERTS_PAGE_SIZE, latestAlerts.length)} of {latestAlerts.length}
+              </span>
+              <button onClick={() => setAlertsPage(p => Math.min(totalPages - 1, p + 1))} disabled={alertsPage >= totalPages - 1}
+                className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-300 disabled:cursor-not-allowed">
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
